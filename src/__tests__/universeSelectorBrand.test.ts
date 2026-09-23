@@ -98,7 +98,7 @@ describe('sélecteur univers — brand + ACL', () => {
   it('gradients carousel alignés accents brand (continuité shell)', () => {
     expect(gradientsForCarouselPole('joueur').cta[1]).toBe('#FFFFFF');
     expect(gradientsForCarouselPole('coach').cta[1]).toBe('#C5A059');
-    expect(gradientsForCarouselPole('pro_club').cta[1]).toBe('#10B981');
+    expect(gradientsForCarouselPole('pro_club').cta[1]).toBe('#F8D548');
     expect(gradientsForCarouselPole('evenements').cta[1]).toBe('#F7941D');
     expect(gradientsForCarouselPole('president').cta[1]).toBe('#C5A059');
     expect(gradientsForCarouselPole('sponsor').cta[1]).toBe('#92278F');

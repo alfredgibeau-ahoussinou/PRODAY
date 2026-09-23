@@ -24,18 +24,29 @@ import {
 import { COACH_SITE, getCoachPageIdentity } from '../content/coachPageIdentity';
 
 describe('coachNavConfig', () => {
-  it('expose 5 onglets premium (Accueil → Profil)', () => {
+  it('expose 4 onglets — Accueil, Calendrier, Équipe, Menu (README §0.2)', () => {
     const ids = COACH_NAV_FOLDERS.map((f) => f.id);
-    expect(ids).toEqual(['accueil', 'equipe', 'ia', 'menu', 'profil']);
+    expect(ids).toEqual(['accueil', 'calendrier', 'equipe', 'menu']);
     const dest = COACH_NAV_FOLDERS.flatMap((f) => f.items.map((i) => i.id));
-    expect(dest).toEqual(['today', 'equipe', 'coach_ia', 'plus', 'profil']);
+    expect(dest).toEqual(['today', 'calendrier', 'equipe', 'plus']);
     expect(COACH_PRIMARY_NAV_IDS).toEqual(dest);
+    /** Menu en **dernière** position, jamais remplacé par un autre module. */
+    expect(dest[dest.length - 1]).toBe('plus');
     expect(findCoachNavItem('today')?.label).toBe('Accueil');
+    expect(findCoachNavItem('calendrier')?.label).toBe('Calendrier');
     expect(findCoachNavItem('equipe')?.label).toBe('Équipe');
-    expect(['Tactique', 'IA']).toContain(findCoachNavItem('coach_ia')?.label);
     expect(findCoachNavItem('plus')?.label).toBe('Menu');
-    expect(findCoachNavItem('profil')?.label).toBe('Profil');
-    expect(findCoachNavItem('messages')?.label).toBe('Messages');
+  });
+
+  it('garde l’IA, la messagerie et le profil hors de la barre mais atteignables', () => {
+    const dest = COACH_NAV_FOLDERS.flatMap((f) => f.items.map((i) => i.id));
+    for (const id of ['coach_ia', 'copilot_chat', 'messages', 'profil'] as const) {
+      expect(dest).not.toContain(id);
+      expect(COACH_SECONDARY_NAV_IDS).toContain(id);
+      expect(findCoachNavItem(id)).toBeTruthy();
+      /** Sortie de barre ⇒ l’état actif se reporte sur Menu, pas sur Accueil. */
+      expect(primaryTabForCoachNav(id)).toBe('plus');
+    }
   });
 
   it('canonise les alias legacy et surligne Menu pour les outils secondaires', () => {
@@ -52,8 +63,9 @@ describe('coachNavConfig', () => {
     expect(primaryTabForCoachNav('carpool')).toBe('plus');
     expect(primaryTabForCoachNav('planning')).toBe('plus');
     expect(primaryTabForCoachNav('plus')).toBe('plus');
-    expect(primaryTabForCoachNav('messages')).toBe('profil');
+    expect(primaryTabForCoachNav('messages')).toBe('plus');
     expect(primaryTabForCoachNav('today')).toBe('today');
+    expect(primaryTabForCoachNav('calendrier')).toBe('calendrier');
   });
 
   it('mappe tabs ↔ nav', () => {
@@ -62,12 +74,14 @@ describe('coachNavConfig', () => {
     expect(tabFromCoachNav('plus')).toBe('home');
     expect(tabFromCoachNav('coach_ia')).toBe('home');
     expect(tabFromCoachNav('equipe')).toBe('home');
+    /** Le calendrier vit dans l’onglet principal `home`, comme les autres hubs coach. */
+    expect(tabFromCoachNav('calendrier')).toBe('home');
     expect(coachNavFromTab('home')).toBe('today');
     expect(findCoachNavItem('mes_videos')?.label).toBe('Mes vidéos');
   });
 
   it('conserve plus et les onglets home-shell lors de la sync tab', () => {
-    expect(COACH_HOME_SHELL_NAV_IDS).toEqual(['today', 'equipe', 'coach_ia', 'plus']);
+    expect(COACH_HOME_SHELL_NAV_IDS).toEqual(['today', 'calendrier', 'equipe', 'plus']);
 
     for (const navId of COACH_HOME_SHELL_NAV_IDS) {
       expect(resolveCoachNavOnTabSync(navId, 'home')).toBe(navId);
@@ -126,11 +140,15 @@ describe('resolveCoachNavAccess', () => {
     expect(video?.lockReason).toMatch(/formule vidéo|module/i);
   });
 
-  it('résout 5 dossiers primaires', () => {
+  it('résout 4 dossiers primaires', () => {
     const folders = resolveCoachNavFolders({ canSmartTactics: true, canVideo: true });
-    expect(folders).toHaveLength(5);
-    expect(folders.flatMap((f) => f.items).map((i) => i.id)).toHaveLength(5);
-    expect(folders.flatMap((f) => f.items).map((i) => i.id)).toContain('plus');
+    expect(folders).toHaveLength(4);
+    expect(folders.flatMap((f) => f.items).map((i) => i.id)).toEqual([
+      'today',
+      'calendrier',
+      'equipe',
+      'plus',
+    ]);
   });
 
   it('expose les 8 lignes Outils depuis COACH_TOOL_GROUPS', () => {
@@ -138,7 +156,7 @@ describe('resolveCoachNavAccess', () => {
     expect(menu.map((i) => i.id)).toEqual(COACH_HOME_TOOLS.map((t) => t.id));
     expect(menu.find((i) => i.id === 'match_center')?.label).toBe('Matchs');
     expect(menu.find((i) => i.id === 'entrainements')?.label).toBe('Séances');
-    expect(menu.find((i) => i.id === 'com_staff')?.label).toBe('Communauté');
+    expect(menu.find((i) => i.id === 'com_staff')?.label).toBe('Messagerie');
     expect(menu.find((i) => i.id === 'coaching_perso')?.label).toBe('Coaching perso');
     const groups = resolveCoachToolGroups({ canSmartTactics: true, canVideo: true });
     expect(groups).toHaveLength(3);
@@ -147,9 +165,10 @@ describe('resolveCoachNavAccess', () => {
 });
 
 describe('COACH_SITE night', () => {
-  it('utilise le fond noir SportEasy', () => {
+  it('utilise le socle Dark Premium DESIGN.md (#121218 / #1A1A24)', () => {
     expect(COACH_SITE.bg).toBe('#000000');
-    expect(COACH_SITE.surface).toBe('#1C1C1E');
+    expect(COACH_SITE.surface).toBe('#121218');
+    expect(COACH_SITE.elevated).toBe('#1A1A24');
     expect(COACH_SITE.foreground).toBe('#FFFFFF');
     expect(COACH_SITE.accent).toBe('#C5A059');
   });
@@ -168,5 +187,6 @@ describe('coach page titles SportEasy', () => {
     expect(getCoachPageIdentity('profil').title).toBe('Profil coach');
     expect(getCoachPageIdentity('com_staff').title).toBe('Communauté');
     expect(getCoachPageIdentity('coaching_perso').title).toBe('Coaching perso');
+    expect(getCoachPageIdentity('calendrier').title).toBe('Calendrier');
   });
 });

@@ -101,17 +101,22 @@ export function getMessagesChapters(t: TranslateFn) {
   ] satisfies { id: MessagesChapterId; label: string }[];
 }
 
+/**
+ * Rail de filtres de la boîte de réception.
+ *
+ * Six entrées au maximum : « Tous », l'état de lecture, puis les **catégories par rôle**
+ * demandées (Joueurs, Parents, Coachs, Club / Staff). La nature d'une conversation (direct,
+ * groupe, annonce) n'est plus un filtre ici : elle est portée par la ligne elle-même, ce qui
+ * évite de transformer le rail en liste de neuf boutons.
+ */
 export function getMessagesThreadFilters(t: TranslateFn) {
   return [
     { id: 'all' as const, label: tr(t, 'messages.filter.all', 'Tous') },
     { id: 'unread' as const, label: tr(t, 'messages.filter.unread', 'Non lus') },
-    { id: 'direct' as const, label: tr(t, 'messages.filter.direct', 'Directs') },
-    { id: 'groups' as const, label: tr(t, 'messages.filter.groups', 'Groupes') },
-    { id: 'announcements' as const, label: tr(t, 'messages.filter.announcements', 'Annonces') },
-    { id: 'coach' as const, label: tr(t, 'messages.filter.coach', 'Coach') },
-    { id: 'team' as const, label: tr(t, 'messages.filter.team', 'Vestiaire / Équipe') },
-    { id: 'mercato' as const, label: tr(t, 'messages.filter.mercato', 'Mercato') },
-    { id: 'care' as const, label: tr(t, 'messages.filter.care', 'Kiné') },
+    { id: 'players' as const, label: tr(t, 'messages.filter.players', 'Joueurs') },
+    { id: 'parents' as const, label: tr(t, 'messages.filter.parents', 'Parents') },
+    { id: 'coaches' as const, label: tr(t, 'messages.filter.coaches', 'Coachs') },
+    { id: 'club_staff' as const, label: tr(t, 'messages.filter.clubStaff', 'Club / Staff') },
   ] satisfies { id: MessagesThreadFilter; label: string }[];
 }
 
@@ -126,9 +131,9 @@ export function getMessagesV4CompactFilters(t: TranslateFn) {
   ] satisfies { id: MessagesThreadFilter; label: string }[];
 }
 
-/** Filtres messagerie coach — sans Kiné. */
+/** Filtres messagerie coach — même rail que le tronc commun (plus de « Kiné » à retirer). */
 export function getCoachMessagesThreadFilters(t: TranslateFn) {
-  return getMessagesThreadFilters(t).filter((f) => f.id !== 'care');
+  return getMessagesThreadFilters(t);
 }
 
 /** Filtres messagerie joueur — compacts v4. */

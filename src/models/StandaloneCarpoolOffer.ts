@@ -28,6 +28,16 @@ export interface StandaloneCarpoolOffer {
   trip_status?: CarpoolTripStatus;
   /** Visible uniquement aux membres du même club */
   club_only?: boolean;
+  /**
+   * Événement (convocation / match / tournoi) auquel le trajet est rattaché.
+   * Lien affiché dans le Pôle Club pour retrouver le contexte et le fil autorisé.
+   */
+  event_id?: string;
+  event_title?: string;
+  /**
+   * Âge minimal de l'équipe cible : les mineurs non-autorisés voient le trajet
+   * mais ne peuvent pas réserver ( garde mineur, cf. standaloneCarpoolMinor ).
+   */
   created_at: Date;
   updated_at: Date;
 }
@@ -46,4 +56,6 @@ export interface CreateStandaloneCarpoolInput {
   city?: string;
   club_id?: string;
   club_only?: boolean;
+  event_id?: string;
+  event_title?: string;
 }

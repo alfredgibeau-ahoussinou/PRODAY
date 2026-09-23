@@ -1,93 +1,106 @@
 /**
- * Design system — ProDay Espace Admin (ops desk raffiné).
- * Typo Inter · surfaces obsidian · champagne discret · densifié.
+ * Design system — ProDay Espace Admin (Ops Desk Apple Liquid Glass).
+ * Typographie Apple San Francisco · surfaces Obsidian Glass · reflets spéculaires · fort contraste.
  */
 
-import type { TextStyle, ViewStyle } from 'react-native';
-import { fontFamily } from '../../../theme/typography';
+import { Platform, type TextStyle, type ViewStyle } from 'react-native';
+import { APPLE_FONT_STACK } from '../../../theme/appleTypography';
 import { ADMIN_TOKENS, type AdminThemeTokens } from './adminTokens';
 
 export const adminType = {
   display: {
-    fontFamily: fontFamily.black,
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 32,
-    letterSpacing: -1.0,
-    lineHeight: 36,
-  },
+    fontWeight: '800',
+    letterSpacing: -0.8,
+    lineHeight: 38,
+  } as TextStyle,
   displaySm: {
-    fontFamily: fontFamily.extrabold,
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 22,
-    letterSpacing: -0.5,
-    lineHeight: 26,
-  },
-  h1: {
-    fontFamily: fontFamily.extrabold,
-    fontSize: 20,
+    fontWeight: '700',
     letterSpacing: -0.4,
+    lineHeight: 28,
+  } as TextStyle,
+  h1: {
+    fontFamily: APPLE_FONT_STACK.display,
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.3,
     lineHeight: 26,
-  },
+  } as TextStyle,
   h2: {
-    fontFamily: fontFamily.bold,
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 15,
+    fontWeight: '600',
     letterSpacing: -0.15,
     lineHeight: 20,
-  },
+  } as TextStyle,
   h3: {
-    fontFamily: fontFamily.bold,
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 13,
+    fontWeight: '600',
     letterSpacing: -0.05,
     lineHeight: 18,
-  },
+  } as TextStyle,
   body: {
-    fontFamily: fontFamily.regular,
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 14,
-    letterSpacing: 0.01,
+    fontWeight: '400',
+    letterSpacing: -0.05,
     lineHeight: 20,
-  },
+  } as TextStyle,
   caption: {
-    fontFamily: fontFamily.semibold,
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
-    letterSpacing: 0.12,
+    fontWeight: '600',
+    letterSpacing: 0.1,
     lineHeight: 15,
-  },
+  } as TextStyle,
   label: {
-    fontFamily: fontFamily.bold,
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9,
-    letterSpacing: 1.6,
+    fontWeight: '800',
+    letterSpacing: 1.4,
     lineHeight: 12,
     textTransform: 'uppercase' as const,
-  },
+  } as TextStyle,
   brand: {
-    fontFamily: fontFamily.brand,
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
-    letterSpacing: 2.4,
+    fontWeight: '800',
+    letterSpacing: 2.2,
     lineHeight: 13,
     textTransform: 'uppercase' as const,
-  },
+  } as TextStyle,
   stat: {
-    fontFamily: fontFamily.black,
-    fontSize: 40,
-    letterSpacing: -1.2,
+    fontFamily: APPLE_FONT_STACK.display,
+    fontSize: 38,
+    fontWeight: '800',
+    letterSpacing: -1.0,
     lineHeight: 42,
-  },
+  } as TextStyle,
   statSm: {
-    fontFamily: fontFamily.extrabold,
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 22,
-    letterSpacing: -0.6,
+    fontWeight: '700',
+    letterSpacing: -0.5,
     lineHeight: 26,
-  },
+  } as TextStyle,
   nav: {
-    fontFamily: fontFamily.semibold,
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12,
-    letterSpacing: 0.15,
+    fontWeight: '600',
+    letterSpacing: 0.1,
     lineHeight: 16,
-  },
+  } as TextStyle,
   mono: {
-    fontFamily: 'Menlo',
+    fontFamily: APPLE_FONT_STACK.mono,
     fontSize: 11,
-    letterSpacing: 0.3,
+    fontWeight: '500',
+    letterSpacing: 0.2,
     lineHeight: 15,
-  },
+  } as TextStyle,
 } satisfies Record<string, TextStyle>;
 
 export type AdminTypeVariant = keyof typeof adminType;
@@ -118,37 +131,37 @@ export const adminRadius = {
 export const adminShadow = {
   soft: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 6,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 2,
   } satisfies ViewStyle,
   card: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.28,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    elevation: 4,
   } satisfies ViewStyle,
   deep: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.45,
+    shadowRadius: 28,
+    elevation: 8,
   } satisfies ViewStyle,
   glow: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
     shadowColor: tokens.signal,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    elevation: 2,
+    shadowOpacity: 0.26,
+    shadowRadius: 12,
+    elevation: 3,
   }),
   champagne: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
     shadowColor: tokens.champagne,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.14,
-    shadowRadius: 8,
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
     elevation: 2,
   }),
 };
@@ -156,9 +169,7 @@ export const adminShadow = {
 export const adminChrome = {
   wideBreakpoint: 920,
   tabletBreakpoint: 700,
-  /** Rail tablette+ uniquement (labels). Mobile = drawer, pas de rail. */
   sidebarExpanded: 228,
-  /** 0 = pas de rail compact / icônes seules sur mobile. */
   sidebarCollapsed: 0,
   topBarHeight: 56,
   dockRailHeight: 0,
@@ -195,6 +206,8 @@ export function adminPanelStyle(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewSt
     borderColor: tokens.borderStrong,
     borderWidth: 1,
     borderRadius: adminRadius.md,
+    overflow: 'hidden',
+    ...(tokens.glassBackdrop as ViewStyle),
   };
 }
 
@@ -204,7 +217,10 @@ export function adminSurfaceHero(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewS
     borderRadius: adminRadius.hero,
     borderWidth: 1,
     borderColor: tokens.borderLuxury,
+    borderTopColor: tokens.specularTop,
     overflow: 'hidden',
+    ...(tokens.isGlass ? adminShadow.card : adminShadow.soft),
+    ...(tokens.glassBackdrop as ViewStyle),
   };
 }
 
@@ -214,6 +230,10 @@ export function adminSurfaceCard(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewS
     borderRadius: adminRadius.lg,
     borderWidth: 1,
     borderColor: tokens.border,
+    borderTopColor: tokens.specularTop,
+    overflow: 'hidden',
+    ...(tokens.isGlass ? adminShadow.card : adminShadow.soft),
+    ...(tokens.glassBackdrop as ViewStyle),
   };
 }
 
@@ -223,8 +243,11 @@ export function adminSurfaceRow(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewSt
     borderRadius: adminRadius.lg,
     borderWidth: 1,
     borderColor: tokens.border,
+    borderTopColor: tokens.specularTop,
     paddingVertical: adminSpace.md,
     paddingHorizontal: adminSpace.lg,
     minHeight: adminLayout.listRowMinHeight,
+    overflow: 'hidden',
+    ...(tokens.glassBackdrop as ViewStyle),
   };
 }

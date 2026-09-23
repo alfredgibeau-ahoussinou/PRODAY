@@ -63,7 +63,7 @@ export const CarpoolScreen: React.FC = () => {
 
   return (
     <CarpoolUiProvider coachShell={coachShell} joueurShell={joueurShell}>
-      <View style={[styles.root, { backgroundColor: screenBg ?? '#000000' }]}>
+      <View style={[styles.root, { backgroundColor: screenBg ?? PLAYER_DARK.bg }]}>
         {joueurShell && !selectedEventId ? (
           <View style={[styles.header, { paddingTop: 6 }]}>
             <View style={styles.headerTitleRow}>
@@ -81,7 +81,7 @@ export const CarpoolScreen: React.FC = () => {
               )}
               <View style={styles.titleCol}>
                 <ProDayText variant="title" style={styles.headerTitleText}>
-                  Trajets & Covoiturage
+                  Transport & Logistique
                 </ProDayText>
                 {clubName ? (
                   <View style={styles.clubSubtitleRow}>
@@ -157,8 +157,8 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-    backgroundColor: '#000000',
+    borderBottomColor: PLAYER_DARK.dockBorder,
+    backgroundColor: PLAYER_DARK.bg,
   },
   headerTitleRow: {
     flexDirection: 'row',
@@ -180,12 +180,12 @@ const styles = StyleSheet.create({
   headerTitleText: {
     fontSize: 21,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
     letterSpacing: -0.4,
   },
   headerSub: {
     fontSize: 11.5,
-    color: '#8B8B9A',
+    color: PLAYER_DARK.textMuted,
     marginTop: 1,
   },
   clubSubtitleRow: {

@@ -146,12 +146,10 @@ export const ClubCamerasPanel: React.FC<ClubCamerasPanelProps> = ({ profile, clu
       </ProDayText>
       <ProDaySurface variant="module" style={[styles.card, { borderColor: c.border }]}>
         <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-          État fabricants
+          Connexion des caméras et captations
         </ProDayText>
         <ProDayText variant="caption" muted>
-          Architecture multi-vendeurs (Veo, XbotGo, smartphone…). Les connecteurs OAuth / API
-          fabricants sont « à connecter » : l’app enregistre la config club et les imports, sans
-          inventer de highlights automatiques réels.
+          Connectez votre compte Veo ou associez vos caméras (Veo Cam, XbotGo, smartphone…). Vos captations et vidéos sont synchronisées directement dans ProDay sans configuration technique requise.
         </ProDayText>
       </ProDaySurface>
 
@@ -189,7 +187,7 @@ export const ClubCamerasPanel: React.FC<ClubCamerasPanelProps> = ({ profile, clu
       {tab === 'connect' ? (
         <ProDaySurface variant="module" style={[styles.panel, { borderColor: c.border }]}>
           <ProDayText variant="caption" muted>
-            Veo · XbotGo · Spiideo · Pixellot · Trace · smartphone — API ou import.
+            Veo · XbotGo · Spiideo · Pixellot · Trace · smartphone — Connexion directe ou import.
           </ProDayText>
           <View style={styles.chips}>
             {providers.map((p) => (

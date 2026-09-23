@@ -10,6 +10,7 @@ import {
   useCarpoolThemedStyles,
   useCarpoolUi,
 } from './CarpoolUiContext';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 export type { CarpoolHubMode };
 
@@ -98,10 +99,10 @@ function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     track: {
       flexDirection: 'row',
-      backgroundColor: '#14141A',
+      backgroundColor: CARPOOL_SITE.surface,
       borderRadius: 14,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: CARPOOL_SITE.lane,
       padding: 4,
       gap: 6,
     },

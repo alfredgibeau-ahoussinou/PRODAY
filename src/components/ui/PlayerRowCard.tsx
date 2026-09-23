@@ -89,7 +89,7 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
       </View>
 
       {onBookmark ? (
-        <TouchableOpacity onPress={onBookmark} hitSlop={12} style={styles.bookmarkBtn}>
+        <TouchableOpacity onPress={onBookmark} hitSlop={12} style={styles.bookmarkBtn} accessibilityRole="button" accessibilityLabel={bookmarked ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
           <Icon
             name={bookmarked ? 'bookmark' : 'bookmark-outline'}
             size={22}

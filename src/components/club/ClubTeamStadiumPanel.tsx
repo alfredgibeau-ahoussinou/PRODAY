@@ -639,7 +639,9 @@ export function ClubTeamStadiumPanel({
             </Text>
           </View>
           <View style={stylesThemed.playerControls}>
-            <Pressable onPress={() => goPlayer(-1)} style={stylesThemed.ctrlBtn}>
+            <Pressable onPress={() => goPlayer(-1)} style={stylesThemed.ctrlBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Retour">
               <Icon name="arrow-back" size={18} color={colors.text} />
             </Pressable>
             <Pressable onPress={() => goPlayer(1)} style={stylesThemed.ctrlBtn}>
@@ -772,7 +774,7 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       borderRadius: radius.lg,
       overflow: 'hidden',
-      backgroundColor: '#060B14',
+      backgroundColor: c.surface,
     },
     pitchEmpty: {
       alignItems: 'center',

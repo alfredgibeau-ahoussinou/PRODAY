@@ -65,34 +65,6 @@ interface TrainHubScreenProps {
   initialView?: TrainHubView;
 }
 
-const DEMO_COACHES: CoachHourlyProfile[] = [
-  {
-    coach_uid: 'demo-coach-1',
-    display_name: 'Camille R. (démo)',
-    bio: 'UEFA B · travail technique & mental. Créneaux semaine et week-end.',
-    specialties: ['Technique', 'Jeunes'],
-    age_categories: ['U13', 'U15', 'U17'],
-    positions_coached: [],
-    city: 'Paris',
-    hourly_rate_eur: 30,
-    club_name: 'ProDay Démo',
-    sessions_completed: 12,
-    available: true,
-  },
-  {
-    coach_uid: 'demo-coach-2',
-    display_name: 'Karim B. (démo)',
-    bio: 'Préparation physique & finition. Séances à l’heure, sans abo.',
-    specialties: ['Physique', 'Finition'],
-    age_categories: ['U17', 'U19', 'Seniors'],
-    positions_coached: [],
-    city: 'Lyon',
-    hourly_rate_eur: 35,
-    sessions_completed: 8,
-    available: true,
-  },
-];
-
 const HUB_ACTIONS: {
   id: 'home' | 'family' | 'coach' | 'book' | 'ai';
   title: string;
@@ -175,6 +147,8 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
   const [selected, setSelected] = useState<HomeExercise | null>(null);
   const [coaches, setCoaches] = useState<CoachHourlyProfile[]>([]);
   const [loadingCoaches, setLoadingCoaches] = useState(false);
+  /** Service injoignable (ou Firebase non configuré) : aucun faux coach n'est inventé. */
+  const [coachesUnavailable, setCoachesUnavailable] = useState(false);
   const [bookingCoach, setBookingCoach] = useState<CoachHourlyProfile | null>(null);
   const [dateStr, setDateStr] = useState('');
   const [duration, setDuration] = useState<CoachSessionDurationMin>(60);
@@ -273,7 +247,14 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
     setLoadingCoaches(true);
     void coachingSessionsService
       .listAvailableCoaches()
-      .then((rows: CoachHourlyProfile[]) => setCoaches(rows.length ? rows : DEMO_COACHES))
+      .then((rows: CoachHourlyProfile[]) => {
+        setCoaches(rows);
+        setCoachesUnavailable(false);
+      })
+      .catch(() => {
+        setCoaches([]);
+        setCoachesUnavailable(true);
+      })
       .finally(() => setLoadingCoaches(false));
   }, [view]);
 
@@ -344,17 +325,6 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
 
   const requestBooking = async () => {
     if (!profile || !bookingCoach) return;
-    if (bookingCoach.coach_uid.startsWith('demo-')) {
-      Alert.alert(
-        'Demande démo',
-        `Séance ${duration} min avec ${bookingCoach.display_name} à ~${Math.round(
-          bookingCoach.hourly_rate_eur * (duration / 60),
-        )} €.\nLes vrais coachs apparaissent dès qu’ils ouvrent leurs créneaux. En attendant, la bibliothèque d’exercices est disponible.`,
-      );
-      setBookingCoach(null);
-      setView('hub');
-      return;
-    }
     const parsed = parseFrenchDate(dateStr);
     if (!parsed) {
       Alert.alert('Date', 'Indique une date jj/mm/aaaa.');
@@ -774,11 +744,20 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
 
                 {loadingCoaches ? (
                   <ActivityIndicator color={teamColor} style={{ marginTop: 24 }} />
+                ) : coachesUnavailable && filteredCoaches.length === 0 ? (
+                  <View style={styles.emptyCoachesCard}>
+                    <Icon name="alert-circle" size={24} color="#71717A" />
+                    <ProDayText style={styles.emptyCoachesText}>
+                      Annuaire des coachs indisponible. Vérifie ta connexion et réessaie.
+                    </ProDayText>
+                  </View>
                 ) : filteredCoaches.length === 0 ? (
                   <View style={styles.emptyCoachesCard}>
                     <Icon name="search" size={24} color="#71717A" />
                     <ProDayText style={styles.emptyCoachesText}>
-                      Aucun coach disponible pour cette recherche.
+                      {query.trim()
+                        ? 'Aucun coach disponible pour cette recherche.'
+                        : 'Aucun coach n’a encore ouvert ses créneaux. Reviens bientôt.'}
                     </ProDayText>
                   </View>
                 ) : (
@@ -1272,9 +1251,9 @@ function createStyles(c: AppColors) {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: '#14141A',
+      backgroundColor: c.surface,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: c.borderStrong,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -1299,10 +1278,10 @@ function createStyles(c: AppColors) {
     infoBanner: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#14141A',
+      backgroundColor: c.surface,
       borderRadius: 16,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: c.borderStrong,
       padding: 14,
       marginBottom: 16,
       gap: 12,
@@ -1332,10 +1311,10 @@ function createStyles(c: AppColors) {
     coachSearchRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#14141A',
+      backgroundColor: c.surface,
       borderRadius: 14,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: c.borderStrong,
       paddingHorizontal: 14,
       height: 46,
       gap: 10,
@@ -1347,10 +1326,10 @@ function createStyles(c: AppColors) {
       color: '#FFFFFF',
     },
     emptyCoachesCard: {
-      backgroundColor: '#14141A',
+      backgroundColor: c.surface,
       borderRadius: 16,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: c.borderStrong,
       padding: 24,
       alignItems: 'center',
       justifyContent: 'center',
@@ -1363,10 +1342,10 @@ function createStyles(c: AppColors) {
       textAlign: 'center',
     },
     coachItemCard: {
-      backgroundColor: '#14141A',
+      backgroundColor: c.surface,
       borderRadius: 18,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: c.borderStrong,
       padding: 16,
       marginBottom: 14,
     },
@@ -1422,7 +1401,7 @@ function createStyles(c: AppColors) {
       marginTop: 12,
     },
     specialtyChip: {
-      backgroundColor: '#1E1E28',
+      backgroundColor: c.surfaceMuted,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 8,
@@ -1455,10 +1434,10 @@ function createStyles(c: AppColors) {
       color: '#000000',
     },
     bookingCard: {
-      backgroundColor: '#14141A',
+      backgroundColor: c.surface,
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: c.borderStrong,
       padding: 18,
     },
     bookingCoachHeader: {
@@ -1471,7 +1450,7 @@ function createStyles(c: AppColors) {
     },
     bookingDivider: {
       height: 1,
-      backgroundColor: '#22222E',
+      backgroundColor: c.borderStrong,
       marginVertical: 16,
     },
     inputLabel: {
@@ -1483,7 +1462,7 @@ function createStyles(c: AppColors) {
     darkInput: {
       backgroundColor: '#0D0D12',
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: c.borderStrong,
       borderRadius: 12,
       paddingHorizontal: 14,
       height: 46,
@@ -1499,7 +1478,7 @@ function createStyles(c: AppColors) {
       flex: 1,
       backgroundColor: '#0D0D12',
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: c.borderStrong,
       borderRadius: 12,
       paddingVertical: 12,
       alignItems: 'center',

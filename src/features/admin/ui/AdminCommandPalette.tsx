@@ -12,7 +12,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminRadius, adminShadow, adminSpace } from '../theme/adminDesignSystem';
 import {
   resolveAdminCommandItems,
@@ -21,9 +21,10 @@ import {
 import { globalAdminSearch } from '../../../utils/adminInsights';
 import { useAdminData } from '../data/AdminDataContext';
 import { Icon } from '../../../components/ui/Icon';
-import { AdminBrandMark, AdminText } from '../ui/adminUi';
+import { AdminBadge, AdminBrandMark, AdminText } from '../ui/adminUi';
 import { useReducedMotion } from '../../../hooks/useReducedMotion';
 import { AdminModalSheet, adminMotion } from '../motion';
+import { useAppearance } from '../../../context/AppearanceContext';
 
 type Props = {
   open: boolean;
@@ -32,9 +33,10 @@ type Props = {
 };
 
 export function AdminCommandPalette({ open, onClose, onNavigate }: Props) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const data = useAdminData();
   const reduced = useReducedMotion();
+  const { isEffectiveGlass, glassMode, setGlassMode, intensity, setIntensity } = useAppearance();
   const [q, setQ] = useState('');
   const commands = useMemo(() => resolveAdminCommandItems(), []);
   const sheetY = useSharedValue(open ? 0 : 24);
@@ -59,8 +61,56 @@ export function AdminCommandPalette({ open, onClose, onNavigate }: Props) {
     transform: [{ translateY: sheetY.value }],
   }));
 
+  const appearanceActions = useMemo(() => [
+    {
+      key: 'app-glass-auto',
+      label: 'Apparence : Auto (Système)',
+      sub: 'Suit la réduction de transparence iOS/OS',
+      action: () => void setGlassMode('system'),
+      badge: glassMode === 'system' ? 'ACTIF' : undefined,
+    },
+    {
+      key: 'app-glass-on',
+      label: 'Apparence : Activer Liquid Glass',
+      sub: 'Translucidité, reflets et flou de profondeur Apple',
+      action: () => void setGlassMode('glass'),
+      badge: glassMode === 'glass' ? 'ACTIF' : undefined,
+    },
+    {
+      key: 'app-glass-off',
+      label: 'Apparence : Forcer Mode Opaque Solide',
+      sub: 'Contraste maximal, zéro effet de transparence',
+      action: () => void setGlassMode('opaque'),
+      badge: glassMode === 'opaque' ? 'ACTIF' : undefined,
+    },
+    {
+      key: 'app-int-subtle',
+      label: 'Intensité Glass : Subtil (16px blur)',
+      sub: 'Translucidité légère',
+      action: () => void setIntensity('subtle'),
+      badge: intensity === 'subtle' ? 'ACTIF' : undefined,
+    },
+    {
+      key: 'app-int-regular',
+      label: 'Intensité Glass : Standard (28px blur)',
+      sub: 'Équilibre officiel Apple',
+      action: () => void setIntensity('regular'),
+      badge: intensity === 'regular' ? 'ACTIF' : undefined,
+    },
+    {
+      key: 'app-int-intense',
+      label: 'Intensité Glass : Intense (40px blur)',
+      sub: 'Profondeur maximale',
+      action: () => void setIntensity('intense'),
+      badge: intensity === 'intense' ? 'ACTIF' : undefined,
+    },
+  ], [glassMode, intensity, setGlassMode, setIntensity]);
+
   const results = useMemo(() => {
     const query = q.trim().toLowerCase();
+    const appHits = appearanceActions.filter((a) =>
+      !query ? true : a.label.toLowerCase().includes(query) || a.sub.toLowerCase().includes(query) || query.includes('glass') || query.includes('theme') || query.includes('apparence') || query.includes('flou'),
+    );
     const cmdHits = commands.filter((c) =>
       !query ? true : c.keywords.some((k) => k.includes(query)) || c.label.toLowerCase().includes(query),
     );
@@ -79,8 +129,8 @@ export function AdminCommandPalette({ open, onClose, onNavigate }: Props) {
         city: e.city ?? '',
       })),
     });
-    return { cmdHits: cmdHits.slice(0, 8), entityHits };
-  }, [q, commands, data]);
+    return { appHits: appHits.slice(0, 3), cmdHits: cmdHits.slice(0, 8), entityHits };
+  }, [q, commands, data, appearanceActions]);
 
   return (
     <AdminModalSheet
@@ -90,9 +140,13 @@ export function AdminCommandPalette({ open, onClose, onNavigate }: Props) {
       gestureClose
       contentStyle={styles.sheetPad}
     >
-      <Animated.View style={[styles.sheet, cardStyle]}>
+      <Animated.View style={[styles.sheet, cardStyle, (t.glassBackdrop as any)]}>
         <View style={styles.searchRow}>
           <AdminBrandMark compact />
+          <AdminBadge
+            label={isEffectiveGlass ? `LIQUID GLASS · ${intensity.toUpperCase()}` : 'MODE OPAQUE'}
+            tone={isEffectiveGlass ? 'accent' : 'info'}
+          />
         </View>
         <View style={styles.searchRow}>
           <Icon name="search" size={18} color={t.signal} />
@@ -100,20 +154,32 @@ export function AdminCommandPalette({ open, onClose, onNavigate }: Props) {
             autoFocus
             value={q}
             onChangeText={setQ}
-            placeholder="Clubs, devis, utilisateurs, domaines…"
+            placeholder="Clubs, devis, utilisateurs, apparence, glass…"
             placeholderTextColor={t.faint}
             style={[styles.input, { color: t.foreground }]}
           />
-          <Pressable onPress={onClose}>
+          <Pressable onPress={onClose} hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Fermer">
             <Icon name="close" size={18} color={t.muted} />
           </Pressable>
         </View>
         <FlatList
           data={[
+            ...results.appHits.map((a) => ({
+              key: a.key,
+              label: a.label,
+              sub: a.sub,
+              type: 'app' as const,
+              badge: a.badge,
+              onRun: a.action,
+            })),
             ...results.cmdHits.map((c) => ({
               key: `cmd-${c.id}`,
               label: c.label,
               sub: 'Navigation',
+              type: 'cmd' as const,
+              badge: undefined,
               section: c.section,
               focusId: undefined as string | undefined,
             })),
@@ -121,6 +187,8 @@ export function AdminCommandPalette({ open, onClose, onNavigate }: Props) {
               key: h.id,
               label: h.title,
               sub: h.subtitle,
+              type: 'entity' as const,
+              badge: undefined,
               section: h.targetSection,
               focusId: h.entityId,
             })),
@@ -131,17 +199,29 @@ export function AdminCommandPalette({ open, onClose, onNavigate }: Props) {
             <Pressable
               style={styles.row}
               onPress={() => {
-                onNavigate(item.section, item.focusId);
-                onClose();
-                setQ('');
+                if (item.type === 'app') {
+                  item.onRun?.();
+                } else {
+                  onNavigate(item.section!, item.focusId);
+                  onClose();
+                  setQ('');
+                }
               }}
             >
-              <View style={{ flex: 1 }}>
-                <AdminText variant="h3">{item.label}</AdminText>
+              <View style={{ flex: 1, gap: 2 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <AdminText variant="h3">{item.label}</AdminText>
+                  {item.badge ? <AdminBadge label={item.badge} tone="accent" /> : null}
+                </View>
                 <AdminText variant="caption" color={t.muted} numberOfLines={1}>
                   {item.sub}
                 </AdminText>
               </View>
+              {item.type === 'app' ? (
+                <Icon name="sparkles" size={16} color={t.signal} />
+              ) : (
+                <Icon name="chevron-forward" size={14} color={t.faint} />
+              )}
             </Pressable>
           )}
           ListEmptyComponent={
@@ -166,11 +246,15 @@ const styles = StyleSheet.create({
     backgroundColor: ADMIN_TOKENS.surfaceRaised,
     borderRadius: adminRadius.lg,
     overflow: 'hidden',
-    ...adminShadow.soft,
+    borderWidth: 1,
+    borderColor: ADMIN_TOKENS.borderStrong,
+    borderTopColor: ADMIN_TOKENS.specularTop,
+    ...adminShadow.card,
   },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 10,
     paddingHorizontal: adminSpace.lg,
     paddingVertical: 12,

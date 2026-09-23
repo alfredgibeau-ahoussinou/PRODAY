@@ -5,6 +5,7 @@ import { PressableSpring } from '../motion';
 import { ProDayText } from './ProDayText';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { colors } from '../../theme/designTokens';
 
 interface OfflineCacheBannerProps {
   visible: boolean;
@@ -62,8 +63,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#14141A',
-    borderColor: '#22222E',
+    backgroundColor: colors.surface,
+    borderColor: colors.borderStrong,
     borderWidth: 1,
     borderRadius: 12,
     marginHorizontal: 16,

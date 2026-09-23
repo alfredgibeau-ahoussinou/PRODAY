@@ -69,7 +69,9 @@ export const ReelFavoritesSheet: React.FC<ReelFavoritesSheetProps> = ({
                       {t('reels.favorites.resume').toUpperCase()}
                     </ProDayText>
                   </PressableSpring>
-                  <Pressable onPress={() => onRemove(entry.bookmarkKey)} hitSlop={8}>
+                  <Pressable onPress={() => onRemove(entry.bookmarkKey)} hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Fermer">
                     <Icon name="close" size={18} color={reelsTheme.color.textFaint} />
                   </Pressable>
                 </View>

@@ -3,12 +3,11 @@
  */
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring, AnimatedEntrance } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { clubForm, clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 import { ClubText } from './clubUi';
 import type { ClubFinanceLedgerRowModel } from './clubFinanceModel';
 import { formatClubFinanceEur } from './clubFinanceModel';
@@ -29,15 +28,8 @@ export function ClubFinanceSoldeHero({
 
   return (
     <AnimatedEntrance kind="fadeUp" index={0} delayStep={36}>
+      {/* Référence : carte plate et neutre — la couleur reste dans le libellé et le solde. */}
       <View style={styles.card}>
-        <LinearGradient
-          colors={[tokens.pitchSoft, tokens.surface]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <View style={[styles.rail, { backgroundColor: positive ? tokens.pitch : tokens.danger }]} />
         <ClubText variant="label" style={{ color: positive ? tokens.pitch : tokens.danger }}>
           Solde club
         </ClubText>
@@ -148,14 +140,12 @@ export function ClubFinanceCotisationPanel({
   unrecorded,
   onAddCotisation,
   onOpenPlayers,
-  onRelanceCotisations,
 }: {
   summary: ClubCotisationSummary;
   paid: CotisationCoverageRow[];
   unrecorded: CotisationCoverageRow[];
   onAddCotisation: () => void;
   onOpenPlayers?: () => void;
-  onRelanceCotisations?: () => void;
 }) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => cotisStyles(tokens), [tokens]);
@@ -223,14 +213,6 @@ export function ClubFinanceCotisationPanel({
             Enregistrer une cotisation
           </ClubText>
         </PressableSpring>
-        {unrecorded.length > 0 && onRelanceCotisations ? (
-          <PressableSpring onPress={onRelanceCotisations} scaleTo={0.97} haptic style={styles.relanceBtn}>
-            <Icon name="mail" size={13} color={tokens.warning} />
-            <ClubText variant="caption" style={{ color: tokens.warning, fontWeight: '700' }}>
-              Relancer les impayés ({unrecorded.length})
-            </ClubText>
-          </PressableSpring>
-        ) : null}
         {onOpenPlayers ? (
           <PressableSpring onPress={onOpenPlayers} scaleTo={0.97} haptic style={styles.ghost}>
             <ClubText variant="caption" style={{ color: tokens.foreground, fontWeight: '700' }}>
@@ -280,17 +262,6 @@ const cotisStyles = (tokens: ClubThemeTokens) =>
       paddingVertical: 8,
       borderRadius: clubRadius.pill,
     },
-    relanceBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      borderWidth: 1,
-      borderColor: tokens.warning,
-      backgroundColor: tokens.warningSoft,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: clubRadius.pill,
-    },
   });
 
 const heroStyles = (tokens: ClubThemeTokens) =>
@@ -299,21 +270,9 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       gap: clubSpace.sm,
       paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.lg,
-      borderRadius: clubRadius.xxl,
+      borderRadius: clubForm.groupRadius,
       backgroundColor: tokens.surface,
-      borderWidth: 1,
-      borderColor: tokens.borderStrong,
       overflow: 'hidden',
-      ...clubShadow.lift,
-    },
-    rail: {
-      position: 'absolute',
-      left: 0,
-      top: 16,
-      bottom: 16,
-      width: 4,
-      borderTopRightRadius: 2,
-      borderBottomRightRadius: 2,
     },
     solde: {
       fontSize: 36,

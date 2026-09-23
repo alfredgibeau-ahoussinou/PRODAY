@@ -7,6 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { prodayMotion, useReducedMotion } from '../../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { sanitizeHostChildren } from '../../motion/sanitizeHostChildren';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -55,7 +56,7 @@ export const PressableSpring: React.FC<PressableSpringProps> = ({
       }}
       {...rest}
     >
-      {children}
+      {sanitizeHostChildren(children)}
     </AnimatedPressable>
   );
 };

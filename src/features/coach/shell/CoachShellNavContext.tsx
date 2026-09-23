@@ -1,8 +1,16 @@
 import React, { createContext, useContext } from 'react';
 import type { CoachNavItemId } from '../navigation/coachNavConfig';
 
-type CoachShellNavValue = {
-  requestNav: (id: CoachNavItemId) => void;
+export type CoachNavOptions = {
+  replace?: boolean;
+  clearHistory?: boolean;
+};
+
+export type CoachShellNavValue = {
+  history: CoachNavItemId[];
+  canGoBack: boolean;
+  goBack: () => void;
+  requestNav: (id: CoachNavItemId, options?: CoachNavOptions) => void;
   openHelp?: () => void;
   signOut?: () => void;
 };
@@ -10,18 +18,26 @@ type CoachShellNavValue = {
 const CoachShellNavContext = createContext<CoachShellNavValue | null>(null);
 
 export function CoachShellNavProvider({
+  history = [],
+  canGoBack = false,
+  goBack = () => {},
   requestNav,
   openHelp,
   signOut,
   children,
 }: {
-  requestNav: (id: CoachNavItemId) => void;
+  history?: CoachNavItemId[];
+  canGoBack?: boolean;
+  goBack?: () => void;
+  requestNav: (id: CoachNavItemId, options?: CoachNavOptions) => void;
   openHelp?: () => void;
   signOut?: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <CoachShellNavContext.Provider value={{ requestNav, openHelp, signOut }}>
+    <CoachShellNavContext.Provider
+      value={{ history, canGoBack, goBack, requestNav, openHelp, signOut }}
+    >
       {children}
     </CoachShellNavContext.Provider>
   );

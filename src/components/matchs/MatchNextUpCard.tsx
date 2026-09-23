@@ -8,6 +8,7 @@ import { useMatchSkinTokens } from './matchCenterUi';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { RsvpStatus } from '../../models/TeamEvent';
 
+import { colors } from '../../theme/designTokens';
 interface MatchNextUpCardProps {
   item: SeasonCalendarItem;
   onPress: () => void;
@@ -17,7 +18,7 @@ interface MatchNextUpCardProps {
   rsvpBusy?: boolean;
 }
 
-function parseMatchTeams(title: string, defaultHome = 'FC ProDay'): { home: string; away: string } {
+function parseMatchTeams(title: string, defaultHome = 'Mon équipe'): { home: string; away: string } {
   const clean = title.trim();
   if (clean.toLowerCase().includes('entraînement') || clean.toLowerCase().includes('séance')) {
     return { home: clean, away: '' };
@@ -266,7 +267,7 @@ export const MatchNextUpCard: React.FC<MatchNextUpCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#14141A',
+    backgroundColor: colors.surface,
     borderWidth: 1.2,
     borderRadius: 20,
     padding: 16,
@@ -388,7 +389,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#0E0E14',
+    backgroundColor: colors.backgroundAlt,
     paddingVertical: 7,
     paddingHorizontal: 12,
     borderRadius: 10,
@@ -402,7 +403,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rsvpSection: {
-    backgroundColor: '#0E0E14',
+    backgroundColor: colors.backgroundAlt,
     padding: 10,
     borderRadius: 12,
     gap: 8,

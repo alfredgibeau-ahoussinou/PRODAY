@@ -54,7 +54,9 @@ export const ProfileGalleryEditor: React.FC<ProfileGalleryEditorProps> = ({
             <TouchableOpacity
               style={[styles.removeBtn, { backgroundColor: accent }]}
               onPress={() => onRemove(uri)}
-            >
+
+              accessibilityRole="button"
+              accessibilityLabel="Fermer">
               <Icon name="close" size={14} color={accentInverse} />
             </TouchableOpacity>
           </View>

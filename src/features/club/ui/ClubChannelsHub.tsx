@@ -13,6 +13,8 @@ import {
   View,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { clubAnnouncementsService } from '../../../services/clubAnnouncements.service';
+import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import type { IconName } from '../../../components/ui/iconNames';
@@ -20,6 +22,8 @@ import { ProDayText } from '../../../components/ui/ProDayText';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import { APPLE_TYPOGRAPHY } from '../../../theme/appleTypography';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
+import { ClubPill } from './clubUi';
+import { CLUB_TOKENS } from '../theme/clubTokens';
 
 export type ChannelCategory = 'official' | 'staff' | 'team';
 
@@ -31,95 +35,30 @@ export type ClubChannelItem = {
   description: string;
   readOnlyForMembers: boolean;
   unreadCount: number;
-  lastMessage: {
+  /** Dernier message réel du canal — absent tant que rien n'a été publié. */
+  lastMessage?: {
     author: string;
     text: string;
     time: string;
   };
 };
 
-export const DEMO_CHANNELS: ClubChannelItem[] = [
-  {
-    id: 'ch-bureau',
-    name: 'Flux Officiel Bureau & Comité',
-    category: 'official',
-    categoryLabel: 'Officiel Bureau',
-    description: 'Annonces officielles de la direction (Lecture seule pour les membres)',
-    readOnlyForMembers: true,
-    unreadCount: 1,
-    lastMessage: {
-      author: 'Président',
-      text: 'Arrêté municipal sur le terrain d’honneur ce mercredi. Les séances sont transférées sur le synthétique.',
-      time: '14:22',
-    },
-  },
-  {
-    id: 'ch-staff',
-    name: 'Coordination Staff & Éducateurs',
-    category: 'staff',
-    categoryLabel: 'Staff Technique',
-    description: 'Échanges techniques entre entraîneurs, RTJ et préparateurs physiques',
-    readOnlyForMembers: false,
-    unreadCount: 3,
-    lastMessage: {
-      author: 'Marc Lefevre (RTJ)',
-      text: 'Pensez à bien valider les feuilles de présence dès la fin de votre entraînement.',
-      time: '12:05',
-    },
-  },
-  {
-    id: 'ch-u17',
-    name: '#u17-regional-2',
-    category: 'team',
-    categoryLabel: 'Équipe U17 R2',
-    description: 'Groupe joueurs, éducateur et parents référents',
-    readOnlyForMembers: false,
-    unreadCount: 0,
-    lastMessage: {
-      author: 'Coach Karim',
-      text: 'Départ pour Versailles fixé à 11h45 précises dimanche au stade.',
-      time: 'Hier',
-    },
-  },
-  {
-    id: 'ch-seniors',
-    name: '#seniors-r1',
-    category: 'team',
-    categoryLabel: 'Équipe Seniors R1',
-    description: 'Groupe effectif Seniors A',
-    readOnlyForMembers: false,
-    unreadCount: 0,
-    lastMessage: {
-      author: 'Yanis Benali',
-      text: 'Bien reçu pour la séance vidéo de vendredi soir.',
-      time: 'Hier',
-    },
-  },
-  {
-    id: 'ch-u15',
-    name: '#u15-regional-2',
-    category: 'team',
-    categoryLabel: 'Équipe U15 R2',
-    description: 'Groupe formation U15',
-    readOnlyForMembers: false,
-    unreadCount: 2,
-    lastMessage: {
-      author: 'Alexandre Petit',
-      text: 'Match amical confirmé mercredi contre l’ACBB.',
-      time: '10:15',
-    },
-  },
-];
 
 type Props = {
   channels?: ClubChannelItem[];
+  clubId?: string;
+  onFlashSent?: () => void;
   onOpenChannel?: (channelId: string) => void;
 };
 
 export function ClubChannelsHub({
-  channels = DEMO_CHANNELS,
+  channels = [],
+  clubId,
+  onFlashSent,
   onOpenChannel,
 }: Props) {
+  const profile = useSessionProfile();
+  const [flashSending, setFlashSending] = useState(false);
   const { tokens } = useClubTheme();
   const [selectedCat, setSelectedCat] = useState<'all' | ChannelCategory>('all');
   const [flashModalOpen, setFlashModalOpen] = useState(false);
@@ -131,17 +70,42 @@ export function ClubChannelsHub({
     return channels.filter((c) => c.category === selectedCat);
   }, [channels, selectedCat]);
 
-  const handleSendFlash = () => {
+  const handleSendFlash = async () => {
     if (!flashMessage.trim()) {
       Alert.alert('Message requis', 'Saisissez le texte du Flash Info.');
       return;
     }
-    Alert.alert(
-      'Flash Info Diffusé',
-      'Votre notification prioritaire a été transmise instantanément à tous les licenciés et éducateurs du club.',
-    );
-    setFlashMessage('');
-    setFlashModalOpen(false);
+    if (!clubId || !profile) {
+      Alert.alert(
+        'Diffusion impossible',
+        'Le Flash Info nécessite un club rattaché et une session active. Rien n\u2019a été envoyé.',
+      );
+      return;
+    }
+    try {
+      setFlashSending(true);
+      await clubAnnouncementsService.create({
+        club_id: clubId,
+        author_uid: profile.uid,
+        author_name: profile.display_name || 'Direction',
+        title: 'Flash Info',
+        body: flashMessage.trim(),
+      });
+      Alert.alert(
+        'Flash Info publié',
+        'L\u2019annonce a été enregistrée et est visible dans le canal Annonces Officielles du club.',
+      );
+      setFlashMessage('');
+      setFlashModalOpen(false);
+      onFlashSent?.();
+    } catch {
+      Alert.alert(
+        'Échec de la diffusion',
+        'L\u2019annonce n\u2019a pas pu être enregistrée. Vérifiez votre connexion et réessayez — rien n\u2019a été publié.',
+      );
+    } finally {
+      setFlashSending(false);
+    }
   };
 
   return (
@@ -165,7 +129,7 @@ export function ClubChannelsHub({
           style={[styles.flashBtn, { backgroundColor: tokens.accent }]}
           scaleTo={0.97}
         >
-          <ProDayText style={styles.flashBtnText}>Diffuser</ProDayText>
+          <ProDayText style={styles.flashBtnText}>Ouvrir Flash Info</ProDayText>
         </PressableSpring>
       </View>
 
@@ -185,32 +149,29 @@ export function ClubChannelsHub({
         ).map((f) => {
           const active = selectedCat === f.id;
           return (
-            <PressableSpring
+            <ClubPill
               key={f.id}
+              label={f.label}
+              active={active}
               onPress={() => setSelectedCat(f.id)}
-              style={[
-                styles.filterPill,
-                active
-                  ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
-                  : { backgroundColor: tokens.surface, borderColor: tokens.border },
-              ]}
-              scaleTo={0.96}
-            >
-              <ProDayText
-                style={[
-                  styles.filterPillText,
-                  active ? { color: '#000000', fontWeight: '700' } : { color: tokens.muted },
-                ]}
-              >
-                {f.label}
-              </ProDayText>
-            </PressableSpring>
+            />
           );
         })}
       </ScrollView>
 
       {/* 3. Liste des Canaux Partitionnés */}
       <View style={styles.channelsList}>
+        {filteredChannels.length === 0 ? (
+          <View style={[styles.emptyStateCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+            <Icon name="chat" size={22} color={tokens.muted} />
+            <ProDayText style={[styles.emptyStateTitle, { color: tokens.foreground }]}>
+              Aucun canal actif
+            </ProDayText>
+            <ProDayText style={[styles.emptyStateBody, { color: tokens.muted }]}>
+              Les canaux de communication du club apparaissent ici dès leur création — aucune donnée de démonstration n’est affichée.
+            </ProDayText>
+          </View>
+        ) : null}
         {filteredChannels.map((channel) => (
           <PressableSpring
             key={channel.id}
@@ -274,19 +235,27 @@ export function ClubChannelsHub({
               ) : null}
             </View>
 
-            {/* Dernier Message */}
+            {/* Dernier Message — affiché seulement s'il existe réellement */}
             <View style={[styles.lastMsgBox, { backgroundColor: tokens.bg, borderColor: tokens.border }]}>
-              <View style={styles.lastMsgTop}>
-                <ProDayText style={[styles.lastMsgAuthor, { color: tokens.accent }]}>
-                  {channel.lastMessage.author}
+              {channel.lastMessage ? (
+                <>
+                  <View style={styles.lastMsgTop}>
+                    <ProDayText style={[styles.lastMsgAuthor, { color: tokens.accent }]}>
+                      {channel.lastMessage.author}
+                    </ProDayText>
+                    <ProDayText style={[styles.lastMsgTime, { color: tokens.muted }]}>
+                      {channel.lastMessage.time}
+                    </ProDayText>
+                  </View>
+                  <ProDayText style={[styles.lastMsgText, { color: tokens.foreground }]} numberOfLines={2}>
+                    {channel.lastMessage.text}
+                  </ProDayText>
+                </>
+              ) : (
+                <ProDayText style={[styles.lastMsgText, { color: tokens.muted }]}>
+                  Aucun message publié dans ce canal.
                 </ProDayText>
-                <ProDayText style={[styles.lastMsgTime, { color: tokens.muted }]}>
-                  {channel.lastMessage.time}
-                </ProDayText>
-              </View>
-              <ProDayText style={[styles.lastMsgText, { color: tokens.foreground }]} numberOfLines={2}>
-                {channel.lastMessage.text}
-              </ProDayText>
+              )}
             </View>
           </PressableSpring>
         ))}
@@ -301,7 +270,7 @@ export function ClubChannelsHub({
       >
         <View style={styles.modalOverlay}>
           <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-          <View style={[styles.modalBox, { backgroundColor: '#12151C', borderColor: tokens.border }]}>
+          <View style={[styles.modalBox, { backgroundColor: CLUB_TOKENS.surface, borderColor: tokens.border }]}>
             <View style={styles.modalHeader}>
               <ProDayText style={[styles.modalTitle, { color: tokens.foreground }]}>
                 Diffuser un Flash Info
@@ -313,7 +282,9 @@ export function ClubChannelsHub({
 
             <View style={styles.modalBody}>
               <ProDayText style={[styles.modalHint, { color: tokens.muted }]}>
-                Ce message sera envoyé en notification push instantanée à l’ensemble des membres et affiché en tête de l’accueil du club.
+                {clubId
+                  ? 'Ce message sera publié comme annonce officielle du club, visible dans le canal Annonces Officielles et sur l\u2019accueil du club.'
+                  : 'Rattachez un club pour publier un Flash Info réel — aucun envoi simulé n\u2019est effectué.'}
               </ProDayText>
 
               <TextInput
@@ -322,18 +293,19 @@ export function ClubChannelsHub({
                 placeholder="Ex: Arrêté municipal en vigueur ce soir. Les entraînements U15 et U17 sont déplacés au gymnase."
                 placeholderTextColor={tokens.muted}
                 multiline
-                style={[styles.flashInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
+                style={[styles.flashInput, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border, color: tokens.foreground }]}
               />
             </View>
 
             <View style={styles.modalFooter}>
               <PressableSpring
-                onPress={handleSendFlash}
-                style={[styles.sendFlashBtn, { backgroundColor: tokens.accent }]}
+                disabled={flashSending}
+                onPress={() => void handleSendFlash()}
+                style={[styles.sendFlashBtn, { backgroundColor: tokens.accent, opacity: flashSending ? 0.6 : 1 }]}
                 scaleTo={0.97}
               >
                 <ProDayText style={styles.sendFlashBtnText}>
-                  Envoyer l'Alerte Flash
+                  {flashSending ? 'Publication…' : 'Publier l\u2019annonce officielle'}
                 </ProDayText>
               </PressableSpring>
             </View>
@@ -350,7 +322,7 @@ export function ClubChannelsHub({
       >
         <View style={styles.modalOverlay}>
           <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-          <View style={[styles.chatBox, { backgroundColor: '#12151C', borderColor: tokens.border }]}>
+          <View style={[styles.chatBox, { backgroundColor: CLUB_TOKENS.surface, borderColor: tokens.border }]}>
             <View style={styles.chatHeader}>
               <View>
                 <ProDayText style={[styles.chatTitle, { color: tokens.foreground }]}>
@@ -366,17 +338,25 @@ export function ClubChannelsHub({
             </View>
 
             <ScrollView style={styles.chatMessages}>
-              <View style={[styles.chatMsgBubble, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
-                <ProDayText style={[styles.bubbleAuthor, { color: tokens.accent }]}>
-                  {activeChatChannel?.lastMessage.author}
-                </ProDayText>
-                <ProDayText style={[styles.bubbleText, { color: tokens.foreground }]}>
-                  {activeChatChannel?.lastMessage.text}
-                </ProDayText>
-                <ProDayText style={[styles.bubbleTime, { color: tokens.muted }]}>
-                  {activeChatChannel?.lastMessage.time}
-                </ProDayText>
-              </View>
+              {activeChatChannel?.lastMessage ? (
+                <View style={[styles.chatMsgBubble, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border }]}>
+                  <ProDayText style={[styles.bubbleAuthor, { color: tokens.accent }]}>
+                    {activeChatChannel.lastMessage.author}
+                  </ProDayText>
+                  <ProDayText style={[styles.bubbleText, { color: tokens.foreground }]}>
+                    {activeChatChannel.lastMessage.text}
+                  </ProDayText>
+                  <ProDayText style={[styles.bubbleTime, { color: tokens.muted }]}>
+                    {activeChatChannel.lastMessage.time}
+                  </ProDayText>
+                </View>
+              ) : (
+                <View style={[styles.chatMsgBubble, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border }]}>
+                  <ProDayText style={[styles.bubbleText, { color: tokens.muted }]}>
+                    Aucun message publié dans ce canal pour l'instant.
+                  </ProDayText>
+                </View>
+              )}
             </ScrollView>
 
             <View style={[styles.chatInputRow, { borderTopColor: tokens.border }]}>
@@ -388,7 +368,7 @@ export function ClubChannelsHub({
                 }
                 editable={!activeChatChannel?.readOnlyForMembers}
                 placeholderTextColor={tokens.muted}
-                style={[styles.chatInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
+                style={[styles.chatInput, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border, color: tokens.foreground }]}
               />
               <PressableSpring
                 disabled={activeChatChannel?.readOnlyForMembers}
@@ -452,14 +432,23 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingBottom: 4,
   },
-  filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+  emptyStateCard: {
+    alignItems: 'center',
+    gap: 8,
+    padding: 20,
+    borderRadius: 16,
     borderWidth: 1,
   },
-  filterPillText: {
-    ...APPLE_TYPOGRAPHY.footnote,
+  emptyStateTitle: {
+    ...APPLE_TYPOGRAPHY.subheadline,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  emptyStateBody: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    textAlign: 'center',
+    lineHeight: 17,
+    maxWidth: 420,
   },
   channelsList: {
     gap: 12,

@@ -14,6 +14,8 @@ import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import type { SignupVisualChrome } from './signupVisualSystem';
+import { LiquidGlassSurface } from '../../components/ui/LiquidGlassSurface';
+import { radius, spacing } from '../../theme/designTokens';
 
 interface SignupStepLayoutProps {
   stepIndex: number;
@@ -34,13 +36,15 @@ interface SignupStepLayoutProps {
 }
 
 /**
- * Chrome inscription — direction shells ProDay :
- * wash plein, header back + barre + close, typo éditoriale, zero clutter.
+ * Nouveau layout d'inscription ProDay :
+ * - Expérience épurée, une question/tâche claire par écran
+ * - Navigation Liquid Glass progressive avec repli standard opaque
+ * - Typographie Apple SF Pro haute lisibilité
+ * - Zéro cartes imbriquées superflues, zéro bruit visuel
  */
 export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   stepIndex,
   stepTotal,
-  stepName,
   title,
   subtitle,
   onBack,
@@ -55,7 +59,7 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   const progress = (active + 1) / total;
   const canNavigateBack = Boolean(onBack);
   const canClose = Boolean(onClose);
-  const scrollBottomPad = tabInset({ stickyFooter: Boolean(footer) });
+  const scrollBottomPad = tabInset({ stickyFooter: Boolean(footer) }) + 32;
   const footerBottomPad = tabInset();
   const styles = useMemo(() => createStyles(contentMaxWidth, visual), [contentMaxWidth, visual]);
 
@@ -66,31 +70,33 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
     >
       <LinearGradient
         colors={[visual.washTop, visual.washMid, visual.bg]}
-        locations={[0, 0.45, 1]}
+        locations={[0, 0.4, 1]}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
 
-      <View style={[styles.header, { paddingTop: headerTopPad }]}>
+      {/* Header Liquid Glass épuré */}
+      <View style={[styles.headerContainer, { paddingTop: headerTopPad + 4 }]}>
         <View style={styles.headerRow}>
           {canNavigateBack ? (
             <PressableSpring
               onPress={onBack}
-              style={styles.iconBtn}
+              style={styles.navBtn}
               hitSlop={16}
               scaleTo={0.92}
               haptic
               accessibilityRole="button"
-              accessibilityLabel="Retour"
+              accessibilityLabel="Étape précédente"
               testID="signup-back"
             >
               <Icon name="arrow-back" size={20} color={visual.text} />
             </PressableSpring>
           ) : (
-            <View style={styles.iconSpacer} />
+            <View style={styles.navSpacer} />
           )}
 
-          <View style={styles.progressWrap}>
+          {/* Indicateur de progression discret */}
+          <View style={styles.progressContainer}>
             <View style={styles.progressTrack}>
               <View
                 style={[
@@ -102,15 +108,15 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
                 ]}
               />
             </View>
-            <ProDayText variant="caption" style={styles.stepCount}>
-              {active + 1} / {total}
+            <ProDayText style={styles.progressLabel}>
+              Étape {active + 1} sur {total}
             </ProDayText>
           </View>
 
           {canClose ? (
             <PressableSpring
               onPress={onClose}
-              style={styles.iconBtn}
+              style={styles.navBtn}
               hitSlop={16}
               scaleTo={0.92}
               haptic
@@ -121,40 +127,38 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
               <Icon name="close" size={20} color={visual.text} />
             </PressableSpring>
           ) : (
-            <View style={styles.iconSpacer} />
+            <View style={styles.navSpacer} />
           )}
         </View>
       </View>
 
+      {/* Contenu principal épuré et aéré */}
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomPad }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <ProDayText variant="eyebrow" style={[styles.poleKicker, { color: visual.focus }]}>
-          {visual.poleLabel}
-          {stepName ? `  ·  ${stepName}` : ''}
-        </ProDayText>
+        <View style={styles.contentWrap}>
+          <View style={styles.titleSection}>
+            <ProDayText style={styles.title}>{title}</ProDayText>
+            {subtitle ? (
+              <ProDayText style={styles.subtitle}>{subtitle}</ProDayText>
+            ) : null}
+          </View>
 
-        <ProDayText variant="title" style={styles.title}>
-          {title}
-        </ProDayText>
-        {subtitle ? (
-          <ProDayText variant="body" style={styles.subtitle}>
-            {subtitle}
-          </ProDayText>
-        ) : null}
-
-        <View style={[styles.panel, { borderColor: visual.border, backgroundColor: visual.elevated }]}>
-          <View style={[styles.panelRail, { backgroundColor: visual.accent }]} />
-          <View style={styles.panelBody}>{children}</View>
+          <View style={styles.bodyWrap}>{children}</View>
         </View>
       </ScrollView>
 
+      {/* Footer d'action flottant Liquid Glass */}
       {footer ? (
-        <View style={[styles.footer, { paddingBottom: footerBottomPad, borderTopColor: visual.border }]}>
-          {footer}
-        </View>
+        <LiquidGlassSurface
+          variant="footer"
+          style={styles.footerSurface}
+          contentStyle={[styles.footerContent, { paddingBottom: footerBottomPad + 8 }]}
+        >
+          <View style={styles.footerInner}>{footer}</View>
+        </LiquidGlassSurface>
       ) : null}
     </KeyboardAvoidingView>
   );
@@ -166,99 +170,97 @@ function createStyles(contentMaxWidth: number, v: SignupVisualChrome) {
       flex: 1,
       backgroundColor: v.bg,
     },
-    header: {
-      paddingHorizontal: 16,
-      paddingBottom: 8,
-      zIndex: 2,
+    headerContainer: {
+      paddingHorizontal: 20,
+      paddingBottom: 12,
+      zIndex: 10,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
+      justifyContent: 'space-between',
+      gap: 16,
     },
-    iconBtn: {
-      width: 44,
-      height: 44,
+    navBtn: {
+      width: 42,
+      height: 42,
+      borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 14,
-      backgroundColor: 'rgba(255,255,255,0.06)',
+      backgroundColor: 'rgba(255, 255, 255, 0.08)',
       borderWidth: 1,
-      borderColor: v.border,
+      borderColor: 'rgba(255, 255, 255, 0.12)',
     },
-    iconSpacer: { width: 44, height: 44 },
-    progressWrap: {
+    navSpacer: {
+      width: 42,
+      height: 42,
+    },
+    progressContainer: {
       flex: 1,
+      alignItems: 'center',
       gap: 6,
-      justifyContent: 'center',
     },
     progressTrack: {
+      width: '100%',
+      maxWidth: 160,
       height: 4,
       borderRadius: 2,
-      backgroundColor: 'rgba(255,255,255,0.12)',
+      backgroundColor: 'rgba(255, 255, 255, 0.12)',
       overflow: 'hidden',
     },
     progressFill: {
       height: '100%',
       borderRadius: 2,
     },
-    stepCount: {
-      color: v.textFaint,
-      fontSize: 11,
+    progressLabel: {
+      color: v.textMuted,
+      fontSize: 12,
       fontWeight: '600',
-      letterSpacing: 0.4,
-      textAlign: 'center',
+      letterSpacing: 0.3,
     },
     scroll: {
       paddingHorizontal: 20,
-      paddingTop: 18,
-      maxWidth: contentMaxWidth + 36,
+      paddingTop: 12,
       width: '100%',
       alignSelf: 'center',
     },
-    poleKicker: {
-      fontSize: 11,
-      fontWeight: '700',
-      letterSpacing: 1.8,
-      textTransform: 'uppercase',
-      marginBottom: 12,
+    contentWrap: {
+      width: '100%',
+      maxWidth: Math.min(contentMaxWidth, 560),
+      alignSelf: 'center',
+    },
+    titleSection: {
+      marginBottom: 24,
     },
     title: {
       color: v.text,
-      fontSize: 32,
-      fontWeight: '800',
-      letterSpacing: -0.8,
-      marginBottom: 10,
-      lineHeight: 38,
+      fontSize: 28,
+      lineHeight: 34,
+      fontWeight: '700',
+      letterSpacing: -0.5,
+      marginBottom: 8,
     },
     subtitle: {
       color: v.textMuted,
       fontSize: 15,
       lineHeight: 22,
       fontWeight: '400',
-      marginBottom: 20,
     },
-    panel: {
-      borderRadius: 18,
-      borderWidth: 1,
-      overflow: 'hidden',
-      flexDirection: 'row',
-      minHeight: 120,
+    bodyWrap: {
+      gap: 16,
     },
-    panelRail: {
-      width: 3,
+    footerSurface: {
+      position: 'relative',
+      zIndex: 10,
     },
-    panelBody: {
-      flex: 1,
-      padding: 18,
-      gap: 14,
-    },
-    footer: {
+    footerContent: {
       paddingHorizontal: 20,
-      paddingTop: 14,
-      backgroundColor: 'rgba(0,0,0,0.72)',
-      borderTopWidth: StyleSheet.hairlineWidth,
-      zIndex: 2,
+      paddingTop: 12,
+    },
+    footerInner: {
+      width: '100%',
+      maxWidth: Math.min(contentMaxWidth, 560),
+      alignSelf: 'center',
     },
   });
 }

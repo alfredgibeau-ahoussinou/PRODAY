@@ -51,7 +51,8 @@ export function toFirestoreDoc(state: BrainPersistedState): BrainFirestoreDoc {
         unlocked: b.unlocked,
       })),
     },
-    last_action: state.lastAction,
+    // Firestore rejette `undefined` : la clé n'existe que si une action réelle a été jouée.
+    ...(state.lastAction ? { last_action: state.lastAction } : {}),
   };
 }
 

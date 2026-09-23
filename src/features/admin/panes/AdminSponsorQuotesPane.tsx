@@ -3,6 +3,8 @@ import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { useAdminData } from '../data/AdminDataContext';
 import {
   AdminAvatarMark,
+  AdminBadge,
+  AdminCard,
   AdminEmptyState,
   AdminEntityRow,
   AdminFilterChip,
@@ -11,7 +13,7 @@ import {
   AdminSearchField,
   AdminText,
 } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminSpace } from '../theme/adminDesignSystem';
 import { AdminModalSheet } from '../motion';
 import { useAuth } from '../../../context/AuthContext';
@@ -46,7 +48,7 @@ function formatShortDate(d: Date): string {
 export function AdminSponsorQuotesPane({ focusId }: { focusId?: string }) {
   const data = useAdminData();
   const { firebaseUser, profile } = useAuth();
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [selected, setSelected] = useState<SponsorQuoteRequest | null>(null);

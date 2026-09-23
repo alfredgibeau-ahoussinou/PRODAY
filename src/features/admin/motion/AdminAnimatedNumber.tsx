@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useReducedMotion } from '../../../hooks/useReducedMotion';
-import { AdminText } from '../ui/adminUi';
+import { AdminText } from '../ui/AdminText';
 import type { AdminTypeVariant } from '../theme/adminDesignSystem';
 import { adminMotion } from './adminMotion';
 

@@ -1,4 +1,9 @@
 import React, { useMemo, useState } from 'react';
+import { PRO_DATA_VIOLET, proSemantic } from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import { COACH_SITE } from '../../content/coachPageIdentity';
+
+const tokens = COACH_SITE;
 import {
   ScrollView,
   StyleSheet,
@@ -38,9 +43,9 @@ export {
   type TacticalDirectiveConfig,
 };
 
-const GRASS_A = '#0F2918';
-const GRASS_B = '#0A1E11';
-const MARK = 'rgba(255,255,255,0.48)';
+const GRASS_A = withAlpha(tokens.bg, 0.86);
+const GRASS_B = withAlpha(tokens.bg, 0.92);
+const MARK = withAlpha('FFFFFF', 0.48);
 const TOKEN = 36;
 const TOKEN_WRAP_W = 84;
 const TOKEN_LABEL = 16;
@@ -102,8 +107,8 @@ export function TacticalAnimationOverlay({
           cx={34}
           cy={20}
           r={9}
-          fill="rgba(245, 158, 11, 0.16)"
-          stroke="#F59E0B"
+          fill="withAlpha('F59E0B', 0.16)"
+          stroke={proSemantic.warning}
           strokeWidth={0.5}
           strokeDasharray="2,2"
         />
@@ -111,51 +116,51 @@ export function TacticalAnimationOverlay({
         <Path
           d="M 28 32 C 29 25, 30 18, 30 11"
           fill="none"
-          stroke="#FAFAFA"
+          stroke={tokens.foreground}
           strokeWidth={1.2}
           strokeDasharray="2,1.5"
         />
         {/* Tête de flèche */}
-        <Polygon points="31,11 26.5,13 29,15.5" fill="#FAFAFA" />
+        <Polygon points="31,11 26.5,13 29,15.5" fill={tokens.foreground} />
 
         {/* Course pressing attaquant axe droit */}
         <Path
           d="M 40 32 C 39 25, 38 18, 38 11"
           fill="none"
-          stroke="#FAFAFA"
+          stroke={tokens.foreground}
           strokeWidth={1.2}
           strokeDasharray="2,1.5"
         />
-        <Polygon points="37,11 39,15.5 41.5,13" fill="#FAFAFA" />
+        <Polygon points="37,11 39,15.5 41.5,13" fill={tokens.foreground} />
 
         {/* Blocage relance centrale */}
         <Path
           d="M 34 22 L 34 8"
           fill="none"
-          stroke="#FAFAFA"
+          stroke={tokens.foreground}
           strokeWidth={1.2}
         />
-        <Polygon points="34,6.5 31.5,10.5 36.5,10.5" fill="#FAFAFA" />
+        <Polygon points="34,6.5 31.5,10.5 36.5,10.5" fill={tokens.foreground} />
 
         {/* Pression milieu relayeur gauche */}
         <Path
           d="M 22 50 L 22 36"
           fill="none"
-          stroke="#FAFAFA"
+          stroke={tokens.foreground}
           strokeWidth={1.0}
           strokeDasharray="2,1"
         />
-        <Polygon points="22,35.5 20,39 24,39" fill="#FAFAFA" />
+        <Polygon points="22,35.5 20,39 24,39" fill={tokens.foreground} />
 
         {/* Pression milieu relayeur droit */}
         <Path
           d="M 46 50 L 46 36"
           fill="none"
-          stroke="#FAFAFA"
+          stroke={tokens.foreground}
           strokeWidth={1.0}
           strokeDasharray="2,1"
         />
-        <Polygon points="46,35.5 44,39 48,39" fill="#FAFAFA" />
+        <Polygon points="46,35.5 44,39 48,39" fill={tokens.foreground} />
       </G>
     );
   }
@@ -170,8 +175,8 @@ export function TacticalAnimationOverlay({
           width={52}
           height={28}
           rx={2.5}
-          fill="rgba(56, 189, 248, 0.16)"
-          stroke="#38BDF8"
+          fill="withAlpha('0A84FF', 0.16)"
+          stroke={proSemantic.info}
           strokeWidth={0.7}
           strokeDasharray="2.5,2"
         />
@@ -179,49 +184,49 @@ export function TacticalAnimationOverlay({
         <Path
           d="M 12 73 L 23 73"
           fill="none"
-          stroke="#38BDF8"
+          stroke={proSemantic.info}
           strokeWidth={1.1}
         />
-        <Polygon points="24.5,73 21,71 21,75" fill="#38BDF8" />
+        <Polygon points="24.5,73 21,71 21,75" fill={proSemantic.info} />
 
         {/* Latéral droit resserre vers l'axe */}
         <Path
           d="M 56 73 L 45 73"
           fill="none"
-          stroke="#38BDF8"
+          stroke={proSemantic.info}
           strokeWidth={1.1}
         />
-        <Polygon points="43.5,73 47,71 47,75" fill="#38BDF8" />
+        <Polygon points="43.5,73 47,71 47,75" fill={proSemantic.info} />
 
         {/* Milieu central resserre le bloc médian */}
         <Path
           d="M 34 42 L 34 54"
           fill="none"
-          stroke="#38BDF8"
+          stroke={proSemantic.info}
           strokeWidth={1.1}
           strokeDasharray="2,1"
         />
-        <Polygon points="34,55.5 31.5,52 36.5,52" fill="#38BDF8" />
+        <Polygon points="34,55.5 31.5,52 36.5,52" fill={proSemantic.info} />
 
         {/* Repli ailier gauche */}
         <Path
           d="M 14 30 L 17 48"
           fill="none"
-          stroke="#38BDF8"
+          stroke={proSemantic.info}
           strokeWidth={0.85}
           strokeDasharray="2,1"
         />
-        <Polygon points="17.5,49.5 15.5,46 19,46.5" fill="#38BDF8" />
+        <Polygon points="17.5,49.5 15.5,46 19,46.5" fill={proSemantic.info} />
 
         {/* Repli ailier droit */}
         <Path
           d="M 54 30 L 51 48"
           fill="none"
-          stroke="#38BDF8"
+          stroke={proSemantic.info}
           strokeWidth={0.85}
           strokeDasharray="2,1"
         />
-        <Polygon points="50.5,49.5 49,46.5 52.5,46" fill="#38BDF8" />
+        <Polygon points="50.5,49.5 49,46.5 52.5,46" fill={proSemantic.info} />
       </G>
     );
   }
@@ -233,58 +238,58 @@ export function TacticalAnimationOverlay({
         <Path
           d="M 9 68 C 5 52, 5 36, 12 18"
           fill="none"
-          stroke="#10B981"
+          stroke={proSemantic.success}
           strokeWidth={1.2}
         />
-        <Polygon points="12.5,16.5 9.5,20 14,21" fill="#10B981" />
+        <Polygon points="12.5,16.5 9.5,20 14,21" fill={proSemantic.success} />
 
         {/* Dédoublement latéral droit */}
         <Path
           d="M 59 68 C 63 52, 63 36, 56 18"
           fill="none"
-          stroke="#10B981"
+          stroke={proSemantic.success}
           strokeWidth={1.2}
         />
-        <Polygon points="55.5,16.5 54,21 58.5,20" fill="#10B981" />
+        <Polygon points="55.5,16.5 54,21 58.5,20" fill={proSemantic.success} />
 
         {/* Course vers l'intérieur ailier gauche */}
         <Path
           d="M 15 28 C 22 22, 26 18, 31 14"
           fill="none"
-          stroke="#10B981"
+          stroke={proSemantic.success}
           strokeWidth={1.0}
           strokeDasharray="2.5,1.5"
         />
-        <Polygon points="32.5,12.5 28.5,14.5 30.5,17" fill="#10B981" />
+        <Polygon points="32.5,12.5 28.5,14.5 30.5,17" fill={proSemantic.success} />
 
         {/* Course vers l'intérieur ailier droit */}
         <Path
           d="M 53 28 C 46 22, 42 18, 37 14"
           fill="none"
-          stroke="#10B981"
+          stroke={proSemantic.success}
           strokeWidth={1.0}
           strokeDasharray="2.5,1.5"
         />
-        <Polygon points="35.5,12.5 37.5,17 39.5,14.5" fill="#10B981" />
+        <Polygon points="35.5,12.5 37.5,17 39.5,14.5" fill={proSemantic.success} />
 
         {/* Projection milieu axial */}
         <Path
           d="M 34 50 L 34 26"
           fill="none"
-          stroke="#10B981"
+          stroke={proSemantic.success}
           strokeWidth={1.2}
           strokeDasharray="3,1.5"
         />
-        <Polygon points="34,24.5 31.5,28.5 36.5,28.5" fill="#10B981" />
+        <Polygon points="34,24.5 31.5,28.5 36.5,28.5" fill={proSemantic.success} />
 
         {/* Attaquant de pointe vers la surface */}
         <Path
           d="M 34 18 L 34 6"
           fill="none"
-          stroke="#10B981"
+          stroke={proSemantic.success}
           strokeWidth={1.3}
         />
-        <Polygon points="34,4.5 31.5,8.5 36.5,8.5" fill="#10B981" />
+        <Polygon points="34,4.5 31.5,8.5 36.5,8.5" fill={proSemantic.success} />
       </G>
     );
   }
@@ -439,7 +444,7 @@ function CoachEasyPitchToken({
           <Icon
             name="add"
             size={14}
-            color={emptyActive || selected ? '#FFFFFF' : 'rgba(255,255,255,0.92)'}
+            color={emptyActive || selected ? tokens.foreground : withAlpha('FFFFFF', 0.92)}
           />
         )}
       </View>
@@ -587,7 +592,7 @@ export function CoachSportEasyPitchSurface({
                 styles.directiveChip,
                 on && {
                   borderColor: TACTICAL_DIRECTIVES[d.id].color,
-                  backgroundColor: themeTokens.isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.12)',
+                  backgroundColor: themeTokens.isLight ? 'withAlpha(tokens.bg, 0.06)' : withAlpha('FFFFFF', 0.12),
                 },
               ]}
             >
@@ -766,10 +771,10 @@ function createStyles(tokens: CoachThemeTokens) {
     },
     pitchFrame: {
       alignItems: 'center',
-      backgroundColor: '#071209',
+      backgroundColor: withAlpha(tokens.bg, 0.94),
       borderRadius: radius.xxl,
       borderWidth: 1,
-      borderColor: 'rgba(16, 185, 129, 0.25)',
+      borderColor: withAlpha('10B981', 0.25),
       padding: spacing.sm,
       gap: spacing.xs,
       shadowColor: '#000',
@@ -814,17 +819,17 @@ function createStyles(tokens: CoachThemeTokens) {
       elevation: 4,
     },
     tokenFilled: {
-      backgroundColor: '#111815',
-      borderColor: '#8B5CF6',
+      backgroundColor: withAlpha(tokens.bg, 0.88),
+      borderColor: PRO_DATA_VIOLET,
     },
     tokenEmpty: {
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      borderColor: 'rgba(255,255,255,0.65)',
+      backgroundColor: 'withAlpha(tokens.bg, 0.5)',
+      borderColor: withAlpha('FFFFFF', 0.65),
       borderStyle: 'dashed',
     },
     tokenSelected: {
-      borderColor: '#10B981',
-      backgroundColor: '#10B981',
+      borderColor: proSemantic.success,
+      backgroundColor: proSemantic.success,
       borderStyle: 'solid',
       transform: [{ scale: 1.12 }],
     },
@@ -833,15 +838,15 @@ function createStyles(tokens: CoachThemeTokens) {
       fontWeight: '900',
       lineHeight: 16,
     },
-    tokenNumDark: { color: '#FFFFFF' },
-    tokenNumLight: { color: '#000000' },
+    tokenNumDark: { color: tokens.foreground },
+    tokenNumLight: { color: tokens.bg },
     tokenNamePill: {
-      backgroundColor: 'rgba(5, 14, 8, 0.92)',
+      backgroundColor: 'withAlpha(tokens.bg, 0.92)',
       paddingHorizontal: 5,
       paddingVertical: 1.5,
       borderRadius: 4,
       borderWidth: 0.5,
-      borderColor: 'rgba(255, 255, 255, 0.22)',
+      borderColor: withAlpha('FFFFFF', 0.22),
       marginTop: 2,
       maxWidth: 80,
       minWidth: 42,
@@ -856,7 +861,7 @@ function createStyles(tokens: CoachThemeTokens) {
     tokenNameText: {
       fontSize: 9.5,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: tokens.foreground,
       textAlign: 'center',
       letterSpacing: -0.2,
     },

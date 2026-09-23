@@ -125,7 +125,7 @@ describe('Player Master Suite — Espace Joueur Architecture', () => {
       expect(sig1).toMatch(/^PD-[A-F0-9]+-20260312$/);
     });
 
-    it('construit un passeport officiel complet prêt pour le recrutement', () => {
+    it('construit un passeport honnête à partir des données fournies (sans auto-certification)', () => {
       const passport = playerPassportService.buildPassport({
         playerId: 'p1',
         fullName: 'Kylian Mbappé',
@@ -134,12 +134,28 @@ describe('Player Master Suite — Espace Joueur Architecture', () => {
         goals: 18,
         assists: 9,
       });
-      expect(passport.coachVerified).toBe(true);
+      // Sans vérification serveur, le client ne se certifie JAMAIS lui-même
+      // (invariant DATA-01 : l'ancien coachVerified: true inconditionnel était faux).
+      expect(passport.coachVerified).toBe(false);
       expect(passport.goals).toBe(18);
       expect(passport.licenseNumber).toBe('FFF-750012');
+      // Licence fournie => signature calculée, mais jamais un sceau de vérification.
+      expect(passport.signatureHash).not.toBe('');
 
       const qrUrl = playerPassportService.getPassportQrUrl(passport);
-      expect(qrUrl).toContain('https://proday.app/scout/verify?d=');
+      expect(qrUrl).toContain('https://proday.app/player/p1');
+    });
+
+    it('ne certifie rien sans licence réelle (aucune donnée inventée)', () => {
+      const passport = playerPassportService.buildPassport({
+        playerId: 'p2',
+        fullName: 'Joueur Sans Licence',
+      });
+      expect(passport.licenseNumber).toBe('—');
+      expect(passport.coachVerified).toBe(false);
+      expect(passport.signatureHash).toBe('');
+      expect(passport.clubName).toBe('—');
+      expect(passport.coachName).toBe('—');
     });
   });
 

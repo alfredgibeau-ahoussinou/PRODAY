@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
-import type { LoadAlert, LoadAlertLevel } from '../../utils/playerLoadAlerts';
+import type { LoadAlert, LoadAlertKind, LoadAlertLevel } from '../../utils/playerLoadAlerts';
 import { spacing } from '../../theme/designTokens';
 import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { proSemantic } from '../../theme/professionalDesign';
 import { CoachSectionCard } from './coachPortalUi';
 
 /** Alertes charge & disponibilité — jamais un % de risque médical. */
@@ -13,13 +14,23 @@ export const CoachLoadAlertsPanel: React.FC<{ alerts: LoadAlert[] }> = ({ alerts
   const styles = useCoachThemedStyles(createStyles);
   const levelMeta = useMemo(
     (): Record<LoadAlertLevel, { label: string; color: string }> => ({
-      high: { label: 'Prioritaire', color: '#fb7185' },
-      caution: { label: 'À surveiller', color: 'rgba(255, 255, 255, 0.7)' },
+      high: { label: 'Prioritaire', color: proSemantic.danger },
+      caution: { label: 'À surveiller', color: proSemantic.warning },
       info: { label: 'Info', color: tokens.accent },
     }),
     [tokens.accent],
   );
-  const actionable = alerts.filter((a) => a.level !== 'info' || a.missingData.length === 0);
+  /**
+   * Libellé de niveau : une disponibilité déclarée se lit « Statut », pas
+   * « Info » — l'information est exploitable, seule sa gravité est nulle.
+   */
+  const kindLabel = (level: LoadAlertLevel, kind: LoadAlertKind): string =>
+    kind === 'availability' ? 'Statut' : levelMeta[level].label;
+  /**
+   * Seules les alertes d'absence de donnée sont écartées : les statuts de
+   * disponibilité déclarés restent visibles (ils étaient auparavant masqués).
+   */
+  const actionable = alerts.filter((a) => a.kind !== 'missing');
 
   return (
     <CoachSectionCard
@@ -35,7 +46,7 @@ export const CoachLoadAlertsPanel: React.FC<{ alerts: LoadAlert[] }> = ({ alerts
         actionable.slice(0, 8).map((a) => {
           const meta = levelMeta[a.level];
           return (
-            <View key={`${a.uid}_${a.level}`} style={styles.row}>
+            <View key={`${a.uid}_${a.level}_${a.kind}`} style={styles.row}>
               <View style={[styles.bar, { backgroundColor: meta.color }]} />
               <View style={styles.body}>
                 <View style={styles.top}>
@@ -46,7 +57,7 @@ export const CoachLoadAlertsPanel: React.FC<{ alerts: LoadAlert[] }> = ({ alerts
                     variant="caption"
                     style={[styles.level, { color: meta.color }]}
                   >
-                    {meta.label}
+                    {kindLabel(a.level, a.kind)}
                   </ProDayText>
                 </View>
                 <ProDayText variant="caption" style={styles.message}>

@@ -1,7 +1,13 @@
 import { usersService } from './users.service';
 import { clubsService } from './clubs.service';
+import { teamsService } from './teams.service';
+import { teamEventsService } from './teamEvents.service';
 import type { User } from '../models/User';
 import type { Club } from '../models/Club';
+import type { Team } from '../models/Team';
+import { EVENT_TYPE_LABELS, type TeamEvent } from '../models/TeamEvent';
+import { formatEventScheduleLabel } from '../utils/teamEventFormatting';
+import type { PlayerSearchScope } from '../utils/playerSearchScope';
 import type { MainTabId } from '../navigation/mainTabConfig';
 import type {
   MatchsDeepLink,
@@ -9,7 +15,13 @@ import type {
   DashboardDeepLink,
 } from '../utils/navigationDeepLink';
 
-export type SearchResultCategory = 'all' | 'pages' | 'players' | 'clubs';
+export type SearchResultCategory =
+  | 'all'
+  | 'pages'
+  | 'players'
+  | 'clubs'
+  | 'teams'
+  | 'events';
 
 export interface GlobalSearchPageTarget {
   id: string;
@@ -48,10 +60,32 @@ export interface GlobalSearchClubItem {
   club: Club;
 }
 
+export interface GlobalSearchTeamItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  category: 'team';
+  badge: string;
+  iconName: string;
+  team: Team;
+}
+
+export interface GlobalSearchEventItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  category: 'event';
+  badge: string;
+  iconName: string;
+  event: TeamEvent;
+}
+
 export type GlobalSearchResultItem =
   | GlobalSearchPageTarget
   | GlobalSearchPlayerItem
-  | GlobalSearchClubItem;
+  | GlobalSearchClubItem
+  | GlobalSearchTeamItem
+  | GlobalSearchEventItem;
 
 /** Nettoyage et normalisation des chaînes pour recherche insensible à la casse et aux accents */
 export function normalizeSearchQuery(text: string): string {
@@ -242,153 +276,29 @@ export const APP_PAGE_DESTINATIONS: GlobalSearchPageTarget[] = [
   },
 ];
 
-const createDemoPlayer = (data: Partial<User> & { uid: string; display_name: string }): User => ({
-  uid: data.uid,
-  email: data.email || `${data.uid}@example.com`,
-  role: 'player',
-  display_name: data.display_name,
-  avatar_url: data.avatar_url,
-  city: data.city || 'Paris',
-  is_verified: true,
-  verification_status: 'VERIFIED',
-  documents: [],
-  created_at: new Date('2024-01-15'),
-  updated_at: new Date(),
-  is_active: true,
-  profile: data.profile || {},
-});
-
-/** Joueurs de démonstration pour garantir un résultat immédiat même hors connexion */
-const DEMO_PLAYERS: User[] = [
-  createDemoPlayer({
-    uid: 'demo-player-1',
-    email: 'lucas.bernard@example.com',
-    display_name: 'Lucas Bernard',
-    city: 'Paris',
-    profile: {
-      position: 'Attaquant (BU)',
-      club_id: 'FC ProDay',
-      age: 17,
-      rating: 88,
-      level: 'National U19',
-    },
-  }),
-  createDemoPlayer({
-    uid: 'demo-player-2',
-    email: 'rayan.cherki@example.com',
-    display_name: 'Rayan Aït-Ahmed',
-    city: 'Lyon',
-    profile: {
-      position: 'Milieu offensif (MOC)',
-      club_id: 'Académie Rhône',
-      age: 18,
-      rating: 86,
-      level: 'Régional 1',
-    },
-  }),
-  createDemoPlayer({
-    uid: 'demo-player-3',
-    email: 'theo.hernandez@example.com',
-    display_name: 'Théo Mendy',
-    city: 'Marseille',
-    profile: {
-      position: 'Latéral gauche (DG)',
-      club_id: 'Olympique Provence',
-      age: 19,
-      rating: 84,
-      level: 'National 3',
-    },
-  }),
-  createDemoPlayer({
-    uid: 'demo-player-4',
-    email: 'kounde.jules@example.com',
-    display_name: 'Jules Traoré',
-    city: 'Bordeaux',
-    profile: {
-      position: 'Défenseur central (DC)',
-      club_id: 'Girondins Élite',
-      age: 20,
-      rating: 85,
-      level: 'Régional 2',
-    },
-  }),
-  createDemoPlayer({
-    uid: 'demo-player-5',
-    email: 'mike.maignan@example.com',
-    display_name: 'Mike Diallo',
-    city: 'Lille',
-    profile: {
-      position: 'Gardien de but (GB)',
-      club_id: 'Lille Métropole FC',
-      age: 17,
-      rating: 87,
-      level: 'National U19',
-    },
-  }),
-];
-
-/** Clubs de démonstration */
-const DEMO_CLUBS: Club[] = [
-  {
-    id: 'club-psg-academy',
-    name: 'PSG Academy',
-    city: 'Paris',
-    department: '75',
-    location: { latitude: 48.8414, longitude: 2.2530 },
-    verified: true,
-    categories: ['U17 National', 'U19 National', 'Séniors'],
-    sponsor_ids: [],
-    owner_uid: 'demo-owner-1',
-    created_at: new Date(),
-  },
-  {
-    id: 'club-fc-proday',
-    name: 'FC ProDay',
-    city: 'Paris',
-    department: '92',
-    location: { latitude: 48.8924, longitude: 2.2361 },
-    verified: true,
-    categories: ['Régional 1', 'Régional 3', 'U18 R1'],
-    sponsor_ids: [],
-    owner_uid: 'demo-owner-2',
-    created_at: new Date(),
-  },
-  {
-    id: 'club-red-star',
-    name: 'Red Star FC',
-    city: 'Saint-Ouen',
-    department: '93',
-    location: { latitude: 48.9108, longitude: 2.3386 },
-    verified: true,
-    categories: ['National', 'U19 Nationaux'],
-    sponsor_ids: [],
-    owner_uid: 'demo-owner-3',
-    created_at: new Date(),
-  },
-  {
-    id: 'club-creteil',
-    name: 'US Créteil-Lusitanos',
-    city: 'Créteil',
-    department: '94',
-    location: { latitude: 48.7770, longitude: 2.4530 },
-    verified: true,
-    categories: ['National 2', 'U17 Nationaux'],
-    sponsor_ids: [],
-    owner_uid: 'demo-owner-4',
-    created_at: new Date(),
-  },
-];
-
 export interface SearchOptions {
   query: string;
   category?: SearchResultCategory;
   limit?: number;
+  /**
+   * Périmètre club autorisé. Sans identifiant de club, la recherche d'équipes et
+   * d'événements est **désactivée** (aucun résultat) : on ne cherche jamais dans
+   * un club que l'utilisateur ne peut pas consulter.
+   */
+  clubId?: string | null;
+  /**
+   * Périmètre autorisé pour la recherche de **personnes** (CA-12). Obligatoire
+   * pour obtenir des résultats : sans périmètre, aucune personne ne remonte.
+   */
+  scope?: PlayerSearchScope | null;
 }
 
 export interface SearchResultsPayload {
   pages: GlobalSearchPageTarget[];
   players: GlobalSearchPlayerItem[];
   clubs: GlobalSearchClubItem[];
+  teams: GlobalSearchTeamItem[];
+  events: GlobalSearchEventItem[];
   totalCount: number;
 }
 
@@ -414,27 +324,40 @@ export const globalSearchService = {
   },
 
   /**
-   * Recherche de joueurs (via Firestore usersService avec fallback local riche)
+   * Recherche de personnes — profils réels de Firestore, **filtrés par le
+   * périmètre autorisé** du lecteur (CA-12).
+   *
+   * - `global` : administration plateforme et rôles de découverte (agent, recruteur).
+   * - `club`   : requête bornée au club du lecteur — aucune lecture inter-clubs.
+   * - `none`   : aucun résultat, jamais un repli sur l'annuaire global.
+   *
+   * Aucun profil de démonstration n'est injecté : service injoignable ou aucun
+   * résultat ⇒ liste vide honnête.
    */
-  async searchPlayers(query: string, limitCount = 10): Promise<GlobalSearchPlayerItem[]> {
+  async searchPlayers(
+    query: string,
+    scope: PlayerSearchScope,
+    limitCount = 10,
+  ): Promise<GlobalSearchPlayerItem[]> {
     const q = normalizeSearchQuery(query);
     let users: User[] = [];
 
+    if (scope.mode === 'none') {
+      return [];
+    }
+
     try {
-      users = await usersService.listPlayers(query.trim());
+      users =
+        scope.mode === 'global'
+          ? await usersService.listPlayers(query.trim())
+          : scope.clubId
+            ? await usersService.listPlayersInClub(scope.clubId, query.trim())
+            : [];
     } catch {
       users = [];
     }
 
-    // Si aucune connexion ou 0 résultat, fusionner avec les profils démo pour réactivité maximale
-    const allCandidates = [...users];
-    for (const demo of DEMO_PLAYERS) {
-      if (!allCandidates.some((c) => c.uid === demo.uid)) {
-        allCandidates.push(demo);
-      }
-    }
-
-    const filtered = allCandidates.filter((u) => {
+    const filtered = users.filter((u) => {
       if (!q) return true;
       const nameNorm = normalizeSearchQuery(u.display_name);
       const posNorm = normalizeSearchQuery(u.profile?.position ?? '');
@@ -470,7 +393,9 @@ export const globalSearchService = {
   },
 
   /**
-   * Recherche de clubs (via clubsService avec fallback local riche)
+   * Recherche de clubs — exclusivement les clubs réels de Firestore
+   * (clubsService.list). Aucun club de démonstration injecté :
+   * service injoignable ou aucun résultat => liste vide honnête.
    */
   async searchClubs(query: string, limitCount = 10): Promise<GlobalSearchClubItem[]> {
     const q = normalizeSearchQuery(query);
@@ -482,14 +407,7 @@ export const globalSearchService = {
       clubs = [];
     }
 
-    const allClubs = [...clubs];
-    for (const demo of DEMO_CLUBS) {
-      if (!allClubs.some((c) => c.id === demo.id)) {
-        allClubs.push(demo);
-      }
-    }
-
-    const filtered = allClubs.filter((c) => {
+    const filtered = clubs.filter((c) => {
       if (!q) return true;
       const nameNorm = normalizeSearchQuery(c.name);
       const cityNorm = normalizeSearchQuery(c.city);
@@ -522,33 +440,135 @@ export const globalSearchService = {
   },
 
   /**
+   * Recherche des équipes d'un club autorisé — Firestore uniquement
+   * (`teamsService.listByClubId`). Aucun club fourni ou service injoignable
+   * ⇒ liste vide honnête, jamais un effectif inventé.
+   */
+  async searchTeams(
+    query: string,
+    clubId?: string | null,
+    limitCount = 10,
+  ): Promise<GlobalSearchTeamItem[]> {
+    if (!clubId) return [];
+    const q = normalizeSearchQuery(query);
+    let teams: Team[] = [];
+
+    try {
+      teams = await teamsService.listByClubId(clubId);
+    } catch {
+      teams = [];
+    }
+
+    return teams
+      .filter((team) => {
+        if (!q) return true;
+        const nameNorm = normalizeSearchQuery(team.name);
+        const catNorm = normalizeSearchQuery(team.category ?? '');
+        const divNorm = normalizeSearchQuery(team.fff_division_label ?? '');
+        return nameNorm.includes(q) || catNorm.includes(q) || divNorm.includes(q);
+      })
+      .slice(0, limitCount)
+      .map((team) => ({
+        id: `team-${team.id}`,
+        title: team.name,
+        subtitle:
+          [team.category, team.fff_division_label].filter(Boolean).join(' · ') || 'Équipe',
+        category: 'team' as const,
+        badge: 'Équipe',
+        iconName: 'people-outline',
+        team,
+      }));
+  },
+
+  /**
+   * Recherche des événements d'un club autorisé — Firestore uniquement
+   * (`teamEventsService.listForClub`). Les libellés d'horaire viennent du
+   * formateur partagé (`teamEventFormatting`) pour rester identiques au pôle Coach.
+   */
+  async searchEvents(
+    query: string,
+    clubId?: string | null,
+    limitCount = 10,
+  ): Promise<GlobalSearchEventItem[]> {
+    if (!clubId) return [];
+    const q = normalizeSearchQuery(query);
+    let events: TeamEvent[] = [];
+
+    try {
+      events = await teamEventsService.listForClub(clubId, 120);
+    } catch {
+      events = [];
+    }
+
+    return events
+      .filter((event) => {
+        if (!q) return true;
+        const titleNorm = normalizeSearchQuery(event.title ?? '');
+        const typeNorm = normalizeSearchQuery(EVENT_TYPE_LABELS[event.event_type] ?? '');
+        const cityNorm = normalizeSearchQuery(event.city ?? '');
+        const placeNorm = normalizeSearchQuery(event.location_label ?? event.location ?? '');
+        return (
+          titleNorm.includes(q) ||
+          typeNorm.includes(q) ||
+          cityNorm.includes(q) ||
+          placeNorm.includes(q)
+        );
+      })
+      .slice(0, limitCount)
+      .map((event) => ({
+        id: `event-${event.id}`,
+        title: formatEventScheduleLabel(event),
+        subtitle: `${EVENT_TYPE_LABELS[event.event_type] ?? 'Événement'} · ${
+          event.location_label ?? event.location ?? event.city
+        }`,
+        category: 'event' as const,
+        badge: EVENT_TYPE_LABELS[event.event_type] ?? 'Événement',
+        iconName: 'calendar-outline',
+        event,
+      }));
+  },
+
+  /**
    * Exécution d'une recherche universelle complète
    */
   async searchAll(options: SearchOptions): Promise<SearchResultsPayload> {
-    const { query, category = 'all', limit = 15 } = options;
+    const { query, category = 'all', limit = 15, clubId = null, scope = null } = options;
 
     let pages: GlobalSearchPageTarget[] = [];
     let players: GlobalSearchPlayerItem[] = [];
     let clubs: GlobalSearchClubItem[] = [];
+    let teams: GlobalSearchTeamItem[] = [];
+    let events: GlobalSearchEventItem[] = [];
 
     if (category === 'all' || category === 'pages') {
       pages = this.searchPages(query, limit);
     }
 
-    if (category === 'all' || category === 'players') {
-      players = await this.searchPlayers(query, limit);
+    if ((category === 'all' || category === 'players') && scope) {
+      players = await this.searchPlayers(query, scope, limit);
     }
 
     if (category === 'all' || category === 'clubs') {
       clubs = await this.searchClubs(query, limit);
     }
 
-    const totalCount = pages.length + players.length + clubs.length;
+    if (category === 'all' || category === 'teams') {
+      teams = await this.searchTeams(query, clubId, limit);
+    }
+
+    if (category === 'all' || category === 'events') {
+      events = await this.searchEvents(query, clubId, limit);
+    }
+
+    const totalCount =
+      pages.length + players.length + clubs.length + teams.length + events.length;
 
     return {
       pages,
       players,
       clubs,
+      teams,
+      events,
       totalCount,
     };
   },

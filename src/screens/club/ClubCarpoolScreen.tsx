@@ -1,7 +1,7 @@
 /**
- * Pôle Club — Covoiturage & Logistique Déplacements
- * Gestion des véhicules, places disponibles, itinéraire GPS stade & conducteurs.
- * Design System Apple Obsidian Glass · Zéro émoji unicode.
+ * Pôle Club — Covoiturage & Logistique Déplacements.
+ * Wrapper écran : en-tête Club + plateau covoiturage complet (trajets,
+ * demandes, réservations, annulations, liens événements).
  */
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -24,9 +24,9 @@ export function ClubCarpoolScreen() {
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
         <ClubBrandHeader
           title="Covoiturage & Logistique"
-          subtitle="Déplacements matchs extérieurs · Véhicules · Itinéraires GPS"
+          subtitle="Déplacements matchs extérieurs · Trajets · Réservations"
         />
-        <ClubCarpoolBoard />
+        <ClubCarpoolBoard clubId={ws.clubId ?? undefined} />
       </ClubChapterScroll>
     </View>
   );

@@ -65,9 +65,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: ELITE_RADIUS.sm,
+    // §5.1 — squircle 40×40, radius 12, fond surface, bordure border.
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: ELITE_COLORS.bgSurfaceElevated,
     borderWidth: 1,
     borderColor: ELITE_COLORS.border,

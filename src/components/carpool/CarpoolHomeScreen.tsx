@@ -433,8 +433,8 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
         style={[
           styles.uberSearchBlock,
           {
-            backgroundColor: '#14141A',
-            borderColor: '#22222E',
+            backgroundColor: palette.surface,
+            borderColor: palette.lane,
           },
         ]}
       >
@@ -752,8 +752,8 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
         style={[
           styles.uberSearchBlock,
           {
-            backgroundColor: '#14141A',
-            borderColor: '#22222E',
+            backgroundColor: palette.surface,
+            borderColor: palette.lane,
           },
         ]}
       >

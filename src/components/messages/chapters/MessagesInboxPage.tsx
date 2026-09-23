@@ -11,7 +11,7 @@ import { MessageThreadRow } from '../MessageThreadRow';
 import { SkeletonList, InteractiveListItem, PressableSpring } from '../../motion';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { useTranslation } from '../../../context/LocaleContext';
-import { spacing, radius } from '../../../theme/designTokens';
+import { colors as designColors, spacing, radius } from '../../../theme/designTokens';
 import { MESSAGES_CHAPTER_PAD } from './messagesChapterLayout';
 import { useCoachTokens } from '../../../features/coach/shell/CoachThemeContext';
 import { useJoueurTheme } from '../../../hooks/useJoueurTheme';
@@ -41,6 +41,8 @@ export interface MessagesInboxPageProps {
   onRefresh: () => void;
   onResetFilters: () => void;
   onOpenMercato: () => void;
+  /** Ouvre la création de groupe. Absent ⇒ aucun bouton n'est affiché. */
+  onCreateGroup?: () => void;
   kineLabelFor: (thread: MessageThread) => string | undefined;
   isWoman: boolean;
   variant?: 'default' | 'coach' | 'joueur';
@@ -65,6 +67,7 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
   onRefresh,
   onResetFilters,
   onOpenMercato,
+  onCreateGroup,
   kineLabelFor,
   isWoman,
   variant,
@@ -152,6 +155,7 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
         unreadCount={unreadCount}
         loading={loading}
         variant={variant}
+        onCreateGroup={onCreateGroup}
       />
 
       {/* Rail Contacts Actifs Style Instagram */}
@@ -291,7 +295,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 48,
     paddingHorizontal: 24,
-    backgroundColor: '#141418',
+    backgroundColor: designColors.surface,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -387,7 +391,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#30D158',
     borderWidth: 1.5,
-    borderColor: '#0E0E14',
+    borderColor: designColors.backgroundAlt,
   },
   storyName: {
     fontSize: 11,

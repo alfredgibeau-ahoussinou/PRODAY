@@ -1,16 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { teamEventsService } from '../../services/teamEvents.service';
+import { isCoachMatchEvent } from '../../models/TeamEvent';
+import {
+  formatCoachRating,
+  formatEvaluationSourceLabel,
+} from '../../utils/coachEvaluationRatings';
+import { formatCalendarDate } from '../../utils/seasonCalendar';
 import {
   playerPassportService,
   type PlayerPassportData,
@@ -18,7 +23,25 @@ import {
 import { PlayerCertifiedPassportModal } from '../../components/player/PlayerCertifiedPassportModal';
 import { PlayerPageGuideModal, type GuideSection } from '../../components/player/PlayerPageGuideModal';
 import { PlayerPageGuideBanner } from '../../components/player/PlayerPageGuideBanner';
+import {
+  playerColors,
+  playerType,
+  playerForm,
+  playerCard,
+  playerHeroCard,
+  PLAYER_SURFACE_TOKENS,
+} from '../../theme/playerDesignSystem';
+import { CLUB_TOKENS } from '../../features/club/theme/clubTokens';
 
+/**
+ * Ma Carte — Performance & CV (refonte Player §5).
+ *
+ * Sections lisibles : KPI de saison · passeport certifié · notations du staff ·
+ * données physiques. Toutes les valeurs affichées sont **réelles et autorisées**
+ * (profil + feuilles de match saisies par le staff) ; une donnée absente reste
+ * « — » et une section vide le dit honnêtement (DATA-01). Forme « Fitness
+ * Park » : cartes groupées plates, typographie Apple system, 0 couleur littérale.
+ */
 export const PlayerStatsScreen: React.FC = () => {
   const profile = useSessionProfile();
   const [showPassport, setShowPassport] = useState(false);
@@ -27,56 +50,116 @@ export const PlayerStatsScreen: React.FC = () => {
   const guideSections: GuideSection[] = [
     {
       icon: 'star',
-      iconColor: '#FFD700',
-      title: 'Calcul des Notes du Staff (/10)',
-      description: 'Après chaque match, le coach et ses adjoints évaluent ton impact selon des critères rigoureux (implication tactique, justesse technique, volume). La note moyenne globale (7.9) alimente ton passeport officiel.',
-      badge: 'OFFICIEL FFF',
+      iconColor: CLUB_TOKENS.secondary,
+      title: 'Calcul des notes du staff (/10)',
+      description: 'Après chaque match, le coach et ses adjoints évaluent ton impact selon des critères précis (implication tactique, justesse technique, volume). La note moyenne alimente ton passeport officiel.',
+      badge: 'OFFICIEL',
     },
     {
       icon: 'shield-checkmark',
-      iconColor: '#30D158',
-      title: 'Passeport Numérique Certifié',
+      iconColor: playerColors.accent,
+      title: 'Passeport numérique certifié',
       description: 'Ton passeport regroupe ton numéro de licence officiel, ton club d\'affiliation, tes minutes disputées et la signature de ton entraîneur pour attester de la véracité de ton CV.',
       badge: 'SCELLÉ',
     },
     {
       icon: 'qr-code',
-      iconColor: '#0A84FF',
-      title: 'Partage QR Code aux Recruteurs',
-      description: 'Présente ou partage ton QR Code sécurisé lors des détections, stages ou essais. Les recruteurs scannent le code pour consulter instantanément ta fiche de joueur certifiée.',
+      iconColor: playerColors.accentAlt,
+      title: 'Partage QR Code aux recruteurs',
+      description: 'Présente ou partage ton QR Code sécurisé lors des détections, stages ou essais. Les recruteurs scannent le code pour consulter ta fiche de joueur certifiée.',
       badge: 'SCOUTING',
     },
     {
       icon: 'speedometer',
-      iconColor: '#A855F7',
-      title: 'Données Physiques & GPS',
-      description: 'Suis tes performances athlétiques clés : vitesse de pointe (32.8 km/h), distance moyenne parcourue (10.4 km) et pourcentage de réussite technique.',
+      iconColor: playerColors.accent,
+      title: 'Données physiques & GPS',
+      description: 'Suis tes performances athlétiques clés dès que les mesures de tes séances seront connectées — aucun indicateur n\'est inventé.',
     },
   ];
 
+  /** Passeport dérivé du profil réel — aucun numéro de licence, club ou coach
+   * inventé. Les champs non fournis restent « — ». */
   const passportData: PlayerPassportData = playerPassportService.buildPassport({
     playerId: profile?.uid || 'player-demo',
-    fullName: profile?.display_name || 'Kylian Perez',
-    licenseNumber: 'FFF-75928103',
-    clubName: 'FC ProDay',
-    clubAffiliation: 'FFF-582910',
-    category: 'Seniors R2',
-    position: profile?.profile?.position || 'Attaquant (BU)',
-    ovr: 87,
-    matchesPlayed: 18,
-    goals: 14,
-    assists: 8,
-    averageRating: 7.9,
-    coachName: 'Didier Deschamps',
+    fullName: profile?.display_name || 'Joueur',
+    licenseNumber: '—',
+    clubName: profile?.profile?.club_id || '—',
+    clubAffiliation: '—',
+    category: '—',
+    position: profile?.profile?.position || '—',
+    ovr: 0,
+    matchesPlayed: 0,
+    goals: 0,
+    assists: 0,
+    averageRating: 0,
+    coachName: '—',
   });
 
-  const lastMatches = [
-    { opponent: 'AS Meudon', score: '3-1', date: 'J16', rating: 8.5, goals: 2, assists: 0 },
-    { opponent: 'ES Colombes', score: '2-2', date: 'J15', rating: 7.8, goals: 1, assists: 1 },
-    { opponent: 'FC Rueil', score: '4-0', date: 'J14', rating: 8.2, goals: 2, assists: 2 },
-    { opponent: 'US Suresnes', score: '1-0', date: 'J13', rating: 7.4, goals: 0, assists: 1 },
-    { opponent: 'Racing CFF', score: '2-1', date: 'J12', rating: 8.0, goals: 1, assists: 0 },
-  ];
+  /** Derniers matchs réels : scores et notes saisis par le staff uniquement (visibles si publiés). */
+  const [matchHistory, setMatchHistory] = useState<{
+    id: string;
+    opponent: string;
+    score: string;
+    date: string;
+    rating: number | null | undefined;
+    goals: number;
+    assists: number;
+    minutes?: number;
+    source?: string;
+    explanation?: string;
+  }[]>([]);
+
+  useEffect(() => {
+    if (!profile?.uid) return;
+    void teamEventsService
+      .listForUser(profile.uid, profile.profile?.club_id)
+      .then((rows) => {
+        const matches = rows.filter((e) => isCoachMatchEvent(e));
+        const history: typeof matchHistory = [];
+        matches.forEach((m) => {
+          const stat = m.player_match_stats?.[profile.uid];
+          // RÈGLE DE VISIBILITÉ : Ne montrer QUE les évaluations publiées, masquer les brouillons staff !
+          if (!stat || stat.status === 'draft') return;
+          const opp = m.live_state?.opponent_name || m.title || 'Adversaire';
+          const score = `${m.live_state?.home_score ?? 0} - ${m.live_state?.away_score ?? 0}`;
+          history.push({
+            id: m.id,
+            opponent: opp,
+            score,
+            date: formatCalendarDate(m.starts_at),
+            rating: stat.rating,
+            goals: stat.goals ?? 0,
+            assists: stat.assists ?? 0,
+            minutes: stat.minutes_played,
+            source: stat.source,
+            explanation: stat.rating_explanation,
+          });
+        });
+        setMatchHistory(history);
+      })
+      .catch(() => {});
+  }, [profile?.uid, profile?.profile?.club_id]);
+
+  const verifiedGoals = useMemo(
+    () => (matchHistory.length > 0 ? matchHistory.reduce((acc, m) => acc + m.goals, 0) : passportData.goals),
+    [matchHistory, passportData.goals],
+  );
+  const verifiedAssists = useMemo(
+    () => (matchHistory.length > 0 ? matchHistory.reduce((acc, m) => acc + m.assists, 0) : passportData.assists),
+    [matchHistory, passportData.assists],
+  );
+  const verifiedAvgRating = useMemo(() => {
+    const rated = matchHistory.filter((m) => m.rating !== undefined && m.rating !== null);
+    if (rated.length === 0) return passportData.averageRating > 0 ? passportData.averageRating : null;
+    return rated.reduce((acc, m) => acc + (m.rating ?? 0), 0) / rated.length;
+  }, [matchHistory, passportData.averageRating]);
+  const verifiedMinutes = useMemo(
+    () => matchHistory.reduce((acc, m) => acc + (m.minutes ?? 0), 0),
+    [matchHistory],
+  );
+
+  /** Période affichée — saison en cours, libellé véridique. */
+  const seasonLabel = 'Saison 2026/2027';
 
   return (
     <ScrollView
@@ -84,11 +167,11 @@ export const PlayerStatsScreen: React.FC = () => {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Title & Passport CTA */}
+      {/* En-tête + passeport */}
       <View style={styles.topHeader}>
         <View>
-          <Text style={styles.screenSubtitle}>Saison 2025/2026</Text>
-          <Text style={styles.screenTitle}>Performance & CV</Text>
+          <Text style={styles.screenSubtitle}>{seasonLabel}</Text>
+          <Text style={styles.screenTitle} numberOfLines={1}>Performance & CV</Text>
         </View>
 
         <View style={styles.topHeaderRight}>
@@ -99,9 +182,11 @@ export const PlayerStatsScreen: React.FC = () => {
               setShowGuideModal(true);
             }}
             activeOpacity={0.8}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             accessibilityLabel="Guide de la page"
+            accessibilityRole="button"
           >
-            <Ionicons name="help-circle-outline" size={16} color="#30D158" />
+            <Ionicons name="help-circle-outline" size={16} color={playerColors.accent} />
             <Text style={styles.guideBtnText}>Guide</Text>
           </TouchableOpacity>
 
@@ -112,14 +197,15 @@ export const PlayerStatsScreen: React.FC = () => {
               setShowPassport(true);
             }}
             activeOpacity={0.8}
+            accessibilityRole="button"
           >
-            <MaterialCommunityIcons name="shield-check" size={16} color="#30D158" />
-            <Text style={styles.passportBadgeText}>Passeport FFF</Text>
+            <MaterialCommunityIcons name="shield-check" size={16} color={playerColors.accent} />
+            <Text style={styles.passportBadgeText}>Passeport</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Dismissible Onboarding Guide Banner */}
+      {/* Guide d'onboarding masquable */}
       <PlayerPageGuideBanner
         pageKey="stats"
         title="Guide Performance & Passeport CV"
@@ -127,98 +213,122 @@ export const PlayerStatsScreen: React.FC = () => {
         onOpenGuide={() => setShowGuideModal(true)}
       />
 
-      {/* Primary KPI 4-Card Hero Matrix */}
+      {/* KPI de saison — valeurs réelles, « — » quand la donnée manque */}
       <View style={styles.kpiGrid}>
-        <View style={styles.kpiCard}>
-          <View style={[styles.kpiIconBox, { backgroundColor: 'rgba(48, 209, 88, 0.12)' }]}>
-            <Ionicons name="football" size={16} color="#30D158" />
+        <View style={[styles.kpiCard, playerCard(PLAYER_SURFACE_TOKENS)]}>
+          <View style={styles.kpiIconBox}>
+            <Ionicons name="football" size={16} color={playerColors.accent} />
           </View>
-          <Text style={styles.kpiVal}>{passportData.goals}</Text>
-          <Text style={styles.kpiLbl}>BUTS MARQUÉS</Text>
-          <Text style={styles.kpiDelta}>+3 sur les 3 derniers</Text>
+          <Text style={styles.kpiVal}>{verifiedGoals > 0 ? verifiedGoals : '—'}</Text>
+          <Text style={styles.kpiLbl}>BUTS</Text>
         </View>
 
-        <View style={styles.kpiCard}>
-          <View style={[styles.kpiIconBox, { backgroundColor: 'rgba(10, 132, 255, 0.12)' }]}>
-            <Ionicons name="git-pull-request" size={16} color="#0A84FF" />
+        <View style={[styles.kpiCard, playerCard(PLAYER_SURFACE_TOKENS)]}>
+          <View style={styles.kpiIconBox}>
+            <Ionicons name="git-pull-request" size={16} color={playerColors.accentAlt} />
           </View>
-          <Text style={styles.kpiVal}>{passportData.assists}</Text>
-          <Text style={styles.kpiLbl}>PASSES DÉCISIVES</Text>
-          <Text style={styles.kpiDelta}>Top 3 de la poule</Text>
+          <Text style={styles.kpiVal}>{verifiedAssists > 0 ? verifiedAssists : '—'}</Text>
+          <Text style={styles.kpiLbl}>PASSES DÉC.</Text>
         </View>
 
-        <View style={styles.kpiCard}>
-          <View style={[styles.kpiIconBox, { backgroundColor: 'rgba(255, 215, 0, 0.12)' }]}>
-            <Ionicons name="star" size={16} color="#FFD700" />
+        <View style={[styles.kpiCard, playerCard(PLAYER_SURFACE_TOKENS)]}>
+          <View style={styles.kpiIconBox}>
+            <Ionicons name="star" size={16} color={CLUB_TOKENS.secondary} />
           </View>
-          <Text style={[styles.kpiVal, { color: '#FFD700' }]}>{passportData.averageRating}</Text>
+          <Text style={styles.kpiVal}>
+            {verifiedAvgRating !== null ? formatCoachRating(verifiedAvgRating) : '—'}
+          </Text>
           <Text style={styles.kpiLbl}>NOTE STAFF /10</Text>
-          <Text style={styles.kpiDelta}>Attribuée par le coach</Text>
         </View>
 
-        <View style={styles.kpiCard}>
-          <View style={[styles.kpiIconBox, { backgroundColor: 'rgba(168, 85, 247, 0.12)' }]}>
-            <Ionicons name="time" size={16} color="#A855F7" />
+        <View style={[styles.kpiCard, playerCard(PLAYER_SURFACE_TOKENS)]}>
+          <View style={styles.kpiIconBox}>
+            <Ionicons name="time" size={16} color={playerColors.accent} />
           </View>
-          <Text style={styles.kpiVal}>1 540'</Text>
+          <Text style={styles.kpiVal}>{verifiedMinutes > 0 ? `${verifiedMinutes}'` : '—'}</Text>
           <Text style={styles.kpiLbl}>TEMPS DE JEU</Text>
-          <Text style={styles.kpiDelta}>18 titularisations</Text>
         </View>
       </View>
 
-      {/* Certified Club Passport Banner (Hero CTA) */}
+      {/* Passeport certifié — hero CTA */}
       <TouchableOpacity
-        style={styles.passportHeroCard}
+        style={[styles.passportHeroCard, playerHeroCard(PLAYER_SURFACE_TOKENS)]}
         onPress={() => {
           prodayHaptics.impactMedium();
           setShowPassport(true);
         }}
         activeOpacity={0.88}
-      >
-        <LinearGradient
-          colors={['#161E2E', '#0F172A']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.passportHeroGradient}
-        >
+        accessibilityRole="button"
+        accessibilityLabel="Scanner un QR code">
+        <View style={styles.passportHeroInner}>
           <View style={styles.passportHeroLeft}>
             <View style={styles.passportHeroIcon}>
-              <MaterialCommunityIcons name="qrcode-scan" size={24} color="#30D158" />
+              <MaterialCommunityIcons name="qrcode-scan" size={24} color={playerColors.accent} />
             </View>
             <View style={styles.passportHeroText}>
-              <Text style={styles.passportHeroTitle}>Passeport Athlétique Certifié</Text>
+              <Text style={styles.passportHeroTitle} numberOfLines={1}>
+                Passeport Athlétique Certifié
+              </Text>
               <Text style={styles.passportHeroSub}>
                 Générer mon QR Code sécurisé pour les recruteurs
               </Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-        </LinearGradient>
+          <Ionicons name="chevron-forward" size={18} color={playerColors.textMuted} />
+        </View>
       </TouchableOpacity>
 
-      {/* Rolling Match History with Coach Ratings */}
-      <View style={styles.matchHistorySection}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeaderTitle}>Dernières Notations du Staff</Text>
-          <Text style={styles.sectionHeaderSub}>Feuilles de match officielles</Text>
-        </View>
+      {/* Notations du staff — feuilles de match officielles */}
+      <View style={styles.sectionBlock}>
+        <Text style={styles.sectionHeaderTitle}>Dernières notations du staff</Text>
+        <Text style={styles.sectionHeaderSub}>Feuilles de match officielles</Text>
 
-        <View style={styles.matchList}>
-          {lastMatches.map((m, idx) => (
-            <View key={idx} style={styles.matchRow}>
+        <View style={[styles.matchList, playerCard(PLAYER_SURFACE_TOKENS)]}>
+          {matchHistory.length === 0 ? (
+            <Text style={styles.honestNote}>
+              Aucune feuille de match saisie pour l'instant. Tes notations du staff
+              apparaîtront ici dès leur enregistrement.
+            </Text>
+          ) : matchHistory.map((m, idx) => (
+            <View key={m.id || idx} style={styles.matchRow}>
               <View style={styles.matchDateBadge}>
                 <Text style={styles.matchDateText}>{m.date}</Text>
               </View>
 
               <View style={styles.matchInfoCol}>
-                <Text style={styles.matchOpponentText}>{m.opponent}</Text>
-                <Text style={styles.matchScoreText}>
-                  Victoire {m.score} · {m.goals}B · {m.assists}P
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.matchOpponentText} numberOfLines={1}>{m.opponent}</Text>
+                  {m.source ? (
+                    <View style={{
+                      paddingHorizontal: 5,
+                      paddingVertical: 1,
+                      borderRadius: 4,
+                      backgroundColor: playerColors.accentSoft,
+                    }}>
+                      <Text style={{
+                        fontSize: 9,
+                        fontWeight: '700',
+                        color: m.source === 'coach_reviewed' ? playerColors.accent : playerColors.accentAlt,
+                      }}>
+                        {formatEvaluationSourceLabel(m.source as any)}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={styles.matchScoreText} numberOfLines={1}>
+                  {m.score} · {m.goals}B · {m.assists}P{m.minutes != null ? ` · ${m.minutes}'` : ''}
                 </Text>
+                {m.explanation ? (
+                  <Text style={{ fontSize: 11, color: playerColors.textMuted, fontStyle: 'italic', marginTop: 2 }} numberOfLines={2}>
+                    « {m.explanation} »
+                  </Text>
+                ) : null}
               </View>
 
               <View style={styles.ratingBadgeBox}>
-                <Text style={styles.ratingBadgeVal}>{m.rating}</Text>
+                <Text style={styles.ratingBadgeVal}>
+                  {m.rating !== undefined && m.rating !== null ? (m.rating === 0 ? '0.0' : m.rating.toFixed(1)) : '—'}
+                </Text>
                 <Text style={styles.ratingBadgeMax}>/10</Text>
               </View>
             </View>
@@ -226,49 +336,35 @@ export const PlayerStatsScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Athletic Physical Benchmark Gauges */}
-      <View style={styles.athleticSection}>
-        <Text style={styles.sectionHeaderTitle}>Données Physiques & GPS</Text>
+      {/* Données physiques & GPS — honnêteté */}
+      <View style={styles.sectionBlock}>
+        <Text style={styles.sectionHeaderTitle}>Données physiques & GPS</Text>
         <Text style={styles.sectionHeaderSub}>Mesures d'entraînement et de match</Text>
 
-        <View style={styles.benchGrid}>
-          <View style={styles.benchItem}>
-            <Text style={styles.benchVal}>32.8 km/h</Text>
-            <Text style={styles.benchKey}>VITESSE DE POINTE</Text>
-          </View>
-          <View style={styles.benchItem}>
-            <Text style={styles.benchVal}>10.4 km</Text>
-            <Text style={styles.benchKey}>DISTANCE MOYENNE</Text>
-          </View>
-          <View style={styles.benchItem}>
-            <Text style={styles.benchVal}>84 %</Text>
-            <Text style={styles.benchKey}>PASSES RÉUSSIES</Text>
-          </View>
-          <View style={styles.benchItem}>
-            <Text style={styles.benchVal}>68 %</Text>
-            <Text style={styles.benchKey}>TIRS CADRÉS</Text>
-          </View>
-        </View>
+        <Text style={styles.honestNote}>
+          Les mesures physiques et GPS réelles seront connectées aux données de tes
+          séances — aucun indicateur n'est inventé sur cet écran.
+        </Text>
       </View>
 
-      {/* Certified Passport Modal */}
+      {/* Passeport certifié */}
       <PlayerCertifiedPassportModal
         visible={showPassport}
         passport={passportData}
         onClose={() => setShowPassport(false)}
       />
 
-      {/* Interactive Page Guide Modal */}
+      {/* Guide interactif */}
       <PlayerPageGuideModal
         visible={showGuideModal}
         onClose={() => setShowGuideModal(false)}
         pageTitle="Performance & CV Numérique"
         pageSubtitle="Suivi athlétique officiel et dossier de recrutement"
         badgeLabel="GUIDE PERFORMANCE & CV"
-        badgeColor="#30D158"
-        introText="Cet écran regroupe tes statistiques individuelles officielles, les notations attribuées par le staff et ton passeport certifié avec QR Code infalsifiable pour les recruteurs."
+        badgeColor={playerColors.accent}
+        introText="Cet écran regroupe tes statistiques individuelles officielles, les notations attribuées par le staff et ton passeport certifié avec QR Code pour les recruteurs."
         sections={guideSections}
-        proTip="Un dossier complet avec au moins 10 notes du staff et un QR Code actif multiplie par 3 tes chances d'être contacté par un club de niveau supérieur !"
+        proTip="Un dossier complet avec plusieurs notations du staff et un QR Code actif augmente tes chances d'être repéré lors des détections."
         ctaLabel="J'ai compris !"
       />
     </ScrollView>
@@ -278,81 +374,78 @@ export const PlayerStatsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0B0E',
+    backgroundColor: playerColors.bg,
   },
   content: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: playerForm.space.lg,
+    paddingBottom: playerForm.space.xxl,
   },
+
+  /* En-tête */
   topHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: playerForm.space.lg,
+    gap: playerForm.space.sm,
   },
   topHeaderRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: playerForm.space.sm,
   },
   guideIconBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    minHeight: playerForm.chipHeight - 12,
+    backgroundColor: playerColors.accentSoft,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: playerColors.border,
     paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 12,
+    borderRadius: playerForm.chipRadius,
   },
   guideBtnText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
+    ...playerType.micro,
     fontWeight: '800',
-    color: '#30D158',
+    color: playerColors.accent,
   },
   screenSubtitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 12,
-    color: '#94A3B8',
+    ...playerType.caption,
+    color: playerColors.textMuted,
   },
   screenTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#FFFFFF',
+    ...playerType.title,
+    color: playerColors.text,
   },
   passportBadgeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    minHeight: playerForm.chipHeight - 12,
+    backgroundColor: playerColors.accentSoft,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: playerColors.border,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
+    borderRadius: playerForm.chipRadius,
   },
   passportBadgeText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
+    ...playerType.micro,
     fontWeight: '800',
-    color: '#30D158',
+    color: playerColors.accent,
   },
+
+  /* KPI 2 colonnes */
   kpiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 16,
+    gap: playerForm.kpiGap,
+    marginBottom: playerForm.space.lg,
   },
   kpiCard: {
     width: '48%',
-    backgroundColor: '#141418',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 12,
+    minHeight: playerForm.kpiMinHeight,
+    padding: playerForm.cardPaddingH,
   },
   kpiIconBox: {
     width: 32,
@@ -360,93 +453,78 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: playerForm.space.sm,
+    backgroundColor: playerColors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: playerColors.border,
   },
   kpiVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#FFFFFF',
+    ...playerType.stat,
+    color: playerColors.text,
   },
   kpiLbl: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 9,
+    ...playerType.micro,
     fontWeight: '800',
-    color: '#64748B',
+    color: playerColors.textDim,
     marginTop: 2,
     letterSpacing: 0.5,
   },
-  kpiDelta: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 10,
-    color: '#30D158',
-    marginTop: 4,
-  },
+
+  /* Hero passeport */
   passportHeroCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.25)',
+    marginBottom: playerForm.space.xl,
   },
-  passportHeroGradient: {
+  passportHeroInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: playerForm.cardPaddingH,
+    minHeight: playerForm.rowMinHeight,
   },
   passportHeroLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
     flex: 1,
+    minWidth: 0,
   },
   passportHeroIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    backgroundColor: playerColors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   passportHeroText: {
     flex: 1,
+    minWidth: 0,
   },
   passportHeroTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    ...playerType.headline,
+    color: playerColors.text,
   },
   passportHeroSub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
-    color: '#94A3B8',
+    ...playerType.caption,
+    color: playerColors.textMuted,
     marginTop: 2,
   },
-  matchHistorySection: {
-    marginBottom: 18,
-  },
-  sectionHeaderRow: {
-    marginBottom: 10,
+
+  /* Sections */
+  sectionBlock: {
+    marginBottom: playerForm.space.xl,
   },
   sectionHeaderTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    ...playerType.section,
+    color: playerColors.text,
   },
   sectionHeaderSub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
-    color: '#64748B',
+    ...playerType.caption,
+    color: playerColors.textDim,
     marginTop: 1,
+    marginBottom: playerForm.space.md,
   },
   matchList: {
-    backgroundColor: '#141418',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
     overflow: 'hidden',
   },
   matchRow: {
@@ -454,85 +532,63 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    minHeight: playerForm.rowMinHeight - 14,
+    borderBottomWidth: playerForm.separatorThickness,
+    borderBottomColor: playerColors.border,
   },
   matchDateBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: playerColors.surfaceRaised,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    marginRight: 12,
+    marginRight: playerForm.space.md,
+    borderWidth: 1,
+    borderColor: playerColors.border,
   },
   matchDateText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 10,
+    ...playerType.micro,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: playerColors.textMuted,
   },
   matchInfoCol: {
     flex: 1,
+    minWidth: 0,
   },
   matchOpponentText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    ...playerType.headline,
+    color: playerColors.text,
   },
   matchScoreText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
-    color: '#64748B',
+    ...playerType.caption,
+    color: playerColors.textDim,
     marginTop: 2,
   },
   ratingBadgeBox: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    backgroundColor: playerColors.surfaceRaised,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: playerColors.border,
   },
   ratingBadgeVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 14,
+    ...playerType.callout,
     fontWeight: '900',
-    color: '#FFD700',
+    color: CLUB_TOKENS.secondary,
   },
   ratingBadgeMax: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 9,
-    color: '#64748B',
+    ...playerType.micro,
+    color: playerColors.textDim,
     marginLeft: 2,
   },
-  athleticSection: {
-    marginBottom: 20,
-  },
-  benchGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 10,
-  },
-  benchItem: {
-    width: '48%',
-    backgroundColor: '#141418',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    padding: 12,
-  },
-  benchVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#38BDF8',
-  },
-  benchKey: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#64748B',
-    marginTop: 2,
+  honestNote: {
+    ...playerType.caption,
+    color: playerColors.textMuted,
+    lineHeight: 18,
+    fontStyle: 'italic',
+    marginTop: playerForm.space.sm,
+    padding: playerForm.cardPaddingH,
   },
 });

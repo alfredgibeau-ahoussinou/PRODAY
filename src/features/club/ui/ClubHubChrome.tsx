@@ -8,7 +8,7 @@ import { PressableSpring, AnimatedEntrance } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { clubForm, clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 import { ClubStatusPill, ClubText } from './clubUi';
 import type { ClubHubAlert, ClubHubSettingsTile } from './clubHubModel';
 
@@ -68,14 +68,7 @@ export function ClubHubIdentityHero({
 
   return (
     <View style={styles.wrap}>
-      {/* Background radial glow */}
-      <LinearGradient
-        colors={['rgba(255, 255, 255, 0.04)', 'rgba(0, 0, 0, 0)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
+      {/* Référence : aucun halo décoratif — le titre se pose sur le canvas nu. */}
 
       {/* Top Status & Verification Row */}
       <View style={styles.topRow}>
@@ -218,15 +211,6 @@ export function ClubHubPackHero({
   return (
     <AnimatedEntrance kind="fadeUp" index={0} delayStep={36}>
       <View style={styles.card}>
-        <LinearGradient
-          colors={['rgba(24, 28, 42, 0.95)', 'rgba(14, 16, 24, 0.98)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <View style={[styles.rail, { backgroundColor: tokens.accent }]} />
-        
         <View style={styles.contentWrap}>
           <View style={styles.headerRow}>
             <View style={[styles.iconBadge, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}>
@@ -307,7 +291,6 @@ export function ClubHubAlertCard({
   return (
     <AnimatedEntrance kind="fadeUp" index={index + 1} delayStep={28}>
       <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.card}>
-        <View style={[styles.rail, { backgroundColor: accent }]} />
         <View style={[styles.icon, { backgroundColor: soft }]}>
           <Icon
             name={alert.id === 'without_coach' ? 'school' : 'people'}
@@ -546,20 +529,10 @@ const identityStyles = (tokens: ClubThemeTokens) =>
 const packStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     card: {
-      borderRadius: clubRadius.xl,
+      borderRadius: clubForm.groupRadius,
       backgroundColor: tokens.surface,
-      borderWidth: 1,
-      borderColor: tokens.border,
       overflow: 'hidden',
       marginBottom: clubSpace.sm,
-      ...clubShadow.lift,
-    },
-    rail: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 4,
     },
     contentWrap: {
       padding: clubSpace.lg,
@@ -660,21 +633,10 @@ const alertStyles = (tokens: ClubThemeTokens) =>
       gap: clubSpace.md,
       paddingVertical: 12,
       paddingHorizontal: clubSpace.lg,
-      borderRadius: clubRadius.xl,
-      backgroundColor: 'rgba(20, 24, 36, 0.95)',
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.09)',
+      borderRadius: clubForm.groupRadius,
+      backgroundColor: tokens.surface,
       overflow: 'hidden',
       marginBottom: 6,
-    },
-    rail: {
-      position: 'absolute',
-      left: 0,
-      top: 10,
-      bottom: 10,
-      width: 3,
-      borderTopRightRadius: 2,
-      borderBottomRightRadius: 2,
     },
     icon: {
       width: 38,

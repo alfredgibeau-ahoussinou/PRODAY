@@ -4,10 +4,12 @@
 import {
   CLUB_FINANCE_TYPE_LABELS,
   isClubFinanceExpenseType,
+  isClubFinanceIncomeType,
   type ClubFinanceEntry,
   type ClubFinanceEntryType,
   type ClubFinanceTotals,
 } from '../../../models/ClubFinanceEntry';
+import { CLUB_SEASON_START_MONTH, clubSeasonBoundsForDate } from '../../../utils/clubSeason';
 
 export function formatClubFinanceEur(n: number): string {
   return `${n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €`;
@@ -197,28 +199,126 @@ export function defaultCotisationLabel(memberName?: string): string {
   return `Cotisation saison ${season}`;
 }
 
-/** Exporte le grand livre du club en CSV formaté pour l'expert-comptable / trésorier. */
-export function exportClubLedgerToCsv(entries: ClubFinanceEntry[]): string {
-  const headers = ['Date', 'Type', 'Libellé', 'Catégorie', 'Adhérent', 'Montant (€)', 'Statut'];
-  const lines: string[] = [headers.join(';')];
+export type { ClubFinanceEntryType };
 
-  entries.forEach((e) => {
-    const isExp = isClubFinanceExpenseType(e.type);
-    const formattedDate = e.entry_date instanceof Date ? e.entry_date.toISOString().slice(0, 10) : String(e.entry_date);
-    const amount = `${isExp ? '-' : ''}${e.amount_eur.toFixed(2)}`;
-    const row = [
-      `"${formattedDate}"`,
-      `"${CLUB_FINANCE_TYPE_LABELS[e.type] || e.type}"`,
-      `"${(e.label || '').replace(/"/g, '""')}"`,
-      `"${(e.category || '').replace(/"/g, '""')}"`,
-      `"${(e.member_name || '').replace(/"/g, '""')}"`,
-      `"${amount}"`,
-      `"${e.status === 'active' ? 'Validé' : 'Annulé'}"`,
-    ];
-    lines.push(row.join(';'));
-  });
+/* ------------------------------------------------------------------ *
+ * Périodes et ventilation — calculé, jamais inventé
+ * ------------------------------------------------------------------ */
 
-  return lines.join('\r\n');
+/**
+ * Périodes proposées. `season` suit la convention du football français : la saison
+ * commence le **1er août** et finit le **31 juillet**. Le seuil est écrit ici, une fois,
+ * et affiché à l'utilisateur (`CLUB_FINANCE_PERIOD_DEFINITION`) : un intervalle choisi
+ * implicitement serait un chiffre que personne ne peut vérifier.
+ */
+export type ClubFinancePeriod = 'all' | 'month' | 'lastMonth' | 'season';
+
+/** Réexporté depuis `utils/clubSeason` — une seule définition de la saison dans le projet. */
+export const CLUB_FINANCE_SEASON_START_MONTH = CLUB_SEASON_START_MONTH;
+
+export const CLUB_FINANCE_PERIOD_LABELS: Record<ClubFinancePeriod, string> = {
+  all: 'Tout',
+  month: 'Ce mois',
+  lastMonth: 'Mois dernier',
+  season: 'Saison',
+};
+
+export const CLUB_FINANCE_PERIOD_DEFINITION =
+  'Ce mois : mois calendaire en cours. Mois dernier : mois calendaire précédent. Saison : du 1er août au 31 juillet.';
+
+export function clubFinanceSeasonBounds(now: Date): { start: Date; end: Date } {
+  return clubSeasonBoundsForDate(now);
 }
 
-export type { ClubFinanceEntryType };
+/** Bornes d'une période. `null` = pas de filtré (tout l'historique). */
+export function clubFinancePeriodRange(
+  period: ClubFinancePeriod,
+  now: Date = new Date(),
+): { start: Date; end: Date } | null {
+  if (period === 'all') return null;
+  if (period === 'month') {
+    return {
+      start: new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0),
+      end: new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0),
+    };
+  }
+  if (period === 'lastMonth') {
+    return {
+      start: new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0),
+      end: new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0),
+    };
+  }
+  return clubFinanceSeasonBounds(now);
+}
+
+/**
+ * Écritures actives de la période. Une écriture annulée ou supprimée n'entre **jamais**
+ * dans un total : c'est la règle qui rend un solde cohérent avec le registre.
+ */
+export function filterClubFinanceByPeriod(
+  entries: ClubFinanceEntry[],
+  period: ClubFinancePeriod,
+  now: Date = new Date(),
+): ClubFinanceEntry[] {
+  const active = entries.filter((e) => e.status === 'active' && !e.deleted_at);
+  const range = clubFinancePeriodRange(period, now);
+  if (!range) return active;
+  return active.filter(
+    (e) => e.entry_date.getTime() >= range.start.getTime() && e.entry_date.getTime() < range.end.getTime(),
+  );
+}
+
+export type ClubFinanceCategoryRow = {
+  category: string;
+  incomeEur: number;
+  expenseEur: number;
+  netEur: number;
+  count: number;
+};
+
+/**
+ * Ventilation par catégorie des écritures reçues (déjà filtrées par période en amont).
+ *
+ * La catégorie vide est regroupée sous « Sans catégorie » — un libellé explicite plutôt
+ * qu'une ligne anonyme. Le tri se fait sur le **poids** (valeur absolue du net) : une
+ * grosse dépense doit remonter, pas disparaître en bas de liste.
+ */
+export function buildClubFinanceCategoryBreakdown(
+  entries: ClubFinanceEntry[],
+): ClubFinanceCategoryRow[] {
+  const byCategory = new Map<string, ClubFinanceCategoryRow>();
+  for (const e of entries) {
+    const category = e.category?.trim() || 'Sans catégorie';
+    const row =
+      byCategory.get(category) ??
+      ({ category, incomeEur: 0, expenseEur: 0, netEur: 0, count: 0 } satisfies ClubFinanceCategoryRow);
+    const isIncome = isClubFinanceIncomeType(e.type);
+    if (isIncome) row.incomeEur += e.amount_eur;
+    else row.expenseEur += e.amount_eur;
+    row.netEur = row.incomeEur - row.expenseEur;
+    row.count += 1;
+    byCategory.set(category, row);
+  }
+  return [...byCategory.values()].sort(
+    (a, b) => Math.abs(b.netEur) - Math.abs(a.netEur) || a.category.localeCompare(b.category),
+  );
+}
+
+/**
+ * Ce qui manque, dans le modèle de données, pour parler d'« impayés » ou d'« attendu ».
+ *
+ * Dit explicitement à l'écran plutôt que rempli par un montant par défaut : sans montant dû
+ * ni échéance enregistrés, tout « reste à recouvrer » serait une donnée inventée.
+ */
+export function clubFinanceOutstandingPrerequisites(): string {
+  return 'Un « reste à recouvrer » se calcule dans la section « Cotisations dues », à partir des montants dus et de leurs échéances. Tant que le club n’en a enregistré aucun, aucun impayé n’est calculable ici : c’est un état du club, pas une impossibilité du produit.';
+}
+
+/**
+ * Statut réel d'une écriture vis-à-vis des moyens de paiement : le registre ne stocke ni
+ * moyen de paiement ni confirmation d'un prestataire. Toute écriture est donc une **saisie
+ * manuelle**, et le dire évite de laisser croire à un rapprochement bancaire.
+ */
+export function clubFinancePaymentProvenanceNote(): string {
+  return 'Saisie manuelle : le moyen de paiement est celui déclaré par le club. Aucun encaissement n’est confirmé par un prestataire ni rapproché d’un relevé bancaire.';
+}

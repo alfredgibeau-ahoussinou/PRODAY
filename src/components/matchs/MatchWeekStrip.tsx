@@ -5,6 +5,7 @@ import { prodayHaptics } from '../../utils/prodayHaptics';
 import { ProDayText } from '../ui/ProDayText';
 import { useMatchSkinTokens } from './matchCenterUi';
 
+import { colors } from '../../theme/designTokens';
 type WeekDay = { date: Date; count: number; isToday: boolean };
 
 interface MatchWeekStripProps {
@@ -118,8 +119,8 @@ export const MatchWeekStrip: React.FC<MatchWeekStripProps> = ({
 function createStyles(_skin: ReturnType<typeof useMatchSkinTokens>) {
   return StyleSheet.create({
     panel: {
-      backgroundColor: '#14141A',
-      borderColor: '#22222E',
+      backgroundColor: colors.surface,
+      borderColor: colors.borderStrong,
       borderWidth: 1,
       borderRadius: 16,
       paddingHorizontal: 14,

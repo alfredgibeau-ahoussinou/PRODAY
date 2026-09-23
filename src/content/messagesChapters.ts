@@ -15,7 +15,28 @@ export type MessagesThreadFilter =
   | 'team'
   | 'mercato'
   | 'care'
-  | 'requests';
+  | 'requests'
+  /** Catégories par rôle — organisent l'affichage, ne modifient aucun droit. */
+  | 'players'
+  | 'parents'
+  | 'coaches'
+  | 'club_staff';
+
+/**
+ * Catégories de conversation du rail, dans l'ordre d'affichage.
+ *
+ * La **nature** d'une conversation (direct, groupe, annonce) n'est plus un filtre : elle est
+ * affichée comme badge sur chaque ligne. Cela évite la surcharge de filtres constatée dans le
+ * rail précédent (neuf entrées) sans rien perdre de l'information.
+ */
+export const MESSAGES_CATEGORY_FILTERS: { id: MessagesThreadFilter; label: string }[] = [
+  { id: 'all', label: 'Tous' },
+  { id: 'unread', label: 'Non lus' },
+  { id: 'players', label: 'Joueurs' },
+  { id: 'parents', label: 'Parents' },
+  { id: 'coaches', label: 'Coachs' },
+  { id: 'club_staff', label: 'Club / Staff' },
+];
 
 /** Filtres compacts officiels ProDay Spécifications v4 : Tous, Non lus, Directs, Groupes, Annonces. */
 export const MESSAGES_V4_COMPACT_FILTERS: { id: MessagesThreadFilter; label: string }[] = [
@@ -32,6 +53,5 @@ export const MESSAGES_THREAD_FILTERS: { id: MessagesThreadFilter; label: string 
   { id: 'team', label: 'Vestiaire / Équipe' },
   { id: 'mercato', label: 'Mercato' },
   { id: 'requests', label: 'Demandes' },
-  { id: 'care', label: 'Kiné' },
 ];
 

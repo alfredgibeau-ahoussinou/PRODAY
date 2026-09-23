@@ -5,27 +5,142 @@
  * Utiliser via `clubUi` / shell ; éviter les styles one-off sur les écrans.
  */
 
-import type { TextStyle, ViewStyle } from 'react-native';
+import { StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 import { CLUB_TOKENS, type ClubThemeTokens } from './clubTokens';
+import { APPLE_FONT_STACK } from '../../../theme/appleTypography';
+
+/**
+ * Forme « application listed as Fitness Park » (captures du 15/09/2026).
+ *
+ * Référence de **forme** retenue pour le pôle Club/Admin : rayons généreux,
+ * conteneurs de liste groupée, séparateurs en retrait, puces pilule dont la
+ * sélection est un **contour d'accent** (jamais un remplissage), champ de
+ * recherche sans bordure, bouton d'action en pilule à contour fin, et FAB
+ * central posé sur l'arête du dock.
+ *
+ * L'accent reste l'émeraude ProDay (D-006/D-008) : seule la forme est reprise.
+ * Le socle de surfaces reste DESIGN.md §2.1.
+ */
+export const clubForm = {
+  /** Conteneur de liste groupée (« Moi ») — rayon généreux, sans bordure. */
+  groupRadius: 22,
+  /** Écart vertical entre deux groupes sur le canvas. */
+  groupGap: 28,
+  /** Marge intérieure horizontale de l'encart groupé. */
+  groupPaddingH: 18,
+  /** Hauteur utile d'une ligne de réglage. */
+  rowMinHeight: 62,
+  rowIconSize: 22,
+  /** Écart icône → libellé dans une ligne de réglage. */
+  rowGap: 12,
+  chevronSize: 15,
+  /**
+   * Séparateur interne en retrait : sa gauche tombe **sous le libellé**, comme
+   * dans la référence — marge de l'encart + colonne d'icône + écart.
+   */
+  separatorInset: 18 + 22 + 12,
+  separatorThickness: StyleSheet.hairlineWidth,
+  /** Champ de recherche : sans bordure, sur fond élevé. */
+  fieldHeight: 52,
+  fieldRadius: 18,
+  /** Puce de filtre : pilule ; sélection = contour d'accent + libellé accent. */
+  chipHeight: 44,
+  chipRadius: 999,
+  chipGap: 10,
+  /** Bouton d'action secondaire (« Réserver un cours ») : pilule à contour fin. */
+  actionRadius: 999,
+  actionMinHeight: 52,
+  actionBorderWidth: 1,
+  /** Pastille d'état en surimpression (badge plein sur une carte). */
+  badgeRadius: 8,
+  /** Dock : capsule flottante à extrémités pleinement arrondies. */
+  dockRadius: 999,
+  dockIconSize: 24,
+  /** Libellés du dock en **bas de casse** (« Accueil », « Training »), jamais en capitales. */
+  dockLabelSize: 11,
+  /** FAB central du dock : 56, dont la moitié dépasse de l'arête supérieure. */
+  fabSize: 56,
+  fabIconSize: 24,
+  fabOverlap: 0.5,
+} as const;
 
 /** Échelle typographique Club (Display → Nav). */
 export const clubType = {
-  display: { fontSize: 32, fontWeight: '800' as const, letterSpacing: -0.8, lineHeight: 38 },
-  h1: { fontSize: 26, fontWeight: '800' as const, letterSpacing: -0.6, lineHeight: 32 },
-  h2: { fontSize: 20, fontWeight: '700' as const, letterSpacing: -0.35, lineHeight: 26 },
-  h3: { fontSize: 17, fontWeight: '700' as const, letterSpacing: -0.2, lineHeight: 22 },
-  body: { fontSize: 15, fontWeight: '500' as const, letterSpacing: 0, lineHeight: 21 },
-  caption: { fontSize: 12, fontWeight: '500' as const, letterSpacing: 0.1, lineHeight: 16 },
+  /**
+   * Typographie **Apple system** — San Francisco / SF Pro via la pile native
+   * (System sur iOS, -apple-system sur web, Roboto en repli Android). Déclarée
+   * ici **une seule fois** : aucun écran ne doit re-déclarer de fontFamily.
+   */
+  display: {
+    fontFamily: APPLE_FONT_STACK.display,
+    fontSize: 32,
+    fontWeight: '800' as const,
+    letterSpacing: -0.8,
+    lineHeight: 38,
+  },
+  h1: {
+    fontFamily: APPLE_FONT_STACK.display,
+    fontSize: 26,
+    fontWeight: '800' as const,
+    letterSpacing: -0.6,
+    lineHeight: 32,
+  },
+  h2: {
+    fontFamily: APPLE_FONT_STACK.display,
+    fontSize: 20,
+    fontWeight: '700' as const,
+    letterSpacing: -0.35,
+    lineHeight: 26,
+  },
+  h3: {
+    fontFamily: APPLE_FONT_STACK.display,
+    fontSize: 17,
+    fontWeight: '700' as const,
+    letterSpacing: -0.2,
+    lineHeight: 22,
+  },
+  body: {
+    fontFamily: APPLE_FONT_STACK.system,
+    fontSize: 15,
+    fontWeight: '500' as const,
+    letterSpacing: 0,
+    lineHeight: 21,
+  },
+  caption: {
+    fontFamily: APPLE_FONT_STACK.system,
+    fontSize: 12,
+    fontWeight: '500' as const,
+    letterSpacing: 0.1,
+    lineHeight: 16,
+  },
   label: {
     fontSize: 11,
     fontWeight: '800' as const,
-    letterSpacing: 1.15,
+    letterSpacing: 0.7,
     lineHeight: 14,
     textTransform: 'uppercase' as const,
   },
-  stat: { fontSize: 28, fontWeight: '800' as const, letterSpacing: -0.8, lineHeight: 32 },
-  score: { fontSize: 36, fontWeight: '800' as const, letterSpacing: -1, lineHeight: 40 },
-  nav: { fontSize: 14, fontWeight: '600' as const, letterSpacing: 0, lineHeight: 18 },
+  stat: {
+    fontFamily: APPLE_FONT_STACK.display,
+    fontSize: 28,
+    fontWeight: '800' as const,
+    letterSpacing: -0.8,
+    lineHeight: 32,
+  },
+  score: {
+    fontFamily: APPLE_FONT_STACK.display,
+    fontSize: 36,
+    fontWeight: '800' as const,
+    letterSpacing: -1,
+    lineHeight: 40,
+  },
+  nav: {
+    fontFamily: APPLE_FONT_STACK.system,
+    fontSize: 14,
+    fontWeight: '600' as const,
+    letterSpacing: 0,
+    lineHeight: 18,
+  },
 } satisfies Record<string, TextStyle>;
 
 export type ClubTypeVariant = keyof typeof clubType;
@@ -170,6 +285,7 @@ export const clubDesignSystem = {
   type: clubType,
   space: clubSpace,
   radius: clubRadius,
+  form: clubForm,
   shadow: clubShadow,
   eventTone: clubEventTone,
   motion: clubMotion,

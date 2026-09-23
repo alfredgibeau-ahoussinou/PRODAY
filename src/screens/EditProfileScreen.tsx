@@ -703,7 +703,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
           disabled={saving}
         >
           {saving ? (
-            <ActivityIndicator color="#FFF" />
+            <ActivityIndicator color={ui.onAccent} />
           ) : (
             <Text style={[styles.primaryText, (isSponsor || joueurLive) && { color: ui.onAccent }]}>Enregistrer</Text>
           )}

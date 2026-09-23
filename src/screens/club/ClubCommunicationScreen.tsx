@@ -3,12 +3,15 @@
  * Partition des canaux (Bureau, Staff, Équipes) remplaçant WhatsApp + Messagerie ProDay.
  * Design System Apple Obsidian Glass · Zéro émoji unicode.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { MessagesScreen } from '../MessagesScreen';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
+import { clubAnnouncementsService } from '../../services/clubAnnouncements.service';
+import { buildClubChannels } from '../../utils/clubHubRealData';
+import type { ClubAnnouncement } from '../../models/ClubAnnouncement';
 import {
   ClubActionRow,
   ClubChapterScroll,
@@ -28,7 +31,30 @@ export function ClubCommunicationScreen() {
   const ws = useClubWorkspace();
   const { tokens } = useClubTheme();
   const [channel, setChannel] = useState<ChannelTab>('channels');
+  const [announcements, setAnnouncements] = useState<ClubAnnouncement[]>([]);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+
+  useEffect(() => {
+    if (!ws.clubId) return;
+    let cancelled = false;
+    clubAnnouncementsService
+      .listByClub(ws.clubId)
+      .then((list) => {
+        if (!cancelled) setAnnouncements(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAnnouncements([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ws.clubId, ws.refreshing]);
+
+  // Canaux réels : annonces officielles persistées + une entrée par équipe existante.
+  const channels = useMemo(
+    () => buildClubChannels(ws.teams, announcements),
+    [ws.teams, announcements],
+  );
 
   if (ws.loading) return <ClubLoading />;
 
@@ -82,7 +108,11 @@ export function ClubCommunicationScreen() {
           onChange={setChannel}
         />
 
-        <ClubChannelsHub />
+        <ClubChannelsHub
+          channels={channels}
+          clubId={ws.clubId}
+          onFlashSent={() => void ws.refresh()}
+        />
       </ClubChapterScroll>
     </View>
   );

@@ -3,13 +3,78 @@
  */
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring, AnimatedEntrance } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { clubForm, clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 import { ClubText } from './clubUi';
+import type { ClubMembershipCompliance } from './clubPlayersModel';
+
+/**
+ * Baromètre de conformité des adhésions — **pôle Club uniquement**.
+ *
+ * Il reste au-dessus de l'annuaire (qui, lui, est partagé avec le pôle Coach) :
+ * la conformité des licences est une responsabilité de club, pas de coach. Les
+ * compteurs viennent des adhésions réelles (`resolveClubMembershipCompliance`),
+ * jamais de champs inventés.
+ */
+export function ClubRosterComplianceBar({ counts }: { counts: ClubMembershipCompliance }) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => complianceStyles(tokens), [tokens]);
+  const cells: { key: string; value: number; label: string; tone: string }[] = [
+    { key: 'active', value: counts.active, label: 'Actifs', tone: tokens.success },
+    { key: 'pending', value: counts.pending, label: 'En attente', tone: tokens.warning },
+    {
+      key: 'withoutLicense',
+      value: counts.withoutLicense,
+      label: 'Sans licence',
+      tone: tokens.danger,
+    },
+    { key: 'suspended', value: counts.suspended, label: 'Suspendus', tone: tokens.muted },
+  ];
+
+  return (
+    <View style={styles.card}>
+      <ClubText variant="caption" muted style={styles.title}>
+        ADHÉSIONS ET LICENCES
+      </ClubText>
+      <View style={styles.row}>
+        {cells.map((cell, index) => (
+          <React.Fragment key={cell.key}>
+            {index > 0 ? <View style={styles.separator} /> : null}
+            <View style={styles.cell}>
+              <ClubText variant="h3" style={[styles.value, { color: cell.tone }]}>
+                {String(cell.value)}
+              </ClubText>
+              <ClubText variant="caption" muted style={styles.label} numberOfLines={1}>
+                {cell.label}
+              </ClubText>
+            </View>
+          </React.Fragment>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const complianceStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    card: {
+      gap: clubSpace.sm,
+      padding: clubSpace.md,
+      borderRadius: clubForm.groupRadius,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    title: { letterSpacing: 0.8 },
+    row: { flexDirection: 'row', alignItems: 'center' },
+    cell: { flex: 1, alignItems: 'center', gap: 2 },
+    value: { fontWeight: '800' },
+    label: { textAlign: 'center' },
+    separator: { width: StyleSheet.hairlineWidth, height: 26, backgroundColor: tokens.border },
+  });
 
 /** Hero adhésions en attente — actions Valider / Voir. */
 export function ClubPlayersPendingHero({
@@ -34,15 +99,8 @@ export function ClubPlayersPendingHero({
 
   return (
     <AnimatedEntrance kind="fadeUp" index={0} delayStep={36}>
+      {/* Référence : carte plate et neutre — la couleur reste dans la pastille. */}
       <View style={styles.card}>
-        <LinearGradient
-          colors={[tokens.warningSoft, tokens.surface]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <View style={[styles.rail, { backgroundColor: tokens.warning }]} />
         <View style={[styles.iconBadge, { backgroundColor: tokens.warningSoft }]}>
           <Icon name="checkmark-circle" size={20} color={tokens.warning} />
         </View>
@@ -232,21 +290,9 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       gap: clubSpace.md,
       paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.lg,
-      borderRadius: clubRadius.xxl,
+      borderRadius: clubForm.groupRadius,
       backgroundColor: tokens.surface,
-      borderWidth: 1,
-      borderColor: tokens.borderStrong,
       overflow: 'hidden',
-      ...clubShadow.lift,
-    },
-    rail: {
-      position: 'absolute',
-      left: 0,
-      top: 16,
-      bottom: 16,
-      width: 4,
-      borderTopRightRadius: 2,
-      borderBottomRightRadius: 2,
     },
     iconBadge: {
       width: 44,

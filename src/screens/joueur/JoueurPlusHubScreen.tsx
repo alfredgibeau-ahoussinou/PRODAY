@@ -21,10 +21,11 @@ import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 import { formatTabBadge } from '../../components/navigation/tabBarShared';
 import { usePlayerTheme, usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { spacing } from '../../theme/designTokens';
+import { spacing, colors } from '../../theme/designTokens';
 import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
 import { GlobalSearchModal } from '../../components/search/GlobalSearchModal';
 import { CrestWatermark } from './PlayerSaisonIcons';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 
 /** Hub Plus — menu complet Tout ProDay */
 export function JoueurPlusHubScreen() {
@@ -194,18 +195,18 @@ export function JoueurPlusHubScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: PLAYER_DARK.bg,
   },
   loader: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: PLAYER_DARK.bg,
   },
   header: {
     paddingHorizontal: 16,
     paddingTop: 4,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: PLAYER_DARK.border,
   },
   headerTitleRow: {
     flexDirection: 'row',
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
   headerTitleText: {
     fontSize: 21,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
     letterSpacing: -0.4,
   },
   clubSubtitleRow: {
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   lead: {
-    color: '#8B8B9A',
+    color: PLAYER_DARK.textMuted,
     fontSize: 12.5,
     lineHeight: 18,
   },
@@ -274,10 +275,10 @@ const styles = StyleSheet.create({
     minHeight: 136,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#22222E',
+    borderColor: PLAYER_DARK.border,
     padding: 15,
     justifyContent: 'space-between',
-    backgroundColor: '#14141A',
+    backgroundColor: PLAYER_DARK.surface,
   },
   tileTop: {
     flexDirection: 'row',
@@ -297,13 +298,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   tileLabel: {
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
     fontWeight: '900',
     fontSize: 14.5,
     letterSpacing: -0.2,
   },
   tileSub: {
-    color: '#8B8B9A',
+    color: PLAYER_DARK.textMuted,
     fontSize: 10.5,
     fontWeight: '500',
     lineHeight: 14,
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   badgeText: {
-    color: '#000000',
+    color: PLAYER_DARK.bg,
     fontSize: 9,
     fontWeight: '900',
   },
@@ -325,12 +326,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: '#1C1D26',
+    backgroundColor: PLAYER_DARK.surfaceRaised,
     borderWidth: 1,
-    borderColor: '#282836',
+    borderColor: PLAYER_DARK.border,
   },
   soonBadgeText: {
-    color: '#8B8B9A',
+    color: PLAYER_DARK.textMuted,
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.2,

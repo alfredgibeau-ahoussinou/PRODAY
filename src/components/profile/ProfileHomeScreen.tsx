@@ -283,6 +283,13 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
               <CoachProfileHub
                 profile={props.profile}
                 subscriptionTier={props.subscriptionTier}
+                onBack={() => {
+                  if (coachShellNav?.canGoBack) {
+                    coachShellNav.goBack();
+                  } else {
+                    coachShellNav?.requestNav('today');
+                  }
+                }}
                 onEdit={handleEdit}
                 onPublicProfile={props.onPublicProfile}
                 onAvatarPress={props.onAvatarPress}
@@ -793,7 +800,22 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     </View>
   );
   if (inCoachShell) {
-    return <CoachPane title={getCoachPageIdentity('profil').title}>{content}</CoachPane>;
+    return (
+      <CoachPane
+        title={getCoachPageIdentity('profil').title}
+        showBack={true}
+        fallbackNavId="today"
+        onBack={() => {
+          if (coachShellNav?.canGoBack) {
+            coachShellNav.goBack();
+          } else {
+            coachShellNav?.requestNav('today');
+          }
+        }}
+      >
+        {content}
+      </CoachPane>
+    );
   }
   return content;
 };

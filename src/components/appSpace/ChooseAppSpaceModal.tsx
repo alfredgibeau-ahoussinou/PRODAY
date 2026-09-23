@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { ProductLineId } from '../../models/ProductLine';
 import { spacing, radius } from '../../theme/designTokens';
+import { APPLE_FONT_STACK } from '../../theme/appleTypography';
 
 export interface ChooseAppSpaceModalProps {
   visible: boolean;
@@ -141,7 +142,9 @@ export const ChooseAppSpaceModal: React.FC<ChooseAppSpaceModalProps> = ({
                 Bascule instantanément entre tes rôles et espaces dédiés.
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer">
               <Ionicons name="close" size={20} color="#94A3B8" />
             </TouchableOpacity>
           </View>
@@ -270,7 +273,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   headerTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 20,
     fontWeight: '900',
     color: '#FFFFFF',
@@ -357,7 +360,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   spaceTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 15,
     fontWeight: '800',
     color: '#FFFFFF',

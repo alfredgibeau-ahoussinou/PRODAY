@@ -69,6 +69,57 @@ export const coachObjectivesService = {
     }
   },
 
+  async listForPlayer(playerUid: string, max = 20): Promise<CoachSeasonObjective[]> {
+    if (!isFirebaseConfigured() || !playerUid) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, COL),
+          where('player_uid', '==', playerUid),
+          orderBy('updated_at', 'desc'),
+          limit(max),
+        ),
+      );
+      return snap.docs.map((d) => mapRow(d.id, d.data() as Record<string, unknown>));
+    } catch {
+      const snap = await getDocs(
+        query(collection(database, COL), where('player_uid', '==', playerUid), limit(max)),
+      );
+      return snap.docs
+        .map((d) => mapRow(d.id, d.data() as Record<string, unknown>))
+        .sort((a, b) => b.updated_at.getTime() - a.updated_at.getTime());
+    }
+  },
+
+  async listTeamObjectives(clubId: string, teamId?: string, max = 30): Promise<CoachSeasonObjective[]> {
+    if (!isFirebaseConfigured() || !clubId) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const constraints = [
+        where('club_id', '==', clubId),
+        where('scope', '==', 'team'),
+      ];
+      if (teamId) {
+        constraints.push(where('team_id', '==', teamId));
+      }
+      const snap = await getDocs(
+        query(
+          collection(database, COL),
+          ...constraints,
+          orderBy('updated_at', 'desc'),
+          limit(max),
+        ),
+      );
+      return snap.docs.map((d) => mapRow(d.id, d.data() as Record<string, unknown>));
+    } catch {
+      const all = await this.listForClub(clubId, max);
+      return all.filter((o) => o.scope === 'team' && (!teamId || o.team_id === teamId));
+    }
+  },
+
   async create(createdBy: string, input: CreateCoachSeasonObjectiveInput): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
@@ -100,3 +151,30 @@ export const coachObjectivesService = {
     });
   },
 };
+
+export function isObjectiveVisibleToUser(
+  objective: CoachSeasonObjective,
+  viewer: { uid?: string; role?: string },
+): boolean {
+  if (!viewer.role) return false;
+  if (viewer.role === 'coach' || viewer.role === 'club' || viewer.role === 'admin') {
+    return true;
+  }
+  if (objective.scope === 'team') {
+    return true;
+  }
+  if (viewer.role === 'player') {
+    return objective.player_uid === viewer.uid;
+  }
+  if (viewer.role === 'parent') {
+    return true;
+  }
+  return false;
+}
+
+export function filterObjectivesForViewer(
+  objectives: CoachSeasonObjective[],
+  viewer: { uid?: string; role?: string },
+): CoachSeasonObjective[] {
+  return objectives.filter((item) => isObjectiveVisibleToUser(item, viewer));
+}

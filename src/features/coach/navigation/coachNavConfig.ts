@@ -3,13 +3,18 @@ import type { CoachPortalChapterId } from '../../../content/coachPortalChapters'
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 
 /**
- * Navigation Pôle Coach — 5 onglets premium.
- * ACCUEIL | ÉQUIPE | IA | MENU | PROFIL
- * Outils secondaires dans l’onglet Menu ; Messages depuis Profil ou header Accueil.
+ * Navigation Pôle Coach — **4 onglets**, conformément au README §0.2 :
+ * ACCUEIL | CALENDRIER | ÉQUIPE | MENU.
+ *
+ * Les destinations secondaires (IA, Copilote, Messagerie, Profil, outils) sont
+ * dans l’onglet Menu. Les anciennes destinations « IA » et « Profil » ne sont
+ * plus dans la barre basse : elles y occupaient deux créneaux sur cinq, alors
+ * que le référentiel impose quatre destinations dont Menu en dernière position.
  */
 
 export type CoachNavFolderId =
   | 'accueil'
+  | 'calendrier'
   | 'equipe'
   | 'match'
   | 'entrainements'
@@ -21,6 +26,7 @@ export type CoachNavFolderId =
 
 export type CoachNavItemId =
   | 'today'
+  | 'calendrier'
   | 'equipe'
   | 'effectif'
   | 'gestion'
@@ -31,11 +37,13 @@ export type CoachNavItemId =
   | 'joueurs'
   | 'smart_tactics'
   | 'coach_ia'
+  | 'copilot_chat'
   | 'mes_videos'
   | 'forme'
   | 'messages'
   | 'com_staff'
   | 'carpool'
+  | 'rsvp_log'
   | 'profil'
   | 'plus'
   | 'pitch'
@@ -71,17 +79,16 @@ export type CoachNavFolder = {
 
 export const COACH_PRIMARY_NAV_IDS: CoachNavItemId[] = [
   'today',
+  'calendrier',
   'equipe',
-  'coach_ia',
   'plus',
-  'profil',
 ];
 
 /** Destinations de la barre coach mappées sur l’onglet main `home`. */
 export const COACH_HOME_SHELL_NAV_IDS: CoachNavItemId[] = [
   'today',
+  'calendrier',
   'equipe',
-  'coach_ia',
   'plus',
 ];
 
@@ -90,12 +97,31 @@ export const COACH_SECONDARY_NAV_IDS: CoachNavItemId[] = [
   'match_center',
   'entrainements',
   'joueurs',
+  /**
+   * Conversation du Copilote. Ajouté parce que l'écran de chat (`CoachAiHubScreen`)
+   * était **importé mais jamais rendu** : `coach_ia` mène au Twin Match Lab, si bien
+   * qu'aucune entrée de navigation n'ouvrait la conversation.
+   */
+  'copilot_chat',
   'mes_videos',
   'forme',
   'carpool',
   'com_staff',
   'gestion',
+  /**
+   * Historique des relances — traces `rsvp_reminder_log` de l'inbox staff.
+   * Accessible depuis l'accueil (entrée dédiée) et le Menu.
+   */
+  'rsvp_log',
   'coaching_perso',
+  /**
+   * Sortis de la barre basse lors du passage à 4 onglets (README §0.2).
+   * Ils restent des destinations réelles : Menu les liste (Assistant IA,
+   * Copilote, Messagerie) et le header ouvre Profil.
+   */
+  'coach_ia',
+  'messages',
+  'profil',
 ];
 
 /** Destinations secondaires — surlignent l’onglet Menu dans la barre. */
@@ -124,6 +150,16 @@ const accueilItem: CoachNavItem = {
   hint: 'Briefing · calendrier du jour',
   icon: 'home',
   chapter: 'cockpit',
+  tab: 'home',
+};
+
+const calendrierItem: CoachNavItem = {
+  id: 'calendrier',
+  label: 'Calendrier',
+  shortLabel: 'Calendrier',
+  hint: 'Événements · convocations · séances',
+  icon: 'calendar',
+  chapter: 'planning',
   tab: 'home',
 };
 
@@ -175,6 +211,16 @@ const coachIaItem: CoachNavItem = {
   tab: 'home',
 };
 
+const copilotChatItem: CoachNavItem = {
+  id: 'copilot_chat',
+  label: 'Chat Copilote IA',
+  shortLabel: 'Copilote',
+  hint: 'Questions libres, séances, causerie',
+  icon: 'chat',
+  aiBadge: true,
+  tab: 'home',
+};
+
 const messagesItem: CoachNavItem = {
   id: 'messages',
   label: 'Messages',
@@ -212,11 +258,13 @@ const planningItem: CoachNavItem = {
 
 export const COACH_NAV_CATALOG: CoachNavItem[] = [
   accueilItem,
+  calendrierItem,
   equipeItem,
   matchCenterItem,
   entrainementsItem,
   joueursItem,
   coachIaItem,
+  copilotChatItem,
   messagesItem,
   profilItem,
   plusItem,
@@ -274,10 +322,16 @@ export const COACH_NAV_CATALOG: CoachNavItem[] = [
   },
   {
     id: 'com_staff',
-    label: 'Communauté',
-    hint: 'Salons · alertes · docs',
+    label: 'Messagerie',
+    hint: 'DM · groupes staff · parents',
     icon: 'chat',
     chapter: 'communication',
+  },
+  {
+    id: 'rsvp_log',
+    label: 'Historique des relances',
+    hint: 'Relances envoyées aux joueurs',
+    icon: 'notifications',
   },
   {
     id: 'carpool',
@@ -294,13 +348,12 @@ export const COACH_NAV_CATALOG: CoachNavItem[] = [
   },
 ];
 
-/** 5 onglets primaires — sidebar + barre mobile. */
+/** 4 onglets primaires — sidebar + barre mobile (README §0.2). */
 export const COACH_NAV_FOLDERS: CoachNavFolder[] = [
   { id: 'accueil', label: 'Accueil', items: [accueilItem] },
+  { id: 'calendrier', label: 'Calendrier', items: [calendrierItem] },
   { id: 'equipe', label: 'Équipe', items: [equipeItem] },
-  { id: 'ia', label: 'IA', items: [coachIaItem] },
   { id: 'menu', label: 'Menu', items: [plusItem] },
-  { id: 'profil', label: 'Profil', items: [profilItem] },
 ];
 
 export type CoachToolGroupId = 'match' | 'club' | 'performance';
@@ -340,7 +393,7 @@ export const COACH_HOME_TOOLS: {
         id === 'entrainements'
           ? 'Séances'
           : id === 'com_staff'
-            ? 'Communauté'
+            ? 'Messagerie'
             : id === 'mes_videos'
               ? 'Vidéos'
               : id === 'coaching_perso'
@@ -364,7 +417,7 @@ export function canonicalizeCoachNav(id: CoachNavResolvableId): CoachNavItemId {
 export function primaryTabForCoachNav(id: CoachNavItemId): CoachNavItemId {
   const canonical = canonicalizeCoachNav(id);
   if (COACH_PRIMARY_NAV_IDS.includes(canonical)) return canonical;
-  if (canonical === 'messages') return 'profil';
+  /** Plus d’onglet « Profil » depuis le passage à 4 destinations : Menu porte l’état actif. */
   if (COACH_MENU_DEST_IDS.includes(canonical)) return 'plus';
   return 'today';
 }
@@ -406,4 +459,45 @@ export function resolveCoachNavOnTabSync(
     return canonical;
   }
   return canonical;
+}
+
+/**
+ * Fallback logique de navigation en cas d'ouverture directe sans historique.
+ * - Outils secondaires -> 'today' (Accueil) ou 'plus' (Menu).
+ * - Onglets racine -> 'today'.
+ */
+export function resolveCoachFallbackNav(id: CoachNavItemId): CoachNavItemId {
+  const canonical = canonicalizeCoachNav(id);
+  switch (canonical) {
+    case 'entrainements':
+    case 'match_center':
+      return 'today';
+    case 'forme':
+    case 'copilot_chat':
+    case 'smart_tactics':
+    case 'mes_videos':
+    case 'coaching_perso':
+    case 'rsvp_log':
+    case 'joueurs':
+    case 'gestion':
+    case 'com_staff':
+    case 'carpool':
+    case 'coach_ia':
+    case 'messages':
+    case 'profil':
+      return 'plus';
+    case 'calendrier':
+    case 'equipe':
+    case 'plus':
+      return 'today';
+    default:
+      return 'today';
+  }
+}
+
+/**
+ * Fallback logique pour fermeture de fiche événement / match.
+ */
+export function resolveEventHubFallback(isMatch?: boolean): CoachNavItemId {
+  return isMatch ? 'match_center' : 'calendrier';
 }

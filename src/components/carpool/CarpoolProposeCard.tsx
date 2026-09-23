@@ -307,8 +307,8 @@ function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     card: {
       borderWidth: 1,
-      borderColor: '#22222E',
-      backgroundColor: '#14141A',
+      borderColor: CARPOOL_SITE.lane,
+      backgroundColor: CARPOOL_SITE.surface,
       borderRadius: 18,
       marginBottom: 12,
       overflow: 'hidden',
@@ -373,7 +373,7 @@ function createStyles(palette: CarpoolUiPalette) {
       paddingBottom: 16,
       gap: 12,
       borderTopWidth: 1,
-      borderTopColor: '#22222E',
+      borderTopColor: CARPOOL_SITE.lane,
     },
     inputGroup: {
       gap: 5,

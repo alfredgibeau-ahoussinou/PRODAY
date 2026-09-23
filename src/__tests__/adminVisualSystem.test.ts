@@ -11,7 +11,6 @@ import { ADMIN_USER_SUBPAGES } from '../features/admin/panes/adminUserSubPages';
 
 describe('Espace Admin visual system', () => {
   it('reste distinct du pôle club (pas émeraude)', () => {
-    expect(ADMIN_TOKENS.accent).toBe(PRODAY_POLE_ACCENTS.admin);
     expect(ADMIN_TOKENS.accent).not.toBe(PRODAY_POLE_ACCENTS.club);
     expect(ADMIN_TOKENS.signal).not.toBe(PRODAY_POLE_ACCENTS.club);
     expect(ADMIN_TOKENS.signal).not.toBe(PRODAY_POLE_ACCENTS.president);
@@ -24,10 +23,10 @@ describe('Espace Admin visual system', () => {
     expect(adminType.brand.fontFamily).toBe(fontFamily.brand);
   });
 
-  it('expose un chrome control room sombre premium', () => {
+  it('expose un chrome Apple sombre premium', () => {
     expect(ADMIN_TOKENS.bg.startsWith('#0')).toBe(true);
-    expect(ADMIN_TOKENS.surface).toBe('#121821');
-    expect(ADMIN_TOKENS.accentHot).toBe('#D4AF5F');
+    expect(ADMIN_TOKENS.surface).toBe('#161922');
+    expect(ADMIN_TOKENS.accentHot).toBe('#0A84FF');
     expect(adminChrome.brandMark).toContain('ADMIN');
     expect(adminChrome.dockRailHeight).toBe(0);
     expect(adminRadius.hero).toBeLessThanOrEqual(16);

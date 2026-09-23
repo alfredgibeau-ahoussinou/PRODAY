@@ -130,7 +130,7 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
       return [
         { icon: 'document', title: 'Mon CV en ligne', sub: 'Compléter et publier votre CV foot', accent: true },
         { icon: 'search', title: 'Candidater', sub: 'Parcourir les annonces. Sans publication' },
-        { icon: 'heart', title: 'Pôle santé', sub: 'Kinés, coach mental, nutrition…' },
+        { icon: 'bus', title: 'Transport & Logistique', sub: 'Trajets, covoiturage & bus club' },
         { icon: 'calendar', title: 'Matchs & convocations', sub: 'RSVP et compo' },
       ];
     case 'coach':

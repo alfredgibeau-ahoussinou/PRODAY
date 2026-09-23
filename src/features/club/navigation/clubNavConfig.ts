@@ -5,9 +5,10 @@ import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { DashboardDeepLink } from '../../../utils/navigationDeepLink';
 
 /**
- * Navigation Pôle Club v1 — gestion amateur simple.
- * Mobile : 5 onglets + FAB « + CRÉER » · Desktop : sidebar complète.
- * Dock : Accueil · Équipes · Matchs · Outils · Club (labels ≥11, actif émeraude).
+ * Navigation Pôle Club — gestion amateur simple.
+ * Mobile : dock **4 destinations** (Accueil · Calendrier · Équipes · Menu) + FAB « + CRÉER ».
+ * Desktop : sidebar complète. Les modules hors dock (Matchs, Club, Joueurs, Finances…)
+ * restent accessibles via le Menu — aucune destination n'est supprimée en passant au dock 4.
  */
 
 export type ClubNavFolderId =
@@ -22,6 +23,7 @@ export type ClubNavItemId =
   | 'teams'
   | 'players'
   | 'coaches'
+  | 'memberships'
   | 'calendar'
   | 'matches'
   | 'trainings'
@@ -62,20 +64,23 @@ export type ClubNavFolder = {
   items: ClubNavItem[];
 };
 
-/** Onglets barre mobile (5 max) — le reste via Outils / sidebar. */
+/**
+ * Dock mobile — exactement 4 destinations : Accueil · Calendrier · Équipes · Menu.
+ * Toute autre destination est joignable depuis le Menu (`CLUB_TOOL_GROUPS`).
+ */
 export const CLUB_PRIMARY_NAV_IDS: ClubNavItemId[] = [
   'today',
+  'calendar',
   'teams',
-  'matches',
   'plus',
-  'club',
 ];
 
-/** Destinations secondaires — surlignent l’onglet Outils. */
+/** Destinations secondaires — surlignent l’onglet Menu. */
 export const CLUB_MENU_DEST_IDS: ClubNavItemId[] = [
   'players',
   'coaches',
-  'calendar',
+  'memberships',
+  'matches',
   'trainings',
   'communication',
   'assistant',
@@ -85,6 +90,7 @@ export const CLUB_MENU_DEST_IDS: ClubNavItemId[] = [
   'finances',
   'sponsoring',
   'pack',
+  'club',
   'notifications',
   'permissions',
   'video',
@@ -152,10 +158,19 @@ const coachesItem: ClubNavItem = {
   requiresAnyFeature: ['licensed_management'],
 };
 
+const membershipsItem: ClubNavItem = {
+  id: 'memberships',
+  label: "Demandes d'adhésion",
+  shortLabel: 'Adhésions',
+  hint: 'Affiliations en attente',
+  icon: 'mail',
+  requiresAnyFeature: ['licensed_management'],
+};
+
 const calendarItem: ClubNavItem = {
   id: 'calendar',
   label: 'Calendrier',
-  shortLabel: 'Agenda',
+  shortLabel: 'Calendrier',
   hint: 'Jour · semaine · mois',
   icon: 'calendar',
   tab: 'matchs',
@@ -202,9 +217,9 @@ const clubItem: ClubNavItem = {
 
 const plusItem: ClubNavItem = {
   id: 'plus',
-  label: 'Outils',
-  shortLabel: 'Outils',
-  hint: 'Pilotage & métiers du club',
+  label: 'Menu',
+  shortLabel: 'Menu',
+  hint: 'Tous les modules du club',
   icon: 'tune',
   tab: 'home',
 };
@@ -311,7 +326,7 @@ export const CLUB_NAV_FOLDERS: ClubNavFolder[] = [
   {
     id: 'effectifs',
     label: 'Effectifs',
-    items: [teamsItem, playersItem, coachesItem],
+    items: [teamsItem, playersItem, coachesItem, membershipsItem],
   },
   {
     id: 'sport',
@@ -356,7 +371,7 @@ export type ClubToolGroup = {
 export const CLUB_TOOL_GROUPS: ClubToolGroup[] = [
   {
     title: 'Fréquents',
-    ids: ['calendar', 'players', 'communication', 'finances', 'assistant'],
+    ids: ['players', 'communication', 'finances', 'assistant'],
     collapsible: false,
   },
   {
@@ -367,7 +382,7 @@ export const CLUB_TOOL_GROUPS: ClubToolGroup[] = [
   },
   {
     title: 'Effectifs',
-    ids: ['coaches', 'teams'],
+    ids: ['coaches'],
     collapsible: true,
     defaultExpanded: true,
   },
@@ -380,7 +395,7 @@ export const CLUB_TOOL_GROUPS: ClubToolGroup[] = [
 
   {
     title: 'Admin',
-    ids: ['pack', 'licenses', 'sponsoring', 'permissions'],
+    ids: ['club', 'pack', 'licenses', 'sponsoring', 'permissions'],
     collapsible: true,
     defaultExpanded: false,
   },

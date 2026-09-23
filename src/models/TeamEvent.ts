@@ -2,6 +2,7 @@ import type { GeoPoint } from './User';
 import type { CarpoolTripStatus } from './CarpoolLiveTrip';
 import type { CarpoolVehicleType } from './CarpoolVehicle';
 import type { TrainingSessionPlan } from './CoachEvaluation';
+import type { EventTransportPlan } from './TransportLogistics';
 import { inferMatchStatus } from '../utils/matchLive';
 
 export type TeamEventType =
@@ -71,15 +72,57 @@ export interface LiveMatchAction {
   created_at: Date;
 }
 
+export type EvaluationSource = 'manual' | 'ai_generated' | 'coach_reviewed';
+export type EvaluationStatus = 'draft' | 'published';
+
+export interface PlayerStatAuditEntry {
+  id: string;
+  author_uid: string;
+  author_name: string;
+  timestamp: string; // ISO format string
+  action: 'create' | 'edit_stats' | 'edit_rating' | 'ai_generated' | 'coach_reviewed' | 'published';
+  summary: string;
+  changes?: {
+    field: string;
+    old_value?: unknown;
+    new_value?: unknown;
+  }[];
+}
+
+export interface PlayerStatClip {
+  timestamp_sec: number;
+  label: string;
+  description?: string;
+}
+
 export interface PlayerMatchSheetStat {
   uid: string;
   player_name: string;
-  minutes_played?: number;
-  rating?: number; // 0-10
+  minutes_played?: number; // 0 is a valid 0-minute value; undefined is unrecorded
+  rating?: number; // 0-10 scale; 0 is a valid 0/10 rating; undefined is unrated
+  rating_explanation?: string;
   goals?: number;
   assists?: number;
   yellow_cards?: number;
   red_cards?: number;
+  clean_sheet?: boolean;
+
+  // Provenance & publication status
+  source?: EvaluationSource;
+  status?: EvaluationStatus;
+
+  // Author & update metadata
+  author_uid?: string;
+  author_name?: string;
+  evaluated_at?: Date | string;
+
+  // AI evaluation metadata (when source is ai_generated or reviewed)
+  ai_confidence?: number; // 0 to 1
+  ai_uncertainty_reason?: string;
+  ai_clips?: PlayerStatClip[];
+
+  // Modification history & audit log
+  history?: PlayerStatAuditEntry[];
 }
 
 /** Tâche logistique (covoiturage, matériel…) — assignation coach */
@@ -164,7 +207,7 @@ export const FORMATIONS = [
   '4-4-1-1',
 ] as const;
 
-export type MatchLiveStatus = 'scheduled' | 'live' | 'halftime' | 'finished';
+export type MatchLiveStatus = 'scheduled' | 'live' | 'halftime' | 'finished' | 'cancelled';
 
 export interface MatchLiveState {
   status: MatchLiveStatus;
@@ -173,6 +216,8 @@ export interface MatchLiveState {
   away_score: number;
   opponent_name?: string;
   home_label?: string;
+  /** Motif d'annulation ou de report affiché au staff et aux joueurs. */
+  cancel_reason?: string;
 }
 
 export interface TeamEvent {
@@ -232,6 +277,8 @@ export interface TeamEvent {
   carpool_slots?: CarpoolSlot[];
   /** Fil de coordination covoiturage (messagerie événement) */
   carpool_messages?: CarpoolMessage[];
+  /** Plan global de transport & logistique (bus, covoiturage, mixte, individuel) */
+  transport_plan?: EventTransportPlan;
   created_at: Date;
   updated_at: Date;
 }
@@ -266,6 +313,10 @@ export interface CreateTeamEventInput {
   max_participants?: number;
   categories?: string[];
   reminder_hours_before?: number;
+  transport_plan?: EventTransportPlan;
+  live_state?: MatchLiveState;
+  carpool_slots?: CarpoolSlot[];
+  lineup?: EventLineup;
 }
 
 export const EVENT_TYPE_LABELS: Record<TeamEventType, string> = {
@@ -308,6 +359,23 @@ export function userRsvp(event: TeamEvent, uid: string): RsvpStatus {
 
 export type EventSessionStatus = 'scheduled' | 'in_progress' | 'finished';
 
+/**
+ * Séance annulée par le staff — conservée pour l'historique mais exclue du
+ * planning courant. Dérivée de `live_state.status === 'cancelled'` (mêmes
+ * données, pas de colonne supplémentaire à migrer).
+ */
+export function isSessionCancelled(event: TeamEvent): boolean {
+  return event.live_state?.status === 'cancelled';
+}
+
+/** Statut affichable : annulé prime, sinon le statut de session calculé. */
+export function resolveEventDisplayStatus(event: TeamEvent):
+  | EventSessionStatus
+  | 'cancelled' {
+  if (isSessionCancelled(event)) return 'cancelled';
+  return resolveEventSessionStatus(event);
+}
+
 export function isCoachMatchEvent(e: TeamEvent): boolean {
   if (e.event_type === 'training') return false;
   return (
@@ -326,6 +394,7 @@ export function isCoachTrainingEvent(e: TeamEvent): boolean {
 /** Statut unifié séance / match pour le planning coach. */
 export function resolveEventSessionStatus(e: TeamEvent): EventSessionStatus {
   if (isCoachMatchEvent(e)) {
+    if (e.live_state?.status === 'cancelled') return 'finished';
     const status = inferMatchStatus(e);
     if (status === 'finished') return 'finished';
     if (status === 'live' || status === 'halftime') return 'in_progress';

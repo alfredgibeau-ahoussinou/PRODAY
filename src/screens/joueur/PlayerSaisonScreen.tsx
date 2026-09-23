@@ -5,160 +5,144 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
-import { playerRsvpService, type PlayerRsvpStatus } from '../../services/playerRsvp.service';
+import type { PlayerRsvpStatus } from '../../services/playerRsvp.service';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
+import { teamEventsService } from '../../services/teamEvents.service';
+import { clubsService } from '../../services/clubs.service';
+import { activeFffSeason } from '../../services/frenchFootballStandings.service';
+import { formatCalendarDate } from '../../utils/seasonCalendar';
+import {
+  EVENT_TYPE_LABELS,
+  isCoachMatchEvent,
+  userRsvp,
+  type RsvpStatus,
+  type TeamEvent,
+} from '../../models/TeamEvent';
+import { colors } from '../../theme/designTokens';
+import { APPLE_FONT_STACK } from '../../theme/appleTypography';
 
-export type SaisonTabId = 'matchs' | 'classement' | 'objectifs';
+export type SaisonTabId = 'matchs' | 'classement' | 'stats';
 
 export function PlayerSaisonScreen() {
   const insets = useSafeAreaInsets();
   const profile = useSessionProfile();
-  const userId = profile?.uid || 'player-demo';
-
   const [activeTab, setActiveTab] = useState<SaisonTabId>('matchs');
-  const [rsvp, setRsvp] = useState<PlayerRsvpStatus>('present');
+
+  /** Événements réels du joueur : null = chargement, erreur => liste vide + bandeau. */
+  const [events, setEvents] = useState<TeamEvent[] | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [rsvpBusy, setRsvpBusy] = useState(false);
+  const [clubName, setClubName] = useState<string | null>(null);
+
+  const clubId = profile?.profile.club_id ?? '';
+  const seasonLabel = activeFffSeason().replace('-', '/');
 
   useEffect(() => {
-    void playerRsvpService.getRsvp(userId, 'match-j17').then(setRsvp);
-  }, [userId]);
+    if (!profile?.uid) return;
+    let alive = true;
+    setEvents(null);
+    setLoadError(false);
+    teamEventsService
+      .listForUser(profile.uid, clubId || undefined)
+      .then((rows) => {
+        if (!alive) return;
+        setEvents(rows);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setEvents([]);
+        setLoadError(true);
+      });
+    if (clubId) {
+      clubsService
+        .getById(clubId)
+        .then((c) => alive && setClubName(c?.name ?? null))
+        .catch(() => undefined);
+    }
+    return () => {
+      alive = false;
+    };
+  }, [profile?.uid, clubId]);
+
+  const reload = () => {
+    if (!profile?.uid) return;
+    teamEventsService
+      .listForUser(profile.uid, clubId || undefined)
+      .then((rows) => setEvents(rows))
+      .catch(() => undefined);
+  };
+
+  const matchEvents = (events ?? []).filter(isCoachMatchEvent);
+  const nextMatch =
+    matchEvents
+      .slice()
+      .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())
+      .find((e) => e.starts_at.getTime() >= Date.now() - 2 * 3600 * 1000) ?? null;
+
+  const pastMatches = matchEvents
+    .filter((e) => e.starts_at.getTime() < Date.now() && e.live_state)
+    .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime())
+    .slice(0, 10);
+
+  /** Statistiques réelles agrégées depuis les feuilles de match saisies par le staff. */
+  const myStats = (() => {
+    const uid = profile?.uid ?? '';
+    let goals = 0;
+    let assists = 0;
+    const ratings: number[] = [];
+    for (const e of matchEvents) {
+      const s = e.player_match_stats?.[uid];
+      if (!s) continue;
+      goals += s.goals ?? 0;
+      assists += s.assists ?? 0;
+      if (typeof s.rating === 'number') ratings.push(s.rating);
+    }
+    return {
+      goals,
+      assists,
+      ratedSheets: ratings.length,
+      averageRating: ratings.length
+        ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
+        : null,
+    };
+  })();
+
+  const RSVP_MAP: Record<PlayerRsvpStatus, RsvpStatus> = {
+    present: 'yes',
+    pending: 'maybe',
+    absent: 'no',
+  };
+  function toUiRsvp(status: RsvpStatus): PlayerRsvpStatus {
+    if (status === 'yes' || status === 'late_under_10' || status === 'late_over_10' || status === 'late_unknown') {
+      return 'present';
+    }
+    if (status === 'no') return 'absent';
+    if (status === 'maybe') return 'pending';
+    return 'pending';
+  }
+  const myRsvp: PlayerRsvpStatus | null = nextMatch && profile ? toUiRsvp(userRsvp(nextMatch, profile.uid)) : null;
 
   const handleRsvpChange = (status: PlayerRsvpStatus) => {
     prodayHaptics.impactMedium();
-    setRsvp(status);
-    void playerRsvpService.setRsvp(userId, 'match-j17', status);
+    if (!nextMatch || !profile?.uid) return;
+    setRsvpBusy(true);
+    teamEventsService
+      .updateRsvp(nextMatch.id, profile.uid, RSVP_MAP[status])
+      .then(reload)
+      .catch(() => undefined)
+      .finally(() => setRsvpBusy(false));
   };
 
   const handleTabChange = (tabId: SaisonTabId) => {
     prodayHaptics.selection();
     setActiveTab(tabId);
   };
-
-  const pastMatches = [
-    {
-      id: 'm16',
-      round: 'J16',
-      date: 'Sam. 14 Sept',
-      opponent: 'AS Meudon',
-      home: true,
-      scoreClub: 3,
-      scoreOpp: 1,
-      result: 'V',
-      started: true,
-      minutes: 90,
-      goals: 2,
-      assists: 0,
-      rating: 8.5,
-      isMotm: true,
-    },
-    {
-      id: 'm15',
-      round: 'J15',
-      date: 'Dim. 7 Sept',
-      opponent: 'ES Colombes',
-      home: false,
-      scoreClub: 2,
-      scoreOpp: 2,
-      result: 'N',
-      started: true,
-      minutes: 85,
-      goals: 1,
-      assists: 1,
-      rating: 7.8,
-      isMotm: false,
-    },
-    {
-      id: 'm14',
-      round: 'J14',
-      date: 'Sam. 31 Août',
-      opponent: 'FC Rueil',
-      home: true,
-      scoreClub: 4,
-      scoreOpp: 0,
-      result: 'V',
-      started: true,
-      minutes: 78,
-      goals: 2,
-      assists: 2,
-      rating: 8.2,
-      isMotm: true,
-    },
-    {
-      id: 'm13',
-      round: 'J13',
-      date: 'Dim. 24 Août',
-      opponent: 'US Suresnes',
-      home: false,
-      scoreClub: 1,
-      scoreOpp: 0,
-      result: 'V',
-      started: true,
-      minutes: 90,
-      goals: 0,
-      assists: 1,
-      rating: 7.4,
-      isMotm: false,
-    },
-    {
-      id: 'm12',
-      round: 'J12',
-      date: 'Sam. 17 Août',
-      opponent: 'Racing CFF',
-      home: true,
-      scoreClub: 2,
-      scoreOpp: 1,
-      result: 'V',
-      started: true,
-      minutes: 90,
-      goals: 1,
-      assists: 0,
-      rating: 8.0,
-      isMotm: false,
-    },
-    {
-      id: 'm11',
-      round: 'J11',
-      date: 'Dim. 10 Août',
-      opponent: 'Red Star FC B',
-      home: false,
-      scoreClub: 2,
-      scoreOpp: 1,
-      result: 'V',
-      started: true,
-      minutes: 90,
-      goals: 1,
-      assists: 0,
-      rating: 7.9,
-      isMotm: false,
-    },
-  ];
-
-  const upcomingMatches = [
-    { round: 'J18', date: 'Sam. 27 Sept · 18:00', opponent: 'Entente SSG', home: false },
-    { round: 'J19', date: 'Sam. 4 Oct · 18:00', opponent: 'US Créteil B', home: true },
-    { round: 'J20', date: 'Dim. 12 Oct · 15:00', opponent: 'Paris 13 Atletico B', home: false },
-  ];
-
-  const standingsData = [
-    { rank: 1, name: 'FC ProDay', pts: 39, m: 16, v: 12, n: 3, d: 1, diff: '+22', form: ['V', 'V', 'V', 'N', 'V'], isMyClub: true },
-    { rank: 2, name: 'RC France', pts: 36, m: 16, v: 11, n: 3, d: 2, diff: '+15', form: ['V', 'D', 'V', 'V', 'V'], isMyClub: false },
-    { rank: 3, name: 'Entente SSG', pts: 31, m: 16, v: 9, n: 4, d: 3, diff: '+8', form: ['D', 'V', 'N', 'V', 'N'], isMyClub: false },
-    { rank: 4, name: 'US Créteil B', pts: 28, m: 16, v: 8, n: 4, d: 4, diff: '+4', form: ['V', 'N', 'V', 'V', 'D'], isMyClub: false },
-    { rank: 5, name: 'Red Star FC B', pts: 26, m: 16, v: 7, n: 5, d: 4, diff: '+2', form: ['D', 'N', 'V', 'D', 'V'], isMyClub: false },
-    { rank: 6, name: 'Paris 13 Atletico B', pts: 24, m: 16, v: 6, n: 6, d: 4, diff: '0', form: ['V', 'D', 'V', 'N', 'N'], isMyClub: false },
-    { rank: 7, name: 'AS Meudon', pts: 22, m: 16, v: 6, n: 4, d: 6, diff: '-2', form: ['N', 'V', 'V', 'D', 'D'], isMyClub: false },
-    { rank: 8, name: 'ES Colombes', pts: 20, m: 16, v: 5, n: 5, d: 6, diff: '-4', form: ['D', 'N', 'D', 'V', 'N'], isMyClub: false },
-    { rank: 9, name: 'FC Rueil', pts: 17, m: 16, v: 4, n: 5, d: 7, diff: '-7', form: ['D', 'V', 'D', 'N', 'D'], isMyClub: false },
-    { rank: 10, name: 'US Suresnes', pts: 14, m: 16, v: 3, n: 5, d: 8, diff: '-11', form: ['V', 'D', 'N', 'D', 'D'], isMyClub: false },
-    { rank: 11, name: 'Montrouge FC', pts: 11, m: 16, v: 2, n: 5, d: 9, diff: '-14', form: ['D', 'D', 'D', 'N', 'D'], isMyClub: false },
-    { rank: 12, name: 'CS Brétigny B', pts: 7, m: 16, v: 1, n: 4, d: 11, diff: '-13', form: ['N', 'D', 'D', 'D', 'D'], isMyClub: false },
-  ];
 
   return (
     <View style={[styles.root, { paddingTop: Math.max(insets.top, 12) }]}>
@@ -167,68 +151,31 @@ export function PlayerSaisonScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: TAB_BAR_CONTENT_INSET + 24 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top Header : Identité de la Saison */}
+        {/* Top Header : Identité de la Saison (données réelles uniquement) */}
         <View style={styles.header}>
           <View>
-            <View style={styles.seasonBadge}>
-              <Ionicons name="shield" size={13} color="#30D158" />
-              <Text style={styles.seasonBadgeText}>FFF · SENIORS R1 · POULE B</Text>
-            </View>
-            <Text style={styles.headerTitle}>Saison 2025/2026</Text>
-            <Text style={styles.headerSub}>FC ProDay · Championnat Régional</Text>
-          </View>
-
-          <View style={styles.roundPill}>
-            <Text style={styles.roundPillVal}>J17 / 26</Text>
-            <Text style={styles.roundPillSub}>65% ÉCOULÉ</Text>
+            <Text style={styles.headerTitle}>Ma Saison</Text>
+            <Text style={styles.headerSub}>
+              {clubName ? `${clubName} · ` : ''}Saison {seasonLabel}
+            </Text>
           </View>
         </View>
 
-        {/* Hero Banner Équipe : Bilan Saison en Direct */}
-        <LinearGradient
-          colors={['#161E2E', '#0F172A']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.heroTeamBanner}
-        >
-          <View style={styles.heroBannerHeader}>
-            <View style={styles.heroRankPill}>
-              <MaterialCommunityIcons name="trophy" size={14} color="#FFD700" />
-              <Text style={styles.heroRankText}>1er du Championnat</Text>
-            </View>
-            <Text style={styles.heroPromotionTag}>Zone Montée N3</Text>
+        {loadError ? (
+          <View style={styles.honestCard}>
+            <Text style={styles.honestNoteText}>
+              Impossible de charger tes matchs. Vérifie ta connexion puis reviens sur cet onglet.
+            </Text>
           </View>
-
-          <View style={styles.heroStatsRow}>
-            <View style={styles.heroStatCol}>
-              <Text style={[styles.heroStatVal, { color: '#30D158' }]}>39</Text>
-              <Text style={styles.heroStatLbl}>POINTS</Text>
-            </View>
-            <View style={styles.heroStatDivider} />
-            <View style={styles.heroStatCol}>
-              <Text style={styles.heroStatVal}>12 - 3 - 1</Text>
-              <Text style={styles.heroStatLbl}>V - N - D</Text>
-            </View>
-            <View style={styles.heroStatDivider} />
-            <View style={styles.heroStatCol}>
-              <Text style={[styles.heroStatVal, { color: '#0A84FF' }]}>+22</Text>
-              <Text style={styles.heroStatLbl}>DIFF. BUTS</Text>
-            </View>
-            <View style={styles.heroStatDivider} />
-            <View style={styles.heroStatCol}>
-              <Text style={[styles.heroStatVal, { color: '#FFD700' }]}>7.9</Text>
-              <Text style={styles.heroStatLbl}>NOTE MOY.</Text>
-            </View>
-          </View>
-        </LinearGradient>
+        ) : null}
 
         {/* Apple Segmented Pill Rail */}
         <View style={styles.pillRail}>
           {(
             [
               { id: 'matchs', label: 'Matchs & Calendrier', icon: 'football' },
-              { id: 'classement', label: 'Classement FFF', icon: 'trophy' },
-              { id: 'objectifs', label: 'Objectifs Saison', icon: 'flag' },
+              { id: 'classement', label: 'Classement', icon: 'trophy' },
+              { id: 'stats', label: 'Mes Stats', icon: 'stats-chart' },
             ] as const
           ).map((tab) => {
             const isActive = activeTab === tab.id;
@@ -239,477 +186,232 @@ export function PlayerSaisonScreen() {
                 onPress={() => handleTabChange(tab.id)}
                 activeOpacity={0.8}
               >
-                <Ionicons
-                  name={tab.icon as any}
-                  size={13}
-                  color={isActive ? '#000000' : '#94A3B8'}
-                />
-                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                  {tab.label}
-                </Text>
+                <Ionicons name={tab.icon as any} size={13} color={isActive ? '#000000' : '#94A3B8'} />
+                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{tab.label}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
 
-        {/* TAB 1: MATCHS & CALENDRIER */}
+        {/* TAB 1: MATCHS RÉELS & CALENDRIER */}
         {activeTab === 'matchs' ? (
           <View style={styles.tabContent}>
-            {/* Prochain Match Immédiat (Hero Card J17) */}
-            <LinearGradient
-              colors={['#181822', '#101016']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.nextMatchCard}
-            >
-              <View style={styles.nextMatchHeader}>
-                <View style={styles.matchTagGreen}>
-                  <Ionicons name="flame" size={13} color="#30D158" />
-                  <Text style={styles.matchTagGreenText}>PROCHAIN MATCH · J17 AU SOMMET</Text>
-                </View>
-                <View style={styles.countdownBadge}>
-                  <Ionicons name="time" size={12} color="#FBBF24" />
-                  <Text style={styles.countdownText}>J-2 · 18:00</Text>
-                </View>
+            {events === null ? (
+              <View style={styles.honestCard}>
+                <Text style={styles.honestNoteText}>Chargement de tes convocations…</Text>
               </View>
-
-              <View style={styles.clashRow}>
-                <View style={styles.teamCol}>
-                  <Text style={styles.teamName}>FC ProDay</Text>
-                  <Text style={styles.teamRankLeader}>1er · Domicile</Text>
+            ) : nextMatch ? (
+              <LinearGradient
+                colors={['#181822', '#101016']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.nextMatchCard}
+              >
+                <View style={styles.nextMatchHeader}>
+                  <View style={styles.matchTagGreen}>
+                    <Ionicons name="flame" size={13} color="#30D158" />
+                    <Text style={styles.matchTagGreenText}>PROCHAIN MATCH</Text>
+                  </View>
+                  <View style={styles.countdownBadge}>
+                    <Ionicons name="time" size={12} color="#FBBF24" />
+                    <Text style={styles.countdownText}>{formatCalendarDate(nextMatch.starts_at)}</Text>
+                  </View>
                 </View>
 
-                <View style={styles.vsBadge}>
-                  <Text style={styles.vsText}>VS</Text>
+                <View style={styles.clashRow}>
+                  <Text style={styles.nextMatchTitle} numberOfLines={2}>
+                    {nextMatch.title || EVENT_TYPE_LABELS[nextMatch.event_type]}
+                  </Text>
                 </View>
 
-                <View style={styles.teamCol}>
-                  <Text style={styles.teamName}>RC France</Text>
-                  <Text style={styles.teamRankChallenger}>2e · Extérieur</Text>
+                <View style={styles.matchInfoLine}>
+                  <Ionicons name="location" size={12} color="#94A3B8" />
+                  <Text style={styles.matchInfoText} numberOfLines={1}>
+                    {nextMatch.location_label || nextMatch.location || nextMatch.city || 'Lieu à confirmer'}
+                  </Text>
                 </View>
-              </View>
 
-              <View style={styles.matchInfoLine}>
-                <Ionicons name="location" size={12} color="#94A3B8" />
-                <Text style={styles.matchInfoText}>Stade Municipal · ☀️ 18°C · Pelouse Synthétique</Text>
-              </View>
-
-              {/* RSVP Convocations */}
-              <View style={styles.rsvpSection}>
-                <Text style={styles.rsvpSectionTitle}>MA CONVOCATION / DISPONIBILITÉ :</Text>
-                <View style={styles.rsvpBar}>
-                  <TouchableOpacity
-                    style={[styles.rsvpBtn, rsvp === 'present' && styles.rsvpBtnPresent]}
-                    onPress={() => handleRsvpChange('present')}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={14}
-                      color={rsvp === 'present' ? '#FFFFFF' : '#30D158'}
-                    />
-                    <Text
-                      style={[styles.rsvpBtnText, rsvp === 'present' && styles.rsvpBtnTextActive]}
+                {/* RSVP Convocations — écriture réelle via teamEventsService */}
+                <View style={styles.rsvpSection}>
+                  <Text style={styles.rsvpSectionTitle}>MA CONVOCATION / DISPONIBILITÉ :</Text>
+                  <View style={styles.rsvpBar}>
+                    <TouchableOpacity
+                      style={[styles.rsvpBtn, myRsvp === 'present' && styles.rsvpBtnPresent]}
+                      onPress={() => handleRsvpChange('present')}
+                      disabled={rsvpBusy}
+                      activeOpacity={0.8}
                     >
-                      Présent
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.rsvpBtn, rsvp === 'pending' && styles.rsvpBtnUncertain]}
-                    onPress={() => handleRsvpChange('pending')}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons
-                      name="help-circle"
-                      size={14}
-                      color={rsvp === 'pending' ? '#FFFFFF' : '#FBBF24'}
-                    />
-                    <Text
-                      style={[styles.rsvpBtnText, rsvp === 'pending' && styles.rsvpBtnTextActive]}
-                    >
-                      Incertain
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.rsvpBtn, rsvp === 'absent' && styles.rsvpBtnAbsent]}
-                    onPress={() => handleRsvpChange('absent')}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons
-                      name="close-circle"
-                      size={14}
-                      color={rsvp === 'absent' ? '#FFFFFF' : '#FF453A'}
-                    />
-                    <Text
-                      style={[styles.rsvpBtnText, rsvp === 'absent' && styles.rsvpBtnTextActive]}
-                    >
-                      Absent
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </LinearGradient>
-
-            {/* Historique des Journées Passées avec Notes Staff */}
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Feuilles de Match & Notations du Staff</Text>
-              <Text style={styles.sectionSub}>Officiel FFF</Text>
-            </View>
-
-            <View style={styles.matchList}>
-              {pastMatches.map((m) => (
-                <View key={m.id} style={styles.matchCard}>
-                  <View style={styles.matchCardTop}>
-                    <View style={styles.matchRoundBadge}>
-                      <Text style={styles.matchRoundText}>{m.round}</Text>
-                      <Text style={styles.matchDateSub}>{m.date}</Text>
-                    </View>
-
-                    <View style={styles.matchCenterCol}>
-                      <View style={styles.opponentRow}>
-                        <Text style={styles.matchOpponent}>{m.opponent}</Text>
-                        <Text style={styles.matchLocation}>({m.home ? 'Dom.' : 'Ext.'})</Text>
-                      </View>
-                      <Text style={styles.matchPlayerPerformance}>
-                        {m.started ? 'Titulaire' : 'Remplaçant'} · {m.minutes}' ·{' '}
-                        {m.goals > 0 ? `⚽ ${m.goals} but${m.goals > 1 ? 's' : ''}` : ''}
-                        {m.goals > 0 && m.assists > 0 ? ' · ' : ''}
-                        {m.assists > 0 ? `🎯 ${m.assists} passe${m.assists > 1 ? 's' : ''}` : ''}
-                        {m.goals === 0 && m.assists === 0 ? 'Actif' : ''}
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={14}
+                        color={myRsvp === 'present' ? '#FFFFFF' : '#30D158'}
+                      />
+                      <Text style={[styles.rsvpBtnText, myRsvp === 'present' && styles.rsvpBtnTextActive]}>
+                        Présent
                       </Text>
-                    </View>
+                    </TouchableOpacity>
 
-                    <View style={styles.matchRightScore}>
-                      <View
-                        style={[
-                          styles.resultScoreBadge,
-                          m.result === 'V'
-                            ? styles.resScoreWin
-                            : m.result === 'N'
-                            ? styles.resScoreDraw
-                            : styles.resScoreLoss,
-                        ]}
-                      >
-                        <Text style={styles.resScoreText}>
-                          {m.scoreClub} - {m.scoreOpp}
-                        </Text>
-                      </View>
+                    <TouchableOpacity
+                      style={[styles.rsvpBtn, myRsvp === 'pending' && styles.rsvpBtnUncertain]}
+                      onPress={() => handleRsvpChange('pending')}
+                      disabled={rsvpBusy}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name="help-circle"
+                        size={14}
+                        color={myRsvp === 'pending' ? '#FFFFFF' : '#FBBF24'}
+                      />
+                      <Text style={[styles.rsvpBtnText, myRsvp === 'pending' && styles.rsvpBtnTextActive]}>
+                        Incertain
+                      </Text>
+                    </TouchableOpacity>
 
-                      <View style={styles.ratingBox}>
-                        <Text style={styles.ratingVal}>{m.rating}</Text>
-                        <Text style={styles.ratingMax}>/10</Text>
-                      </View>
-                    </View>
+                    <TouchableOpacity
+                      style={[styles.rsvpBtn, myRsvp === 'absent' && styles.rsvpBtnAbsent]}
+                      onPress={() => handleRsvpChange('absent')}
+                      disabled={rsvpBusy}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name="close-circle"
+                        size={14}
+                        color={myRsvp === 'absent' ? '#FFFFFF' : '#FF453A'}
+                      />
+                      <Text style={[styles.rsvpBtnText, myRsvp === 'absent' && styles.rsvpBtnTextActive]}>
+                        Absent
+                      </Text>
+                    </TouchableOpacity>
                   </View>
-
-                  {m.isMotm ? (
-                    <View style={styles.motmTag}>
-                      <MaterialCommunityIcons name="star" size={13} color="#FFD700" />
-                      <Text style={styles.motmTagText}>ÉLU HOMME DU MATCH PAR LE COACH</Text>
-                    </View>
-                  ) : null}
                 </View>
-              ))}
-            </View>
+              </LinearGradient>
+            ) : (
+              <View style={styles.honestCard}>
+                <Text style={styles.honestNoteText}>
+                  Aucun match programmé pour l’instant. Les convocations créées par le staff
+                  apparaîtront ici.
+                </Text>
+              </View>
+            )}
 
-            {/* Matchs à Venir */}
+            {/* Historique réel : scores enregistrés par le staff */}
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Calendrier des Journées Suivantes</Text>
+              <Text style={styles.sectionTitle}>Derniers scores enregistrés</Text>
             </View>
 
-            <View style={styles.upcomingList}>
-              {upcomingMatches.map((up, idx) => (
-                <View key={idx} style={styles.upcomingRow}>
-                  <View style={styles.upcomingRoundBadge}>
-                    <Text style={styles.upcomingRoundText}>{up.round}</Text>
-                  </View>
-                  <View style={styles.upcomingInfo}>
-                    <Text style={styles.upcomingOpponent}>{up.opponent}</Text>
-                    <Text style={styles.upcomingDate}>
-                      {up.date} · {up.home ? 'À Domicile' : 'En Déplacement'}
-                    </Text>
-                  </View>
-                  <Ionicons name="calendar-outline" size={16} color="#64748B" />
-                </View>
-              ))}
-            </View>
+            {events !== null && pastMatches.length === 0 ? (
+              <View style={styles.honestCard}>
+                <Text style={styles.honestNoteText}>
+                  Aucun score enregistré. Les résultats saisis par le staff après tes matchs
+                  s’afficheront ici.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.matchList}>
+                {pastMatches.map((m) => {
+                  const uid = profile?.uid ?? '';
+                  const ls = m.live_state!;
+                  const mine = m.player_match_stats?.[uid];
+                  const result = ls.home_score > ls.away_score ? 'V' : ls.home_score === ls.away_score ? 'N' : 'D';
+                  return (
+                    <View key={m.id} style={styles.matchCard}>
+                      <View style={styles.matchCardTop}>
+                        <View style={styles.matchRoundBadge}>
+                          <Text style={styles.matchRoundText}>{formatCalendarDate(m.starts_at)}</Text>
+                        </View>
+
+                        <View style={styles.matchCenterCol}>
+                          <View style={styles.opponentRow}>
+                            <Text style={styles.matchOpponent} numberOfLines={1}>
+                              {ls.opponent_name || m.title || 'Match'}
+                            </Text>
+                          </View>
+                          {mine ? (
+                            <Text style={styles.matchPlayerPerformance}>
+                              {mine.goals ? `${mine.goals} but${mine.goals > 1 ? 's' : ''}` : ''}
+                              {mine.goals && mine.assists ? ' · ' : ''}
+                              {mine.assists ? `${mine.assists} passe${mine.assists > 1 ? 's' : ''}` : ''}
+                              {!mine.goals && !mine.assists ? 'Sélectionné' : ''}
+                            </Text>
+                          ) : null}
+                        </View>
+
+                        <View style={styles.matchRightScore}>
+                          <View
+                            style={[
+                              styles.resultScoreBadge,
+                              result === 'V'
+                                ? styles.resScoreWin
+                                : result === 'N'
+                                  ? styles.resScoreDraw
+                                  : styles.resScoreLoss,
+                            ]}
+                          >
+                            <Text style={styles.resScoreText}>
+                              {ls.home_score} - {ls.away_score}
+                            </Text>
+                          </View>
+                          {typeof mine?.rating === 'number' ? (
+                            <View style={styles.ratingBox}>
+                              <Text style={styles.ratingVal}>{mine.rating}</Text>
+                              <Text style={styles.ratingMax}>/10</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </View>
         ) : null}
 
-        {/* TAB 2: CLASSEMENT FFF OFFICIEL */}
+        {/* TAB 2: CLASSEMENT — aucun classement inventé */}
         {activeTab === 'classement' ? (
           <View style={styles.tabContent}>
-            <View style={styles.standingsHeaderBlock}>
-              <View style={styles.seasonBadge}>
-                <Ionicons name="trophy" size={12} color="#FFD700" />
-                <Text style={styles.seasonBadgeText}>CLASSEMENT GÉNÉRAL · SENIORS R1 POULE B</Text>
-              </View>
-              <Text style={styles.standingsNotice}>
-                Mise à jour en temps réel après la 16e journée.
+            <View style={styles.honestCard}>
+              <Text style={styles.honestNoteText}>
+                Aucun classement officiel rattaché à ton club. Le classement de ta compétition
+                apparaîtra ici dès qu’une source FFF sera validée par le club — aucun
+                championnat fictif n’est affiché.
               </Text>
-            </View>
-
-            {/* Table Header */}
-            <View style={styles.tableHeaderRow}>
-              <Text style={[styles.thText, { width: 30 }]}>#</Text>
-              <Text style={[styles.thText, { flex: 1 }]}>CLUB</Text>
-              <Text style={[styles.thText, { width: 40, textAlign: 'center' }]}>PTS</Text>
-              <Text style={[styles.thText, { width: 30, textAlign: 'center' }]}>J</Text>
-              <Text style={[styles.thText, { width: 36, textAlign: 'center' }]}>DIFF</Text>
-              <Text style={[styles.thText, { width: 68, textAlign: 'right' }]}>FORME</Text>
-            </View>
-
-            {/* Standings Table Rows */}
-            <View style={styles.tableBody}>
-              {standingsData.map((item) => (
-                <View
-                  key={item.rank}
-                  style={[
-                    styles.tableRow,
-                    item.isMyClub && styles.myClubRow,
-                    item.rank === 1 && styles.firstPlaceBorder,
-                  ]}
-                >
-                  <View style={styles.rankCol}>
-                    <View
-                      style={[
-                        styles.rankBadge,
-                        item.rank === 1
-                          ? styles.rankGold
-                          : item.rank === 2
-                          ? styles.rankSilver
-                          : item.rank >= 10
-                          ? styles.rankRelegation
-                          : styles.rankStandard,
-                      ]}
-                    >
-                      <Text style={styles.rankNum}>{item.rank}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.clubNameCol}>
-                    <Text
-                      style={[
-                        styles.clubNameText,
-                        item.isMyClub && styles.myClubNameText,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {item.name}
-                    </Text>
-                    {item.isMyClub ? (
-                      <View style={styles.myClubIndicator}>
-                        <Text style={styles.myClubIndicatorText}>MON CLUB</Text>
-                      </View>
-                    ) : null}
-                  </View>
-
-                  <Text style={[styles.ptsText, item.isMyClub && { color: '#30D158' }]}>
-                    {item.pts}
-                  </Text>
-                  <Text style={styles.mText}>{item.m}</Text>
-                  <Text style={styles.diffText}>{item.diff}</Text>
-
-                  <View style={styles.formRow}>
-                    {item.form.slice(-3).map((f, i) => (
-                      <View
-                        key={i}
-                        style={[
-                          styles.formDot,
-                          f === 'V'
-                            ? styles.formWin
-                            : f === 'N'
-                            ? styles.formDraw
-                            : styles.formLoss,
-                        ]}
-                      >
-                        <Text style={styles.formLetter}>{f}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              ))}
-            </View>
-
-            {/* Standings Legend */}
-            <View style={styles.legendRow}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#30D158' }]} />
-                <Text style={styles.legendLabel}>1er : Montée directe N3</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#0A84FF' }]} />
-                <Text style={styles.legendLabel}>2e : Barrage N3</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#FF453A' }]} />
-                <Text style={styles.legendLabel}>10-12e : Descente R2</Text>
-              </View>
             </View>
           </View>
         ) : null}
 
-        {/* TAB 3: OBJECTIFS & QUÊTES DE LA SAISON */}
-        {activeTab === 'objectifs' ? (
+        {/* TAB 3: MES STATS RÉELLES (feuilles de match saisies par le staff) */}
+        {activeTab === 'stats' ? (
           <View style={styles.tabContent}>
-            {/* Snapshot Individuel */}
-            <View style={styles.kpiGrid}>
-              <View style={styles.kpiCard}>
-                <Text style={[styles.kpiVal, { color: '#30D158' }]}>14</Text>
-                <Text style={styles.kpiLbl}>BUTS EN SAISON</Text>
-                <Text style={styles.kpiSub}>1er Buteur R1</Text>
+            {myStats.ratedSheets === 0 && myStats.goals === 0 && myStats.assists === 0 ? (
+              <View style={styles.honestCard}>
+                <Text style={styles.honestNoteText}>
+                  Aucune feuille de match saisie pour l’instant. Tes buts, passes décisives et
+                  notes du staff apparaîtront ici dès leur enregistrement.
+                </Text>
               </View>
-
-              <View style={styles.kpiCard}>
-                <Text style={[styles.kpiVal, { color: '#0A84FF' }]}>8</Text>
-                <Text style={styles.kpiLbl}>PASSES DÉCISIVES</Text>
-                <Text style={styles.kpiSub}>2e Passeur R1</Text>
-              </View>
-
-              <View style={styles.kpiCard}>
-                <Text style={[styles.kpiVal, { color: '#FFD700' }]}>7.9</Text>
-                <Text style={styles.kpiLbl}>NOTE MOYENNE</Text>
-                <Text style={styles.kpiSub}>Sur 16 feuilles</Text>
-              </View>
-
-              <View style={styles.kpiCard}>
-                <Text style={[styles.kpiVal, { color: '#A855F7' }]}>1 440'</Text>
-                <Text style={styles.kpiLbl}>TEMPS DE JEU</Text>
-                <Text style={styles.kpiSub}>16 Titularisations</Text>
-              </View>
-            </View>
-
-            {/* Jauges d'Objectifs Fixés avec le Coach */}
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Objectifs Annuels du Joueur</Text>
-              <Text style={styles.sectionSub}>Fixés au début de saison</Text>
-            </View>
-
-            <View style={styles.goalCard}>
-              <View style={styles.goalHeaderRow}>
-                <Text style={styles.goalTitle}>⚽ Objectif Buts en Championnat</Text>
-                <Text style={styles.goalProgressVal}>14 / 20 Buts (70%)</Text>
-              </View>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: '70%', backgroundColor: '#30D158' }]} />
-              </View>
-              <Text style={styles.goalRemark}>Plus que 6 buts pour atteindre le Palier Or.</Text>
-            </View>
-
-            <View style={styles.goalCard}>
-              <View style={styles.goalHeaderRow}>
-                <Text style={styles.goalTitle}>🎯 Objectif Passes Décisives</Text>
-                <Text style={styles.goalProgressVal}>8 / 10 Passes (80%)</Text>
-              </View>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: '80%', backgroundColor: '#0A84FF' }]} />
-              </View>
-              <Text style={styles.goalRemark}>En excellente voie pour dépasser la cible.</Text>
-            </View>
-
-            <View style={styles.goalCard}>
-              <View style={styles.goalHeaderRow}>
-                <Text style={styles.goalTitle}>⏱️ Temps de Jeu & Titularisations</Text>
-                <Text style={styles.goalProgressVal}>1 440' / 2 000' (72%)</Text>
-              </View>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: '72%', backgroundColor: '#A855F7' }]} />
-              </View>
-              <Text style={styles.goalRemark}>100% de titularisations lors des 16 journées.</Text>
-            </View>
-
-            <View style={styles.goalCard}>
-              <View style={styles.goalHeaderRow}>
-                <Text style={styles.goalTitle}>⭐ Note Moyenne Staff Cible</Text>
-                <Text style={[styles.goalProgressVal, { color: '#FFD700' }]}>7.9 / 8.0 (98%)</Text>
-              </View>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: '98%', backgroundColor: '#FFD700' }]} />
-              </View>
-              <Text style={styles.goalRemark}>Objectif atteint et consolidé depuis 5 matchs.</Text>
-            </View>
-
-            {/* Quêtes & Défis Hebdomadaires */}
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Quêtes de la Semaine</Text>
-              <Text style={styles.sectionSub}>+XP de Saison</Text>
-            </View>
-
-            <View style={styles.questCard}>
-              <View style={styles.questLeft}>
-                <View style={[styles.questIconBox, { backgroundColor: 'rgba(48, 209, 88, 0.12)' }]}>
-                  <Ionicons name="football" size={16} color="#30D158" />
+            ) : (
+              <View style={styles.kpiGrid}>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiVal, { color: '#30D158' }]}>{myStats.goals}</Text>
+                  <Text style={styles.kpiLbl}>BUTS SAISIS</Text>
                 </View>
-                <View style={styles.questTextWrap}>
-                  <Text style={styles.questTitle}>Cadre au moins 3 tirs au prochain match</Text>
-                  <Text style={styles.questDesc}>Contre le RC France lors du choc J17</Text>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiVal, { color: '#0A84FF' }]}>{myStats.assists}</Text>
+                  <Text style={styles.kpiLbl}>PASSES DÉCISIVES</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiVal, { color: '#FFD700' }]}>
+                    {myStats.averageRating ?? '—'}
+                  </Text>
+                  <Text style={styles.kpiLbl}>NOTE MOYENNE</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiVal, { color: '#A855F7' }]}>{myStats.ratedSheets}</Text>
+                  <Text style={styles.kpiLbl}>FEUILLES NOTÉES</Text>
                 </View>
               </View>
-              <View style={styles.xpBadge}>
-                <Text style={styles.xpBadgeText}>+150 XP</Text>
-              </View>
-            </View>
-
-            <View style={styles.questCard}>
-              <View style={styles.questLeft}>
-                <View style={[styles.questIconBox, { backgroundColor: 'rgba(10, 132, 255, 0.12)' }]}>
-                  <Ionicons name="pulse" size={16} color="#0A84FF" />
-                </View>
-                <View style={styles.questTextWrap}>
-                  <Text style={styles.questTitle}>Check-in forme 5 jours d'affilée</Text>
-                  <Text style={styles.questDesc}>Progression actuelle : 4 / 5 jours</Text>
-                </View>
-              </View>
-              <View style={styles.xpBadge}>
-                <Text style={styles.xpBadgeText}>+200 XP</Text>
-              </View>
-            </View>
-
-            <View style={styles.questCard}>
-              <View style={styles.questLeft}>
-                <View style={[styles.questIconBox, { backgroundColor: 'rgba(255, 215, 0, 0.12)' }]}>
-                  <Ionicons name="checkmark-done" size={16} color="#FFD700" />
-                </View>
-                <View style={styles.questTextWrap}>
-                  <Text style={styles.questTitle}>Séance tactique vidéo validée</Text>
-                  <Text style={styles.questDesc}>Consignes d'attaque intégrées avec le coach</Text>
-                </View>
-              </View>
-              <View style={styles.completedTag}>
-                <Ionicons name="checkmark" size={12} color="#30D158" />
-                <Text style={styles.completedTagText}>Validée</Text>
-              </View>
-            </View>
-
-            {/* Distinctions & Trophées de la Saison */}
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Distinctions de la Saison</Text>
-            </View>
-
-            <View style={styles.trophiesRow}>
-              <View style={styles.trophyCard}>
-                <MaterialCommunityIcons name="star-circle" size={24} color="#FFD700" />
-                <Text style={styles.trophyCount}>4x</Text>
-                <Text style={styles.trophyTitle}>Homme du Match</Text>
-                <Text style={styles.trophySub}>J3, J8, J14, J16</Text>
-              </View>
-
-              <View style={styles.trophyCard}>
-                <MaterialCommunityIcons name="medal" size={24} color="#30D158" />
-                <Text style={styles.trophyCount}>1x</Text>
-                <Text style={styles.trophyTitle}>Joueur du Mois</Text>
-                <Text style={styles.trophySub}>Novembre 2025</Text>
-              </View>
-
-              <View style={styles.trophyCard}>
-                <MaterialCommunityIcons name="shield-star" size={24} color="#0A84FF" />
-                <Text style={styles.trophyCount}>3x</Text>
-                <Text style={styles.trophyTitle}>Équipe Type</Text>
-                <Text style={styles.trophySub}>Seniors R1 FFF</Text>
-              </View>
-            </View>
+            )}
           </View>
         ) : null}
       </ScrollView>
@@ -749,21 +451,21 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   seasonBadgeText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10.5,
     fontWeight: '800',
     color: '#30D158',
     letterSpacing: 0.5,
   },
   headerTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 24,
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: -0.4,
   },
   headerSub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12,
     color: '#94A3B8',
     marginTop: 2,
@@ -778,13 +480,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   roundPillVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 14,
     fontWeight: '900',
     color: '#30D158',
   },
   roundPillSub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9,
     fontWeight: '800',
     color: '#64748B',
@@ -815,13 +517,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   heroRankText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12,
     fontWeight: '800',
     color: '#FFD700',
   },
   heroPromotionTag: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     fontWeight: '700',
     color: '#30D158',
@@ -836,13 +538,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroStatVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 18,
     fontWeight: '900',
     color: '#FFFFFF',
   },
   heroStatLbl: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9.5,
     fontWeight: '800',
     color: '#64748B',
@@ -857,7 +559,7 @@ const styles = StyleSheet.create({
   /* Pill Rail */
   pillRail: {
     flexDirection: 'row',
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 4,
     borderWidth: 1,
@@ -882,7 +584,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   tabLabel: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     fontWeight: '700',
     color: '#94A3B8',
@@ -914,7 +616,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   matchTagGreenText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10.5,
     fontWeight: '800',
     color: '#30D158',
@@ -930,7 +632,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   countdownText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     fontWeight: '800',
     color: '#FBBF24',
@@ -945,20 +647,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   teamName: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 16,
     fontWeight: '900',
     color: '#FFFFFF',
   },
   teamRankLeader: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     fontWeight: '700',
     color: '#30D158',
     marginTop: 2,
   },
   teamRankChallenger: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     fontWeight: '700',
     color: '#94A3B8',
@@ -974,7 +676,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
   },
   vsText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
     fontWeight: '900',
     color: '#94A3B8',
@@ -989,7 +691,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.06)',
   },
   matchInfoText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     color: '#94A3B8',
   },
@@ -1000,7 +702,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.06)',
   },
   rsvpSectionTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
     fontWeight: '800',
     color: '#64748B',
@@ -1033,7 +735,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF453A',
   },
   rsvpBtnText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     fontWeight: '700',
     color: '#94A3B8',
@@ -1052,13 +754,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   sectionTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 14,
     fontWeight: '800',
     color: '#FFFFFF',
   },
   sectionSub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     color: '#64748B',
   },
@@ -1068,7 +770,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   matchCard: {
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -1079,7 +781,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   matchRoundBadge: {
-    backgroundColor: '#1C1C24',
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 6,
@@ -1088,13 +790,13 @@ const styles = StyleSheet.create({
     width: 52,
   },
   matchRoundText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 12,
     fontWeight: '900',
     color: '#30D158',
   },
   matchDateSub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 8.5,
     color: '#64748B',
     marginTop: 2,
@@ -1109,18 +811,18 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   matchOpponent: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 13,
     fontWeight: '800',
     color: '#FFFFFF',
   },
   matchLocation: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     color: '#64748B',
   },
   matchPlayerPerformance: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     color: '#94A3B8',
     marginTop: 2,
@@ -1144,7 +846,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 69, 58, 0.15)',
   },
   resScoreText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11.5,
     fontWeight: '800',
     color: '#FFFFFF',
@@ -1154,13 +856,13 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   ratingVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 13,
     fontWeight: '900',
     color: '#FFD700',
   },
   ratingMax: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9,
     color: '#64748B',
   },
@@ -1176,7 +878,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   motmTagText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9.5,
     fontWeight: '800',
     color: '#FFD700',
@@ -1190,21 +892,21 @@ const styles = StyleSheet.create({
   upcomingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
   },
   upcomingRoundBadge: {
-    backgroundColor: '#1E1E28',
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
     marginRight: 10,
   },
   upcomingRoundText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     fontWeight: '800',
     color: '#94A3B8',
@@ -1213,13 +915,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   upcomingOpponent: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12.5,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   upcomingDate: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10.5,
     color: '#64748B',
     marginTop: 1,
@@ -1230,7 +932,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   standingsNotice: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     color: '#64748B',
     marginTop: 4,
@@ -1245,7 +947,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   thText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
     fontWeight: '800',
     color: '#64748B',
@@ -1257,7 +959,7 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 9,
@@ -1295,7 +997,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   rankNum: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
     fontWeight: '900',
     color: '#000000',
@@ -1307,7 +1009,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   clubNameText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12,
     fontWeight: '700',
     color: '#FFFFFF',
@@ -1323,7 +1025,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   myClubIndicatorText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 8,
     fontWeight: '900',
     color: '#30D158',
@@ -1331,7 +1033,7 @@ const styles = StyleSheet.create({
   ptsText: {
     width: 40,
     textAlign: 'center',
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 12.5,
     fontWeight: '900',
     color: '#FFFFFF',
@@ -1339,14 +1041,14 @@ const styles = StyleSheet.create({
   mText: {
     width: 30,
     textAlign: 'center',
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     color: '#94A3B8',
   },
   diffText: {
     width: 36,
     textAlign: 'center',
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     color: '#94A3B8',
   },
@@ -1373,7 +1075,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF453A',
   },
   formLetter: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 8,
     fontWeight: '900',
     color: '#000000',
@@ -1395,7 +1097,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   legendLabel: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9.5,
     color: '#64748B',
   },
@@ -1407,7 +1109,7 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     flex: 1,
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -1415,13 +1117,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   kpiVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 18,
     fontWeight: '900',
     color: '#FFFFFF',
   },
   kpiLbl: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 8.5,
     fontWeight: '800',
     color: '#94A3B8',
@@ -1429,14 +1131,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   kpiSub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 8,
     color: '#64748B',
     marginTop: 1,
     textAlign: 'center',
   },
   goalCard: {
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -1449,13 +1151,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   goalTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12.5,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   goalProgressVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     fontWeight: '800',
     color: '#30D158',
@@ -1471,7 +1173,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   goalRemark: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10.5,
     color: '#64748B',
   },
@@ -1479,7 +1181,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 10,
     borderWidth: 1,
@@ -1503,13 +1205,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   questTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   questDesc: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
     color: '#64748B',
     marginTop: 1,
@@ -1521,7 +1223,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   xpBadgeText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10.5,
     fontWeight: '800',
     color: '#FFD700',
@@ -1536,7 +1238,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   completedTagText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10.5,
     fontWeight: '800',
     color: '#30D158',
@@ -1547,7 +1249,7 @@ const styles = StyleSheet.create({
   },
   trophyCard: {
     flex: 1,
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -1555,14 +1257,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   trophyCount: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 16,
     fontWeight: '900',
     color: '#FFFFFF',
     marginTop: 4,
   },
   trophyTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10.5,
     fontWeight: '800',
     color: '#94A3B8',
@@ -1570,11 +1272,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   trophySub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9,
     color: '#64748B',
     marginTop: 1,
     textAlign: 'center',
+  },
+  honestCard: {
+    backgroundColor: '#12121A',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 14,
+    padding: 16,
+  },
+  honestNoteText: {
+    color: '#94A3B8',
+    fontSize: 12.5,
+    lineHeight: 18,
+    fontStyle: 'italic',
+  },
+  nextMatchTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
 });
 

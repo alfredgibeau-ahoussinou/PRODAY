@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { PRO_DATA_VIOLET, proSemantic } from '../../theme/professionalDesign';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import type { RsvpStatus, TeamEvent } from '../../models/TeamEvent';
 import { isComingRsvp, userRsvp } from '../../models/TeamEvent';
@@ -29,8 +30,8 @@ function jerseyOf(user: User, index: number): number {
 
 function rsvpDotColor(status: RsvpStatus, tokens: CoachThemeTokens): string {
   if (status === 'yes') return tokens.accent;
-  if (status === 'no') return '#FF375F';
-  if (status === 'maybe') return '#FF9F0A';
+  if (status === 'no') return proSemantic.danger;
+  if (status === 'maybe') return proSemantic.warning;
   return tokens.muted;
 }
 

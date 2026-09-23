@@ -12,6 +12,7 @@ import { AnimatedRouteContent } from '../../components/motion';
 import { AdminHomeScreen } from './AdminHomeScreen';
 import { AdminStaffScreen } from './AdminStaffScreen';
 import { AdminSystemScreen } from './AdminSystemScreen';
+import { ADMIN_TOKENS } from '../../features/admin/theme/adminTokens';
 
 export type AdminTabId = 'cockpit' | 'staff' | 'system';
 
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   },
   pillRail: {
     flexDirection: 'row',
-    backgroundColor: '#141418',
+    backgroundColor: ADMIN_TOKENS.surface,
     borderRadius: 20,
     padding: 4,
     borderWidth: 1,

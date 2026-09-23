@@ -16,7 +16,8 @@ describe('prodayBrand', () => {
   it('expose les accents officiels planche', () => {
     expect(PRODAY_POLE_ACCENTS.player).toBe('#FFFFFF');
     expect(PRODAY_POLE_ACCENTS.coach).toBe('#C5A059');
-    expect(PRODAY_POLE_ACCENTS.club).toBe('#10B981');
+    // Or mesuré au pixel sur la charte de référence (D-011).
+    expect(PRODAY_POLE_ACCENTS.club).toBe('#F8D548');
     expect(PRODAY_POLE_ACCENTS.parent).toBe('#8CC63F');
     expect(PRODAY_POLE_ACCENTS.supporter).toBe('#06B6D4');
     expect(PRODAY_POLE_ACCENTS.sponsor).toBe('#92278F');
@@ -41,14 +42,16 @@ describe('prodayBrand', () => {
     expect(poleOnAccent('player')).toBe(PRODAY_MASTER.black);
     expect(poleOnAccent('coach')).toBe(PRODAY_MASTER.black);
     expect(poleOnAccent('parent')).toBe(PRODAY_MASTER.black);
-    expect(poleOnAccent('club')).toBe(PRODAY_MASTER.white);
+    // L'or Club `#F8D548` est clair : l'encre doit être noire (mesurée sur le
+    // FAB de la référence), là où le blanc tomberait à ~1,4:1 (D-011).
+    expect(poleOnAccent('club')).toBe(PRODAY_MASTER.black);
     expect(poleOnAccent('sponsor')).toBe(PRODAY_MASTER.white);
     expect(poleOnAccent('supporter')).toBe(PRODAY_MASTER.white);
   });
 
   it('poleAccent retombe sur master or', () => {
     expect(poleAccent('master')).toBe(PRODAY_MASTER.gold);
-    expect(poleAccent('club')).toBe('#10B981');
+    expect(poleAccent('club')).toBe('#F8D548');
   });
 
   it('poleSymbolAsset retourne le symbole teinté par pôle', () => {

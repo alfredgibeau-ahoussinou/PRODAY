@@ -22,9 +22,10 @@ import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubText } from '../../features/club/ui/clubUi';
 import { EliteLeagueStandings } from '../../components/matchs/EliteLeagueStandings';
 import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
-import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { CLUB_TOKENS, type ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import {
   buildCertifiedSeedLeague,
+  describeStandingsFreshness,
   frenchFootballStandingsService,
   type FrenchLeagueData,
 } from '../../services/frenchFootballStandings.service';
@@ -52,6 +53,7 @@ export function ClubStandingsScreen() {
   const [poolSubTab, setPoolSubTab] = useState<PoolSubTab>('classement');
   const [poolData, setPoolData] = useState<FrenchLeagueData | null>(null);
   const [loadingPool, setLoadingPool] = useState<boolean>(false);
+  const [refreshingStandings, setRefreshingStandings] = useState(false);
 
   // État des corrections manuelles systématiques (Page 19)
   const [overrides, setOverrides] = useState<Record<string, {
@@ -74,38 +76,57 @@ export function ClubStandingsScreen() {
   const [editReason, setEditReason] = useState('');
 
   const styles = useMemo(() => createStyles(tokens), [tokens]);
-  const effectiveLeagueId = leagueId || 'r1_idf_b';
-  const effectiveTeamName = clubTeamName || 'FC ProDay';
+  const effectiveTeamName = clubTeamName;
   const seasonLabel = (season || '2026-2027').replace('-', '/');
+  const freshness = useMemo(() => describeStandingsFreshness(poolData), [poolData]);
+
+  /** Charge (sans état local intermédiaire) le classement de la poule. */
+  const loadPool = React.useCallback(async () => {
+    if (!leagueId) {
+      setPoolData(null);
+      setLoadingPool(false);
+      return;
+    }
+    setLoadingPool(true);
+    setPoolData(buildCertifiedSeedLeague(leagueId, season));
+    try {
+      const data = await frenchFootballStandingsService.getLeagueStandings(leagueId, season);
+      if (data) setPoolData(data);
+    } catch {
+      // Source injoignable : le shell vide honnête reste affiché
+    } finally {
+      setLoadingPool(false);
+    }
+  }, [leagueId, season]);
+
+  /**
+   * Rafraîchissement manuel autorisé (admin) — la Cloud Function applique son
+   * propre rate limiting (15 min) et un verrou anti-chevauchement ; on remonte
+   * son message tel quel plutôt que d'afficher un faux « à jour ».
+   */
+  const refreshStandings = async () => {
+    if (refreshingStandings) return;
+    setRefreshingStandings(true);
+    try {
+      const result = await frenchFootballStandingsService.refreshNow();
+      await loadPool();
+      if (result.updated === 0) {
+        Alert.alert(
+          'Synchronisation',
+          'La source n’a publié aucune mise à jour : le classement précédent est conservé avec son horodatage.',
+        );
+      }
+    } catch (e) {
+      Alert.alert('Synchronisation FFF', e instanceof Error ? e.message : 'Rafraîchissement impossible.');
+    } finally {
+      setRefreshingStandings(false);
+    }
+  };
 
   // Chargement officiel des données de la poule du club
   useEffect(() => {
-    let active = true;
-    setLoadingPool(true);
-
-    // Initialisation immédiate avec les données de seed certifiées FFF
-    const immediateData = buildCertifiedSeedLeague(effectiveLeagueId, season);
-    setPoolData(immediateData);
-
-    // Tentative de synchronisation en arrière-plan
-    frenchFootballStandingsService
-      .getLeagueStandings(effectiveLeagueId, season)
-      .then((data) => {
-        if (active && data) {
-          setPoolData(data);
-        }
-      })
-      .catch(() => {
-        // En cas d'échec réseau, les données certifiées immédiates restent actives
-      })
-      .finally(() => {
-        if (active) setLoadingPool(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [effectiveLeagueId, season]);
+    void loadPool();
+  }, [loadPool]);
 
   // Calcul du classement effectif intégrant les corrections manuelles (Page 19)
   const effectiveStandings = useMemo(() => {
@@ -150,14 +171,16 @@ export function ClubStandingsScreen() {
     );
   }
 
-  // Équipe du club dans le classement de la poule
+  // Équipe du club dans le classement — uniquement par rattachement explicite.
+  // Jamais de repli silencieux sur la première ligne (ancien comportement trompeur).
   const myTeamRow = effectiveStandings.find(
     (row) =>
       row.isMyTeam ||
-      (teamId && row.team_id === teamId) ||
-      row.name.toLowerCase().includes(effectiveTeamName.toLowerCase()) ||
-      row.name.toLowerCase().includes('proday'),
-  ) ?? effectiveStandings[0];
+      (teamId != null && row.team_id === teamId) ||
+      (effectiveTeamName != null &&
+        effectiveTeamName.trim().length > 0 &&
+        row.name.toLowerCase().includes(effectiveTeamName.toLowerCase())),
+  ) ?? null;
 
   return (
     <View style={styles.root}>
@@ -231,22 +254,38 @@ export function ClubStandingsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* BARRE STATUT SYNCHRO FFF & CORRECTION MANUELLE (Page 19) */}
-          <View style={[styles.syncStatusBar, { backgroundColor: '#141822', borderColor: tokens.border }]}>
+          <View style={[styles.syncStatusBar, { backgroundColor: CLUB_TOKENS.surface, borderColor: tokens.border }]}>
             <View style={styles.syncStatusLeft}>
-              <View style={[styles.syncStatusIndicator, { backgroundColor: hasOverrides ? '#F59E0B' : '#10B981' }]} />
+              <View style={[styles.syncStatusIndicator, { backgroundColor: freshness.color }]} />
               <View style={{ flex: 1 }}>
                 <ProDayText style={[styles.syncStatusTitle, { color: tokens.foreground }]}>
-                  {hasOverrides ? 'Correction Manuelle Active' : 'Synchro FFF Active (Repli Local)'}
+                  {hasOverrides ? 'Correction Manuelle Active' : freshness.label}
                 </ProDayText>
                 <ProDayText style={[styles.syncStatusSubtitle, { color: tokens.muted }]}>
                   {hasOverrides
-                    ? `${Object.keys(overrides).length} club(s) corrigé(s) manuellement`
-                    : 'Source officielle FFF · Données certifiées'}
+                    ? `${Object.keys(overrides).length} club(s) corrigé(s) manuellement · ${freshness.detail}`
+                    : `Sync auto toutes les 3 h · ${freshness.detail}`}
                 </ProDayText>
+                {freshness.isStale && !hasOverrides ? (
+                  <ProDayText style={[styles.syncStatusWarn, { color: '#F59E0B' }]}>
+                    Données conservées telles quelles : jamais présentées comme fraîchement synchronisées.
+                  </ProDayText>
+                ) : null}
               </View>
             </View>
 
             <View style={styles.syncStatusActions}>
+              <PressableSpring
+                onPress={() => void refreshStandings()}
+                disabled={refreshingStandings}
+                scaleTo={0.96}
+                style={[styles.resetSyncBtn, { borderColor: tokens.border, opacity: refreshingStandings ? 0.6 : 1 }]}
+              >
+                <ProDayText style={styles.resetSyncBtnText}>
+                  {refreshingStandings ? 'Synchro…' : 'Actualiser'}
+                </ProDayText>
+              </PressableSpring>
+
               {hasOverrides ? (
                 <TouchableOpacity
                   onPress={() => {
@@ -291,12 +330,16 @@ export function ClubStandingsScreen() {
               <View style={styles.heroBadgeBox}>
                 <Icon name="shield" size={13} color={tokens.accent} />
                 <ProDayText style={styles.heroBadgeText}>
-                  {divisionLabel || poolData?.divisionLabel || 'Régional 1 IDF · Poule B'}
+                  {divisionLabel || poolData?.divisionLabel || 'Compétition non rattachée'}
                 </ProDayText>
               </View>
               <View style={styles.promotionPill}>
                 <ProDayText style={styles.promotionPillText}>
-                  {myTeamRow && myTeamRow.rank === 1 ? '1er · Zone Montée N3' : `${myTeamRow?.rank ?? 1}e du Championnat`}
+                  {myTeamRow
+                    ? myTeamRow.rank === 1
+                      ? '1er du championnat'
+                      : `${myTeamRow.rank}e du championnat`
+                    : 'Classement non disponible'}
                 </ProDayText>
               </View>
             </View>
@@ -305,12 +348,12 @@ export function ClubStandingsScreen() {
               <View>
                 <ProDayText style={styles.heroClubName}>{effectiveTeamName}</ProDayText>
                 <ProDayText style={styles.heroClubSub}>
-                  Ligue de Paris Île-de-France · {groupLabel || 'Poule B'}
+                  {groupLabel || 'Poule à confirmer'}
                 </ProDayText>
               </View>
               <View style={styles.heroPointsBox}>
                 <ProDayText style={styles.heroPointsNum}>
-                  {myTeamRow?.points ?? 39}
+                  {myTeamRow?.points ?? '—'}
                 </ProDayText>
                 <ProDayText style={styles.heroPointsLabel}>POINTS</ProDayText>
               </View>
@@ -319,30 +362,30 @@ export function ClubStandingsScreen() {
             {/* Quick Stat Strip */}
             <View style={styles.statStrip}>
               <View style={styles.statStripItem}>
-                <ProDayText style={styles.statStripNum}>{myTeamRow?.played ?? 16}</ProDayText>
+                <ProDayText style={styles.statStripNum}>{myTeamRow?.played ?? '—'}</ProDayText>
                 <ProDayText style={styles.statStripLabel}>Matchs</ProDayText>
               </View>
               <View style={styles.statStripItem}>
                 <ProDayText style={[styles.statStripNum, { color: '#10B981' }]}>
-                  {myTeamRow?.won ?? 12}V
+                  {myTeamRow?.won ?? '—'}
                 </ProDayText>
                 <ProDayText style={styles.statStripLabel}>Victoires</ProDayText>
               </View>
               <View style={styles.statStripItem}>
                 <ProDayText style={[styles.statStripNum, { color: '#F59E0B' }]}>
-                  {myTeamRow?.drawn ?? 3}N
+                  {myTeamRow?.drawn ?? '—'}
                 </ProDayText>
                 <ProDayText style={styles.statStripLabel}>Nuls</ProDayText>
               </View>
               <View style={styles.statStripItem}>
                 <ProDayText style={[styles.statStripNum, { color: '#EF4444' }]}>
-                  {myTeamRow?.lost ?? 1}D
+                  {myTeamRow?.lost ?? '—'}
                 </ProDayText>
                 <ProDayText style={styles.statStripLabel}>Défaites</ProDayText>
               </View>
               <View style={styles.statStripItem}>
                 <ProDayText style={[styles.statStripNum, { color: tokens.accent }]}>
-                  {myTeamRow?.goal_diff ? (myTeamRow.goal_diff > 0 ? `+${myTeamRow.goal_diff}` : myTeamRow.goal_diff) : '+22'}
+                  {myTeamRow?.goal_diff != null ? (myTeamRow.goal_diff > 0 ? `+${myTeamRow.goal_diff}` : myTeamRow.goal_diff) : '—'}
                 </ProDayText>
                 <ProDayText style={styles.statStripLabel}>Diff.</ProDayText>
               </View>
@@ -391,7 +434,7 @@ export function ClubStandingsScreen() {
                   poolSubTab === 'classement' && styles.poolSubBtnTextActive,
                 ]}
               >
-                Classement Général ({poolData?.standings.length ?? 12} clubs)
+                Classement Général ({poolData?.standings.length ?? 0} clubs)
               </ProDayText>
             </TouchableOpacity>
 
@@ -419,6 +462,14 @@ export function ClubStandingsScreen() {
           {/* CONTENU SOUS-ONGLET 1 : CLASSEMENT COMPLET 12 CLUBS */}
           {poolSubTab === 'classement' ? (
             <View style={styles.tableCard}>
+              {effectiveStandings.length === 0 ? (
+                <ProDayText style={styles.honestNote}>
+                  {leagueId
+                    ? 'Aucun classement disponible pour cette compétition pour le moment. Les données officielles apparaîtront dès leur synchronisation.'
+                    : 'Aucune compétition FFF rattachée au club pour cette saison. Le classement apparaîtra ici dès qu’un rattachement sera validé — aucun championnat fictif n’est affiché.'}
+                </ProDayText>
+              ) : (
+              <>
               {/* En-tête Tableau */}
               <View style={styles.tableHeaderRow}>
                 <ProDayText style={[styles.colRank, styles.colHeadText]}>#</ProDayText>
@@ -434,9 +485,7 @@ export function ClubStandingsScreen() {
               {/* Lignes du Tableau */}
               {effectiveStandings.map((row) => {
                 const isProDay =
-                  row.isMyTeam ||
-                  row.name.toLowerCase().includes('proday') ||
-                  row.team_id === 'fc_proday';
+                  row.isMyTeam || (teamId != null && row.team_id === teamId);
                 const isPromotion = row.rank === 1;
                 const isPlayoff = row.rank === 2;
                 const isRelegation = row.rank >= 10;
@@ -561,6 +610,8 @@ export function ClubStandingsScreen() {
                   </ProDayText>
                 </View>
               </View>
+              </>
+              )}
             </View>
           ) : (
             /* CONTENU SOUS-ONGLET 2 : MEILLEURS BUTEURS DE LA POULE */
@@ -572,8 +623,16 @@ export function ClubStandingsScreen() {
                 </ProDayText>
               </View>
 
+              {(poolData?.scorers ?? []).length === 0 ? (
+                <ProDayText style={styles.honestNote}>
+                  Aucun buteur enregistré pour cette compétition.
+                </ProDayText>
+              ) : null}
               {(poolData?.scorers ?? []).map((scorer) => {
-                const isProDayScorer = scorer.club.toLowerCase().includes('proday');
+                const isProDayScorer =
+                  effectiveTeamName != null &&
+                  effectiveTeamName.trim().length > 0 &&
+                  scorer.club.trim().toLowerCase() === effectiveTeamName.trim().toLowerCase();
                 return (
                   <View
                     key={scorer.rank}
@@ -650,8 +709,8 @@ export function ClubStandingsScreen() {
 
           {/* Moteur complet EliteLeagueStandings */}
           <EliteLeagueStandings
-            initialLeagueId={effectiveLeagueId}
-            highlightTeamName={effectiveTeamName}
+            initialLeagueId={leagueId ?? undefined}
+            highlightTeamName={effectiveTeamName ?? undefined}
             highlightTeamId={teamId ?? undefined}
             accent={tokens.accent}
           />
@@ -667,7 +726,7 @@ export function ClubStandingsScreen() {
       >
         <View style={styles.modalOverlay}>
           <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-          <View style={[styles.modalBox, { backgroundColor: '#12151C', borderColor: tokens.border }]}>
+          <View style={[styles.modalBox, { backgroundColor: CLUB_TOKENS.surface, borderColor: tokens.border }]}>
             <View style={styles.modalHeader}>
               <View>
                 <ProDayText style={[styles.modalTitle, { color: tokens.foreground }]}>
@@ -706,7 +765,7 @@ export function ClubStandingsScreen() {
                       styles.teamPickPill,
                       selectedTeamId === st.team_id
                         ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
-                        : { backgroundColor: '#181C26', borderColor: tokens.border },
+                        : { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border },
                     ]}
                   >
                     <ProDayText
@@ -1065,7 +1124,14 @@ function createStyles(tokens: ClubThemeTokens) {
     },
 
     // Tableau de Classement
-    tableCard: {
+    honestNote: {
+    color: tokens.muted,
+    fontSize: 12,
+    lineHeight: 18,
+    fontStyle: 'italic',
+    paddingVertical: 8,
+  },
+  tableCard: {
       backgroundColor: tokens.surface,
       borderRadius: clubRadius.md,
       borderWidth: 1,
@@ -1322,6 +1388,10 @@ function createStyles(tokens: ClubThemeTokens) {
       fontSize: 11,
       marginTop: 1,
     },
+    syncStatusWarn: {
+      fontSize: 10,
+      marginTop: 2,
+    },
     syncStatusActions: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -1406,7 +1476,7 @@ function createStyles(tokens: ClubThemeTokens) {
       paddingHorizontal: 10,
       paddingVertical: 8,
       fontSize: 14,
-      backgroundColor: '#181C26',
+      backgroundColor: CLUB_TOKENS.elevated,
     },
     teamPickPill: {
       paddingHorizontal: 12,

@@ -6,7 +6,6 @@ import {
   Modal,
   TouchableOpacity,
   Share,
-  Platform,
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +16,10 @@ import {
   type PlayerPassportData,
   playerPassportService,
 } from '../../services/playerPassport.service';
+import { colors } from '../../theme/designTokens';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { APPLE_FONT_STACK } from '../../theme/appleTypography';
+import { CLUB_TOKENS } from '../../features/club/theme/clubTokens';
 
 interface PlayerCertifiedPassportModalProps {
   visible: boolean;
@@ -29,23 +32,23 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // Stylized procedural vector QR Code
 const VectorQrCode: React.FC<{ size?: number }> = ({ size = 140 }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
-    <Rect width="100" height="100" fill="#FFFFFF" rx="8" />
+    <Rect width="100" height="100" fill={PLAYER_DARK.text} rx="8" />
     {/* Top Left Marker */}
-    <Rect x="8" y="8" width="26" height="26" fill="#000000" rx="3" />
-    <Rect x="13" y="13" width="16" height="16" fill="#FFFFFF" rx="2" />
-    <Rect x="17" y="17" width="8" height="8" fill="#000000" rx="1" />
+    <Rect x="8" y="8" width="26" height="26" fill={PLAYER_DARK.bg} rx="3" />
+    <Rect x="13" y="13" width="16" height="16" fill={PLAYER_DARK.text} rx="2" />
+    <Rect x="17" y="17" width="8" height="8" fill={PLAYER_DARK.bg} rx="1" />
     {/* Top Right Marker */}
-    <Rect x="66" y="8" width="26" height="26" fill="#000000" rx="3" />
-    <Rect x="71" y="13" width="16" height="16" fill="#FFFFFF" rx="2" />
-    <Rect x="75" y="17" width="8" height="8" fill="#000000" rx="1" />
+    <Rect x="66" y="8" width="26" height="26" fill={PLAYER_DARK.bg} rx="3" />
+    <Rect x="71" y="13" width="16" height="16" fill={PLAYER_DARK.text} rx="2" />
+    <Rect x="75" y="17" width="8" height="8" fill={PLAYER_DARK.bg} rx="1" />
     {/* Bottom Left Marker */}
-    <Rect x="8" y="66" width="26" height="26" fill="#000000" rx="3" />
-    <Rect x="13" y="71" width="16" height="16" fill="#FFFFFF" rx="2" />
-    <Rect x="17" y="75" width="8" height="8" fill="#000000" rx="1" />
+    <Rect x="8" y="66" width="26" height="26" fill={PLAYER_DARK.bg} rx="3" />
+    <Rect x="13" y="71" width="16" height="16" fill={PLAYER_DARK.text} rx="2" />
+    <Rect x="17" y="75" width="8" height="8" fill={PLAYER_DARK.bg} rx="1" />
     {/* Procedural Data Pattern */}
     <Path
       d="M40 10h6v6h-6zm12 0h6v6h-6zm-12 12h6v6h-6zm18 0h6v6h-6zm6 6h6v6h-6zm-30 12h6v6h-6zm12 0h6v6h-6zm12 0h6v6h-6zm12 0h6v6h-6zm-36 12h6v6h-6zm12 0h12v6H46zm18 0h6v6h-6zm6 6h6v6h-6zm-30 6h6v6h-6zm12 0h6v6h-6zm12 0h6v6h-6zm12 0h6v6h-6zm-30 12h6v6h-6zm12 0h12v6H58zm18 0h6v6h-6z"
-      fill="#000000"
+      fill={PLAYER_DARK.bg}
     />
   </Svg>
 );
@@ -55,13 +58,16 @@ export const PlayerCertifiedPassportModal: React.FC<PlayerCertifiedPassportModal
   passport,
   onClose,
 }) => {
+  /** La certification est celle du staff — jamais un état supposé du visuel. */
+  const certified = passport.coachVerified === true;
+
   const handleShareLink = async () => {
     prodayHaptics.impactLight();
     const url = playerPassportService.getPassportQrUrl(passport);
     try {
       await Share.share({
         title: `Passeport ProDay — ${passport.fullName}`,
-        message: `📋 Consulter le passeport athlétique certifié de ${passport.fullName} (${passport.clubName}) : ${url}`,
+        message: `📋 Consulter le passeport athlétique ${certified ? 'certifié' : 'de'} ${passport.fullName} (${passport.clubName}) : ${url}${certified ? '' : ' — certification en attente du staff'}`,
         url,
       });
     } catch {
@@ -76,17 +82,19 @@ export const PlayerCertifiedPassportModal: React.FC<PlayerCertifiedPassportModal
           {/* Top Bar */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="shield-check" size={20} color="#30D158" />
+              <MaterialCommunityIcons name="shield-check" size={20} color={PLAYER_DARK.accent} />
               <Text style={styles.headerTitle}>Passeport Athlétique Certifié</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Ionicons name="close" size={20} color="#94A3B8" />
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer">
+              <Ionicons name="close" size={20} color={PLAYER_DARK.textMuted} />
             </TouchableOpacity>
           </View>
 
           {/* Passport Document Card */}
           <LinearGradient
-            colors={['#161E2E', '#0F172A', '#0B0F19']}
+            colors={PLAYER_DARK.cardGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.passportCard}
@@ -94,13 +102,22 @@ export const PlayerCertifiedPassportModal: React.FC<PlayerCertifiedPassportModal
             {/* Top Seal & FFF Info */}
             <View style={styles.sealRow}>
               <View style={styles.federationTag}>
-                <Ionicons name="ribbon" size={14} color="#0A84FF" />
+                <Ionicons name="ribbon" size={14} color={PLAYER_DARK.statBlue} />
                 <Text style={styles.federationText}>CERTIFICATION COACH FFF</Text>
               </View>
-              <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark-circle" size={14} color="#30D158" />
-                <Text style={styles.verifiedText}>STATUT VÉRIFIÉ</Text>
-              </View>
+              {certified ? (
+                <View style={styles.verifiedBadge}>
+                  <Ionicons name="checkmark-circle" size={14} color={PLAYER_DARK.accent} />
+                  <Text style={styles.verifiedText}>STATUT VÉRIFIÉ</Text>
+                </View>
+              ) : (
+                <View style={styles.verifiedBadge}>
+                  <Ionicons name="time-outline" size={14} color={PLAYER_DARK.textMuted} />
+                  <Text style={[styles.verifiedText, { color: PLAYER_DARK.textMuted }]}>
+                    CERTIFICATION EN ATTENTE
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Player Info Summary */}
@@ -109,7 +126,11 @@ export const PlayerCertifiedPassportModal: React.FC<PlayerCertifiedPassportModal
               <Text style={styles.playerClub}>
                 {passport.clubName} · {passport.category} ({passport.position})
               </Text>
-              <Text style={styles.licenseNumber}>Licence N° {passport.licenseNumber}</Text>
+              <Text style={styles.licenseNumber}>
+                {passport.licenseNumber?.trim()
+                  ? `Licence N° ${passport.licenseNumber}`
+                  : 'Licence non renseignée'}
+              </Text>
             </View>
 
             {/* Verified Metrics Matrix */}
@@ -120,17 +141,19 @@ export const PlayerCertifiedPassportModal: React.FC<PlayerCertifiedPassportModal
               </View>
               <View style={styles.metricDivider} />
               <View style={styles.metricCol}>
-                <Text style={[styles.metricVal, { color: '#30D158' }]}>{passport.goals}</Text>
+                <Text style={[styles.metricVal, { color: PLAYER_DARK.accent }]}>{passport.goals}</Text>
                 <Text style={styles.metricLbl}>BUTS</Text>
               </View>
               <View style={styles.metricDivider} />
               <View style={styles.metricCol}>
-                <Text style={[styles.metricVal, { color: '#0A84FF' }]}>{passport.assists}</Text>
+                <Text style={[styles.metricVal, { color: PLAYER_DARK.statBlue }]}>{passport.assists}</Text>
                 <Text style={styles.metricLbl}>PASSES</Text>
               </View>
               <View style={styles.metricDivider} />
               <View style={styles.metricCol}>
-                <Text style={[styles.metricVal, { color: '#FFD700' }]}>{passport.averageRating}/10</Text>
+                <Text style={[styles.metricVal, { color: colors.bookmark }]}>
+                  {passport.averageRating > 0 ? `${passport.averageRating}/10` : '—'}
+                </Text>
                 <Text style={styles.metricLbl}>NOTE STAFF</Text>
               </View>
             </View>
@@ -143,13 +166,17 @@ export const PlayerCertifiedPassportModal: React.FC<PlayerCertifiedPassportModal
               <Text style={styles.qrInstructions}>
                 Scannez avec un appareil photo pour vérifier l'authenticité auprès de la cellule recrutement
               </Text>
-              <Text style={styles.signatureCode}>Empreinte : {passport.signatureHash}</Text>
+              {passport.signatureHash?.trim() ? (
+                <Text style={styles.signatureCode}>Empreinte : {passport.signatureHash}</Text>
+              ) : null}
             </View>
 
             <View style={styles.endorsementRow}>
-              <Ionicons name="finger-print" size={14} color="#64748B" />
+              <Ionicons name="finger-print" size={14} color={PLAYER_DARK.textDim} />
               <Text style={styles.endorsedBy}>
-                Signé numériquement par {passport.coachName} (Staff Technique)
+                {passport.coachName?.trim()
+                  ? `Signé numériquement par ${passport.coachName} (Staff Technique)`
+                  : 'En attente de signature du staff technique'}
               </Text>
             </View>
           </LinearGradient>
@@ -158,12 +185,12 @@ export const PlayerCertifiedPassportModal: React.FC<PlayerCertifiedPassportModal
           <View style={styles.actions}>
             <TouchableOpacity style={styles.shareBtn} onPress={handleShareLink} activeOpacity={0.88}>
               <LinearGradient
-                colors={['#0A84FF', '#0070E0']}
+                colors={[PLAYER_DARK.accent, PLAYER_DARK.statGreen]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.shareGradient}
               >
-                <Ionicons name="link" size={16} color="#FFFFFF" />
+                <Ionicons name="link" size={16} color={PLAYER_DARK.bg} />
                 <Text style={styles.shareBtnText}>Partager le Lien Sécurisé Recruteur</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -177,17 +204,17 @@ export const PlayerCertifiedPassportModal: React.FC<PlayerCertifiedPassportModal
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: CLUB_TOKENS.scrim,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
   },
   container: {
     width: Math.min(SCREEN_WIDTH - 32, 380),
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: PLAYER_DARK.borderStrong,
     overflow: 'hidden',
     paddingBottom: 16,
   },
@@ -198,7 +225,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: PLAYER_DARK.border,
   },
   headerTitleRow: {
     flexDirection: 'row',
@@ -206,16 +233,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 16,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: PLAYER_DARK.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -223,7 +250,7 @@ const styles = StyleSheet.create({
     margin: 16,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: PLAYER_DARK.borderStrong,
     padding: 16,
   },
   sealRow: {
@@ -236,64 +263,64 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(10, 132, 255, 0.12)',
+    backgroundColor: PLAYER_DARK.surfaceRaised,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
   federationText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9,
     fontWeight: '800',
-    color: '#0A84FF',
+    color: PLAYER_DARK.statBlue,
     letterSpacing: 0.5,
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    backgroundColor: PLAYER_DARK.accentSoft,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
   verifiedText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9,
     fontWeight: '800',
-    color: '#30D158',
+    color: PLAYER_DARK.accent,
   },
   playerBioSection: {
     alignItems: 'center',
     marginBottom: 14,
   },
   playerName: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 17,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
     letterSpacing: 0.8,
   },
   playerClub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12,
     fontWeight: '600',
-    color: '#94A3B8',
+    color: PLAYER_DARK.textMuted,
     marginTop: 2,
   },
   licenseNumber: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
-    color: '#64748B',
+    color: PLAYER_DARK.textDim,
     marginTop: 2,
   },
   metricsBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: PLAYER_DARK.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: PLAYER_DARK.border,
     borderRadius: 14,
     paddingVertical: 10,
     marginBottom: 16,
@@ -302,22 +329,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   metricVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 15,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
   },
   metricLbl: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 8,
     fontWeight: '700',
-    color: '#64748B',
+    color: PLAYER_DARK.textDim,
     marginTop: 2,
   },
   metricDivider: {
     width: 1,
     height: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: PLAYER_DARK.border,
   },
   qrSection: {
     alignItems: 'center',
@@ -325,27 +352,27 @@ const styles = StyleSheet.create({
   },
   qrContainer: {
     padding: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: PLAYER_DARK.text,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: PLAYER_DARK.bg,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   qrInstructions: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
-    color: '#94A3B8',
+    color: PLAYER_DARK.textMuted,
     textAlign: 'center',
     marginTop: 10,
     paddingHorizontal: 12,
     lineHeight: 14,
   },
   signatureCode: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9,
-    color: '#475569',
+    color: PLAYER_DARK.textDim,
     marginTop: 4,
     fontWeight: '600',
   },
@@ -355,13 +382,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: PLAYER_DARK.border,
     paddingTop: 10,
   },
   endorsedBy: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
-    color: '#64748B',
+    color: PLAYER_DARK.textDim,
     fontStyle: 'italic',
   },
   actions: {
@@ -379,9 +406,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   shareBtnText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 13,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.bg,
   },
 });

@@ -22,7 +22,7 @@ export const PLAYER_DARK = {
   dockBg: 'rgba(18,18,24,0.96)',
   dockBorder: 'rgba(255,255,255,0.06)',
   cardGradient: ['#1A1A24', '#0A0A0F'] as [string, string],
-  shieldGradient: ['#222230', '#121218', '#0A0A0F'] as [string, string, string],
+  shieldGradient: ['#1A1A24', '#121218', '#0A0A0F'] as [string, string, string],
   ratingRing: ['#FFFFFF', '#2DD4BF', '#00E676', '#22C55E', '#00E676'] as [string, string, string, string, string],
 } as const;
 

@@ -59,7 +59,7 @@ export const CoachListCard: React.FC<CoachListCardProps> = ({
         {p.rating != null && <StarRating rating={p.rating} size="sm" />}
       </View>
       {onBookmark && (
-        <TouchableOpacity onPress={() => onBookmark(user)} style={styles.bookmark}>
+        <TouchableOpacity onPress={() => onBookmark(user)} style={styles.bookmark} accessibilityRole="button" accessibilityLabel={bookmarked ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
           <Icon
             name={bookmarked ? 'bookmark' : 'bookmark-outline'}
             size={22}

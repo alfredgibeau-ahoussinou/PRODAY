@@ -163,7 +163,7 @@ export function CoachAiOpponentAnalysis({ onBack, events, members }: Props) {
   return (
     <CoachPane
       title="Analyse Tactique IA"
-      actions={[{ icon: 'chevron-down', onPress: onBack, accessibilityLabel: 'Retour' }]}
+      onBack={onBack}
     >
       <KeyboardAvoidingView
         style={{ flex: 1 }}

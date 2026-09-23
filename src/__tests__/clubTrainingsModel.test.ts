@@ -1,5 +1,6 @@
 import {
   buildClubTrainingCardModel,
+  filterClubTrainingsByStatus,
   resolveClubTrainingHero,
   resolveTrainingActions,
   sortClubTrainings,
@@ -88,5 +89,67 @@ describe('clubTrainingsModel', () => {
       [],
     );
     expect(resolveTrainingActions(model).map((a) => a.id)).toEqual(['presence', 'detail']);
+  });
+
+  it('distingue explicitement programmée / terminée / annulée', () => {
+    const past = trainingEvent({ id: 'past', starts_at: new Date(Date.now() - 3 * 86400000) });
+    const upcoming = trainingEvent({ id: 'next', starts_at: new Date(Date.now() + 86400000) });
+    const cancelled = trainingEvent({
+      id: 'cancelled',
+      starts_at: new Date(Date.now() + 2 * 86400000),
+      live_state: { status: 'cancelled', home_score: 0, away_score: 0 },
+    });
+
+    expect(buildClubTrainingCardModel(past, []).status).toBe('finished');
+    expect(buildClubTrainingCardModel(upcoming, []).status).toBe('scheduled');
+    const cancelledModel = buildClubTrainingCardModel(cancelled, []);
+    expect(cancelledModel.status).toBe('cancelled');
+    expect(cancelledModel.statusLabel).toBe('Annulée');
+    expect(cancelledModel.isCancelled).toBe(true);
+  });
+
+  it('filtre par état sans mélanger les annulées avec le planning actif', () => {
+    const past = trainingEvent({ id: 'past', starts_at: new Date(Date.now() - 3 * 86400000) });
+    const upcoming = trainingEvent({ id: 'next', starts_at: new Date(Date.now() + 86400000) });
+    const cancelled = trainingEvent({
+      id: 'cancelled',
+      starts_at: new Date(Date.now() + 2 * 86400000),
+      live_state: { status: 'cancelled', home_score: 0, away_score: 0 },
+    });
+    const events = [past, upcoming, cancelled];
+
+    expect(filterClubTrainingsByStatus(events, 'upcoming').map((e) => e.id)).toEqual(['next']);
+    expect(filterClubTrainingsByStatus(events, 'completed').map((e) => e.id)).toEqual(['past']);
+    expect(filterClubTrainingsByStatus(events, 'cancelled').map((e) => e.id)).toEqual([
+      'cancelled',
+    ]);
+    // « Toutes » reste exhaustif : aucune séance n'est masquée silencieusement.
+    expect(filterClubTrainingsByStatus(events, 'all')).toHaveLength(3);
+  });
+
+  it('ne met jamais une séance annulée en avant tant qu’une séance active existe', () => {
+    const cancelledToday = trainingEvent({
+      id: 'cancelled-today',
+      starts_at: new Date(Date.now() - 10 * 60 * 1000),
+      live_state: { status: 'cancelled', home_score: 0, away_score: 0 },
+    });
+    const nextWeek = trainingEvent({ id: 'next-week', starts_at: new Date(Date.now() + 7 * 86400000) });
+
+    expect(resolveClubTrainingHero([cancelledToday, nextWeek])?.id).toBe('next-week');
+    // Si tout est annulé, on l'affiche honnêtement plutôt que de masquer le planning.
+    expect(resolveClubTrainingHero([cancelledToday])?.id).toBe('cancelled-today');
+  });
+
+  it('expose la durée planifiée (même séance que côté coach)', () => {
+    const model = buildClubTrainingCardModel(
+      trainingEvent({
+        id: 'coach-session-1',
+        starts_at: new Date(Date.now() + 3600000),
+        session_plan: { focus: 'Pressing', notes: 'Groupe A', duration_min: 75 },
+      }),
+      [],
+    );
+    expect(model.id).toBe('coach-session-1');
+    expect(model.durationMin).toBe(75);
   });
 });

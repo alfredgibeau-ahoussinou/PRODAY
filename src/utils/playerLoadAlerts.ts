@@ -43,10 +43,21 @@ export interface PlayerLoadSignals {
 
 export type LoadAlertLevel = 'info' | 'caution' | 'high';
 
+/**
+ * Nature de l'alerte — permet à l'interface de distinguer une absence de
+ * donnée d'un signal exploitable.
+ *
+ *  - `load` : charge dense détectée (données réelles) ;
+ *  - `availability` : statut déclaré par le joueur (indisponible / reprise) ;
+ *  - `missing` : aucune donnée exploitable pour ce joueur.
+ */
+export type LoadAlertKind = 'load' | 'availability' | 'missing';
+
 export interface LoadAlert {
   uid: string;
   displayName: string;
   level: LoadAlertLevel;
+  kind: LoadAlertKind;
   /** Message opérationnel — jamais un % de risque de blessure. */
   message: string;
   /** Données manquantes explicites. */
@@ -75,6 +86,11 @@ export function buildLoadAlerts(players: PlayerLoadSignals[]): LoadAlert[] {
         uid: p.uid,
         displayName: p.displayName,
         level: 'info',
+        /**
+         * Statut déclaré : information exploitable, jamais filtrée comme une
+         * simple absence de donnée (le panneau la masquait auparavant).
+         */
+        kind: 'availability',
         message: `${p.displayName} — statut : ${RETURN_TO_PLAY_LABELS[p.rtpStatus]}. Pas de détail médical affiché.`,
         missingData: missing,
       });
@@ -86,6 +102,7 @@ export function buildLoadAlerts(players: PlayerLoadSignals[]): LoadAlert[] {
         uid: p.uid,
         displayName: p.displayName,
         level: highDeclared || (denseCompetition && tightTurnaround) ? 'high' : 'caution',
+        kind: 'load',
         message:
           'Charge élevée détectée sur une période courte. Vérifiez la disponibilité et adaptez la charge si nécessaire. Ceci n’est pas un diagnostic médical.',
         missingData: missing,
@@ -95,6 +112,7 @@ export function buildLoadAlerts(players: PlayerLoadSignals[]): LoadAlert[] {
         uid: p.uid,
         displayName: p.displayName,
         level: 'info',
+        kind: 'missing',
         message: 'Donnée indisponible pour une alerte précise.',
         missingData: missing,
       });

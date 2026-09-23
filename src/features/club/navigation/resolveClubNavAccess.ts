@@ -109,7 +109,7 @@ export function resolveClubPrimaryNav(input: ClubNavAccessInput): ClubNavResolve
   return CLUB_PRIMARY_NAV_IDS.map((id) => {
     const base = findClubNavItem(id);
     if (!base) return null;
-    if (id === 'plus' || id === 'today' || id === 'club') {
+    if (id === 'plus' || id === 'today') {
       return { ...base, locked: false };
     }
     return resolveItem(base, input) ?? { ...base, locked: false };

@@ -17,6 +17,7 @@ import { ProDayText } from '../../../components/ui/ProDayText';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import { APPLE_TYPOGRAPHY } from '../../../theme/appleTypography';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
+import { ClubPill } from './clubUi';
 
 export type AuxiliaryModuleTab = 'sponsoring' | 'buvette' | 'medical' | 'equipment';
 
@@ -46,31 +47,13 @@ export function ClubAuxiliaryModules({
         ).map((tab) => {
           const active = activeTab === tab.id;
           return (
-            <PressableSpring
+            <ClubPill
               key={tab.id}
+              label={tab.label}
+              icon={tab.icon}
+              active={active}
               onPress={() => setActiveTab(tab.id)}
-              style={[
-                styles.tabPill,
-                active
-                  ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
-                  : { backgroundColor: tokens.surface, borderColor: tokens.border },
-              ]}
-              scaleTo={0.96}
-            >
-              <Icon
-                name={tab.icon}
-                size={14}
-                color={active ? '#000000' : tokens.muted}
-              />
-              <ProDayText
-                style={[
-                  styles.tabPillText,
-                  active ? { color: '#000000', fontWeight: '700' } : { color: tokens.muted },
-                ]}
-              >
-                {tab.label}
-              </ProDayText>
-            </PressableSpring>
+            />
           );
         })}
       </ScrollView>
@@ -235,18 +218,6 @@ const styles = StyleSheet.create({
   tabRow: {
     gap: 8,
     paddingBottom: 4,
-  },
-  tabPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  tabPillText: {
-    ...APPLE_TYPOGRAPHY.footnote,
   },
   tabContent: {
     gap: 14,

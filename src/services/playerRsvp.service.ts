@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type PlayerRsvpStatus = 'present' | 'absent' | 'pending' | 'uncertain';
+export type PlayerRsvpStatus = 'present' | 'absent' | 'pending';
 
 export interface PlayerRsvpRecord {
   eventId: string;
@@ -15,8 +15,8 @@ export const playerRsvpService = {
   async getRsvp(userId: string, eventId: string): Promise<PlayerRsvpStatus> {
     try {
       const val = await AsyncStorage.getItem(`${RSVP_STORAGE_PREFIX}${userId}_${eventId}`);
-      if (val === 'present' || val === 'absent' || val === 'pending' || val === 'uncertain') {
-        return val as PlayerRsvpStatus;
+      if (val === 'present' || val === 'absent' || val === 'pending') {
+        return val;
       }
       return 'present'; // Default active
     } catch {

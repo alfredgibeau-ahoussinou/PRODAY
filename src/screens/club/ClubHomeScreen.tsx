@@ -1,40 +1,57 @@
 /**
- * Pôle Club — Cockpit Exécutif (ClubHomeScreen)
- * Architecture Apple Obsidian Glass · Zéro code legacy · Zéro émoji unicode.
+ * Pôle Club — Accueil (ClubHomeScreen)
+ *
+ * Forme : application de référence (captures du 15/09/2026) — titre posé sur le
+ * canvas, encart d'identité à lignes d'icônes, rangée de puces d'action, listes
+ * groupées à filets en retrait, en-têtes de section avec action alignée à droite.
+ *
+ * Données : uniquement `useClubWorkspace` (club, équipes, licenciés, adhésions,
+ * événements réels). Aucun chiffre de démonstration, aucune valeur inventée :
+ * un effectif à 0 s'affiche à 0, un événement absent donne un état vide explicite.
  */
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Alert, Image, StyleSheet, View } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubLogoUpload } from '../../features/club/hooks/useClubLogoUpload';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import {
+  ClubActionRow,
   ClubChapterScroll,
   ClubEmptyState,
+  ClubListGroup,
   ClubLoading,
+  ClubPill,
+  ClubPillRow,
+  ClubSectionHeader,
+  ClubSmartCard,
+  ClubStatusPill,
+  ClubText,
 } from '../../features/club/ui/clubUi';
+import {
+  buildClubHomeTeamCards,
+  formatClubHomeMetaLine,
+  resolveClubHomePriority,
+  resolveClubPresenceAlert,
+  resolvePriorityLocationLabel,
+  resolvePriorityTeamLabel,
+} from '../../features/club/ui/clubHomeAccueilModel';
+import { formatMatchClock, formatMatchDay } from '../../features/club/ui/clubMatchesModel';
+import { findClubNavItem, type ClubNavItemId } from '../../features/club/navigation/clubNavConfig';
 import { membershipsService } from '../../services/memberships.service';
 import { listPendingMembershipPlayers } from '../../features/club/ui/clubPlayersModel';
 import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import type { IconName } from '../../components/ui/iconNames';
-import { ProDayText } from '../../components/ui/ProDayText';
-import { APPLE_TYPOGRAPHY } from '../../theme/appleTypography';
-import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
+import { clubForm, clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { isCoachMatchEvent, isCoachTrainingEvent } from '../../models/TeamEvent';
 import { CreateClubScreen } from '../CreateClubScreen';
 import { ShellAccountSection } from '../../components/shell/ShellAccountSection';
-import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
-import { ChooseAppSpaceModal } from '../../components/appSpace/ChooseAppSpaceModal';
+
+/** Fenêtre de la carte « Événements » : 7 jours francs, définie et affichée. */
+const UPCOMING_WINDOW_DAYS = 7;
 
 export function ClubHomeScreen() {
   const profile = useSessionProfile();
@@ -42,7 +59,6 @@ export function ClubHomeScreen() {
   const { tokens, logoUrl } = useClubTheme();
   const ws = useClubWorkspace();
   const [createOpen, setCreateOpen] = useState(false);
-  const [showSpaceModal, setShowSpaceModal] = useState(false);
   const [busyMembershipId, setBusyMembershipId] = useState<string | null>(null);
 
   const onLogoUploaded = useCallback(() => {
@@ -50,6 +66,13 @@ export function ClubHomeScreen() {
   }, [ws]);
   const logo = useClubLogoUpload(onLogoUploaded);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+
+  const nav = useCallback(
+    (id: ClubNavItemId) => {
+      shellNav?.requestNav(id);
+    },
+    [shellNav],
+  );
 
   const playersByUid = useMemo(() => {
     const map = new Map<string, (typeof ws.members)[number]>();
@@ -67,6 +90,42 @@ export function ClubHomeScreen() {
     [ws.memberships, playersByUid],
   );
 
+  /** Événements à venir dans la fenêtre affichée — calculés, jamais estimés. */
+  const upcoming = useMemo(() => {
+    const now = Date.now();
+    const limit = now + UPCOMING_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    const inWindow = ws.events.filter((e) => {
+      const t = e.starts_at ? new Date(e.starts_at).getTime() : Number.NaN;
+      return Number.isFinite(t) && t >= now - 30 * 60 * 1000 && t <= limit;
+    });
+    return {
+      total: inWindow.length,
+      matches: inWindow.filter(isCoachMatchEvent).length,
+      trainings: inWindow.filter(isCoachTrainingEvent).length,
+    };
+  }, [ws.events]);
+
+  const priority = useMemo(
+    () =>
+      resolveClubHomePriority({
+        todayMatches: ws.todayMatches,
+        todayTrainings: ws.todayTrainings,
+        events: ws.events,
+      }),
+    [ws.todayMatches, ws.todayTrainings, ws.events],
+  );
+
+  const presence = useMemo(() => resolveClubPresenceAlert(ws.events), [ws.events]);
+
+  const teamCards = useMemo(
+    () =>
+      buildClubHomeTeamCards(ws.teamRows, 4, (teamId) => {
+        shellNav?.setSelectedTeamId?.(teamId);
+        shellNav?.requestNav('teams');
+      }),
+    [ws.teamRows, shellNav],
+  );
+
   const approveMembership = useCallback(
     async (membershipId: string) => {
       if (!profile?.uid) return;
@@ -74,7 +133,7 @@ export function ClubHomeScreen() {
       try {
         await membershipsService.approve(membershipId, profile.uid);
         await ws.refresh();
-        Alert.alert('Adhésion Validée', 'Le licencié est maintenant actif dans les effectifs du club.');
+        Alert.alert('Adhésion validée', 'Le licencié est maintenant actif dans les effectifs du club.');
       } catch (e) {
         Alert.alert('Erreur', e instanceof Error ? e.message : 'Confirmation impossible.');
       } finally {
@@ -117,21 +176,6 @@ export function ClubHomeScreen() {
     return (
       <View style={styles.root}>
         <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-          <View style={[styles.heroCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-            <View style={styles.heroTop}>
-              <View style={[styles.crestPlaceholder, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
-                <Icon name="business" size={28} color={tokens.accent} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <ProDayText style={[styles.heroTitle, { color: tokens.foreground }]}>
-                  {profile?.display_name ?? 'Pôle Club'}
-                </ProDayText>
-                <ProDayText style={[styles.heroSubtitle, { color: tokens.muted }]}>
-                  Structure Club non liée
-                </ProDayText>
-              </View>
-            </View>
-          </View>
           <ClubEmptyState
             title="Aucun club rattaché"
             body="Le Pôle Club nécessite une structure officielle liée. Créez votre club ou contactez votre administrateur pour accéder au cockpit exécutif."
@@ -171,547 +215,325 @@ export function ClubHomeScreen() {
     );
   }
 
-  const clubName = ws.club.name ?? profile?.display_name ?? 'ProDay Football Club';
+  const club = ws.club;
+  const clubName = club.name ?? profile?.display_name ?? 'Club';
   const crestLetter = (clubName.trim().charAt(0) || 'C').toUpperCase();
-  const totalLicencies = ws.players.length || 24;
-  const totalEquipes = ws.teams.length || 3;
-  const totalStaff = ws.coaches.length || 2;
+  const teamsCount = ws.teams.length;
+  const playersCount = ws.players.length;
+  const staffCount = ws.coaches.length;
+  const metaLine =
+    playersCount + staffCount + teamsCount > 0
+      ? formatClubHomeMetaLine(playersCount, staffCount, teamsCount)
+      : 'Aucune équipe enregistrée à ce jour';
+
+  /** Lignes d'identité — uniquement des champs renseignés dans le document club. */
+  const infoRows: { key: string; icon: IconName; label: string }[] = [];
+  if (club.city?.trim()) {
+    infoRows.push({ key: 'city', icon: 'location', label: club.city.trim() });
+  }
+  if (club.fff_division_label?.trim()) {
+    infoRows.push({ key: 'division', icon: 'trophy', label: club.fff_division_label.trim() });
+  }
+  if (club.fff_season?.trim()) {
+    infoRows.push({ key: 'season', icon: 'calendar', label: `Saison ${club.fff_season.trim()}` });
+  }
+  if (club.fff_affiliation_number?.trim()) {
+    infoRows.push({
+      key: 'affiliation',
+      icon: 'shield',
+      label: `Affiliation FFF ${club.fff_affiliation_number.trim()}`,
+    });
+  }
+
+  /** Modules du club — libellés et icônes de la navigation (source unique). */
+  const modules: { id: ClubNavItemId; label: string; icon: IconName; hint: string }[] = (
+    [
+      { id: 'teams' as ClubNavItemId, hint: teamsCount > 0 ? `${teamsCount} équipe${teamsCount > 1 ? 's' : ''}` : 'Aucune équipe créée' },
+      { id: 'players' as ClubNavItemId, hint: playersCount > 0 ? `${playersCount} licencié${playersCount > 1 ? 's' : ''}` : 'Aucun licencié rattaché' },
+      { id: 'coaches' as ClubNavItemId, hint: staffCount > 0 ? `${staffCount} coach${staffCount > 1 ? 's' : ''}` : 'Aucun coach affecté' },
+      {
+        id: 'calendar' as ClubNavItemId,
+        hint: `${upcoming.total} événement${upcoming.total > 1 ? 's' : ''} sous ${UPCOMING_WINDOW_DAYS} jours`,
+      },
+      { id: 'matches' as ClubNavItemId, hint: `${upcoming.matches} match${upcoming.matches > 1 ? 's' : ''} programmé${upcoming.matches > 1 ? 's' : ''}` },
+      { id: 'trainings' as ClubNavItemId, hint: `${upcoming.trainings} séance${upcoming.trainings > 1 ? 's' : ''} programmée${upcoming.trainings > 1 ? 's' : ''}` },
+      { id: 'standings' as ClubNavItemId, hint: 'Championnat officiel & corrections' },
+      { id: 'communication' as ClubNavItemId, hint: 'Annonces officielles & groupes' },
+    ] as { id: ClubNavItemId; hint: string }[]
+  )
+    .map((entry) => {
+      const item = findClubNavItem(entry.id);
+      if (!item) return null;
+      return { id: entry.id, label: item.label, icon: item.icon, hint: entry.hint };
+    })
+    .filter(Boolean) as { id: ClubNavItemId; label: string; icon: IconName; hint: string }[];
+
+  const priorityTeam = resolvePriorityTeamLabel(priority, ws.teamRows);
+  const priorityWhere = resolvePriorityLocationLabel(priority);
+  const priorityStart = priority.kind === 'calm' ? null : priority.event.starts_at ?? null;
+  const priorityWhen = priorityStart ? new Date(priorityStart) : null;
 
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        {/* Section 0.8 bis: Barre de recherche pôle Club */}
-        <GlobalSearchBar
-          placeholder="Rechercher un membre, une équipe, un document…"
-          accent={tokens.accent}
-          style={{ marginBottom: 16 }}
-        />
+        {/* 1. Titre posé sur le canvas (référence : pas de barre d'en-tête). */}
+        <View style={styles.titleBlock}>
+          <ClubText variant="h1">Accueil</ClubText>
+        </View>
 
-        {/* 1. HERO COCKPIT EXÉCUTIF (APPLE OBSIDIAN GLASS) */}
-        <View style={[styles.heroCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-          <LinearGradient
-            colors={['rgba(255, 255, 255, 0.04)', 'rgba(255, 255, 255, 0.005)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-          <View style={styles.heroTop}>
+        {/* 2. Encart d'identité du club (référence « TON CLUB »). */}
+        <ClubSectionHeader
+          label="Mon club"
+          actionLabel="Réglages"
+          onAction={() => nav('club')}
+        />
+        <View style={styles.identityCard} testID="club-identity-card">
+          <View style={styles.identityTop}>
             <PressableSpring
               onPress={logo.canEdit ? () => void logo.pickAndUpload() : undefined}
               scaleTo={0.96}
-              style={[styles.crestWrap, { borderColor: `${tokens.accent}50` }]}
+              haptic={logo.canEdit}
+              style={styles.crestWrap}
+              accessibilityLabel={logo.canEdit ? 'Changer le logo du club' : undefined}
             >
               {logoUrl ? (
                 <Image source={{ uri: logoUrl }} style={styles.crestImg} resizeMode="cover" />
               ) : (
-                <View style={[styles.crestPlaceholder, { backgroundColor: tokens.elevated }]}>
-                  <ProDayText style={[styles.crestLetter, { color: tokens.accent }]}>
+                <View style={styles.crestPlaceholder}>
+                  <ClubText variant="h1" style={{ color: tokens.accent }}>
                     {crestLetter}
-                  </ProDayText>
+                  </ClubText>
                 </View>
               )}
             </PressableSpring>
 
-            <View style={styles.heroInfo}>
-              <View style={styles.badgeRow}>
-                <View style={[styles.fffBadge, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}>
-                  <Icon name="shield" size={12} color={tokens.accent} />
-                  <ProDayText style={[styles.fffBadgeText, { color: tokens.accent }]}>
-                    Club Officiel FFF
-                  </ProDayText>
-                </View>
-                <View style={[styles.seasonBadge, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
-                  <ProDayText style={[styles.seasonBadgeText, { color: tokens.muted }]}>
-                    Saison 2026/2027
-                  </ProDayText>
-                </View>
-              </View>
-
-              <ProDayText style={[styles.heroTitle, { color: tokens.foreground }]} numberOfLines={1}>
+            <View style={styles.identityCol}>
+              <ClubText variant="h2" numberOfLines={2}>
                 {clubName}
-              </ProDayText>
-              <ProDayText style={[styles.heroSubtitle, { color: tokens.muted }]}>
-                Cockpit Exécutif · Direction & Comité Directeur
-              </ProDayText>
-            </View>
-          </View>
-
-          {/* Actions Rapides Exécutives */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.quickActionsRow}
-          >
-            <PressableSpring
-              onPress={() => setShowSpaceModal(true)}
-              style={[styles.actionPill, { backgroundColor: 'rgba(255, 210, 0, 0.15)', borderColor: '#FFD200' }]}
-              scaleTo={0.96}
-            >
-              <Icon name="football" size={14} color="#FFD200" />
-              <ProDayText style={[styles.actionPillText, { color: '#FFD200', fontWeight: '800' }]}>
-                ⚡ Espace Joueur (Fitness Park)
-              </ProDayText>
-            </PressableSpring>
-
-            <PressableSpring
-              onPress={() => shellNav?.requestNav('communication')}
-              style={[styles.actionPill, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
-              scaleTo={0.96}
-            >
-              <Icon name="notifications" size={14} color={tokens.accent} />
-              <ProDayText style={[styles.actionPillText, { color: tokens.foreground }]}>
-                Diffuser Annonce
-              </ProDayText>
-            </PressableSpring>
-
-            <PressableSpring
-              onPress={() => shellNav?.requestNav('matches')}
-              style={[styles.actionPill, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
-              scaleTo={0.96}
-            >
-              <Icon name="trophy" size={14} color={tokens.accent} />
-              <ProDayText style={[styles.actionPillText, { color: tokens.foreground }]}>
-                Convocations 1-Tap
-              </ProDayText>
-            </PressableSpring>
-
-            <PressableSpring
-              onPress={() => shellNav?.requestNav('teams')}
-              style={[styles.actionPill, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
-              scaleTo={0.96}
-            >
-              <Icon name="add" size={14} color={tokens.accent} />
-              <ProDayText style={[styles.actionPillText, { color: tokens.foreground }]}>
-                Créer Équipe
-              </ProDayText>
-            </PressableSpring>
-
-            <PressableSpring
-              onPress={() => shellNav?.requestNav('assistant')}
-              style={[styles.actionPill, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}
-              scaleTo={0.96}
-            >
-              <Icon name="star-four-points" size={14} color={tokens.accent} />
-              <ProDayText style={[styles.actionPillText, { color: tokens.accent, fontWeight: '700' }]}>
-                Copilote IA
-              </ProDayText>
-            </PressableSpring>
-          </ScrollView>
-        </View>
-
-        {/* 2. TABLEAU DE BORD ADMIN — 4 WIDGETS CLÉS (PAGE 12 SPÉCIFICATIONS V4) */}
-        <View style={styles.kpiGrid}>
-          <PressableSpring
-            onPress={() => shellNav?.requestNav('finances')}
-            style={[styles.kpiCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
-            scaleTo={0.98}
-          >
-            <View style={styles.kpiCardTop}>
-              <Icon name="bag" size={16} color="#10B981" />
-              <ProDayText style={[styles.kpiStatusBadge, { color: '#10B981' }]}>
-                Solvable
-              </ProDayText>
-            </View>
-            <ProDayText style={[styles.kpiNum, { color: '#10B981' }]}>
-              94 %
-            </ProDayText>
-            <ProDayText style={[styles.kpiLabel, { color: tokens.muted }]}>
-              Taux de Recouvrement
-            </ProDayText>
-          </PressableSpring>
-
-          <PressableSpring
-            onPress={() => shellNav?.requestNav('teams')}
-            style={[styles.kpiCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
-            scaleTo={0.98}
-          >
-            <View style={styles.kpiCardTop}>
-              <Icon name="shirt" size={16} color={tokens.accent} />
-              <ProDayText style={[styles.kpiStatusBadge, { color: tokens.accent }]}>
-                FFF Homologué
-              </ProDayText>
-            </View>
-            <ProDayText style={[styles.kpiNum, { color: tokens.foreground }]}>
-              {totalEquipes}
-            </ProDayText>
-            <ProDayText style={[styles.kpiLabel, { color: tokens.muted }]}>
-              Équipes Actives
-            </ProDayText>
-          </PressableSpring>
-
-          <PressableSpring
-            onPress={() => shellNav?.requestNav('matches')}
-            style={[styles.kpiCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
-            scaleTo={0.98}
-          >
-            <View style={styles.kpiCardTop}>
-              <Icon name="trophy" size={16} color="#3B82F6" />
-              <ProDayText style={[styles.kpiStatusBadge, { color: '#3B82F6' }]}>
-                Ce week-end
-              </ProDayText>
-            </View>
-            <ProDayText style={[styles.kpiNum, { color: tokens.foreground }]}>
-              3
-            </ProDayText>
-            <ProDayText style={[styles.kpiLabel, { color: tokens.muted }]}>
-              Prochains Matchs
-            </ProDayText>
-          </PressableSpring>
-
-          <PressableSpring
-            onPress={() => shellNav?.requestNav('notifications')}
-            style={[styles.kpiCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
-            scaleTo={0.98}
-          >
-            <View style={styles.kpiCardTop}>
-              <Icon name="notifications" size={16} color="#F59E0B" />
-              <ProDayText style={[styles.kpiStatusBadge, { color: '#F59E0B' }]}>
-                Action requise
-              </ProDayText>
-            </View>
-            <ProDayText style={[styles.kpiNum, { color: '#F59E0B' }]}>
-              3
-            </ProDayText>
-            <ProDayText style={[styles.kpiLabel, { color: tokens.muted }]}>
-              Alertes Prioritaires
-            </ProDayText>
-          </PressableSpring>
-        </View>
-
-        {/* 3. HERO CENTRE MATCH (PROCHAIN RENDEZ-VOUS OFFICIEL) */}
-        <View style={[styles.matchHeroCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-          <View style={styles.matchHeroHeader}>
-            <View style={[styles.matchBadge, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}>
-              <Icon name="trophy" size={12} color={tokens.accent} />
-              <ProDayText style={[styles.matchBadgeText, { color: tokens.accent }]}>
-                Match Officiel · Championnat R1
-              </ProDayText>
-            </View>
-            <ProDayText style={[styles.matchTimeText, { color: tokens.muted }]}>
-              Dimanche 15:00
-            </ProDayText>
-          </View>
-
-          <View style={styles.teamsRow}>
-            <View style={styles.teamCol}>
-              <View style={[styles.teamBadgeBox, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
-                <ProDayText style={[styles.teamBadgeLetter, { color: tokens.accent }]}>
-                  {crestLetter}
-                </ProDayText>
-              </View>
-              <ProDayText style={[styles.teamNameText, { color: tokens.foreground }]}>
-                {clubName}
-              </ProDayText>
-              <ProDayText style={[styles.teamCategoryText, { color: tokens.muted }]}>
-                Seniors R1 (Dom.)
-              </ProDayText>
-            </View>
-
-            <View style={styles.vsBox}>
-              <ProDayText style={[styles.vsText, { color: tokens.accent }]}>VS</ProDayText>
-            </View>
-
-            <View style={styles.teamCol}>
-              <View style={[styles.teamBadgeBox, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
-                <ProDayText style={[styles.teamBadgeLetter, { color: '#3B82F6' }]}>
-                  RC
-                </ProDayText>
-              </View>
-              <ProDayText style={[styles.teamNameText, { color: tokens.foreground }]}>
-                RC France
-              </ProDayText>
-              <ProDayText style={[styles.teamCategoryText, { color: tokens.muted }]}>
-                Seniors R1 (Ext.)
-              </ProDayText>
-            </View>
-          </View>
-
-          <View style={[styles.matchLocationRow, { borderTopColor: tokens.border }]}>
-            <View style={styles.locItem}>
-              <Icon name="location" size={14} color={tokens.muted} />
-              <ProDayText style={[styles.locText, { color: tokens.muted }]}>
-                Stade d’Honneur · Gazon Naturel
-              </ProDayText>
-            </View>
-            <View style={styles.locItem}>
-              <Icon name="checkmark-circle" size={14} color="#10B981" />
-              <ProDayText style={[styles.locText, { color: '#10B981' }]}>
-                16 / 16 Convoqués
-              </ProDayText>
-            </View>
-          </View>
-
-          <View style={styles.matchActionsRow}>
-            <PressableSpring
-              onPress={() => shellNav?.requestNav('matches')}
-              style={[styles.primaryMatchBtn, { backgroundColor: tokens.accent }]}
-              scaleTo={0.97}
-            >
-              <Icon name="trophy" size={14} color="#000000" />
-              <ProDayText style={styles.primaryMatchBtnText}>
-                Feuille de Match & Direct
-              </ProDayText>
-            </PressableSpring>
-            <PressableSpring
-              onPress={() => shellNav?.requestNav('matches')}
-              style={[styles.secondaryMatchBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
-              scaleTo={0.97}
-            >
-              <Icon name="people" size={14} color={tokens.foreground} />
-              <ProDayText style={[styles.secondaryMatchBtnText, { color: tokens.foreground }]}>
-                Convocations
-              </ProDayText>
-            </PressableSpring>
-          </View>
-        </View>
-
-        {/* 4. CHAMPIONNAT & CLASSEMENT FFF (ACCÈS DIRECT HUB) */}
-        <PressableSpring
-          onPress={() => shellNav?.requestNav('standings')}
-          style={[styles.standingsBannerCard, { backgroundColor: tokens.surface, borderColor: `${tokens.accent}40` }]}
-          scaleTo={0.98}
-        >
-          <View style={styles.standingsBannerTop}>
-            <View style={[styles.standingsBadge, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}>
-              <Icon name="trophy" size={13} color={tokens.accent} />
-              <ProDayText style={[styles.standingsBadgeText, { color: tokens.accent }]}>
-                Seniors R1 · Poule B (FFF)
-              </ProDayText>
-            </View>
-            <View style={styles.standingsPosPill}>
-              <ProDayText style={styles.standingsPosText}>1er · Zone Montée N3</ProDayText>
-            </View>
-          </View>
-
-          <View style={styles.standingsBannerMiddle}>
-            <View style={{ flex: 1 }}>
-              <ProDayText style={[styles.standingsClubName, { color: tokens.foreground }]}>
-                {clubName}
-              </ProDayText>
-              <ProDayText style={[styles.standingsSub, { color: tokens.muted }]}>
-                16 J · 12V 3N 1D · Diff +22 · 39 Pts
-              </ProDayText>
-            </View>
-            <View style={[styles.standingsPtsBadge, { backgroundColor: tokens.elevated, borderColor: `${tokens.accent}50` }]}>
-              <ProDayText style={[styles.standingsPtsNum, { color: tokens.accent }]}>39</ProDayText>
-              <ProDayText style={[styles.standingsPtsLabel, { color: tokens.muted }]}>PTS</ProDayText>
-            </View>
-          </View>
-
-          <View style={[styles.standingsBannerFooter, { borderTopColor: tokens.border }]}>
-            <ProDayText style={[styles.standingsFooterText, { color: tokens.muted }]}>
-              Voir le classement du club & explorer toutes les ligues FFF (L1, L2, N1-N3, Districts)
-            </ProDayText>
-            <Icon name="chevron-forward" size={16} color={tokens.accent} />
-          </View>
-        </PressableSpring>
-
-        {/* 5. LE BRIEF EXÉCUTIF DE L'IA (APPLE INTELLIGENCE) */}
-        <View style={[styles.aiBriefCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-          <View style={styles.aiBriefHeader}>
-            <View style={[styles.aiIconBox, { backgroundColor: tokens.accentSoft }]}>
-              <Icon name="star-four-points" size={18} color={tokens.accent} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <ProDayText style={[styles.aiBriefTitle, { color: tokens.foreground }]}>
-                Le Brief Sportif & Exécutif
-              </ProDayText>
-              <ProDayText style={[styles.aiBriefSubtitle, { color: tokens.muted }]}>
-                Synthèse IA proactive pour le Comité Directeur
-              </ProDayText>
-            </View>
-          </View>
-
-          <View style={styles.aiPointsList}>
-            <View style={styles.aiPointRow}>
-              <View style={[styles.aiPointDot, { backgroundColor: tokens.accent }]} />
-              <ProDayText style={[styles.aiPointText, { color: tokens.foreground }]}>
-                <ProDayText style={{ fontWeight: '700' }}>Convocations R1 & U17 :</ProDayText> 100% des joueurs ont confirmé leur présence via l’application pour les rencontres de ce week-end.
-              </ProDayText>
-            </View>
-            <View style={styles.aiPointRow}>
-              <View style={[styles.aiPointDot, { backgroundColor: '#F59E0B' }]} />
-              <ProDayText style={[styles.aiPointText, { color: tokens.foreground }]}>
-                <ProDayText style={{ fontWeight: '700' }}>Conformité Médicale :</ProDayText> 2 certificats FFF arrivent à échéance sous 7 jours. Relance automatique programmée.
-              </ProDayText>
-            </View>
-            <View style={styles.aiPointRow}>
-              <View style={[styles.aiPointDot, { backgroundColor: '#10B981' }]} />
-              <ProDayText style={[styles.aiPointText, { color: tokens.foreground }]}>
-                <ProDayText style={{ fontWeight: '700' }}>Terrains & Météo :</ProDayText> Terrain d’honneur praticable, créneaux d'entraînement U11 et U13 confirmés sur le Synthétique 1.
-              </ProDayText>
-            </View>
-          </View>
-
-          <PressableSpring
-            onPress={() => shellNav?.requestNav('assistant')}
-            style={[styles.aiActionBtn, { borderTopColor: tokens.border }]}
-            scaleTo={0.98}
-          >
-            <ProDayText style={[styles.aiActionBtnText, { color: tokens.accent }]}>
-              Ouvrir le Copilote IA pour planifier la semaine
-            </ProDayText>
-            <Icon name="chevron-forward" size={14} color={tokens.accent} />
-          </PressableSpring>
-        </View>
-
-        {/* 5. HUB GRID : ACCÈS DIRECT AUX 8 MODULES CLÉS DU CLUB */}
-        <View style={styles.sectionHeader}>
-          <ProDayText style={[styles.sectionTitle, { color: tokens.foreground }]}>
-            Modules Opérationnels du Club
-          </ProDayText>
-          <ProDayText style={[styles.sectionSubtitle, { color: tokens.muted }]}>
-            Navigation 1-Tap vers l'ensemble des pôles
-          </ProDayText>
-        </View>
-
-        <View style={styles.hubGrid}>
-          {[
-            {
-              id: 'teams',
-              title: 'Structure & Équipes',
-              hint: 'Pôles U7 à Seniors · Surclassements',
-              icon: 'shirt' as IconName,
-              badge: `${totalEquipes} équipes`,
-            },
-            {
-              id: 'players',
-              title: 'Annuaire Licenciés',
-              hint: 'Conformité FFF · Solvabilité',
-              icon: 'people' as IconName,
-              badge: `${totalLicencies} membres`,
-            },
-            {
-              id: 'matches',
-              title: 'Matchs & Amicaux',
-              hint: 'Centralisateur officiel FFF',
-              icon: 'trophy' as IconName,
-              badge: 'Championnat',
-            },
-            {
-              id: 'trainings',
-              title: 'Planning & Terrains',
-              hint: 'Météo · Créneaux · Suivi RTJ',
-              icon: 'calendar' as IconName,
-              badge: 'Terrains OK',
-            },
-            {
-              id: 'video',
-              title: 'Hub Vidéo & Highlights',
-              hint: 'Captation Veo · Clipping IA',
-              icon: 'videocam' as IconName,
-              badge: 'IA Activée',
-            },
-            {
-              id: 'carpool',
-              title: 'Covoiturage Intégré',
-              hint: 'Logistique déplacements matchs',
-              icon: 'car' as IconName,
-              badge: 'Logistique',
-            },
-            {
-              id: 'communication',
-              title: 'Canaux Officiels',
-              hint: 'Messages bureau · Adhérents',
-              icon: 'chat' as IconName,
-              badge: 'Diffusion',
-            },
-            {
-              id: 'sponsoring',
-              title: 'Sponsoring & Buvette',
-              hint: 'Partenaires · Protocole FFF',
-              icon: 'gift' as IconName,
-              badge: 'Auxiliaire',
-            },
-          ].map((mod) => (
-            <PressableSpring
-              key={mod.id}
-              onPress={() => shellNav?.requestNav(mod.id as any)}
-              style={[styles.hubTile, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
-              scaleTo={0.97}
-            >
-              <View style={styles.hubTileTop}>
-                <View style={[styles.hubTileIconBox, { backgroundColor: tokens.accentSoft }]}>
-                  <Icon name={mod.icon} size={18} color={tokens.accent} />
+              </ClubText>
+              <ClubText variant="caption" muted>
+                {metaLine}
+              </ClubText>
+              {club.verified ? (
+                <View style={styles.verifiedWrap}>
+                  <ClubStatusPill label="Club vérifié" tone="ok" filled />
                 </View>
-                <View style={[styles.hubTileBadge, { backgroundColor: tokens.elevated }]}>
-                  <ProDayText style={[styles.hubTileBadgeText, { color: tokens.muted }]}>
-                    {mod.badge}
-                  </ProDayText>
-                </View>
-              </View>
-
-              <ProDayText style={[styles.hubTileTitle, { color: tokens.foreground }]}>
-                {mod.title}
-              </ProDayText>
-              <ProDayText style={[styles.hubTileHint, { color: tokens.muted }]}>
-                {mod.hint}
-              </ProDayText>
-            </PressableSpring>
-          ))}
-        </View>
-
-        {/* 6. DEMANDES D'ADHÉSION EN ATTENTE (SI EXISTANTES) */}
-        {pendingItems.length > 0 ? (
-          <View style={styles.pendingSection}>
-            <View style={styles.sectionHeader}>
-              <ProDayText style={[styles.sectionTitle, { color: tokens.foreground }]}>
-                Adhésions en Attente ({pendingItems.length})
-              </ProDayText>
-              <ProDayText style={[styles.sectionSubtitle, { color: tokens.muted }]}>
-                Dossiers d’inscription à valider par le secrétariat
-              </ProDayText>
+              ) : null}
             </View>
+          </View>
 
-            <View style={styles.pendingList}>
-              {pendingItems.map((item) => (
-                <View
-                  key={item.membership.id}
-                  style={[styles.pendingRow, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
-                >
-                  <View style={{ flex: 1 }}>
-                    <ProDayText style={[styles.pendingName, { color: tokens.foreground }]}>
-                      {item.name}
-                    </ProDayText>
-                    <ProDayText style={[styles.pendingCategory, { color: tokens.muted }]}>
-                      {item.membership.category ?? 'Joueur'} · Licence FFF en cours
-                    </ProDayText>
-                  </View>
-
-                  <View style={styles.pendingBtnRow}>
-                    <PressableSpring
-                      onPress={() => void approveMembership(item.membership.id)}
-                      disabled={busyMembershipId === item.membership.id}
-                      style={[styles.approveBtn, { backgroundColor: tokens.accent }]}
-                      scaleTo={0.96}
-                    >
-                      <ProDayText style={styles.approveBtnText}>
-                        {busyMembershipId === item.membership.id ? '...' : 'Valider'}
-                      </ProDayText>
-                    </PressableSpring>
-                    <PressableSpring
-                      onPress={() => void rejectMembership(item.membership.id)}
-                      disabled={busyMembershipId === item.membership.id}
-                      style={[styles.rejectBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
-                      scaleTo={0.96}
-                    >
-                      <Icon name="close" size={14} color={tokens.muted} />
-                    </PressableSpring>
-                  </View>
+          {infoRows.length > 0 ? (
+            <View style={styles.identityRows}>
+              {infoRows.map((row) => (
+                <View key={row.key} style={styles.identityRow}>
+                  <Icon name={row.icon} size={17} color={tokens.muted} />
+                  <ClubText variant="body" muted style={styles.identityRowText} numberOfLines={1}>
+                    {row.label}
+                  </ClubText>
                 </View>
               ))}
             </View>
+          ) : null}
+        </View>
+
+        {/* 3. Rangée de puces d'action (référence : pilules sous l'encart). */}
+        <ClubPillRow>
+          <ClubPill label="Annuaire" icon="people" onPress={() => nav('players')} />
+          <ClubPill label="Calendrier" icon="calendar" onPress={() => nav('calendar')} />
+          <ClubPill label="Annonce" icon="notifications" onPress={() => nav('communication')} />
+          {shellNav?.openCreate ? (
+            <ClubPill label="Créer" icon="add" onPress={() => shellNav.openCreate?.()} variant="outline" />
+          ) : null}
+        </ClubPillRow>
+
+        {/* 4. Indicateurs — valeurs réelles, définitions explicites. */}
+        <View style={styles.kpiGrid}>
+          <ClubSmartCard
+            label="Équipes"
+            value={teamsCount}
+            hint="Équipes rattachées au club"
+            icon="football"
+            onPress={() => nav('teams')}
+            index={0}
+          />
+          <ClubSmartCard
+            label="Licenciés"
+            value={playersCount}
+            hint="Comptes joueurs rattachés"
+            icon="people"
+            onPress={() => nav('players')}
+            index={1}
+          />
+          <ClubSmartCard
+            label="Adhésions"
+            value={ws.pendingMemberships}
+            hint="Demandes à valider"
+            icon="document"
+            tone={ws.pendingMemberships > 0 ? 'warning' : 'default'}
+            onPress={() => nav('players')}
+            index={2}
+          />
+          <ClubSmartCard
+            label="Convocations"
+            value={presence.pendingCount}
+            hint={`Réponses manquantes · ${UPCOMING_WINDOW_DAYS} jours`}
+            icon="notifications"
+            tone={presence.pendingCount > 0 ? 'warning' : 'success'}
+            onPress={() => nav(presence.nav)}
+            index={3}
+          />
+        </View>
+
+        {/* 5. Prochain rendez-vous — événement réel du calendrier. */}
+        <ClubSectionHeader
+          label="Prochain rendez-vous"
+          actionLabel="Calendrier"
+          onAction={() => nav('calendar')}
+        />
+        {priority.kind === 'calm' || !priorityWhen ? (
+          <ClubEmptyState
+            title="Aucun rendez-vous à venir"
+            body="Aucun match ni séance n’est programmé pour ce club. Créez un événement pour le voir apparaître ici."
+            icon="calendar"
+            actionLabel="Ouvrir le calendrier"
+            onAction={() => nav('calendar')}
+          />
+        ) : (
+          <View style={styles.nextCard} testID="club-next-event">
+            <ClubStatusPill
+              label={priority.kind === 'match' ? 'Match' : 'Entraînement'}
+              tone={priority.kind === 'match' ? 'accent' : 'ok'}
+            />
+            <ClubText variant="h3" numberOfLines={2}>
+              {priority.event.title?.trim() || (priority.kind === 'match' ? 'Match' : 'Entraînement')}
+            </ClubText>
+            <View style={styles.nextMeta}>
+              <Icon name="time" size={15} color={tokens.muted} />
+              <ClubText variant="caption" muted>
+                {`${formatMatchDay(priorityWhen)} · ${formatMatchClock(priorityWhen)}`}
+                {priorityTeam ? ` · ${priorityTeam}` : ''}
+                {priorityWhere ? ` · ${priorityWhere}` : ''}
+              </ClubText>
+            </View>
+            <ClubPillRow>
+              <ClubPill
+                label={priority.kind === 'match' ? 'Centre match' : 'Feuille de séance'}
+                icon="trophy"
+                onPress={() => nav(priority.kind === 'match' ? 'matches' : 'trainings')}
+              />
+            </ClubPillRow>
           </View>
+        )}
+
+        {/* 6. Modules — liste groupée de la référence. */}
+        <ClubSectionHeader label="Modules du club" actionLabel="Tout voir" onAction={() => nav('plus')} />
+        <ClubListGroup>
+          {modules.map((mod) => (
+            <ClubActionRow
+              key={mod.id}
+              label={mod.label}
+              hint={mod.hint}
+              icon={mod.icon}
+              onPress={() => nav(mod.id)}
+            />
+          ))}
+        </ClubListGroup>
+
+        {/* 7. Équipes — effectif réel du club. */}
+        <ClubSectionHeader label="Équipes" actionLabel="Gérer" onAction={() => nav('teams')} />
+        {teamCards.length > 0 ? (
+          <ClubListGroup>
+            {teamCards.map((team) => (
+              <ClubActionRow
+                key={team.teamId ?? team.name}
+                label={team.name}
+                hint={`${team.metaPrimary}${team.metaPrimary ? ' · ' : ''}${team.metaSecondary} · ${team.coachesLabel}`}
+                icon="football"
+                onPress={team.onPress}
+              />
+            ))}
+          </ClubListGroup>
+        ) : (
+          <ClubEmptyState
+            title="Aucune équipe"
+            body="Créez une première équipe pour activer les convocations, le calendrier et les compositions."
+            icon="football"
+            actionLabel="Créer une équipe"
+            onAction={() => nav('teams')}
+          />
+        )}
+
+        {/* 8. Adhésions en attente — uniquement lorsqu'il y en a. */}
+        {pendingItems.length > 0 ? (
+          <>
+            <ClubSectionHeader label={`Adhésions en attente (${pendingItems.length})`} />
+            <ClubListGroup>
+              {pendingItems.map((item) => (
+                <ClubActionRow
+                  key={item.membership.id}
+                  label={item.name}
+                  hint={item.membership.category ?? 'Catégorie non renseignée'}
+                  trailing={
+                    <View style={styles.pendingActions}>
+                      <PressableSpring
+                        onPress={() => void approveMembership(item.membership.id)}
+                        disabled={busyMembershipId === item.membership.id}
+                        scaleTo={0.96}
+                        haptic
+                        style={styles.approveBtn}
+                        accessibilityLabel={`Valider l’adhésion de ${item.name}`}
+                      >
+                        <ClubText variant="caption" style={styles.approveLabel}>
+                          {busyMembershipId === item.membership.id ? '…' : 'Valider'}
+                        </ClubText>
+                      </PressableSpring>
+                      <PressableSpring
+                        onPress={() => void rejectMembership(item.membership.id)}
+                        disabled={busyMembershipId === item.membership.id}
+                        scaleTo={0.96}
+                        haptic
+                        style={styles.rejectBtn}
+                        accessibilityLabel={`Refuser l’adhésion de ${item.name}`}
+                      >
+                        <Icon name="close" size={15} color={tokens.muted} />
+                      </PressableSpring>
+                    </View>
+                  }
+                />
+              ))}
+            </ClubListGroup>
+          </>
         ) : null}
 
-        <View style={{ height: 40 }} />
+        <ShellAccountSection
+          tone={{
+            foreground: tokens.foreground,
+            muted: tokens.muted,
+            faint: tokens.faint,
+            surface: tokens.surface,
+            border: tokens.border,
+            destructive: '#EF4444',
+            iconBg: tokens.elevated,
+          }}
+          onSignOut={shellNav?.signOut}
+          safeBottom
+        />
       </ClubChapterScroll>
 
-      <ChooseAppSpaceModal
-        visible={showSpaceModal}
-        onClose={() => setShowSpaceModal(false)}
-      />
+      {profile ? (
+        <PushScreenTransition active={createOpen}>
+          {createOpen ? (
+            <CreateClubScreen
+              profile={profile}
+              onBack={() => setCreateOpen(false)}
+              onCreated={() => {
+                setCreateOpen(false);
+                void ws.refresh();
+              }}
+            />
+          ) : null}
+        </PushScreenTransition>
+      ) : null}
     </View>
   );
 }
@@ -722,476 +544,71 @@ const createStyles = (tokens: ClubThemeTokens) =>
       flex: 1,
       backgroundColor: 'transparent',
     },
-    heroCard: {
-      borderRadius: clubRadius.lg,
-      borderWidth: 1,
-      padding: clubSpace.lg,
-      marginBottom: 14,
-      gap: 16,
-      overflow: 'hidden',
+    /** Titre posé sur le canvas, sans conteneur (référence). */
+    titleBlock: {
+      paddingTop: clubSpace.sm,
     },
-    heroTop: {
+    /** Encart d'identité — aplat, rayon généreux, sans bordure ni ombre. */
+    identityCard: {
+      backgroundColor: tokens.surface,
+      borderRadius: clubForm.groupRadius,
+      padding: clubSpace.lg,
+      gap: clubSpace.lg,
+    },
+    identityTop: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 14,
+      gap: clubSpace.lg,
     },
     crestWrap: {
-      width: 60,
-      height: 60,
-      borderRadius: 16,
-      borderWidth: 1.5,
+      width: 64,
+      height: 64,
+      borderRadius: clubRadius.md,
       overflow: 'hidden',
-      alignItems: 'center',
-      justifyContent: 'center',
+      backgroundColor: tokens.elevated,
     },
-    crestImg: {
-      width: '100%',
-      height: '100%',
-    },
+    crestImg: { width: '100%', height: '100%' },
     crestPlaceholder: {
       width: '100%',
       height: '100%',
       alignItems: 'center',
       justifyContent: 'center',
     },
-    crestLetter: {
-      ...APPLE_TYPOGRAPHY.title1,
-      fontWeight: '800',
-    },
-    heroInfo: {
-      flex: 1,
-      gap: 3,
-    },
-    badgeRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginBottom: 2,
-    },
-    fffBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-      borderWidth: 1,
-    },
-    fffBadgeText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      fontWeight: '700',
-    },
-    seasonBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-      borderWidth: 1,
-    },
-    seasonBadgeText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-    },
-    heroTitle: {
-      ...APPLE_TYPOGRAPHY.title2,
-    },
-    heroSubtitle: {
-      ...APPLE_TYPOGRAPHY.footnote,
-    },
-    quickActionsRow: {
-      gap: 8,
-      paddingTop: 4,
-    },
-    actionPill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 20,
-      borderWidth: 1,
-    },
-    actionPillText: {
-      ...APPLE_TYPOGRAPHY.footnote,
-      fontWeight: '600',
-    },
+    identityCol: { flex: 1, minWidth: 0, gap: 3 },
+    verifiedWrap: { marginTop: 6 },
+    identityRows: { gap: clubSpace.md },
+    identityRow: { flexDirection: 'row', alignItems: 'center', gap: clubSpace.md },
+    identityRowText: { flex: 1, minWidth: 0 },
     kpiGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 10,
-      marginBottom: 16,
-    },
-    kpiCard: {
-      flex: 1,
-      minWidth: '47%',
-      borderRadius: clubRadius.md,
-      borderWidth: 1,
-      padding: 14,
-      gap: 4,
-    },
-    kpiCardTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 6,
-    },
-    kpiStatusBadge: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      fontWeight: '700',
-    },
-    kpiNum: {
-      ...APPLE_TYPOGRAPHY.title1,
-      fontWeight: '800',
-    },
-    kpiLabel: {
-      ...APPLE_TYPOGRAPHY.footnote,
-    },
-    matchHeroCard: {
-      borderRadius: clubRadius.lg,
-      borderWidth: 1,
-      padding: 16,
-      gap: 16,
-      marginBottom: 16,
-    },
-    matchHeroHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    matchBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 8,
-      borderWidth: 1,
-    },
-    matchBadgeText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      fontWeight: '700',
-    },
-    matchTimeText: {
-      ...APPLE_TYPOGRAPHY.footnote,
-      fontWeight: '600',
-    },
-    teamsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-around',
-      paddingVertical: 8,
-    },
-    teamCol: {
-      alignItems: 'center',
-      gap: 6,
-      flex: 1,
-    },
-    teamBadgeBox: {
-      width: 48,
-      height: 48,
-      borderRadius: 14,
-      borderWidth: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    teamBadgeLetter: {
-      ...APPLE_TYPOGRAPHY.title2,
-      fontWeight: '800',
-    },
-    teamNameText: {
-      ...APPLE_TYPOGRAPHY.subheadline,
-      fontWeight: '700',
-      textAlign: 'center',
-    },
-    teamCategoryText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      textAlign: 'center',
-    },
-    vsBox: {
-      paddingHorizontal: 8,
-    },
-    vsText: {
-      ...APPLE_TYPOGRAPHY.subheadline,
-      fontWeight: '800',
-    },
-    matchLocationRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: 12,
-      borderTopWidth: 1,
-    },
-    locItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    locText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      fontWeight: '600',
-    },
-    matchActionsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    primaryMatchBtn: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      paddingVertical: 10,
-      borderRadius: 10,
-    },
-    primaryMatchBtnText: {
-      ...APPLE_TYPOGRAPHY.footnote,
-      fontWeight: '700',
-      color: '#000000',
-    },
-    secondaryMatchBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      borderRadius: 10,
-      borderWidth: 1,
-    },
-    secondaryMatchBtnText: {
-      ...APPLE_TYPOGRAPHY.footnote,
-      fontWeight: '600',
-    },
-    standingsBannerCard: {
-      borderRadius: clubRadius.lg,
-      borderWidth: 1,
-      padding: 16,
-      gap: 12,
-      marginBottom: 16,
-    },
-    standingsBannerTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    standingsBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 8,
-      borderWidth: 1,
-    },
-    standingsBadgeText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      fontWeight: '700',
-    },
-    standingsPosPill: {
-      backgroundColor: 'rgba(16, 185, 129, 0.15)',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 6,
-    },
-    standingsPosText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      fontWeight: '800',
-      color: '#10B981',
-    },
-    standingsBannerMiddle: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
-    },
-    standingsClubName: {
-      ...APPLE_TYPOGRAPHY.title3,
-      fontWeight: '800',
-      letterSpacing: -0.3,
-    },
-    standingsSub: {
-      ...APPLE_TYPOGRAPHY.footnote,
-      marginTop: 2,
-    },
-    standingsPtsBadge: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 10,
-      borderWidth: 1,
-    },
-    standingsPtsNum: {
-      ...APPLE_TYPOGRAPHY.headline,
-      fontWeight: '900',
-    },
-    standingsPtsLabel: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      fontWeight: '800',
-    },
-    standingsBannerFooter: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: 10,
-      borderTopWidth: 1,
-      gap: 8,
-    },
-    standingsFooterText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      flex: 1,
-    },
-    aiBriefCard: {
-      borderRadius: clubRadius.lg,
-      borderWidth: 1,
-      padding: 16,
-      gap: 14,
-      marginBottom: 20,
-    },
-    aiBriefHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    aiIconBox: {
-      width: 38,
-      height: 38,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    aiBriefTitle: {
-      ...APPLE_TYPOGRAPHY.headline,
-    },
-    aiBriefSubtitle: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      marginTop: 2,
-    },
-    aiPointsList: {
-      gap: 10,
-    },
-    aiPointRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: 10,
-    },
-    aiPointDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      marginTop: 6,
-    },
-    aiPointText: {
-      ...APPLE_TYPOGRAPHY.footnote,
-      flex: 1,
-      lineHeight: 18,
-    },
-    aiActionBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: 12,
-      borderTopWidth: 1,
-    },
-    aiActionBtnText: {
-      ...APPLE_TYPOGRAPHY.footnote,
-      fontWeight: '600',
-    },
-    sectionHeader: {
-      marginBottom: 12,
-    },
-    sectionTitle: {
-      ...APPLE_TYPOGRAPHY.title3,
-    },
-    sectionSubtitle: {
-      ...APPLE_TYPOGRAPHY.footnote,
-      marginTop: 2,
-    },
-    hubGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 10,
-      marginBottom: 20,
-    },
-    hubTile: {
-      width: '48.5%',
-      borderRadius: clubRadius.md,
-      borderWidth: 1,
-      padding: 14,
-      gap: 6,
-    },
-    hubTileTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 4,
-    },
-    hubTileIconBox: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    hubTileBadge: {
-      paddingHorizontal: 6,
-      paddingVertical: 3,
-      borderRadius: 6,
-    },
-    hubTileBadgeText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      fontWeight: '600',
-    },
-    hubTileTitle: {
-      ...APPLE_TYPOGRAPHY.subheadline,
-      fontWeight: '700',
-    },
-    hubTileHint: {
-      ...APPLE_TYPOGRAPHY.caption1,
-    },
-    pendingSection: {
-      gap: 12,
-      marginBottom: 20,
-    },
-    pendingList: {
-      gap: 8,
-    },
-    pendingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: 14,
-      borderRadius: clubRadius.md,
-      borderWidth: 1,
-    },
-    pendingName: {
-      ...APPLE_TYPOGRAPHY.subheadline,
-      fontWeight: '700',
-    },
-    pendingCategory: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      marginTop: 2,
-    },
-    pendingBtnRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
+      gap: clubSpace.md,
+    },
+    /** Prochain rendez-vous — encart aplat, même famille que la liste groupée. */
+    nextCard: {
+      backgroundColor: tokens.surface,
+      borderRadius: clubForm.groupRadius,
+      padding: clubSpace.lg,
+      gap: clubSpace.sm,
+    },
+    nextMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    pendingActions: { flexDirection: 'row', alignItems: 'center', gap: clubSpace.sm },
     approveBtn: {
-      paddingHorizontal: 12,
-      paddingVertical: 7,
-      borderRadius: 8,
-    },
-    approveBtnText: {
-      ...APPLE_TYPOGRAPHY.caption1,
-      fontWeight: '700',
-      color: '#000000',
-    },
-    rejectBtn: {
-      width: 30,
-      height: 30,
-      borderRadius: 8,
-      borderWidth: 1,
+      paddingHorizontal: clubSpace.lg,
+      minHeight: 36,
       alignItems: 'center',
       justifyContent: 'center',
+      borderRadius: clubForm.actionRadius,
+      backgroundColor: tokens.accent,
+    },
+    approveLabel: { color: tokens.onAccent, fontWeight: '700' },
+    rejectBtn: {
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: clubForm.actionRadius,
+      borderWidth: 1,
+      borderColor: tokens.borderStrong,
     },
   });

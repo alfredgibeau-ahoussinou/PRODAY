@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { withAlpha } from '../../utils/coachTeamTheme';
 import {
   Modal,
   StyleSheet,
@@ -328,7 +329,7 @@ export function FederationSyncDrawer({
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end' },
-  overlayBg: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
+  overlayBg: { ...StyleSheet.absoluteFillObject, backgroundColor: 'withAlpha(tokens.bg, 0.6)' },
   drawer: {
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
@@ -370,7 +371,7 @@ const styles = StyleSheet.create({
   // Step 4
   syncContainer: { flex: 1, justifyContent: 'center', paddingVertical: spacing.lg },
   syncingTitle: { fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: spacing.md },
-  progressBarBg: { height: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' },
+  progressBarBg: { height: 6, backgroundColor: withAlpha('FFFFFF', 0.1), borderRadius: 3, overflow: 'hidden' },
   progressBarFill: { height: '100%', borderRadius: 3 },
   successCircle: { width: 80, height: 80, borderRadius: 40, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: spacing.lg },
   successTitle: { fontSize: 20, fontWeight: '800', textAlign: 'center', marginBottom: spacing.xl },

@@ -226,7 +226,9 @@ export const PlayerAiCopilotHero: React.FC<Props> = ({
           onPress={handleSendPrompt}
           disabled={!promptDraft.trim()}
           activeOpacity={0.8}
-        >
+
+          accessibilityRole="button"
+          accessibilityLabel="Envoyer">
           <Ionicons
             name="arrow-up"
             size={16}

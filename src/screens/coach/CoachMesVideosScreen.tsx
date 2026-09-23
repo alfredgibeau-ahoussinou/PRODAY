@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  proSemantic,
+} from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import {
   ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
-  Modal,
 } from 'react-native';
-import { ProDayVideoPlayer } from '../../components/video/ProDayVideoPlayer';
-import type { VeoMatchStream } from '../../services/veo/veoLiveStream.service';
 import type { User } from '../../models/User';
 import type { ClubMatchVideo } from '../../models/ClubCameras';
 import {
@@ -42,7 +43,9 @@ import {
   coachVideoAiHonestAlert,
   coachVideoEmptyLibraryBody,
   coachVideoLiveUnavailableBody,
+  coachVideoMissingSourceAlert,
 } from '../../utils/coachVideoHonesty';
+import { ProDayIntegratedVideoPlayer } from '../../components/video/ProDayIntegratedVideoPlayer';
 
 type Props = {
   profile: User;
@@ -60,7 +63,11 @@ export function CoachMesVideosScreen({ profile }: Props) {
   const [videos, setVideos] = useState<ClubMatchVideo[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedPreflight, setCheckedPreflight] = useState<Record<string, boolean>>({});
-  const [activePlaybackStream, setActivePlaybackStream] = useState<VeoMatchStream | null>(null);
+  const [playingVideo, setPlayingVideo] = useState<{
+    url: string;
+    title: string;
+    matchInfo?: string;
+  } | null>(null);
 
   const load = useCallback(async () => {
     if (!clubId) {
@@ -108,7 +115,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
 
   if (!clubId) {
     return (
-      <CoachPane title={getCoachPageIdentity('mes_videos').title}>
+      <CoachPane title={getCoachPageIdentity('mes_videos').title} fallbackNavId="plus">
         <ScrollView contentContainerStyle={styles.pad}>
           <CoachEmptyState
             title="Club requis"
@@ -122,7 +129,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
   }
 
   return (
-    <CoachPane title={getCoachPageIdentity('mes_videos').title}>
+    <CoachPane title={getCoachPageIdentity('mes_videos').title} fallbackNavId="plus">
       <View style={styles.root}>
         {/* 1. BARRE D'ONGLETS HORIZONTALE */}
         <ScrollView
@@ -153,7 +160,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                 <Icon
                   name={p.icon}
                   size={14}
-                  color={on ? '#000000' : ELITE_COLORS.textMuted}
+                  color={on ? tokens.bg : ELITE_COLORS.textMuted}
                 />
                 <ProDayText
                   variant="caption"
@@ -219,7 +226,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                   <View style={styles.statDivider} />
 
                   <View style={styles.statItem}>
-                    <ProDayText variant="hero" style={[styles.statNum, { color: '#38BDF8' }]}>
+                    <ProDayText variant="hero" style={[styles.statNum, { color: proSemantic.info }]}>
                       {totalClips}
                     </ProDayText>
                     <ProDayText variant="caption" muted style={styles.statLabel}>
@@ -267,7 +274,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                       {/* PREVIEW BANNER / HEADER */}
                       <View style={styles.videoPreviewHeader}>
                         <View style={styles.vendorPill}>
-                          <Icon name="videocam" size={11} color="#FFFFFF" />
+                          <Icon name="videocam" size={11} color={tokens.foreground} />
                           <ProDayText variant="caption" style={styles.vendorText}>
                             {v.vendor ? vendorLabel(v.vendor) : 'Caméra Club'}
                           </ProDayText>
@@ -289,13 +296,13 @@ export function CoachMesVideosScreen({ profile }: Props) {
                           <View
                             style={[
                               styles.miniStatusDot,
-                              { backgroundColor: isReady ? '#10B981' : '#F59E0B' },
+                              { backgroundColor: isReady ? proSemantic.success : proSemantic.warning },
                             ]}
                           />
                           <ProDayText
                             variant="caption"
                             style={{
-                              color: isReady ? '#10B981' : '#F59E0B',
+                              color: isReady ? proSemantic.success : proSemantic.warning,
                               fontWeight: '800',
                               fontSize: 10,
                             }}
@@ -335,7 +342,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                         {/* BADGES CLIPS & IA */}
                         <View style={styles.featureBadgesRow}>
                           {v.highlights_ready || v.ai_ready ? (
-                            <View style={[styles.featureBadge, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
+                            <View style={[styles.featureBadge, { backgroundColor: withAlpha('F59E0B', 0.12) }]}>
                               <Icon name="sparkles" size={11} color={tokens.accent} />
                               <ProDayText
                                 variant="caption"
@@ -347,11 +354,11 @@ export function CoachMesVideosScreen({ profile }: Props) {
                           ) : null}
 
                           {v.talk_ready ? (
-                            <View style={[styles.featureBadge, { backgroundColor: 'rgba(56, 189, 248, 0.12)' }]}>
-                              <Icon name="mic" size={11} color="#38BDF8" />
+                            <View style={[styles.featureBadge, { backgroundColor: withAlpha('0A84FF', 0.12) }]}>
+                              <Icon name="mic" size={11} color={proSemantic.info} />
                               <ProDayText
                                 variant="caption"
-                                style={{ color: '#38BDF8', fontWeight: '800', fontSize: 10 }}
+                                style={{ color: proSemantic.info, fontWeight: '800', fontSize: 10 }}
                               >
                                 Causerie
                               </ProDayText>
@@ -359,11 +366,11 @@ export function CoachMesVideosScreen({ profile }: Props) {
                           ) : null}
 
                           {v.clips?.length ? (
-                            <View style={[styles.featureBadge, { backgroundColor: 'rgba(255, 255, 255, 0.06)' }]}>
-                              <Icon name="document-text" size={11} color="#FFFFFF" />
+                            <View style={[styles.featureBadge, { backgroundColor: withAlpha('FFFFFF', 0.06) }]}>
+                              <Icon name="document-text" size={11} color={tokens.foreground} />
                               <ProDayText
                                 variant="caption"
-                                style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 10 }}
+                                style={{ color: tokens.foreground, fontWeight: '800', fontSize: 10 }}
                               >
                                 {v.clips.length} clips
                               </ProDayText>
@@ -377,24 +384,20 @@ export function CoachMesVideosScreen({ profile }: Props) {
                         <TouchableOpacity
                           activeOpacity={0.85}
                           onPress={() => {
-                            setActivePlaybackStream({
-                              id: v.id,
-                              match_id: v.event_id || v.id,
-                              club_id: v.club_id,
+                            prodayHaptics.press();
+                            if (!v.storage_url) {
+                              Alert.alert('Lecture impossible', coachVideoMissingSourceAlert());
+                              return;
+                            }
+                            setPlayingVideo({
+                              url: v.storage_url,
                               title: v.title,
-                              stream_kind: v.source === 'camera_api' ? 'live' : 'replay',
-                              is_live: v.status === 'recording',
-                              stream_url:
-                                v.storage_url ||
-                                'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-                              status: v.status === 'recording' ? 'live' : 'ready',
-                              duration_sec: v.duration_sec,
-                              updated_at: new Date().toISOString(),
+                              matchInfo: `${v.team_label || 'Équipe'} ${v.opponent ? `vs ${v.opponent}` : ''}`,
                             });
                           }}
                           style={[styles.actionBtn, styles.actionBtnPrimary]}
                         >
-                          <Icon name="play" size={13} color="#000000" />
+                          <Icon name="play" size={13} color={tokens.bg} />
                           <ProDayText variant="caption" style={styles.actionBtnPrimaryText}>
                             Regarder
                           </ProDayText>
@@ -412,7 +415,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                           }
                           style={[styles.actionBtn, styles.actionBtnOutline]}
                         >
-                          <Icon name="document-text" size={13} color="#FFFFFF" />
+                          <Icon name="document-text" size={13} color={tokens.foreground} />
                           <ProDayText variant="caption" style={styles.actionBtnOutlineText}>
                             Clips
                           </ProDayText>
@@ -466,7 +469,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                   <ProDayText
                     variant="caption"
                     style={{
-                      color: isPreflightComplete ? '#10B981' : '#F59E0B',
+                      color: isPreflightComplete ? proSemantic.success : proSemantic.warning,
                       fontWeight: '800',
                       fontSize: 10,
                     }}
@@ -493,7 +496,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                         ]}
                       >
                         {isChecked ? (
-                          <Icon name="checkmark-circle" size={12} color="#000000" />
+                          <Icon name="checkmark-circle" size={12} color={tokens.bg} />
                         ) : null}
                       </View>
                       <ProDayText
@@ -523,7 +526,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                 }}
                 style={[styles.mainActionBtn, { backgroundColor: tokens.accent }]}
               >
-                <Icon name="checkmark-circle" size={16} color="#000000" />
+                <Icon name="checkmark-circle" size={16} color={tokens.bg} />
                 <ProDayText variant="caption" style={styles.mainActionBtnText}>
                   Tout valider & Passer au Live
                 </ProDayText>
@@ -536,7 +539,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
                 <View style={styles.cardIconBox}>
-                  <Icon name="flash" size={16} color="#F43F5E" />
+                  <Icon name="flash" size={16} color={withAlpha('EF4444', 0.85)} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <ProDayText variant="section" style={styles.cardHeaderTitle}>
@@ -585,7 +588,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                 }
                 style={[styles.mainActionBtn, styles.actionBtnOutline, { marginTop: 6 }]}
               >
-                <Icon name="document-text" size={15} color="#FFFFFF" />
+                <Icon name="document-text" size={15} color={tokens.foreground} />
                 <ProDayText variant="caption" style={styles.actionBtnOutlineText}>
                   Ajouter une note de match
                 </ProDayText>
@@ -668,7 +671,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
               <View style={styles.card}>
                 <View style={styles.cardHeaderRow}>
                   <View style={styles.cardIconBox}>
-                    <Icon name="mic" size={16} color="#38BDF8" />
+                    <Icon name="mic" size={16} color={proSemantic.info} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <ProDayText variant="section" style={styles.cardHeaderTitle}>
@@ -700,7 +703,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                   }
                   style={[styles.mainActionBtn, { backgroundColor: tokens.accent, marginTop: 4 }]}
                 >
-                  <Icon name="document-text" size={15} color="#000000" />
+                  <Icon name="document-text" size={15} color={tokens.bg} />
                   <ProDayText variant="caption" style={styles.mainActionBtnText}>
                     Préparer la causerie vidéo
                   </ProDayText>
@@ -711,20 +714,16 @@ export function CoachMesVideosScreen({ profile }: Props) {
         </ScrollView>
       </View>
 
-      {activePlaybackStream ? (
-        <Modal
-          visible={Boolean(activePlaybackStream)}
-          animationType="slide"
-          onRequestClose={() => setActivePlaybackStream(null)}
-        >
-          <View style={{ flex: 1, backgroundColor: '#000000', justifyContent: 'center' }}>
-            <ProDayVideoPlayer
-              stream={activePlaybackStream}
-              onClose={() => setActivePlaybackStream(null)}
-            />
-          </View>
-        </Modal>
-      ) : null}
+      {playingVideo && (
+        <ProDayIntegratedVideoPlayer
+          isModal
+          sourceUrl={playingVideo.url}
+          title={playingVideo.title}
+          matchInfo={playingVideo.matchInfo}
+          userRole="coach"
+          onClose={() => setPlayingVideo(null)}
+        />
+      )}
     </CoachPane>
   );
 }
@@ -766,7 +765,7 @@ function createStyles(tokens: CoachThemeTokens) {
       fontSize: 11,
     },
     railTextOn: {
-      color: '#000000',
+      color: tokens.bg,
       fontWeight: '800',
     },
     scroll: {
@@ -804,18 +803,18 @@ function createStyles(tokens: CoachThemeTokens) {
     heroTitle: {
       fontSize: 14,
       fontWeight: '900',
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     cameraBadge: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      backgroundColor: 'rgba(245, 158, 11, 0.12)',
+      backgroundColor: withAlpha('F59E0B', 0.12),
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: 'rgba(245, 158, 11, 0.25)',
+      borderColor: withAlpha('F59E0B', 0.25),
     },
     cameraBadgeText: {
       fontSize: 10,
@@ -840,7 +839,7 @@ function createStyles(tokens: CoachThemeTokens) {
     statNum: {
       fontSize: 18,
       fontWeight: '900',
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     statLabel: {
       fontSize: 10,
@@ -860,7 +859,7 @@ function createStyles(tokens: CoachThemeTokens) {
       gap: 8,
     },
     videoCardSelected: {
-      borderColor: 'rgba(245, 158, 11, 0.4)',
+      borderColor: withAlpha('F59E0B', 0.4),
       backgroundColor: ELITE_COLORS.bgSurfaceElevated,
     },
     videoPreviewHeader: {
@@ -873,7 +872,7 @@ function createStyles(tokens: CoachThemeTokens) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+      backgroundColor: tokens.border,
       paddingHorizontal: 7,
       paddingVertical: 2,
       borderRadius: 6,
@@ -881,7 +880,7 @@ function createStyles(tokens: CoachThemeTokens) {
     vendorText: {
       fontSize: 10,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     datePill: {
       flexDirection: 'row',
@@ -902,12 +901,12 @@ function createStyles(tokens: CoachThemeTokens) {
       borderWidth: 1,
     },
     statusPillReady: {
-      backgroundColor: 'rgba(16, 185, 129, 0.1)',
-      borderColor: 'rgba(16, 185, 129, 0.25)',
+      backgroundColor: withAlpha('10B981', 0.1),
+      borderColor: withAlpha('10B981', 0.25),
     },
     statusPillPending: {
-      backgroundColor: 'rgba(245, 158, 11, 0.1)',
-      borderColor: 'rgba(245, 158, 11, 0.25)',
+      backgroundColor: withAlpha('F59E0B', 0.1),
+      borderColor: withAlpha('F59E0B', 0.25),
     },
     miniStatusDot: {
       width: 5,
@@ -920,7 +919,7 @@ function createStyles(tokens: CoachThemeTokens) {
     videoTitle: {
       fontSize: 14,
       fontWeight: '900',
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     metaLocationRow: {
       flexDirection: 'row',
@@ -952,7 +951,7 @@ function createStyles(tokens: CoachThemeTokens) {
       marginTop: 4,
       paddingTop: 6,
       borderTopWidth: 1,
-      borderTopColor: 'rgba(255, 255, 255, 0.05)',
+      borderTopColor: withAlpha('FFFFFF', 0.05),
     },
     actionBtn: {
       flexDirection: 'row',
@@ -968,7 +967,7 @@ function createStyles(tokens: CoachThemeTokens) {
       flex: 1.2,
     },
     actionBtnPrimaryText: {
-      color: '#000000',
+      color: tokens.bg,
       fontWeight: '800',
       fontSize: 11,
     },
@@ -979,7 +978,7 @@ function createStyles(tokens: CoachThemeTokens) {
       flex: 1,
     },
     actionBtnOutlineText: {
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontWeight: '700',
       fontSize: 11,
     },
@@ -1000,18 +999,18 @@ function createStyles(tokens: CoachThemeTokens) {
       width: 32,
       height: 32,
       borderRadius: 8,
-      backgroundColor: 'rgba(245, 158, 11, 0.12)',
+      backgroundColor: withAlpha('F59E0B', 0.12),
       alignItems: 'center',
       justifyContent: 'center',
     },
     cardHeaderTitle: {
       fontSize: 13,
       fontWeight: '900',
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     cardHeaderSub: {
       fontSize: 10,
-      color: 'rgba(255, 255, 255, 0.55)',
+      color: withAlpha('FFFFFF', 0.55),
       marginTop: 1,
     },
     checklistWrap: {
@@ -1028,8 +1027,8 @@ function createStyles(tokens: CoachThemeTokens) {
       borderColor: ELITE_COLORS.border,
     },
     checklistItemChecked: {
-      borderColor: 'rgba(245, 158, 11, 0.35)',
-      backgroundColor: 'rgba(245, 158, 11, 0.06)',
+      borderColor: withAlpha('F59E0B', 0.35),
+      backgroundColor: withAlpha('F59E0B', 0.06),
     },
     checkboxCircle: {
       width: 18,
@@ -1043,11 +1042,11 @@ function createStyles(tokens: CoachThemeTokens) {
     checklistText: {
       fontSize: 12,
       fontWeight: '600',
-      color: 'rgba(255, 255, 255, 0.8)',
+      color: withAlpha('FFFFFF', 0.8),
       flex: 1,
     },
     checklistTextChecked: {
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontWeight: '700',
     },
     mainActionBtn: {
@@ -1059,7 +1058,7 @@ function createStyles(tokens: CoachThemeTokens) {
       gap: 6,
     },
     mainActionBtnText: {
-      color: '#000000',
+      color: tokens.bg,
       fontWeight: '800',
       fontSize: 12,
     },
@@ -1085,7 +1084,7 @@ function createStyles(tokens: CoachThemeTokens) {
     liveGridLabel: {
       fontSize: 9,
       fontWeight: '700',
-      color: 'rgba(255, 255, 255, 0.7)',
+      color: withAlpha('FFFFFF', 0.7),
       textAlign: 'center',
     },
     stagesRow: {
@@ -1106,14 +1105,14 @@ function createStyles(tokens: CoachThemeTokens) {
       justifyContent: 'center',
     },
     stageNumberText: {
-      color: '#000000',
+      color: tokens.bg,
       fontWeight: '900',
       fontSize: 11,
     },
     stageLabelText: {
       fontSize: 9,
       fontWeight: '700',
-      color: 'rgba(255, 255, 255, 0.7)',
+      color: withAlpha('FFFFFF', 0.7),
       textAlign: 'center',
     },
     promptsList: {
@@ -1132,7 +1131,7 @@ function createStyles(tokens: CoachThemeTokens) {
     promptItemText: {
       flex: 1,
       fontSize: 11,
-      color: 'rgba(255, 255, 255, 0.85)',
+      color: withAlpha('FFFFFF', 0.85),
       lineHeight: 15,
     },
     talkGrid: {
@@ -1153,7 +1152,7 @@ function createStyles(tokens: CoachThemeTokens) {
     talkBoxTitle: {
       fontSize: 12,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     talkBoxClips: {
       fontSize: 10,

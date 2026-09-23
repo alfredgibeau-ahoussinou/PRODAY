@@ -5,6 +5,7 @@ import { spacing, radius } from '../../theme/designTokens';
 import { Icon } from '../ui/Icon';
 import { useCarpoolUi } from './CarpoolUiContext';
 import { ProDayText } from '../ui/ProDayText';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 type Props = {
   meta: string;
@@ -39,8 +40,8 @@ export function CarpoolTripTicket({
       style={[
         styles.card,
         {
-          backgroundColor: '#14141A',
-          borderColor: '#22222E',
+          backgroundColor: CARPOOL_SITE.surface,
+          borderColor: CARPOOL_SITE.lane,
         },
       ]}
       scaleTo={0.98}

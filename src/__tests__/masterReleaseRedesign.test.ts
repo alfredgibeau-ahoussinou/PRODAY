@@ -72,14 +72,26 @@ describe('Master Release Redesign Unit Tests', () => {
   });
 
   describe('Screen 3: Messages Inbox Filters', () => {
-    it('provides standard Apple-style thread filters', () => {
+    it('expose les catégories par rôle demandées, sans surcharger le rail', () => {
       const t = ((_key: string, _params?: any, def?: string) => def || _key) as any;
       const filters = getMessagesThreadFilters(t);
       const ids = filters.map((f) => f.id);
+
+      // Catégories demandées : Tous, Joueurs, Parents, Coachs, Club / Staff.
       expect(ids).toContain('all');
-      expect(ids).toContain('coach');
-      expect(ids).toContain('team');
-      expect(ids).toContain('mercato');
+      expect(ids).toContain('players');
+      expect(ids).toContain('parents');
+      expect(ids).toContain('coaches');
+      expect(ids).toContain('club_staff');
+
+      // La nature (direct / groupe / annonce) n'est plus un filtre : elle est portée par la
+      // ligne elle-même, ce qui évite le rail à neuf entrées constaté auparavant.
+      expect(ids).not.toContain('direct');
+      expect(ids).not.toContain('groups');
+      expect(ids).not.toContain('announcements');
+
+      // Rail compact : au plus six entrées.
+      expect(filters.length).toBeLessThanOrEqual(6);
     });
   });
 });

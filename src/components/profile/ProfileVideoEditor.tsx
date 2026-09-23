@@ -57,7 +57,9 @@ export const ProfileVideoEditor: React.FC<ProfileVideoEditorProps> = ({
             <TouchableOpacity
               style={[styles.removeBtn, { backgroundColor: accent }]}
               onPress={() => onRemove(uri)}
-            >
+
+              accessibilityRole="button"
+              accessibilityLabel="Fermer">
               <Icon name="close" size={14} color={accentInverse} />
             </TouchableOpacity>
           </View>

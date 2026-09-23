@@ -49,6 +49,8 @@ export interface MessagesHomeScreenProps {
   onSignup: () => void;
   onOpenMercato: () => void;
   onResetFilters: () => void;
+  /** Ouvre la création de groupe depuis la boîte de réception. */
+  onCreateGroup: () => void;
   kineLabelFor: (thread: MessageThread) => string | undefined;
   isWoman: boolean;
   variant?: 'default' | 'coach';
@@ -130,6 +132,7 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
             onRefresh={props.onRefresh}
             onResetFilters={props.onResetFilters}
             onOpenMercato={props.onOpenMercato}
+            onCreateGroup={props.onCreateGroup}
             kineLabelFor={props.kineLabelFor}
             isWoman={props.isWoman}
             variant={messagesVariant}

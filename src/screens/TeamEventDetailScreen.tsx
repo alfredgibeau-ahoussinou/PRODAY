@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
   Share,
+  TouchableOpacity,
+  TextInput,
+  Linking,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { TeamEvent, RsvpStatus } from '../models/TeamEvent';
 import {
   EVENT_TYPE_LABELS,
@@ -19,7 +20,6 @@ import {
   RSVP_STATUS_LABELS,
   isLateRsvp,
 } from '../models/TeamEvent';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { useAuth } from '../context/AuthContext';
 import { formatCalendarDate } from '../utils/seasonCalendar';
@@ -30,9 +30,12 @@ import { EventLiveStatsScreen } from './EventLiveStatsScreen';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
 import { EventCarpoolPanel } from '../components/team/EventCarpoolPanel';
 import { LateReportControl } from '../components/team/LateReportControl';
-import { spacing, radius } from '../theme/designTokens';
-import { useThemedScreen } from '../hooks/useThemedScreen';
-import { PushScreenTransition } from '../components/motion';
+import { PushScreenTransition, PressableSpring } from '../components/motion';
+import { ProDayText } from '../components/ui/ProDayText';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
+import { playerType } from '../theme/playerDesignSystem';
+import { prodayHaptics } from '../utils/prodayHaptics';
+import { calendarExportService } from '../services/calendarExport.service';
 
 interface TeamEventDetailScreenProps {
   eventId: string;
@@ -41,10 +44,10 @@ interface TeamEventDetailScreenProps {
 
 type SubView = 'detail' | 'lineup' | 'live';
 
-const RSVP_OPTIONS: { status: RsvpStatus; label: string }[] = [
-  { status: 'yes', label: 'Présent' },
-  { status: 'maybe', label: 'Peut-être' },
-  { status: 'no', label: 'Absent' },
+const RSVP_OPTIONS: { status: RsvpStatus; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
+  { status: 'yes', label: 'Présent', icon: 'checkmark-circle', color: '#10B981' },
+  { status: 'maybe', label: 'Peut-être', icon: 'help-circle', color: '#F59E0B' },
+  { status: 'no', label: 'Absent', icon: 'close-circle', color: '#EF4444' },
 ];
 
 export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
@@ -52,7 +55,6 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
   onBack,
 }) => {
   const { profile, isAdmin } = useAuth();
-  const { colors: c, rootStyle } = useThemedScreen();
   const [subView, setSubView] = useState<SubView>('detail');
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,21 +64,36 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
 
   const load = useCallback(async () => {
     setLoading(true);
-    setEvent(await teamEventsService.getById(eventId));
+    const data = await teamEventsService.getById(eventId);
+    setEvent(data);
     setLoading(false);
   }, [eventId]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const handleRsvp = async (status: RsvpStatus) => {
-    if (!profile) return;
+    if (!profile || !event) return;
     if (status === 'no' && !showAbsenceNote) {
       setShowAbsenceNote(true);
       return;
     }
+    const prevStatus = userRsvp(event, profile.uid);
     setSaving(true);
+
+    // Optimistic update
+    setEvent((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        rsvps: {
+          ...prev.rsvps,
+          [profile.uid]: status,
+        },
+      };
+    });
+
     try {
       if (status === 'no') {
         await teamEventsService.updateRsvpWithReason(
@@ -90,9 +107,21 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
       } else {
         await teamEventsService.updateRsvp(eventId, profile.uid, status);
       }
+      prodayHaptics.rsvpConfirm();
       await load();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Réponse impossible.');
+      // Rollback
+      setEvent((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          rsvps: {
+            ...prev.rsvps,
+            [profile.uid]: prevStatus,
+          },
+        };
+      });
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible d’enregistrer votre réponse.');
     } finally {
       setSaving(false);
     }
@@ -120,19 +149,50 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
     await Share.share({ message: buildConvocationShareMessage(event) });
   };
 
+  const handleExportCalendar = () => {
+    if (!event) return;
+    const start = event.starts_at ? new Date(event.starts_at) : new Date();
+    const end = event.ends_at ? new Date(event.ends_at) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    void calendarExportService.exportEventToCalendar({
+      id: event.id,
+      title: event.title,
+      description: `${EVENT_TYPE_LABELS[event.event_type]} • ${event.description || 'ProDay Football'}`,
+      location: `${event.location_label ? `${event.location_label}, ` : ''}${event.city || ''}`,
+      startDate: start,
+      endDate: end,
+    });
+  };
+
+  const openMapsDirections = () => {
+    if (!event) return;
+    const query = encodeURIComponent(`${event.location_label || ''} ${event.city || ''}`.trim());
+    if (!query) return;
+    const url = `https://maps.apple.com/?q=${query}`;
+    void Linking.openURL(url);
+  };
+
   if (loading) {
     return (
-      <View style={[styles.centered, rootStyle]}>
-        <ActivityIndicator color={c.brand} size="large" />
+      <View style={styles.centered}>
+        <ActivityIndicator color={PLAYER_DARK.accent} size="large" />
       </View>
     );
   }
 
   if (!event) {
     return (
-      <View style={rootStyle}>
-        <ScreenHeader title="Événement" onBack={onBack} centered />
-        <Text style={[styles.missing, { color: c.textMuted }]}>Événement introuvable.</Text>
+      <View style={styles.container}>
+        <View style={styles.navHeader}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={22} color={PLAYER_DARK.text} />
+          </TouchableOpacity>
+          <ProDayText style={styles.navHeaderTitle}>Événement</ProDayText>
+          <View style={{ width: 36 }} />
+        </View>
+        <View style={styles.emptyWrap}>
+          <Ionicons name="alert-circle-outline" size={40} color={PLAYER_DARK.textMuted} />
+          <ProDayText style={styles.missingText}>Événement introuvable ou supprimé.</ProDayText>
+        </View>
       </View>
     );
   }
@@ -144,11 +204,6 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
   const canRespond =
     profile &&
     (event.invitee_uids.includes(profile.uid) || isOrganizer || event.event_type === 'detection');
-  const showLineupLive =
-    event.event_type === 'training' ||
-    event.event_type === 'friendly' ||
-    event.event_type === 'detection' ||
-    event.event_type === 'tournament';
   const isStaff =
     Boolean(isAdmin) ||
     profile?.role === 'coach' ||
@@ -157,6 +212,10 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
     profile?.role === 'club';
   const canManageFinalizedReport = isStaff;
   const reportLocked = Boolean(event.match_report_finalized_at) && !canManageFinalizedReport;
+
+  const isTraining = event.event_type === 'training';
+  const isTournament = event.event_type === 'tournament';
+  const kindBadgeColor = isTraining ? '#10B981' : isTournament ? '#F59E0B' : PLAYER_DARK.accent;
 
   const toggleReportLock = async () => {
     if (!canManageFinalizedReport || !profile) return;
@@ -168,413 +227,681 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
     await load();
   };
 
-  const surfaceCard = {
-    backgroundColor: c.surface,
-    borderColor: c.border,
-  };
-
   return (
     <>
-    <View style={rootStyle}>
-      <ScreenHeader title="Convocation" onBack={onBack} centered />
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.badge, { backgroundColor: event.event_type === 'training' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)', borderColor: event.event_type === 'training' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(59, 130, 246, 0.4)', borderWidth: 1 }]}>
-          <Text style={[styles.badgeText, { color: event.event_type === 'training' ? '#10B981' : '#3B82F6' }]}>
-            {EVENT_TYPE_LABELS[event.event_type] || 'Événement'}
-          </Text>
+      <View style={styles.container}>
+        {/* Navigation Header Apple */}
+        <View style={styles.navHeader}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="chevron-back" size={22} color={PLAYER_DARK.text} />
+          </TouchableOpacity>
+
+          <View style={styles.navCenter}>
+            <ProDayText style={styles.navHeaderTitle} numberOfLines={1}>
+              {EVENT_TYPE_LABELS[event.event_type] || 'Événement'}
+            </ProDayText>
+          </View>
+
+          <View style={styles.navActionsRow}>
+            <TouchableOpacity onPress={handleExportCalendar} style={styles.headerIconBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityRole="button" accessibilityLabel="Ajouter au calendrier">
+              <Ionicons name="calendar-outline" size={18} color={PLAYER_DARK.text} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={shareConvocation} style={styles.headerIconBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityRole="button" accessibilityLabel="Partager la convocation">
+              <Ionicons name="share-outline" size={18} color={PLAYER_DARK.text} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <Text style={[styles.title, { color: '#FFFFFF' }]}>
-          {event.event_type === 'training'
-            ? formatTrainingSessionTitle(event)
-            : event.title}
-        </Text>
-        <Text style={[styles.meta, { color: '#8E8E9F' }]}>
-          {formatEventScheduleLabel(event)}
-        </Text>
-        <Text style={[styles.meta, { color: '#8E8E9F' }]}>
-          {event.city}
-          {event.location_label ? ` · ${event.location_label}` : ''}
-        </Text>
-        <Text style={[styles.meta, { color: '#8E8E9F' }]}>Par {event.organizer_name}</Text>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* 1. CARTE PRINCIPALE : EN-TÊTE & HORAIRES */}
+          <View style={styles.heroCard}>
+            <View style={styles.heroTopRow}>
+              <View style={[styles.typeBadge, { backgroundColor: `${kindBadgeColor}18`, borderColor: `${kindBadgeColor}35` }]}>
+                <ProDayText style={[styles.typeBadgeText, { color: kindBadgeColor }]}>
+                  {EVENT_TYPE_LABELS[event.event_type] || 'Événement'}
+                </ProDayText>
+              </View>
 
-        {event.event_type === 'detection' && event.max_participants ? (
-          <Text style={[styles.stats, { color: c.brand }]}>
-            {yesCount} / {event.max_participants} places confirmées
-          </Text>
-        ) : null}
-
-        {event.categories && event.categories.length > 0 ? (
-          <Text style={[styles.categories, { color: c.textMuted }]}>
-            {event.categories.join(' · ')}
-          </Text>
-        ) : null}
-
-        {event.description ? (
-          <Text style={[styles.desc, { color: c.text }]}>{event.description}</Text>
-        ) : null}
-
-        {profile &&
-        (isOrganizer ||
-          isStaff ||
-          event.invitee_uids.includes(profile.uid) ||
-          event.event_type === 'detection') ? (
-          <EventCarpoolPanel
-            event={event}
-            profile={profile}
-            isStaff={Boolean(isStaff)}
-            onUpdated={load}
-          />
-        ) : null}
-
-        {event.lineup && (
-          <View style={[styles.lineupBox, surfaceCard]}>
-            <Text style={[styles.lineupTitle, { color: c.text }]}>
-              Composition · {event.lineup.formation}
-            </Text>
-            <Text style={[styles.lineupSub, { color: c.textMuted }]}>
-              {event.lineup.slots.filter((s) => s.role === 'starter').length} titulaires ·{' '}
-              {event.lineup.slots.filter((s) => s.role === 'sub').length} remplaçants
-            </Text>
-          </View>
-        )}
-
-        {isOrganizer && (
-          <>
-            <View style={[styles.summary, surfaceCard]}>
-              <Text style={[styles.summaryTitle, { color: c.text }]}>Réponses</Text>
-              {(['yes', 'late_under_10', 'late_over_10', 'late_unknown', 'maybe', 'no', 'pending'] as RsvpStatus[]).map((st) => {
-                const n = Object.values(event.rsvps).filter((s) => s === st).length;
-                if (n === 0 && isLateRsvp(st)) return null;
-                return (
-                  <Text key={st} style={[styles.summaryLine, { color: c.textSecondary }]}>
-                    {RSVP_STATUS_LABELS[st]} : {n}
-                  </Text>
-                );
-              })}
-            </View>
-
-            <View style={styles.organizerRow}>
-              {pendingCount > 0 && (
-                <TouchableOpacity
-                  style={[styles.orgBtn, { backgroundColor: c.brand }]}
-                  onPress={handleReminder}
-                  disabled={saving}
-                >
-                  <Text style={[styles.orgBtnText, { color: c.brandInverse }]}>
-                    Relancer ({pendingCount})
-                  </Text>
-                </TouchableOpacity>
+              {event.live_state?.status === 'cancelled' ? (
+                <View style={styles.statusBadgeCancelled}>
+                  <ProDayText style={styles.statusBadgeTextCancelled}>ANNULÉ</ProDayText>
+                </View>
+              ) : (
+                <View style={styles.statusBadgeActive}>
+                  <ProDayText style={styles.statusBadgeTextActive}>CONFIRMÉ</ProDayText>
+                </View>
               )}
-              <TouchableOpacity
-                style={[styles.orgBtnSecondary, surfaceCard]}
-                onPress={shareConvocation}
-              >
-                <Text style={[styles.orgBtnSecondaryText, { color: c.text }]}>Partager</Text>
-              </TouchableOpacity>
             </View>
 
-            {event.last_reminder_at && (
-              <Text style={[styles.reminderMeta, { color: c.textMuted }]}>
-                Dernière relance :{' '}
-                {event.last_reminder_at.toLocaleString('fr-FR', {
-                  day: 'numeric',
-                  month: 'short',
-                  hour: '2-digit',
-                  minute: '2-digit',
+            <ProDayText style={styles.heroTitle}>
+              {isTraining ? formatTrainingSessionTitle(event) : event.title}
+            </ProDayText>
+
+            {/* Date & Heures */}
+            <View style={styles.metaStack}>
+              <View style={styles.metaRow}>
+                <Ionicons name="calendar" size={15} color={PLAYER_DARK.textMuted} />
+                <ProDayText style={styles.metaText}>
+                  {formatCalendarDate(event.starts_at)}
+                </ProDayText>
+              </View>
+
+              <View style={styles.metaRow}>
+                <Ionicons name="time" size={15} color={PLAYER_DARK.textMuted} />
+                <ProDayText style={styles.metaText}>
+                  {formatEventScheduleLabel(event)}
+                </ProDayText>
+              </View>
+
+              {event.carpool_slots?.[0]?.meeting_time ? (
+                <View style={[styles.metaRow, styles.meetingHighlight]}>
+                  <Ionicons name="alarm-outline" size={15} color={PLAYER_DARK.accent} />
+                  <ProDayText style={[styles.metaText, { color: PLAYER_DARK.accent, fontWeight: '700' }]}>
+                    Rendez-vous vestiaire : {event.carpool_slots[0].meeting_time}
+                  </ProDayText>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Organisateur */}
+            <View style={styles.organizerRow}>
+              <Ionicons name="person-circle-outline" size={15} color={PLAYER_DARK.textMuted} />
+              <ProDayText style={styles.organizerText}>
+                Organisé par {event.organizer_name}
+              </ProDayText>
+            </View>
+          </View>
+
+          {/* 2. LIEU & ITINÉRAIRE */}
+          {(event.city || event.location_label) && (
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.sectionTitleRow}>
+                  <Ionicons name="location" size={16} color={PLAYER_DARK.accent} />
+                  <ProDayText style={styles.sectionTitle}>Lieu & Rendez-vous</ProDayText>
+                </View>
+
+                <TouchableOpacity
+                  onPress={openMapsDirections}
+                  style={styles.itineraryButton}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="navigate-outline" size={13} color={PLAYER_DARK.accent} />
+                  <ProDayText style={[styles.itineraryButtonText, { color: PLAYER_DARK.accent }]}>
+                    Itinéraire
+                  </ProDayText>
+                </TouchableOpacity>
+              </View>
+
+              <ProDayText style={styles.locationMainText}>
+                {event.location_label || event.city}
+              </ProDayText>
+              {event.location_label && event.city ? (
+                <ProDayText style={styles.locationSubText}>{event.city}</ProDayText>
+              ) : null}
+            </View>
+          )}
+
+          {/* 3. RÉPONSE DU JOUEUR (RSVP 1-TAP) */}
+          {canRespond && (
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="checkmark-done-circle" size={16} color={PLAYER_DARK.accent} />
+                <ProDayText style={styles.sectionTitle}>Votre présence</ProDayText>
+                {saving ? (
+                  <ActivityIndicator size="small" color={PLAYER_DARK.accent} style={{ marginLeft: 6 }} />
+                ) : null}
+              </View>
+
+              <View style={styles.rsvpSegment}>
+                {RSVP_OPTIONS.map((opt) => {
+                  const isSelected = myStatus === opt.status;
+
+                  return (
+                    <TouchableOpacity
+                      key={opt.status}
+                      onPress={() => {
+                        prodayHaptics.press();
+                        void handleRsvp(opt.status);
+                      }}
+                      style={[
+                        styles.rsvpButton,
+                        isSelected && {
+                          backgroundColor: `${opt.color}20`,
+                          borderColor: opt.color,
+                        },
+                      ]}
+                      disabled={saving}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name={opt.icon}
+                        size={15}
+                        color={isSelected ? opt.color : PLAYER_DARK.textMuted}
+                      />
+                      <ProDayText
+                        style={[
+                          styles.rsvpButtonLabel,
+                          { color: isSelected ? opt.color : PLAYER_DARK.textMuted },
+                          isSelected && styles.rsvpButtonLabelActive,
+                        ]}
+                      >
+                        {opt.label}
+                      </ProDayText>
+                    </TouchableOpacity>
+                  );
                 })}
-              </Text>
-            )}
-
-            {showLineupLive && (
-              <View style={styles.toolRow}>
-                <TouchableOpacity
-                  style={[styles.toolCard, surfaceCard, reportLocked && styles.toolCardMuted]}
-                  onPress={() => setSubView('lineup')}
-                >
-                  <Text style={[styles.toolTitle, { color: c.text }]}>Composition</Text>
-                  <Text style={[styles.toolSub, { color: c.textMuted }]}>Tactique & titulaires</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.toolCard, surfaceCard, reportLocked && styles.toolCardMuted]}
-                  onPress={() => setSubView('live')}
-                  disabled={reportLocked}
-                >
-                  <Text style={[styles.toolTitle, { color: c.text }]}>Live Stats</Text>
-                  <Text style={[styles.toolSub, { color: c.textMuted }]}>
-                    {reportLocked
-                      ? 'Lecture seule (rapport validé)'
-                      : `${event.live_actions?.length ?? 0} action(s)`}
-                  </Text>
-                </TouchableOpacity>
               </View>
-            )}
 
-            {event.match_report_finalized_at ? (
-              <Text style={[styles.reportLockInfo, { color: c.textMuted }]}>
-                Rapport validé le{' '}
-                {event.match_report_finalized_at.toLocaleDateString('fr-FR')}.
-              </Text>
-            ) : null}
-            {canManageFinalizedReport ? (
-              <TouchableOpacity
-                style={[styles.lockToggleBtn, surfaceCard]}
-                onPress={() => void toggleReportLock()}
-              >
-                <Text style={[styles.lockToggleText, { color: c.textSecondary }]}>
-                  {event.match_report_finalized_at
-                    ? 'Déverrouiller le rapport'
-                    : 'Valider et verrouiller le rapport'}
-                </Text>
-              </TouchableOpacity>
-            ) : null}
-
-            {event.invitee_uids.length > 0 ? (
-              <View style={styles.attendanceSection}>
-                <Text style={[styles.summaryTitle, { color: c.text }]}>Présences & pointage</Text>
-                <EventAttendancePanel
-                  event={event}
-                  profile={profile}
-                  isStaff={isStaff}
-                  onUpdated={load}
-                />
-              </View>
-            ) : null}
-          </>
-        )}
-
-        {canRespond && (
-          <>
-            <Text style={[styles.rsvpLabel, { color: c.textSecondary }]}>Votre réponse</Text>
-            <View style={styles.rsvpRow}>
-              {RSVP_OPTIONS.map((opt) => {
-                const active = myStatus === opt.status;
-                return (
+              {showAbsenceNote ? (
+                <View style={styles.absenceNoteContainer}>
+                  <ProDayText style={styles.absenceNotePrompt}>
+                    Motif d’absence (optionnel) :
+                  </ProDayText>
+                  <TextInput
+                    style={styles.absenceInput}
+                    placeholder="Ex. blessure, examen, déplacement professionnel…"
+                    placeholderTextColor={PLAYER_DARK.textMuted}
+                    value={absenceNote}
+                    onChangeText={setAbsenceNote}
+                    multiline
+                  />
                   <TouchableOpacity
-                    key={opt.status}
-                    style={[
-                      styles.rsvpBtn,
-                      {
-                        backgroundColor: active ? c.brand : c.surface,
-                        borderColor: active ? c.brand : c.border,
-                      },
-                    ]}
-                    onPress={() => handleRsvp(opt.status)}
+                    style={styles.confirmAbsenceBtn}
+                    onPress={() => void handleRsvp('no')}
                     disabled={saving}
                   >
-                    <Text
-                      style={[
-                        styles.rsvpBtnText,
-                        { color: active ? c.brandInverse : c.text },
-                      ]}
-                    >
-                      {opt.label}
-                    </Text>
+                    <ProDayText style={styles.confirmAbsenceBtnText}>
+                      Confirmer l’absence
+                    </ProDayText>
                   </TouchableOpacity>
-                );
-              })}
-            </View>
-            {showAbsenceNote ? (
-              <>
-                <Text style={[styles.rsvpLabel, { color: c.textSecondary }]}>
-                  Motif d&apos;absence (optionnel)
-                </Text>
-                <TextInput
-                  style={[
-                    styles.noteInput,
-                    {
-                      backgroundColor: c.surface,
-                      borderColor: c.border,
-                      color: c.text,
-                    },
-                  ]}
-                  placeholder="Ex. blessure, examen, déplacement…"
-                  placeholderTextColor={c.textMuted}
-                  value={absenceNote}
-                  onChangeText={setAbsenceNote}
-                  multiline
-                />
-                <TouchableOpacity
-                  style={[styles.confirmAbsentBtn, { backgroundColor: c.brand }]}
-                  onPress={() => void handleRsvp('no')}
-                  disabled={saving}
-                >
-                  <Text style={[styles.confirmAbsentText, { color: c.brandInverse }]}>
-                    Confirmer l&apos;absence
-                  </Text>
-                </TouchableOpacity>
-              </>
-            ) : null}
-            {profile && event.rsvp_notes?.[profile.uid] ? (
-              <Text style={[styles.myNote, { color: c.textMuted }]}>
-                Votre motif : {event.rsvp_notes[profile.uid]}
-              </Text>
-            ) : null}
-            {profile ? (
-              <LateReportControl
-                eventId={event.id}
-                playerUid={profile.uid}
-                playerName={profile.display_name}
-                currentRsvp={myStatus}
-                onReported={() => void load()}
-              />
-            ) : null}
-          </>
-        )}
+                </View>
+              ) : null}
 
-        {event.event_type === 'detection' &&
-          profile &&
-          !event.invitee_uids.includes(profile.uid) && (
-            <TouchableOpacity
-              style={[styles.registerBtn, { backgroundColor: c.brand }]}
-              onPress={() => handleRsvp('yes')}
-              disabled={saving}
-            >
-              <Text style={[styles.registerText, { color: c.brandInverse }]}>
-                S&apos;inscrire à la détection
-              </Text>
-            </TouchableOpacity>
+              {profile && event.rsvp_notes?.[profile.uid] ? (
+                <View style={styles.savedNoteRow}>
+                  <Ionicons name="information-circle-outline" size={14} color={PLAYER_DARK.textMuted} />
+                  <ProDayText style={styles.savedNoteText}>
+                    Motif transmis : {event.rsvp_notes[profile.uid]}
+                  </ProDayText>
+                </View>
+              ) : null}
+
+              {profile ? (
+                <LateReportControl
+                  eventId={event.id}
+                  playerUid={profile.uid}
+                  playerName={profile.display_name}
+                  currentRsvp={myStatus}
+                  onReported={() => void load()}
+                />
+              ) : null}
+            </View>
           )}
-      </ScrollView>
-    </View>
-    <PushScreenTransition active={subView !== 'detail'}>
-      {subView === 'lineup' ? (
-        <EventLineupScreen
-          eventId={eventId}
-          onBack={() => {
-            setSubView('detail');
-            load();
-          }}
-        />
-      ) : subView === 'live' ? (
-        <EventLiveStatsScreen
-          eventId={eventId}
-          onBack={() => {
-            setSubView('detail');
-            load();
-          }}
-        />
-      ) : null}
-    </PushScreenTransition>
+
+          {/* 4. COMPOSITION D'ÉQUIPE (SI PUBLIÉE) */}
+          {event.lineup && (
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.sectionTitleRow}>
+                  <Ionicons name="football" size={16} color={PLAYER_DARK.accent} />
+                  <ProDayText style={styles.sectionTitle}>
+                    Composition · {event.lineup.formation}
+                  </ProDayText>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.viewLineupBtn}
+                  onPress={() => setSubView('lineup')}
+                >
+                  <ProDayText style={[styles.viewLineupBtnText, { color: PLAYER_DARK.accent }]}>
+                    Voir le terrain →
+                  </ProDayText>
+                </TouchableOpacity>
+              </View>
+
+              <ProDayText style={styles.lineupSummaryText}>
+                {event.lineup.slots.filter((s) => s.role === 'starter').length} titulaires ·{' '}
+                {event.lineup.slots.filter((s) => s.role === 'sub').length} remplaçants
+              </ProDayText>
+            </View>
+          )}
+
+          {/* 5. COVOITURAGE D'ÉQUIPE */}
+          {profile &&
+          (isOrganizer ||
+            isStaff ||
+            event.invitee_uids.includes(profile.uid) ||
+            event.event_type === 'detection') ? (
+            <EventCarpoolPanel
+              event={event}
+              profile={profile}
+              isStaff={Boolean(isStaff)}
+              onUpdated={load}
+            />
+          ) : null}
+
+          {/* 6. CONSIGNES & DESCRIPTION */}
+          {event.description ? (
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="document-text-outline" size={16} color={PLAYER_DARK.accent} />
+                <ProDayText style={styles.sectionTitle}>Consignes du staff</ProDayText>
+              </View>
+              <ProDayText style={styles.descriptionText}>{event.description}</ProDayText>
+            </View>
+          ) : null}
+
+          {/* 7. ESPACE STAFF & POINTAGE (SI AUTORISÉ) */}
+          {isOrganizer && (
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="shield-checkmark" size={16} color={PLAYER_DARK.accent} />
+                <ProDayText style={styles.sectionTitle}>Gestion Staff</ProDayText>
+              </View>
+
+              <View style={styles.summaryStatsRow}>
+                {(['yes', 'maybe', 'no', 'pending'] as RsvpStatus[]).map((st) => {
+                  const n = Object.values(event.rsvps).filter((s) => s === st).length;
+                  return (
+                    <View key={st} style={styles.summaryStatBox}>
+                      <ProDayText style={styles.summaryStatNumber}>{n}</ProDayText>
+                      <ProDayText style={styles.summaryStatLabel}>{RSVP_STATUS_LABELS[st]}</ProDayText>
+                    </View>
+                  );
+                })}
+              </View>
+
+              <View style={styles.staffActionRow}>
+                {pendingCount > 0 && (
+                  <TouchableOpacity
+                    style={[styles.staffPrimaryBtn, { backgroundColor: PLAYER_DARK.accent }]}
+                    onPress={handleReminder}
+                    disabled={saving}
+                  >
+                    <ProDayText style={styles.staffPrimaryBtnText}>
+                      Relancer ({pendingCount})
+                    </ProDayText>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={styles.staffSecondaryBtn}
+                  onPress={() => setSubView('lineup')}
+                >
+                  <ProDayText style={styles.staffSecondaryBtnText}>Modifier la composition</ProDayText>
+                </TouchableOpacity>
+              </View>
+
+              {event.invitee_uids.length > 0 ? (
+                <View style={{ marginTop: 12 }}>
+                  <EventAttendancePanel
+                    event={event}
+                    profile={profile}
+                    isStaff={isStaff}
+                    onUpdated={load}
+                  />
+                </View>
+              ) : null}
+            </View>
+          )}
+        </ScrollView>
+      </View>
+
+      <PushScreenTransition active={subView !== 'detail'}>
+        {subView === 'lineup' ? (
+          <EventLineupScreen
+            eventId={eventId}
+            onBack={() => {
+              setSubView('detail');
+              void load();
+            }}
+          />
+        ) : subView === 'live' ? (
+          <EventLiveStatsScreen
+            eventId={eventId}
+            onBack={() => {
+              setSubView('detail');
+              void load();
+            }}
+          />
+        ) : null}
+      </PushScreenTransition>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  missing: { textAlign: 'center', marginTop: 40 },
-  badge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    marginBottom: spacing.sm,
-  },
-  badgeText: { fontSize: 11, fontWeight: '800' },
-  title: { fontSize: 22, fontWeight: '900', marginBottom: spacing.sm },
-  meta: { fontSize: 14, marginBottom: 4 },
-  stats: { fontSize: 15, fontWeight: '800', marginTop: spacing.md },
-  categories: { fontSize: 13, marginTop: spacing.xs },
-  desc: { fontSize: 15, lineHeight: 22, marginTop: spacing.lg },
-  lineupBox: {
-    marginTop: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  lineupTitle: { fontWeight: '900' },
-  lineupSub: { fontSize: 12, marginTop: 4 },
-  summary: {
-    marginTop: spacing.xl,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  summaryTitle: { fontWeight: '900', marginBottom: spacing.sm },
-  summaryLine: { fontSize: 13, marginBottom: 4 },
-  organizerRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
-  orgBtn: {
+  container: {
     flex: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    alignItems: 'center',
+    backgroundColor: PLAYER_DARK.bg,
   },
-  orgBtnText: { fontWeight: '900', fontSize: 13 },
-  orgBtnSecondary: {
+  centered: {
     flex: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
+    justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    backgroundColor: PLAYER_DARK.bg,
   },
-  orgBtnSecondaryText: { fontWeight: '800' },
-  reminderMeta: { fontSize: 11, marginTop: spacing.xs },
-  toolRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
-  toolCard: {
+  navHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  navCenter: {
     flex: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  toolCardMuted: { opacity: 0.6 },
-  toolTitle: { fontWeight: '900', fontSize: 14 },
-  toolSub: { fontSize: 11, marginTop: 4 },
-  exportBtn: {
-    marginTop: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
     alignItems: 'center',
+    paddingHorizontal: 8,
   },
-  exportBtnText: { fontWeight: '800', fontSize: 13 },
-  reportLockInfo: { marginTop: spacing.sm, fontSize: 12 },
-  lockToggleBtn: {
-    marginTop: spacing.sm,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
+  navHeaderTitle: {
+    ...playerType.headline,
+    color: PLAYER_DARK.text,
+  },
+  navActionsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  lockToggleText: { fontSize: 12, fontWeight: '800' },
-  rsvpLabel: {
-    fontSize: 12,
+  headerIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 36,
+    gap: 12,
+  },
+  emptyWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    gap: 12,
+  },
+  missingText: {
+    ...playerType.subheadline,
+    color: PLAYER_DARK.textMuted,
+    textAlign: 'center',
+  },
+  heroCard: {
+    backgroundColor: PLAYER_DARK.surface,
+    borderColor: PLAYER_DARK.border,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 16,
+    gap: 12,
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  typeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  typeBadgeText: {
+    ...playerType.micro,
     fontWeight: '800',
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
+    letterSpacing: 0.5,
   },
-  rsvpRow: { flexDirection: 'row', gap: spacing.sm },
-  rsvpBtn: {
+  statusBadgeActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 6,
+  },
+  statusBadgeTextActive: {
+    ...playerType.micro,
+    color: '#10B981',
+    fontWeight: '800',
+  },
+  statusBadgeCancelled: {
+    backgroundColor: 'rgba(239, 68, 68, 0.14)',
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 6,
+  },
+  statusBadgeTextCancelled: {
+    ...playerType.micro,
+    color: '#EF4444',
+    fontWeight: '800',
+  },
+  heroTitle: {
+    ...playerType.title,
+    fontSize: 22,
+    color: PLAYER_DARK.text,
+  },
+  metaStack: {
+    gap: 6,
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  metaText: {
+    ...playerType.subheadline,
+    color: PLAYER_DARK.text,
+    fontSize: 13.5,
+  },
+  meetingHighlight: {
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  organizerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  organizerText: {
+    ...playerType.caption,
+    color: PLAYER_DARK.textMuted,
+  },
+  sectionCard: {
+    backgroundColor: PLAYER_DARK.surface,
+    borderColor: PLAYER_DARK.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sectionTitle: {
+    ...playerType.headline,
+    fontSize: 15,
+    color: PLAYER_DARK.text,
+  },
+  itineraryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  itineraryButtonText: {
+    ...playerType.micro,
+    fontWeight: '700',
+  },
+  locationMainText: {
+    ...playerType.subheadline,
+    color: PLAYER_DARK.text,
+    fontWeight: '600',
+  },
+  locationSubText: {
+    ...playerType.caption,
+    color: PLAYER_DARK.textMuted,
+  },
+  rsvpSegment: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  rsvpButton: {
     flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  rsvpBtnText: { fontWeight: '800', fontSize: 13 },
-  registerBtn: {
-    marginTop: spacing.lg,
-    padding: spacing.lg,
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  registerText: { fontWeight: '900', fontSize: 16 },
-  attendanceSection: { marginTop: spacing.lg },
-  noteInput: {
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    borderColor: PLAYER_DARK.border,
     borderWidth: 1,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    fontSize: 14,
-    minHeight: 72,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  rsvpButtonLabel: {
+    ...playerType.caption,
+    fontWeight: '600',
+  },
+  rsvpButtonLabelActive: {
+    fontWeight: '800',
+  },
+  absenceNoteContainer: {
+    gap: 6,
+    marginTop: 6,
+  },
+  absenceNotePrompt: {
+    ...playerType.caption,
+    color: PLAYER_DARK.textMuted,
+  },
+  absenceInput: {
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    borderColor: PLAYER_DARK.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    color: PLAYER_DARK.text,
+    ...playerType.caption,
+    minHeight: 60,
     textAlignVertical: 'top',
-    marginBottom: spacing.sm,
   },
-  confirmAbsentBtn: {
-    borderRadius: radius.md,
-    padding: spacing.md,
+  confirmAbsenceBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.16)',
+    borderColor: '#EF4444',
+    borderWidth: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
     alignItems: 'center',
-    marginBottom: spacing.sm,
   },
-  confirmAbsentText: { fontWeight: '800', fontSize: 13 },
-  myNote: { fontSize: 12, marginTop: spacing.xs, fontStyle: 'italic' },
+  confirmAbsenceBtnText: {
+    ...playerType.caption,
+    color: '#EF4444',
+    fontWeight: '700',
+  },
+  savedNoteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 4,
+  },
+  savedNoteText: {
+    ...playerType.caption,
+    color: PLAYER_DARK.textMuted,
+    fontStyle: 'italic',
+  },
+  viewLineupBtn: {
+    paddingVertical: 2,
+  },
+  viewLineupBtnText: {
+    ...playerType.caption,
+    fontWeight: '700',
+  },
+  lineupSummaryText: {
+    ...playerType.caption,
+    color: PLAYER_DARK.textMuted,
+  },
+  descriptionText: {
+    ...playerType.subheadline,
+    color: PLAYER_DARK.textMuted,
+    lineHeight: 20,
+  },
+  summaryStatsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  summaryStatBox: {
+    flex: 1,
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    paddingVertical: 8,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+  },
+  summaryStatNumber: {
+    ...playerType.headline,
+    color: PLAYER_DARK.text,
+  },
+  summaryStatLabel: {
+    ...playerType.micro,
+    color: PLAYER_DARK.textMuted,
+    marginTop: 2,
+  },
+  staffActionRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  staffPrimaryBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  staffPrimaryBtnText: {
+    ...playerType.caption,
+    color: '#000000',
+    fontWeight: '800',
+  },
+  staffSecondaryBtn: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  staffSecondaryBtnText: {
+    ...playerType.caption,
+    color: PLAYER_DARK.text,
+    fontWeight: '700',
+  },
 });
+

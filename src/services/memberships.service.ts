@@ -3,6 +3,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   serverTimestamp,
   setDoc,
@@ -38,6 +39,36 @@ export const membershipsService = {
     }
   },
 
+  subscribeByPlayer(playerUid: string, callback: (list: Membership[]) => void): () => void {
+    if (!isFirebaseConfigured() || !playerUid) {
+      callback([]);
+      return () => {};
+    }
+    const database = getDb();
+    if (!database) {
+      callback([]);
+      return () => {};
+    }
+    try {
+      const q = query(collection(database, COL), where('player_uid', '==', playerUid), limit(30));
+      return onSnapshot(
+        q,
+        (snap) => {
+          const list = snap.docs.map((d) =>
+            membershipFromFirestore(d.id, d.data() as Record<string, unknown>),
+          );
+          callback(list);
+        },
+        () => {
+          // fallback to empty or no-op on snapshot error
+        },
+      );
+    } catch {
+      callback([]);
+      return () => {};
+    }
+  },
+
   async listByClub(clubId: string, status?: Membership['status']): Promise<Membership[]> {
     if (!isFirebaseConfigured() || !clubId) return [];
     const database = getDb();
@@ -50,6 +81,40 @@ export const membershipsService = {
       return status ? all.filter((m) => m.status === status) : all;
     } catch {
       return [];
+    }
+  },
+
+  subscribeByClub(
+    clubId: string,
+    callback: (list: Membership[]) => void,
+    status?: Membership['status'],
+  ): () => void {
+    if (!isFirebaseConfigured() || !clubId) {
+      callback([]);
+      return () => {};
+    }
+    const database = getDb();
+    if (!database) {
+      callback([]);
+      return () => {};
+    }
+    try {
+      const q = query(collection(database, COL), where('club_id', '==', clubId), limit(80));
+      return onSnapshot(
+        q,
+        (snap) => {
+          const all = snap.docs.map((d) =>
+            membershipFromFirestore(d.id, d.data() as Record<string, unknown>),
+          );
+          callback(status ? all.filter((m) => m.status === status) : all);
+        },
+        () => {
+          // fallback
+        },
+      );
+    } catch {
+      callback([]);
+      return () => {};
     }
   },
 
@@ -96,11 +161,15 @@ export const membershipsService = {
     const ref = doc(collection(database, COL));
     const payload = {
       club_id: input.club_id,
+      club_name: club.name,
       team_id: teamId,
+      requested_team_name: input.requested_team_name?.trim() || null,
       player_uid: input.player_uid,
       player_name: input.player_name.trim(),
       role: input.role ?? 'player',
+      requested_role: input.requested_role ?? input.role ?? 'player',
       category: input.category?.trim() || null,
+      applicant_message: input.applicant_message?.trim() || null,
       identity_document_name: input.identity_document_name?.trim() || null,
       identity_document_url: input.identity_document_url?.trim() || null,
       identity_document_type: input.identity_document_type ?? null,
@@ -131,7 +200,7 @@ export const membershipsService = {
         recipient_uids: [...recipients],
         type: 'generic',
         title: 'Demande d’adhésion',
-        body: `${input.player_name.trim()} (${roleLabel}) demande à rejoindre le club. Confirmez ou refusez.`,
+        body: `${input.player_name.trim()} (${roleLabel}) demande à rejoindre le club ${club.name}. Confirmez ou refusez.`,
         club_id: input.club_id,
         player_uid: input.player_uid,
       });
@@ -175,10 +244,15 @@ export const membershipsService = {
     const ref = doc(collection(database, COL));
     const payload = {
       club_id: input.club_id,
+      club_name: club.name,
       team_id: teamId,
       player_uid: input.player_uid,
       player_name: input.player_name.trim(),
       status: 'pending',
+      role: input.role ?? 'player',
+      requested_role: input.role ?? 'player',
+      category: input.category?.trim() || null,
+      applicant_message: input.applicant_message?.trim() || null,
       invited_by_uid: input.invited_by_uid,
       requested_at: serverTimestamp(),
       created_at: serverTimestamp(),
@@ -189,8 +263,33 @@ export const membershipsService = {
     return membershipFromFirestore(snap.id, snap.data() as Record<string, unknown>);
   },
 
+  /** Annulation d'une demande par le joueur/coach lui-même. */
+  async cancelRequest(membershipId: string, playerUid: string): Promise<void> {
+    if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const membership = await this.getById(membershipId);
+    if (!membership) throw new Error('Demande introuvable.');
+    if (membership.player_uid !== playerUid) {
+      throw new Error('Action non autorisée sur cette demande.');
+    }
+    if (membership.status !== 'pending') {
+      throw new Error('Cette demande n’est plus en attente.');
+    }
+
+    await updateDoc(doc(database, COL, membershipId), {
+      status: 'cancelled',
+      updated_at: serverTimestamp(),
+    });
+  },
+
   /** Staff club valide l'affiliation — active le membership et lie le profil joueur. */
-  async approve(membershipId: string, approverUid: string): Promise<void> {
+  async approve(
+    membershipId: string,
+    approverUid: string,
+    options?: { teamId?: string; role?: import('../models/Membership').MembershipRole },
+  ): Promise<void> {
     if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
@@ -201,7 +300,7 @@ export const membershipsService = {
       throw new Error('Cette demande n’est plus en attente.');
     }
 
-    let teamId = membership.team_id;
+    let teamId = options?.teamId ?? membership.team_id;
     if (!teamId || teamId === 'unassigned') {
       const club = await clubsService.getById(membership.club_id);
       const team = await teamsService.ensureDefaultTeam(
@@ -211,23 +310,43 @@ export const membershipsService = {
       teamId = team.id;
     }
 
+    const finalRole = options?.role ?? membership.requested_role ?? membership.role ?? 'player';
+
     await updateDoc(doc(database, COL, membershipId), {
       status: 'active',
       team_id: teamId,
+      role: finalRole,
       validated_at: serverTimestamp(),
       validated_by_uid: approverUid,
       updated_at: serverTimestamp(),
     });
 
-    await profileService.updateProfile(membership.player_uid, {
-      profile: {
+    try {
+      await updateDoc(doc(database, 'users', membership.player_uid), {
+        role: finalRole === 'coach' ? 'coach' : 'player',
+        'profile.club_id': membership.club_id,
+        ...(membership.category ? { 'profile.category': membership.category } : {}),
+        updated_at: serverTimestamp(),
+      });
+    } catch {
+      // best-effort
+    }
+
+    try {
+      await staffNotificationsService.notifyRecipients({
+        recipient_uids: [membership.player_uid],
+        type: 'generic',
+        title: 'Adhésion validée !',
+        body: `Votre demande d’adhésion à ${membership.club_name ?? 'votre club'} a été acceptée. Bienvenue dans votre espace !`,
         club_id: membership.club_id,
-        ...(membership.category ? { category: membership.category } : {}),
-      },
-    });
+        player_uid: membership.player_uid,
+      });
+    } catch {
+      // best-effort
+    }
   },
 
-  async reject(membershipId: string, approverUid: string): Promise<void> {
+  async reject(membershipId: string, approverUid: string, reason?: string): Promise<void> {
     if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
@@ -240,6 +359,7 @@ export const membershipsService = {
 
     await updateDoc(doc(database, COL, membershipId), {
       status: 'rejected',
+      rejection_reason: reason?.trim() || null,
       validated_at: serverTimestamp(),
       validated_by_uid: approverUid,
       updated_at: serverTimestamp(),
@@ -254,6 +374,21 @@ export const membershipsService = {
           updated_at: serverTimestamp(),
         });
       }
+    } catch {
+      // best-effort
+    }
+
+    try {
+      await staffNotificationsService.notifyRecipients({
+        recipient_uids: [membership.player_uid],
+        type: 'generic',
+        title: 'Demande d’adhésion non retenue',
+        body: reason
+          ? `Votre demande d’adhésion à ${membership.club_name ?? 'ce club'} n’a pas été acceptée : ${reason}`
+          : `Votre demande d’adhésion à ${membership.club_name ?? 'ce club'} n’a pas été acceptée.`,
+        club_id: membership.club_id,
+        player_uid: membership.player_uid,
+      });
     } catch {
       // best-effort
     }

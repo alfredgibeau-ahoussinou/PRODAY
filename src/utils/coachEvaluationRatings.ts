@@ -17,8 +17,10 @@ export const COACH_RATING_FIELDS: {
   { key: 'mental', label: 'Mental' },
 ];
 
+import type { EvaluationSource, EvaluationStatus } from '../models/TeamEvent';
+
 export function clampCoachRating(value: number): number {
-  return Math.min(COACH_RATING_MAX, Math.max(1, Math.round(value * 10) / 10));
+  return Math.min(COACH_RATING_MAX, Math.max(0, Math.round(value * 10) / 10));
 }
 
 export function hasAnyCoachRating(ratings: Partial<CoachOptionalRatings> | undefined): boolean {
@@ -35,7 +37,7 @@ export function normalizeCoachOverallRating(
   const hasDims = COACH_RATING_FIELDS.some(
     ({ key }) => key !== 'overall' && typeof ratings[key] === 'number',
   );
-  if (!hasDims && overall <= 5) return clampCoachRating(overall * 2);
+  if (!hasDims && overall <= 5 && overall > 0) return clampCoachRating(overall * 2);
   return clampCoachRating(overall);
 }
 
@@ -56,9 +58,26 @@ export function normalizeCoachRatings(
   return next;
 }
 
-export function formatCoachRating(value: number): string {
+export function formatCoachRating(value: number | undefined | null): string {
+  if (value == null || Number.isNaN(value)) return '—';
   const rounded = Math.round(value * 10) / 10;
   return Number.isInteger(rounded) ? `${rounded}/10` : `${rounded.toFixed(1)}/10`;
+}
+
+export function formatEvaluationSourceLabel(
+  source?: EvaluationSource,
+  options?: { audience?: 'coach' | 'club' },
+): string {
+  if (source === 'ai_generated') return 'Généré par IA';
+  if (source === 'coach_reviewed') {
+    return options?.audience === 'club' ? 'Validé par le staff / club' : 'Validé par le coach';
+  }
+  return 'Saisie manuelle';
+}
+
+export function formatEvaluationStatusLabel(status?: EvaluationStatus): string {
+  if (status === 'draft') return 'Brouillon';
+  return 'Publié';
 }
 
 export function formatCoachRatingsSummary(ratings: CoachOptionalRatings): string | null {

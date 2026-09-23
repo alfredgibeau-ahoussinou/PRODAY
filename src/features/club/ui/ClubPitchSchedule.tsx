@@ -41,115 +41,6 @@ export type PitchFacility = {
   slots: PitchSlot[];
 };
 
-export const DEMO_PITCHES: PitchFacility[] = [
-  {
-    id: 'grass',
-    name: 'Terrain d’Honneur',
-    surface: 'Pelouse Naturelle Hybride',
-    status: 'banned',
-    statusReason: 'Arrêté municipal intempéries (Pluie intense)',
-    lighting: true,
-    slots: [
-      {
-        id: 's-1',
-        timeRange: '19:30 - 21:00',
-        pitchId: 'grass',
-        teamName: 'Seniors R1',
-        category: 'Seniors',
-        coachName: 'Marc Lefevre',
-        changingRoom: 'Vestiaire 1',
-        lightsRequired: true,
-      },
-    ],
-  },
-  {
-    id: 'synthetic_a',
-    name: 'Synthétique A (Principal)',
-    surface: 'Synthétique Dernière Génération 4G',
-    status: 'open',
-    lighting: true,
-    slots: [
-      {
-        id: 's-2',
-        timeRange: '17:30 - 19:00',
-        pitchId: 'synthetic_a',
-        teamName: 'U13 Région',
-        category: 'Pré-formation',
-        coachName: 'Lucas Bernard',
-        changingRoom: 'Vestiaire 3',
-        lightsRequired: false,
-      },
-      {
-        id: 's-3',
-        timeRange: '19:00 - 20:30',
-        pitchId: 'synthetic_a',
-        teamName: 'U17 R2',
-        category: 'Formation',
-        coachName: 'Karim Ziani',
-        changingRoom: 'Vestiaire 2',
-        lightsRequired: true,
-      },
-      {
-        id: 's-4',
-        timeRange: '20:30 - 22:00',
-        pitchId: 'synthetic_a',
-        teamName: 'Seniors B (D1)',
-        category: 'Seniors',
-        coachName: 'David Rossi',
-        changingRoom: 'Vestiaire 4',
-        lightsRequired: true,
-      },
-    ],
-  },
-  {
-    id: 'synthetic_b',
-    name: 'Synthétique B (Annexe)',
-    surface: 'Synthétique Sablé Rénové',
-    status: 'open',
-    lighting: true,
-    slots: [
-      {
-        id: 's-5',
-        timeRange: '17:30 - 19:00',
-        pitchId: 'synthetic_b',
-        teamName: 'U15 R2',
-        category: 'Formation',
-        coachName: 'Alexandre Petit',
-        changingRoom: 'Vestiaire 5',
-        lightsRequired: false,
-      },
-      {
-        id: 's-6',
-        timeRange: '19:00 - 20:30',
-        pitchId: 'synthetic_b',
-        teamName: 'Féminines Seniors',
-        category: 'Seniors Fém.',
-        coachName: 'Sarah Khelifi',
-        changingRoom: 'Vestiaire 6',
-        lightsRequired: true,
-      },
-    ],
-  },
-  {
-    id: 'stabilized',
-    name: 'Terrain Stabilisé / Futsal',
-    surface: 'Sol Souple & Synthétique Réduit',
-    status: 'open',
-    lighting: true,
-    slots: [
-      {
-        id: 's-7',
-        timeRange: '14:00 - 16:00',
-        pitchId: 'stabilized',
-        teamName: 'École de Foot U7-U9',
-        category: 'Éveil',
-        coachName: 'Thomas Martin',
-        changingRoom: 'Vestiaire 7',
-        lightsRequired: false,
-      },
-    ],
-  },
-];
 
 type Props = {
   facilities?: PitchFacility[];
@@ -157,11 +48,16 @@ type Props = {
 };
 
 export function ClubPitchSchedule({
-  facilities = DEMO_PITCHES,
+  facilities = [],
 }: Props) {
   const { tokens } = useClubTheme();
   const [selectedPitch, setSelectedPitch] = useState<PitchType>('synthetic_a');
-  const [activeDate] = useState('Mercredi 16 Septembre');
+  // Date réelle du jour — plus aucune date de démonstration figée.
+  const activeDate = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
 
   const currentFacility = useMemo(
     () => facilities.find((f) => f.id === selectedPitch) || facilities[0],
@@ -175,8 +71,8 @@ export function ClubPitchSchedule({
 
   const handleApplyBannedRelocation = () => {
     Alert.alert(
-      'Repli Automatique Effectué',
-      'La séance des Seniors R1 a été basculée sur le Synthétique A (20:30). Les coachs concernés et les joueurs ont reçu une notification push immédiate.',
+      'Repli non automatisé',
+      'Le déplacement automatique des séances vers un autre terrain n\u2019est pas encore connecté à un service : aucune séance n\u2019a été modifiée.',
     );
   };
 
@@ -212,24 +108,18 @@ export function ClubPitchSchedule({
         </View>
       ) : null}
 
-      {/* 2. Météo Terrain & Date */}
+      {/* 2. Date réelle du planning — aucune météo inventée. */}
       <View style={[styles.weatherCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
         <View style={styles.weatherLeft}>
           <Icon name="cloud-upload" size={22} color={tokens.accent} />
           <View>
             <ProDayText style={[styles.weatherTitle, { color: tokens.foreground }]}>
-              {activeDate} · Prévisions 18:00
+              Planning des terrains · {activeDate}
             </ProDayText>
             <ProDayText style={[styles.weatherSub, { color: tokens.muted }]}>
-              14°C · Pluie modérée (Vent 18 km/h) · Praticabilité réduite
+              Créneaux réels issus des entraînements enregistrés par le club
             </ProDayText>
           </View>
-        </View>
-
-        <View style={[styles.statusPill, { backgroundColor: tokens.accentSoft }]}>
-          <ProDayText style={[styles.statusPillText, { color: tokens.accent }]}>
-            Synthétiques OK
-          </ProDayText>
         </View>
       </View>
 
@@ -293,6 +183,7 @@ export function ClubPitchSchedule({
       </ScrollView>
 
       {/* 4. Détail du Terrain Sélectionné & Créneaux */}
+      {currentFacility ? (
       <View style={[styles.facilityDetailCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
         <View style={styles.facilityHeader}>
           <View>
@@ -359,6 +250,13 @@ export function ClubPitchSchedule({
           )}
         </View>
       </View>
+      ) : (
+        <View style={[styles.facilityDetailCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+          <ProDayText style={[styles.emptySlotsText, { color: tokens.muted }]}>
+            Aucun terrain programmé : les créneaux apparaissent dès que des entraînements avec un lieu sont enregistrés — aucune donnée de démonstration n’est affichée.
+          </ProDayText>
+        </View>
+      )}
     </View>
   );
 }

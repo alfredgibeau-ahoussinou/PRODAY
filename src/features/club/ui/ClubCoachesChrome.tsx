@@ -3,12 +3,11 @@
  */
 import React, { useMemo } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring, AnimatedEntrance } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { clubForm, clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 import { ClubStatusPill, ClubText } from './clubUi';
 import type { ClubCoachListItem } from './clubCoachesModel';
 
@@ -35,15 +34,8 @@ export function ClubCoachesGapHero({
 
   return (
     <AnimatedEntrance kind="fadeUp" index={0} delayStep={36}>
+      {/* Référence : carte plate et neutre — la couleur reste dans la pastille. */}
       <View style={styles.card}>
-        <LinearGradient
-          colors={[tokens.warningSoft, tokens.surface]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <View style={[styles.rail, { backgroundColor: tokens.warning }]} />
         <View style={[styles.iconBadge, { backgroundColor: tokens.warningSoft }]}>
           <Icon name="school" size={20} color={tokens.warning} />
         </View>
@@ -151,21 +143,9 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       gap: clubSpace.md,
       paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.lg,
-      borderRadius: clubRadius.xxl,
+      borderRadius: clubForm.groupRadius,
       backgroundColor: tokens.surface,
-      borderWidth: 1,
-      borderColor: tokens.borderStrong,
       overflow: 'hidden',
-      ...clubShadow.lift,
-    },
-    rail: {
-      position: 'absolute',
-      left: 0,
-      top: 16,
-      bottom: 16,
-      width: 4,
-      borderTopRightRadius: 2,
-      borderBottomRightRadius: 2,
     },
     iconBadge: {
       width: 44,

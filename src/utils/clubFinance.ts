@@ -2,9 +2,12 @@ import type {
   ClubFinanceEntry,
   ClubFinanceEntryStatus,
   ClubFinanceEntryType,
+  ClubFinancePaymentMethod,
+  ClubFinanceReceipt,
   ClubFinanceTotals,
 } from '../models/ClubFinanceEntry';
 import {
+  CLUB_FINANCE_PAYMENT_METHODS,
   isClubFinanceExpenseType,
   isClubFinanceIncomeType,
 } from '../models/ClubFinanceEntry';
@@ -12,7 +15,34 @@ import {
 const VALID_TYPES: ClubFinanceEntryType[] = ['cotisation', 'depense', 'recette', 'autre'];
 const VALID_STATUSES: ClubFinanceEntryStatus[] = ['active', 'cancelled'];
 
-function toDate(v: unknown): Date {
+/**
+ * Un moyen inconnu devient `null` — « non renseigné », jamais « Autre ».
+ * Ranger une valeur illisible sous « Autre » transformerait une donnée manquante en
+ * réponse déclarée, et fausserait toute lecture par moyen de paiement.
+ */
+export function normalizeClubFinancePaymentMethod(
+  raw: unknown,
+): ClubFinancePaymentMethod | null {
+  const m = String(raw ?? '').trim();
+  return CLUB_FINANCE_PAYMENT_METHODS.includes(m as ClubFinancePaymentMethod)
+    ? (m as ClubFinancePaymentMethod)
+    : null;
+}
+
+function mapClubFinanceReceipt(raw: unknown): ClubFinanceReceipt | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  const url = typeof r.url === 'string' ? r.url.trim() : '';
+  if (!url) return null;
+  return {
+    name: typeof r.name === 'string' && r.name.trim() ? r.name.trim() : 'Justificatif',
+    url,
+    uploaded_at: toDate(r.uploaded_at),
+  };
+}
+
+/** Firestore Timestamp / Date / string → Date. Exporté : les mappers cotisations et budgets l'utilisent aussi. */
+export function toDate(v: unknown): Date {
   if (v instanceof Date) return v;
   if (v && typeof v === 'object' && 'toDate' in v) {
     return (v as { toDate: () => Date }).toDate();
@@ -63,6 +93,10 @@ export function mapClubFinanceEntry(
     member_name: data.member_name ? String(data.member_name) : null,
     team_id: data.team_id ? String(data.team_id) : null,
     status: normalizeClubFinanceStatus(data.status),
+    payment_method: normalizeClubFinancePaymentMethod(data.payment_method),
+    payment_provenance: 'manual',
+    fee_id: data.fee_id ? String(data.fee_id) : null,
+    receipt: mapClubFinanceReceipt(data.receipt),
     created_at: toDate(data.created_at),
     updated_at: toDate(data.updated_at),
     deleted_at: data.deleted_at ? toDate(data.deleted_at) : null,

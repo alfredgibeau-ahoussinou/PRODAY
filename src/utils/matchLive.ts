@@ -5,6 +5,7 @@ export const MATCH_LIVE_STATUS_LABELS: Record<MatchLiveStatus, string> = {
   live: 'En direct',
   halftime: 'Mi-temps',
   finished: 'Terminé',
+  cancelled: 'Annulé',
 };
 
 export function countGoalsFromActions(actions: LiveMatchAction[] | undefined): number {

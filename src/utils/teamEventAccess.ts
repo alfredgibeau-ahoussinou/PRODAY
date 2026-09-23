@@ -3,7 +3,7 @@ import type { User } from '../models/User';
 
 /** Lecture calendrier / hub — staff + compte club (vitrine structure). */
 const CLUB_STAFF_ROLES = new Set(['coach', 'organizer', 'agent', 'club', 'recruiter']);
-/** Gestion convocations / live — Pôle Staff (pas le rôle club). */
+/** Gestion convocations / live / stats — Pôle Staff & Dirigeants Club. */
 const MANAGE_STAFF_ROLES = new Set(['coach', 'organizer', 'agent']);
 
 export interface SupporterFollowContext {
@@ -68,7 +68,7 @@ export function canManageTeamEvent(
   options?: { isAdmin?: boolean },
 ): boolean {
   if (!profile) return false;
-  if (options?.isAdmin) return true;
+  if (options?.isAdmin || profile.is_admin) return true;
   if (event.organizer_uid === profile.uid) return true;
   const clubId = profile.profile?.club_id;
   if (clubId && event.club_id && clubId === event.club_id && MANAGE_STAFF_ROLES.has(profile.role)) {

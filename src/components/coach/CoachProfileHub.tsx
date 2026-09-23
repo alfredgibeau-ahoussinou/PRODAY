@@ -1,4 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { PRO_DATA_VIOLET, proSemantic } from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import { COACH_SITE } from '../../content/coachPageIdentity';
+
+const tokens = COACH_SITE;
 import {
   View,
   Text,
@@ -184,17 +189,23 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
         {/* 1. EN-TÊTE DU PROFIL COACH */}
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            {onBack ? (
-              <TouchableOpacity
-                onPress={() => {
-                  prodayHaptics.press();
+            <TouchableOpacity
+              onPress={() => {
+                prodayHaptics.press();
+                if (onBack) {
                   onBack();
-                }}
-                style={styles.backBtn}
-              >
-                <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-              </TouchableOpacity>
-            ) : null}
+                } else if (shellNav?.canGoBack) {
+                  shellNav.goBack();
+                } else {
+                  shellNav?.requestNav('today');
+                }
+              }}
+              style={styles.backBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Retour"
+            >
+              <Ionicons name="arrow-back" size={22} color={tokens.foreground} />
+            </TouchableOpacity>
             <View>
               <Text style={styles.coachName}>
                 {first}
@@ -263,7 +274,7 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
                 onPress={() => openNav('match_center')}
                 style={[styles.btnBase, styles.btnPrimary, { flex: 1 }]}
               >
-                <Ionicons name="clipboard-outline" size={17} color="#000000" />
+                <Ionicons name="clipboard-outline" size={17} color={tokens.bg} />
                 <Text style={[styles.btnText, styles.btnTextPrimary]}>Feuille de match</Text>
               </TouchableOpacity>
 
@@ -371,7 +382,7 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
                       </View>
                     )}
                     <View style={styles.cameraIconBadge}>
-                      <Ionicons name="camera" size={12} color="#000000" />
+                      <Ionicons name="camera" size={12} color={tokens.bg} />
                     </View>
                   </TouchableOpacity>
 
@@ -448,7 +459,7 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
                   activeOpacity={0.85}
                   style={[styles.btnBase, styles.btnPrimary, { flex: 1 }]}
                 >
-                  <Ionicons name="create-outline" size={17} color="#000000" />
+                  <Ionicons name="create-outline" size={17} color={tokens.bg} />
                   <Text style={[styles.btnText, styles.btnTextPrimary]}>Modifier profil</Text>
                 </TouchableOpacity>
 
@@ -460,7 +471,7 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
                   activeOpacity={0.85}
                   style={[styles.btnBase, styles.btnOutline, { flex: 1 }]}
                 >
-                  <Ionicons name="globe-outline" size={17} color="#FFFFFF" />
+                  <Ionicons name="globe-outline" size={17} color={tokens.foreground} />
                   <Text style={[styles.btnText, styles.btnTextOutline]}>Vitrine publique</Text>
                 </TouchableOpacity>
               </View>
@@ -524,7 +535,7 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
               </View>
 
               <View style={[styles.card, styles.counterBox]}>
-                <Ionicons name="people-outline" size={24} color="#A78BFA" />
+                <Ionicons name="people-outline" size={24} color={PRO_DATA_VIOLET} />
                 <Text style={styles.counterNum}>{coachStats.rosterSize}</Text>
                 <Text style={styles.counterLabel}>Joueurs sous gestion</Text>
               </View>
@@ -535,7 +546,7 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
               <Text style={styles.sectionHeaderTitle}>Dynamique & Disponibilité Effectif</Text>
               <View style={styles.formRow}>
                 <View style={styles.badgeSuccess}>
-                  <Ionicons name="checkmark-circle" size={14} color="#10B981" style={{ marginRight: 5 }} />
+                  <Ionicons name="checkmark-circle" size={14} color={proSemantic.success} style={{ marginRight: 5 }} />
                   <Text style={styles.badgeSuccessText}>Effectif opérationnel pour le match</Text>
                 </View>
                 <Text style={styles.formNote}>
@@ -573,7 +584,7 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
                 activeOpacity={0.85}
                 style={[styles.btnBase, styles.btnPrimary, { marginTop: 14 }]}
               >
-                <Ionicons name="sparkles" size={16} color="#000000" style={{ marginRight: 6 }} />
+                <Ionicons name="sparkles" size={16} color={tokens.bg} style={{ marginRight: 6 }} />
                 <Text style={[styles.btnText, styles.btnTextPrimary]}>
                   Ouvrir le Copilote IA Coach
                 </Text>
@@ -665,14 +676,14 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
               activeOpacity={0.85}
               style={[styles.btnBase, styles.btnOutline]}
             >
-              <Ionicons name="document-text" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Ionicons name="document-text" size={18} color={tokens.foreground} style={{ marginRight: 8 }} />
               <Text style={styles.btnText}>Télécharger mon CV Coach (PDF)</Text>
             </TouchableOpacity>
 
             {/* ZONE DE DANGER */}
-            <View style={[styles.card, { marginTop: 20, borderColor: 'rgba(239, 68, 68, 0.35)' }]}>
-              <Text style={[styles.sectionHeaderTitle, { color: '#F87171' }]}>Zone de danger</Text>
-              <Text style={[styles.bioText, { color: '#9CA3AF', marginBottom: 12 }]}>
+            <View style={[styles.card, { marginTop: 20, borderColor: withAlpha('EF4444', 0.35) }]}>
+              <Text style={[styles.sectionHeaderTitle, { color: withAlpha('EF4444', 0.72) }]}>Zone de danger</Text>
+              <Text style={[styles.bioText, { color: tokens.muted, marginBottom: 12 }]}>
                 La suppression de votre compte efface définitivement l'ensemble de vos données, historiques d'entraînements et fiches de match.
               </Text>
               <TouchableOpacity
@@ -682,14 +693,14 @@ export const CoachProfileHub: React.FC<CoachProfileHubProps> = ({
                 style={[
                   styles.btnBase,
                   {
-                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                    backgroundColor: withAlpha('EF4444', 0.15),
                     borderWidth: 1,
-                    borderColor: 'rgba(239, 68, 68, 0.5)',
+                    borderColor: withAlpha('EF4444', 0.5),
                   },
                 ]}
               >
-                <Ionicons name="trash-outline" size={18} color="#EF4444" style={{ marginRight: 8 }} />
-                <Text style={[styles.btnText, { color: '#EF4444' }]}>
+                <Ionicons name="trash-outline" size={18} color={proSemantic.danger} style={{ marginRight: 8 }} />
+                <Text style={[styles.btnText, { color: proSemantic.danger }]}>
                   {deletingAccount ? 'Suppression en cours…' : 'Supprimer définitivement mon compte'}
                 </Text>
               </TouchableOpacity>
@@ -751,15 +762,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: tokens.border,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: withAlpha('FFFFFF', 0.12),
   },
   aiAdvisorBtnText: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontWeight: '700',
     fontSize: 12,
     letterSpacing: 0.1,
@@ -811,7 +822,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: ELITE_COLORS.primarySoft,
     borderWidth: 1,
-    borderColor: 'rgba(0, 230, 118, 0.25)',
+    borderColor: withAlpha(tokens.accent, 0.25),
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -864,7 +875,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 230, 118, 0.25)',
+    borderColor: withAlpha(tokens.accent, 0.25),
   },
   coachCardTopRow: {
     flexDirection: 'row',
@@ -898,7 +909,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   pendingBadge: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: withAlpha('FFFFFF', 0.06),
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -934,7 +945,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarLetter: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 32,
     fontWeight: '900',
   },
@@ -972,7 +983,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'withAlpha(tokens.bg, 0.3)',
     borderRadius: 12,
     paddingVertical: 12,
     marginTop: 16,
@@ -1042,7 +1053,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 230, 118, 0.2)',
+    borderColor: withAlpha(tokens.accent, 0.2),
   },
   specialtyChipText: {
     color: ELITE_COLORS.primary,
@@ -1243,10 +1254,10 @@ const styles = StyleSheet.create({
   btnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokens.foreground,
   },
   btnTextPrimary: {
-    color: '#000000',
+    color: tokens.bg,
     fontWeight: '800',
   },
   btnTextOutline: {

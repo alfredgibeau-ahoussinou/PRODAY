@@ -12,10 +12,16 @@ import type { User } from '../../models/User';
 type Props = {
   /** Stats saison visibles sous l’hub (false si déjà affichées ailleurs). */
   showSeasonStats?: boolean;
+  /**
+   * Page ouverte à l’arrivée. `'chat'` ouvre directement la conversation du Copilote,
+   * ce qui évite d’imposer le tableau de bord quand l’entrée de menu s’appelle
+   * « Chat Copilote IA ».
+   */
+  initialPage?: 'dashboard' | 'training' | 'opponent' | 'tactics' | 'chat';
 };
 
 /** Écran hub IA coach — charge effectif et événements. */
-export function CoachAiHubScreen({ showSeasonStats = true }: Props) {
+export function CoachAiHubScreen({ showSeasonStats = true, initialPage = 'dashboard' }: Props) {
   const profile = useSessionProfile();
   const { tokens } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
@@ -55,6 +61,7 @@ export function CoachAiHubScreen({ showSeasonStats = true }: Props) {
       events={events}
       onRefresh={() => void load()}
       onOpenChapter={() => {}}
+      initialPage={initialPage}
     />
   );
 }

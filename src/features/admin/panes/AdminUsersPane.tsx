@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -8,6 +7,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import { useAdminData } from '../data/AdminDataContext';
 import {
   AdminAvatarMark,
@@ -16,18 +16,21 @@ import {
   AdminCard,
   AdminEmptyState,
   AdminEntityRow,
+  AdminField,
   AdminFilterChip,
   AdminLoading,
   AdminPaneHeader,
   AdminSearchField,
+  AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminSpace } from '../theme/adminDesignSystem';
 import { AdminListRow, AdminModalSheet } from '../motion';
 import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
 import {
   adminRoleOptionFromUser,
+  adminRoleOptionsFromUser,
   adminRoleOptionLabel,
   adminUserMatchesRoleFilter,
   type AdminRoleOption,
@@ -64,7 +67,7 @@ export function AdminUsersPane({
 }) {
   const data = useAdminData();
   const { firebaseUser, profile } = useAuth();
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const [q, setQ] = useState('');
   const [role, setRole] = useState<'all' | AdminRoleOption>('all');
   const [onlyPending, setOnlyPending] = useState(false);
@@ -148,7 +151,7 @@ export function AdminUsersPane({
           selection.clear();
           await data.refresh();
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         } finally {
           setBusy(false);
         }
@@ -168,14 +171,16 @@ export function AdminUsersPane({
           right={
             <View style={{ flexDirection: 'row', gap: 6 }}>
               <AdminButton
-                label="Créer"
-                variant="soft"
+                label="+ Créer un compte"
+                variant="primary"
+                compact
                 onPress={() => setGodModeContext('create')}
               />
               {canImpersonate ? (
                 <AdminButton
                   label="Aperçu"
                   variant="ghost"
+                  compact
                   onPress={() => setGodModeContext('impersonate')}
                 />
               ) : null}
@@ -245,6 +250,8 @@ export function AdminUsersPane({
         renderItem={({ item, index }) => {
           const needs = userNeedsAdminVerificationReview(item);
           const paid = !!(item.subscription_tier && item.subscription_tier !== 'free');
+          const userRoles = adminRoleOptionsFromUser(item, data.clubs);
+          const rolesLabel = userRoles.map(adminRoleOptionLabel).join(' + ');
           return (
             <AdminListRow
               index={index}
@@ -253,8 +260,8 @@ export function AdminUsersPane({
             >
               <AdminEntityRow
                 title={item.display_name}
-                subtitle={`${adminRoleOptionLabel(adminRoleOptionFromUser(item, data.clubs))} · ${item.email}`}
-                meta={`${item.is_active === false ? 'Désactivé' : 'Actif'}${item.city ? ` · ${item.city}` : ''}`}
+                subtitle={`${rolesLabel} · ${item.email}`}
+                meta={`${item.is_active === false ? 'Désactivé' : 'Actif'}${userRoles.length > 1 ? ` · Multi-rôles (${userRoles.length})` : ''}${item.city ? ` · ${item.city}` : ''}`}
                 badge={needs ? 'À vérifier' : paid ? 'Payant' : 'Gratuit'}
                 badgeTone={needs ? 'warn' : paid ? 'accent' : 'info'}
                 selected={selection.isSelected(item.uid)}
@@ -307,6 +314,7 @@ export function AdminUsersPane({
           setBusy={setBusy}
           actorUid={firebaseUser?.uid ?? 'admin'}
           actorEmail={profile?.email ?? firebaseUser?.email ?? undefined}
+          onClose={() => setGodModeContext(null)}
           onDone={async () => {
             setGodModeContext(null);
             await data.refresh();
@@ -336,15 +344,17 @@ function CreateEntitySheet({
   setBusy,
   actorUid,
   actorEmail,
+  onClose,
   onDone,
 }: {
   busy: boolean;
   setBusy: (v: boolean) => void;
   actorUid: string;
   actorEmail?: string;
+  onClose: () => void;
   onDone: () => Promise<void>;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -354,7 +364,7 @@ function CreateEntitySheet({
 
   const createAccount = () => {
     if (!email.trim() || password.length < 6 || !displayName.trim()) {
-      Alert.alert('Champs requis', 'Email, nom et mot de passe (≥6) sont obligatoires.');
+      prodayAlert.alert('Champs requis', 'Email, nom et mot de passe (≥6) sont obligatoires.');
       return;
     }
     confirmAdminAction(
@@ -377,10 +387,10 @@ function CreateEntitySheet({
             target_id: uid,
             summary: `Compte créé · ${role} · ${email.trim()}`,
           });
-          Alert.alert('Compte créé', `UID ${uid}`);
+          prodayAlert.alert('Compte créé', `UID ${uid}`);
           await onDone();
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec création');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec création');
         } finally {
           setBusy(false);
         }
@@ -390,7 +400,7 @@ function CreateEntitySheet({
 
   const createClub = () => {
     if (!clubName.trim()) {
-      Alert.alert('Nom requis', 'Indiquez le nom du club.');
+      prodayAlert.alert('Nom requis', 'Indiquez le nom du club.');
       return;
     }
     confirmAdminAction(
@@ -406,10 +416,10 @@ function CreateEntitySheet({
             actor_uid: actorUid,
             verified: false,
           });
-          Alert.alert('Club créé', `ID ${id}`);
+          prodayAlert.alert('Club créé', `ID ${id}`);
           await onDone();
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec création club');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec création club');
         } finally {
           setBusy(false);
         }
@@ -418,107 +428,98 @@ function CreateEntitySheet({
   };
 
   return (
-    <ScrollView style={{ padding: adminSpace.lg }} contentContainerStyle={{ gap: 16 }}>
-      <AdminText variant="h2" style={{ color: ADMIN_TOKENS.accent }}>
-        Création forcée
-      </AdminText>
-      <AdminText variant="body" muted>
-        Auth + Firestore via callable adminCreateUser · club via Firestore admin.
-      </AdminText>
-      <AdminCard>
-        <AdminText variant="h3">Nouveau compte</AdminText>
-        <View style={{ gap: 8, marginTop: 8 }}>
-          <TextInput
-            value={displayName}
-            onChangeText={setDisplayName}
-            placeholder="Nom affiché"
-            placeholderTextColor={t.muted}
-            style={{
-              borderWidth: 1,
-              borderColor: t.border,
-              padding: 12,
-              borderRadius: 8,
-              color: t.foreground,
-            }}
-          />
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            placeholder="Email"
-            placeholderTextColor={t.muted}
-            style={{
-              borderWidth: 1,
-              borderColor: t.border,
-              padding: 12,
-              borderRadius: 8,
-              color: t.foreground,
-            }}
-          />
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholder="Mot de passe temporaire (≥6)"
-            placeholderTextColor={t.muted}
-            style={{
-              borderWidth: 1,
-              borderColor: t.border,
-              padding: 12,
-              borderRadius: 8,
-              color: t.foreground,
-            }}
-          />
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-            {(['player', 'coach', 'parent', 'club'] as const).map((r) => (
-              <Chip key={r} label={r} active={role === r} onPress={() => setRole(r)} />
-            ))}
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <AdminSheetHeader
+        title="Créer un compte ou club"
+        subtitle="Provisionnement direct Auth + Firestore via callable admin"
+        onClose={onClose}
+      />
+      <ScrollView style={{ padding: adminSpace.lg }} contentContainerStyle={{ gap: 16 }} showsVerticalScrollIndicator={false}>
+        <AdminCard>
+          <AdminText variant="h2">Nouveau compte utilisateur</AdminText>
+          <AdminText variant="caption" muted>Crée un utilisateur avec mot de passe initial</AdminText>
+          <View style={{ gap: 10, marginTop: 8 }}>
+            <View style={{ gap: 4 }}>
+              <AdminText variant="label" muted>Nom affiché *</AdminText>
+              <AdminField
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder="Ex: Paul Pogba"
+              />
+            </View>
+            <View style={{ gap: 4 }}>
+              <AdminText variant="label" muted>Adresse email *</AdminText>
+              <AdminField
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Ex: paul.pogba@proday.com"
+              />
+            </View>
+            <View style={{ gap: 4 }}>
+              <AdminText variant="label" muted>Mot de passe temporaire (≥ 6 car.) *</AdminText>
+              <AdminField
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                placeholder="Mot de passe"
+              />
+            </View>
+            <View style={{ gap: 4 }}>
+              <AdminText variant="label" muted>Rôle du compte</AdminText>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {(['player', 'coach', 'parent', 'club'] as const).map((r) => (
+                  <AdminFilterChip
+                    key={r}
+                    label={r === 'player' ? 'Joueur' : r === 'coach' ? 'Coach' : r === 'parent' ? 'Parent' : 'Club'}
+                    active={role === r}
+                    onPress={() => setRole(r)}
+                  />
+                ))}
+              </View>
+            </View>
+            <View style={{ marginTop: 6 }}>
+              <AdminButton
+                label={busy ? 'Création en cours…' : 'Créer le compte utilisateur'}
+                variant="primary"
+                disabled={busy}
+                onPress={createAccount}
+              />
+            </View>
           </View>
-          <AdminButton
-            label={busy ? '…' : 'Créer le compte'}
-            disabled={busy}
-            onPress={createAccount}
-          />
-        </View>
-      </AdminCard>
-      <AdminCard>
-        <AdminText variant="h3">Nouveau club</AdminText>
-        <View style={{ gap: 8, marginTop: 8 }}>
-          <TextInput
-            value={clubName}
-            onChangeText={setClubName}
-            placeholder="Nom du club"
-            placeholderTextColor={t.muted}
-            style={{
-              borderWidth: 1,
-              borderColor: t.border,
-              padding: 12,
-              borderRadius: 8,
-              color: t.foreground,
-            }}
-          />
-          <TextInput
-            value={clubCity}
-            onChangeText={setClubCity}
-            placeholder="Ville"
-            placeholderTextColor={t.muted}
-            style={{
-              borderWidth: 1,
-              borderColor: t.border,
-              padding: 12,
-              borderRadius: 8,
-              color: t.foreground,
-            }}
-          />
-          <AdminButton
-            label={busy ? '…' : 'Créer le club'}
-            disabled={busy}
-            onPress={createClub}
-          />
-        </View>
-      </AdminCard>
-    </ScrollView>
+        </AdminCard>
+
+        <AdminCard>
+          <AdminText variant="h2">Nouveau club</AdminText>
+          <AdminText variant="caption" muted>Enregistre une nouvelle entité club</AdminText>
+          <View style={{ gap: 10, marginTop: 8 }}>
+            <View style={{ gap: 4 }}>
+              <AdminText variant="label" muted>Nom du club *</AdminText>
+              <AdminField
+                value={clubName}
+                onChangeText={setClubName}
+                placeholder="Ex: FC Montrouge 92"
+              />
+            </View>
+            <View style={{ gap: 4 }}>
+              <AdminText variant="label" muted>Ville</AdminText>
+              <AdminField
+                value={clubCity}
+                onChangeText={setClubCity}
+                placeholder="Ex: Montrouge"
+              />
+            </View>
+            <View style={{ marginTop: 6 }}>
+              <AdminButton
+                label={busy ? 'Création en cours…' : 'Créer le club'}
+                variant="soft"
+                disabled={busy}
+                onPress={createClub}
+              />
+            </View>
+          </View>
+        </AdminCard>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -537,12 +538,12 @@ function ImpersonateSheet({
   onPreviewUserApp?: () => void;
   onClose: () => void;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const [uid, setUid] = useState('');
 
   const startPreview = (targetUid: string, label: string) => {
     if (!canImpersonate || !onPreviewUserApp) {
-      Alert.alert('Refusé', 'Aperçu app non autorisé pour ce compte admin.');
+      prodayAlert.alert('Refusé', 'Aperçu app non autorisé pour ce compte admin.');
       return;
     }
     confirmAdminAction(
@@ -564,8 +565,14 @@ function ImpersonateSheet({
   };
 
   return (
-    <ScrollView style={{ padding: adminSpace.lg }} contentContainerStyle={{ gap: 16 }}>
-      <AdminText variant="h2" style={{ color: ADMIN_TOKENS.accent }}>
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <AdminSheetHeader
+        title="Aperçu App (Impersonate)"
+        subtitle="Ouvre l’app utilisateur en mode aperçu · actions auditées"
+        onClose={onClose}
+      />
+      <ScrollView style={{ padding: adminSpace.lg }} contentContainerStyle={{ gap: 16 }}>
+      <AdminText variant="h2" style={{ color: t.accentHot }}>
         Aperçu app
       </AdminText>
       <AdminText variant="body" muted>
@@ -619,7 +626,8 @@ function ImpersonateSheet({
           />
         </AdminCard>
       ))}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -632,7 +640,7 @@ function Chip({
   active: boolean;
   onPress: () => void;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <Pressable
       onPress={onPress}

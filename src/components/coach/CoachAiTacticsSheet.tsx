@@ -1,4 +1,10 @@
 import React, { useState } from 'react';
+import { PRO_DATA_VIOLET, proSemantic } from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import { COACH_SITE } from '../../content/coachPageIdentity';
+
+const tokens = COACH_SITE;
+import { COACH_CLEAR_SURFACES as CLEAR } from '../../utils/coachTeamTheme';
 import {
   Modal,
   ScrollView,
@@ -39,28 +45,28 @@ const STRATEGIES: Array<{
     title: '11 Idéal & Forme Max',
     subtitle: 'Aligne les joueurs les plus en forme à leurs postes naturels.',
     icon: 'star-four-points',
-    color: '#8B5CF6',
+    color: PRO_DATA_VIOLET,
   },
   {
     id: 'offensive',
     title: 'Pressing Haut & Transition (4-2-3-1)',
     subtitle: 'Récupération agressive et percussion immédiate sur les ailes.',
     icon: 'trophy',
-    color: '#F59E0B',
+    color: proSemantic.warning,
   },
   {
     id: 'counter',
     title: 'Bloc Compact & Contre (3-5-2)',
     subtitle: 'Fermeture de l’axe et projection rapide dans le dos adverse.',
     icon: 'shield',
-    color: '#3B82F6',
+    color: proSemantic.info,
   },
   {
     id: 'rotation',
     title: 'Rotation & Temps de Jeu (4-4-2)',
     subtitle: 'Donne des minutes aux remplaçants tout en maintenant l’équilibre.',
     icon: 'people',
-    color: '#10B981',
+    color: proSemantic.success,
   },
 ];
 
@@ -176,7 +182,7 @@ export const CoachAiTacticsSheet: React.FC<Props> = ({
           <View style={styles.headerRow}>
             <View style={styles.headerTitleRow}>
               <View style={[styles.aiIconBadge, { backgroundColor: '#8B5CF622' }]}>
-                <Icon name="star-four-points" size={18} color="#8B5CF6" />
+                <Icon name="star-four-points" size={18} color={PRO_DATA_VIOLET} />
               </View>
               <View>
                 <CoachText style={[styles.title, { color: tokens.foreground }]}>
@@ -290,16 +296,16 @@ export const CoachAiTacticsSheet: React.FC<Props> = ({
                     style={[
                       styles.formationCard,
                       {
-                        backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.2)' : tokens.elevated,
-                        borderColor: isSelected ? '#8B5CF6' : tokens.border,
+                        backgroundColor: isSelected ? withAlpha(PRO_DATA_VIOLET, 0.2) : tokens.elevated,
+                        borderColor: isSelected ? PRO_DATA_VIOLET : tokens.border,
                       },
                     ]}
                   >
                     <View style={styles.formationCardTop}>
-                      <View style={[styles.formationBadge, { backgroundColor: isSelected ? '#8B5CF6' : tokens.border }]}>
+                      <View style={[styles.formationBadge, { backgroundColor: isSelected ? PRO_DATA_VIOLET : tokens.border }]}>
                         <CoachText style={styles.formationBadgeText}>{item.code}</CoachText>
                       </View>
-                      {isSelected && <Icon name="checkmark-circle" size={14} color="#10B981" />}
+                      {isSelected && <Icon name="checkmark-circle" size={14} color={proSemantic.success} />}
                     </View>
                     <CoachText numberOfLines={1} style={[styles.formationName, { color: tokens.foreground }]}>
                       {item.name}
@@ -332,7 +338,7 @@ export const CoachAiTacticsSheet: React.FC<Props> = ({
               <PressableSpring
                 style={[
                   styles.sendBtn,
-                  { backgroundColor: customPrompt.trim() ? '#8B5CF6' : tokens.border },
+                  { backgroundColor: customPrompt.trim() ? PRO_DATA_VIOLET : tokens.border },
                 ]}
                 onPress={() => handleGenerate('custom', customPrompt)}
                 disabled={!customPrompt.trim()}
@@ -345,7 +351,7 @@ export const CoachAiTacticsSheet: React.FC<Props> = ({
             {/* Loading Indicator */}
             {loading && (
               <View style={styles.loadingBox}>
-                <ActivityIndicator color="#8B5CF6" size="large" />
+                <ActivityIndicator color={PRO_DATA_VIOLET} size="large" />
                 <CoachText style={{ color: tokens.muted, marginTop: spacing.sm, fontSize: 13 }}>
                   L’IA configure le schéma et optimise l’alignement des postes...
                 </CoachText>
@@ -357,11 +363,11 @@ export const CoachAiTacticsSheet: React.FC<Props> = ({
               <View style={[styles.resultCard, { borderColor: '#8B5CF666' }]}>
                 <View style={styles.resultTopRow}>
                   <View style={styles.resultBadgeRow}>
-                    <View style={[styles.formationChip, { backgroundColor: '#8B5CF6' }]}>
+                    <View style={[styles.formationChip, { backgroundColor: PRO_DATA_VIOLET }]}>
                       <CoachText style={styles.formationChipText}>{result.formation}</CoachText>
                     </View>
                     <View style={styles.directiveChip}>
-                      <Icon name="trophy" size={12} color="#DDD6FE" />
+                      <Icon name="trophy" size={12} color={withAlpha(PRO_DATA_VIOLET, 0.25)} />
                       <CoachText style={styles.directiveChipText}>Aligné par l'IA</CoachText>
                     </View>
                   </View>
@@ -371,7 +377,7 @@ export const CoachAiTacticsSheet: React.FC<Props> = ({
                 {/* AI Rationale */}
                 <View style={styles.rationaleBox}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <Icon name="sparkles" size={14} color="#C4B5FD" />
+                    <Icon name="sparkles" size={14} color={PRO_DATA_VIOLET} />
                     <CoachText style={[styles.rationaleHeading, { marginBottom: 0 }]}>Analyse du Coach IA</CoachText>
                   </View>
                   <CoachText style={styles.rationaleBody}>{result.aiRationale}</CoachText>
@@ -380,12 +386,12 @@ export const CoachAiTacticsSheet: React.FC<Props> = ({
                 {/* Key instructions */}
                 <View style={styles.instructionsBox}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                    <Icon name="list" size={14} color="#DDD6FE" />
+                    <Icon name="list" size={14} color={withAlpha(PRO_DATA_VIOLET, 0.25)} />
                     <CoachText style={[styles.instructionsHeading, { marginBottom: 0 }]}>Consignes Clés</CoachText>
                   </View>
                   {result.keyInstructions.map((inst, i) => (
                     <View key={i} style={styles.instructionItem}>
-                      <Icon name="checkmark-circle" size={14} color="#10B981" />
+                      <Icon name="checkmark-circle" size={14} color={proSemantic.success} />
                       <CoachText style={styles.instructionText}>{inst}</CoachText>
                     </View>
                   ))}
@@ -393,7 +399,7 @@ export const CoachAiTacticsSheet: React.FC<Props> = ({
 
                 {/* Apply Button */}
                 <PressableSpring
-                  style={[styles.applyBtn, { backgroundColor: '#10B981' }]}
+                  style={[styles.applyBtn, { backgroundColor: proSemantic.success }]}
                   onPress={handleApply}
                 >
                   <Icon name="checkmark-circle" size={18} color="#000" />
@@ -413,7 +419,7 @@ export const CoachAiTacticsSheet: React.FC<Props> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'withAlpha(tokens.bg, 0.75)',
     justifyContent: 'flex-end',
   },
   sheet: {
@@ -482,7 +488,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: withAlpha('FFFFFF', 0.12),
   },
   catTabText: {
     fontSize: 11.5,
@@ -546,7 +552,7 @@ const styles = StyleSheet.create({
   loadingBox: { padding: spacing.xl, alignItems: 'center', justifyContent: 'center' },
 
   resultCard: {
-    backgroundColor: '#1E1435',
+    backgroundColor: tokens.elevated,
     borderRadius: radius.xl,
     borderWidth: 1,
     padding: spacing.lg,
@@ -563,28 +569,28 @@ const styles = StyleSheet.create({
   directiveChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(139, 92, 246, 0.3)',
+    backgroundColor: withAlpha(PRO_DATA_VIOLET, 0.3),
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.pill,
     gap: 4,
   },
-  directiveChipText: { color: '#EDE9FE', fontSize: 11, fontWeight: '700' },
+  directiveChipText: { color: withAlpha(PRO_DATA_VIOLET, 0.18), fontSize: 11, fontWeight: '700' },
   resultTitle: { color: '#FFF', fontSize: 17, fontWeight: '900', marginTop: 4 },
 
   rationaleBox: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: withAlpha('FFFFFF', 0.06),
     padding: spacing.md,
     borderRadius: radius.md,
     marginBottom: spacing.sm,
   },
-  rationaleHeading: { color: '#DDD6FE', fontSize: 12, fontWeight: '800', marginBottom: 4 },
-  rationaleBody: { color: '#F3F4F6', fontSize: 12, lineHeight: 17 },
+  rationaleHeading: { color: withAlpha(PRO_DATA_VIOLET, 0.25), fontSize: 12, fontWeight: '800', marginBottom: 4 },
+  rationaleBody: { color: CLEAR.surface, fontSize: 12, lineHeight: 17 },
 
   instructionsBox: { marginBottom: spacing.md },
-  instructionsHeading: { color: '#DDD6FE', fontSize: 12, fontWeight: '800', marginBottom: 6 },
+  instructionsHeading: { color: withAlpha(PRO_DATA_VIOLET, 0.25), fontSize: 12, fontWeight: '800', marginBottom: 6 },
   instructionItem: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  instructionText: { color: '#F9FAFB', fontSize: 12, flex: 1 },
+  instructionText: { color: tokens.foreground, fontSize: 12, flex: 1 },
 
   applyBtn: {
     flexDirection: 'row',

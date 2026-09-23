@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ProDayBottomTabBar } from '../../../components/navigation/ProDayBottomTabBar';
-import { ProDayMenuScreen } from '../../../screens/menu/ProDayMenuScreen';
+import { ClubSidebar } from './ClubSidebar';
+import { ClubTabBar } from './ClubTabBar';
 import { ClubShellNavProvider } from './ClubShellNavContext';
 import { ClubThemeProvider, useClubTheme } from './ClubThemeContext';
 import { ClubMenuPane } from './ClubMenuPane';
@@ -49,6 +49,7 @@ import { ClubTrainingsScreen } from '../../../screens/club/ClubTrainingsScreen';
 import { ClubCommunicationScreen } from '../../../screens/club/ClubCommunicationScreen';
 import { ClubHubScreen, ClubPackScreen } from '../../../screens/club/ClubHubScreen';
 import { ClubStandingsScreen } from '../../../screens/club/ClubStandingsScreen';
+import { ClubMembershipRequestsScreen } from '../../../screens/club/ClubMembershipRequestsScreen';
 import { renderClubSecondaryStub } from '../../../screens/club/ClubSecondaryScreens';
 
 import { useAuth } from '../../../context/AuthContext';
@@ -60,6 +61,8 @@ import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import { clubChrome } from '../theme/clubDesignSystem';
 import { ClubPageChrome } from '../ui/ClubPageChrome';
+import { GlobalSearchBar } from '../../../components/search/GlobalSearchBar';
+import { GlobalSearchModal } from '../../../components/search/GlobalSearchModal';
 import { usePresidentShellBridge } from '../../president/bridge/PresidentShellBridge';
 import {
   canAccessPresidentPole,
@@ -124,8 +127,11 @@ function ClubAppShellInner({
   const [createOpen, setCreateOpen] = useState(false);
   const [createFormAction, setCreateFormAction] = useState<ClubCreateActionId | null>(null);
   const [selectedPlayerUid, setSelectedPlayerUid] = useState<string | null>(null);
+  /** Événement ciblé par la recherche, transmis au calendrier pour ouverture directe. */
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [playersPendingFocus, setPlayersPendingFocus] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const applyNav = useCallback((id: ClubNavItemId) => {
     const next = canonicalizeClubNav(id);
@@ -134,6 +140,9 @@ function ClubAppShellInner({
     setNavId(next);
     if (next !== 'teams') setSelectedTeamId(null);
     if (next !== 'players') setSelectedPlayerUid(null);
+    // On oublie l'événement ciblé dès qu'on quitte le calendrier, pour ne pas le rouvrir
+    // à chaque retour sur l'onglet.
+    if (next !== 'calendar') setSelectedEventId(null);
     const nextTab = tabFromClubNav(next);
     if (nextTab !== activeTab) {
       onTabChange(nextTab);
@@ -205,14 +214,16 @@ function ClubAppShellInner({
   const onOpenPresident = () => {
     if (ws.loading) return;
     if (!canOpenPresident) {
-      Alert.alert(PRESIDENT_POLE_DENIED_TITLE, PRESIDENT_POLE_DENIED_BODY);
+      prodayAlert.alert(PRESIDENT_POLE_DENIED_TITLE, PRESIDENT_POLE_DENIED_BODY);
       return;
     }
     presidentBridge?.openPresident();
   };
 
   const onSignOut = () => {
-    Alert.alert('Se déconnecter', 'Voulez-vous quitter votre session club ?', [
+    // prodayAlert : fenêtre modale native sur iOS/Android, window.confirm sur
+    // web (R-03 — Alert.alert y est silencieux et bloquait la déconnexion).
+    prodayAlert.alert('Se déconnecter', 'Voulez-vous quitter votre session club ?', [
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Se déconnecter',
@@ -258,17 +269,9 @@ function ClubAppShellInner({
     resolved?.locked ? (
       <ClubLockedPane item={resolved} />
     ) : (
-      renderClubPane(navId, toolItems)
+      renderClubPane(navId, toolItems, selectedEventId)
     );
 
-
-  const clubBottomBarTab = useMemo((): MainTabId => {
-    const canonical = canonicalizeClubNav(navId);
-    if (canonical === 'plus') return 'plus';
-    if (canonical === 'teams' || canonical === 'players' || canonical === 'coaches') return 'recrutement';
-    if (canonical === 'calendar' || canonical === 'matches' || canonical === 'trainings' || canonical === 'events') return 'matchs';
-    return 'home';
-  }, [navId]);
 
   return (
     <ClubShellNavProvider
@@ -276,6 +279,7 @@ function ClubAppShellInner({
       openCreate={openCreate}
       openHelp={onOpenHelp}
       openPresident={profile?.role === 'club' ? onOpenPresident : undefined}
+      openSearch={() => setSearchOpen(true)}
       signOut={onSignOut}
       selectedTeamId={selectedTeamId}
       setSelectedTeamId={setSelectedTeamId}
@@ -289,7 +293,7 @@ function ClubAppShellInner({
       clearPlayersPendingFocus={() => setPlayersPendingFocus(false)}
     >
       <StatusBar style="light" />
-      <View style={[styles.root, styles.rootColumn]}>
+      <View style={[styles.root, !wide && styles.rootColumn]}>
         <LinearGradient
           colors={[tokens.bgWash, tokens.bgWashMid, 'transparent']}
           locations={[0, 0.2, 0.52]}
@@ -298,6 +302,7 @@ function ClubAppShellInner({
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
+        {wide ? <ClubSidebar {...sidebarProps} /> : null}
 
         <View style={styles.pane}>
           <ClubPageChrome
@@ -305,10 +310,20 @@ function ClubAppShellInner({
             visible={wide}
             clubName={clubName}
             onNotifications={() => onSelect('notifications')}
-            onSearch={() => onSelect('plus')}
+            onSearch={() => setSearchOpen(true)}
             onProfile={() => onSelect('club')}
             onOpenCopilot={onOpenHelp}
           />
+          {/* Barre de recherche visible sur l'Accueil (mobile compris) — CA-07. */}
+          {navId === 'today' ? (
+            <View style={styles.homeSearchWrap}>
+              <GlobalSearchBar
+                onPress={() => setSearchOpen(true)}
+                accent={tokens.accent}
+                placeholder="Rechercher un membre, une équipe, un événement..."
+              />
+            </View>
+          ) : null}
           <View style={[styles.paneBody, wide ? styles.paneBodyWide : null]}>
             <PaneTransition sectionKey={navId} direction={direction} context="tab">
               {React.isValidElement(content) ? content : null}
@@ -316,21 +331,14 @@ function ClubAppShellInner({
           </View>
         </View>
 
-        <ProDayBottomTabBar
-          activeTab={clubBottomBarTab}
-          onTabPress={(tab) => {
-            onTabChange(tab);
-            if (tab === 'home') onSelect('today');
-            else if (tab === 'matchs') onSelect('matches');
-            else if (tab === 'recrutement') onSelect('teams');
-            else if (tab === 'plus') onSelect('plus');
-            else {
-              const cNav = clubNavFromTab(tab);
-              onSelect(cNav);
-            }
-          }}
-          unreadCount={0}
-        />
+        {!wide ? (
+          <ClubTabBar
+            items={primaryItems}
+            activeId={navId}
+            onSelect={onSelect}
+            onCreate={() => openCreate()}
+          />
+        ) : null}
       </View>
 
       <ClubCreateSheet
@@ -344,11 +352,31 @@ function ClubAppShellInner({
         onClose={() => setCreateFormAction(null)}
       />
       <ClubCopilotSheet visible={copilotOpen} onClose={() => setCopilotOpen(false)} />
+      {/* Recherche club — équipes et événements limités au club autorisé. */}
+      <GlobalSearchModal
+        visible={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        accent={tokens.accent}
+        clubId={ws.clubId}
+        onOpenTeam={(item) => {
+          setSelectedTeamId(item.team.id);
+          onSelect('teams');
+        }}
+        onOpenEvent={(item) => {
+          // On transmet l'événement trouvé : le calendrier l'ouvre directement.
+          setSelectedEventId(item.event.id);
+          onSelect('calendar');
+        }}
+      />
     </ClubShellNavProvider>
   );
 }
 
-function renderClubPane(navId: ClubNavItemId, toolItems: ReturnType<typeof resolveClubMenuItems>) {
+function renderClubPane(
+  navId: ClubNavItemId,
+  toolItems: ReturnType<typeof resolveClubMenuItems>,
+  selectedEventId: string | null,
+) {
   const secondary = renderClubSecondaryStub(navId);
   if (secondary) return secondary;
 
@@ -361,8 +389,11 @@ function renderClubPane(navId: ClubNavItemId, toolItems: ReturnType<typeof resol
       return <ClubPlayersScreen />;
     case 'coaches':
       return <ClubCoachesScreen />;
+    case 'memberships':
+      return <ClubMembershipRequestsScreen />;
     case 'calendar':
-      return <ClubCalendarScreen />;
+      // Arrivée depuis la recherche : l'événement trouvé s'ouvre directement.
+      return <ClubCalendarScreen initialEventId={selectedEventId} />;
     case 'matches':
       return <ClubMatchesScreen />;
     case 'trainings':
@@ -376,7 +407,7 @@ function renderClubPane(navId: ClubNavItemId, toolItems: ReturnType<typeof resol
     case 'pack':
       return <ClubPackScreen />;
     case 'plus':
-      return <ProDayMenuScreen />;
+      return <ClubMenuPane items={toolItems} />;
     case 'assistant':
       return <ClubAiAssistant />;
     default:
@@ -406,6 +437,14 @@ function createStyles(tokens: ClubThemeTokens) {
       minHeight: 0,
     },
     paneBodyWide: {
+      width: '100%',
+      maxWidth: clubChrome.contentMaxWidth,
+      alignSelf: 'center',
+    },
+    homeSearchWrap: {
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 4,
       width: '100%',
       maxWidth: clubChrome.contentMaxWidth,
       alignSelf: 'center',

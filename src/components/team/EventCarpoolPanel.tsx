@@ -36,9 +36,14 @@ import {
   eventTripId,
   slotTripStatus,
 } from '../../utils/carpoolLiveTrip';
-import { prodayHaptics } from '../../utils/prodayHaptics';
 import { spacing, radius } from '../../theme/designTokens';
 import { useTranslation } from '../../context/LocaleContext';
+import { prodayHaptics } from '../../utils/prodayHaptics';
+import { transportLogisticsService } from '../../services/transportLogistics.service';
+import { TransportModeSelector } from '../transport/TransportModeSelector';
+import { ClubBusCard } from '../transport/ClubBusCard';
+import { AddBusModal } from '../transport/AddBusModal';
+import { PassengerTransportTicket } from '../transport/PassengerTransportTicket';
 
 interface EventCarpoolPanelProps {
   event: TeamEvent;
@@ -81,6 +86,36 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   const canManage = isStaff || profile.uid === event.organizer_uid;
   const canParticipate =
     profile.uid === event.organizer_uid || event.invitee_uids.includes(profile.uid);
+
+  const transportPlan = useMemo(
+    () => transportLogisticsService.resolveTransportPlan(event),
+    [event]
+  );
+  const userTransportSummary = useMemo(
+    () => transportLogisticsService.getPassengerTransportSummary(event, profile.uid),
+    [event, profile.uid]
+  );
+  const [addBusModalOpen, setAddBusModalOpen] = useState(false);
+
+  const isIndependent = Boolean(
+    transportPlan.independent_traveler_uids?.includes(profile.uid)
+  );
+
+  const toggleIndependent = async () => {
+    setSaving(true);
+    try {
+      await transportLogisticsService.setIndependentTravel(
+        event.id,
+        profile.uid,
+        !isIndependent
+      );
+      onUpdated();
+    } catch (err: any) {
+      Alert.alert('Erreur', err?.message || 'Erreur');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const applyEditVehicleType = (type: CarpoolVehicleType) => {
     const taken = mySlot?.passengers?.length ?? 0;
@@ -307,16 +342,121 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   const seatTotal = totalCarpoolSeats(slots);
   const availableTotal = totalCarpoolAvailableSeats(slots);
 
+  const showCarpool =
+    transportPlan.mode === 'carpool_only' ||
+    transportPlan.mode === 'mixed' ||
+    slots.length > 0;
+
   return (
     <View style={styles.wrap}>
       <View style={styles.headerRow}>
-        <Icon name="walk" size={20} color={c.accent} />
-        <Text style={styles.title}>Covoiturage équipe</Text>
+        <Icon name="bus" size={20} color={c.accent} />
+        <Text style={styles.title}>Transport & Logistique</Text>
       </View>
       <Text style={styles.sub}>
-        Comme BlaBlaCar : proposez un trajet ou réservez une place chez un coéquipier ou votre
-        coach.
+        Déplacements de l'équipe : bus du club, covoiturage entre coéquipiers ou déplacement individuel.
       </Text>
+
+      {canManage && (
+        <TransportModeSelector
+          currentMode={transportPlan.mode}
+          eventId={event.id}
+          editorUid={profile.uid}
+          onUpdated={onUpdated}
+        />
+      )}
+
+      {/* Titre de transport / Pass personnel */}
+      <PassengerTransportTicket
+        summary={userTransportSummary}
+        eventTitle={event.title}
+        eventDate={event.date ? String(event.date) : event.city}
+        onDeclareIndependent={toggleIndependent}
+      />
+
+      {/* Déclaration déplacement autonome */}
+      <PressableSpring
+        style={[styles.independentBtn, isIndependent && styles.independentBtnActive]}
+        onPress={toggleIndependent}
+        disabled={saving}
+        scaleTo={0.96}
+        haptic
+      >
+        <Icon name="person" size={16} color={isIndependent ? '#38BDF8' : c.textMuted} />
+        <Text style={[styles.independentBtnText, isIndependent && styles.independentBtnTextActive]}>
+          {isIndependent
+            ? '✓ Déplacement individuel enregistré (par vos propres moyens)'
+            : 'Je me déplace par mes propres moyens'}
+        </Text>
+      </PressableSpring>
+
+      {/* Section Déplacement Individuel si mode actif */}
+      {transportPlan.mode === 'individual' && (
+        <View style={styles.individualBanner}>
+          <Icon name="person" size={22} color="#94A3B8" />
+          <View style={styles.individualBannerText}>
+            <Text style={styles.individualBannerTitle}>Déplacement individuel</Text>
+            <Text style={styles.individualBannerSub}>
+              Le club n'organise pas de transport collectif pour cet événement. Chaque participant se rend directement sur place.
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Section Bus Club */}
+      {(transportPlan.mode === 'bus_only' ||
+        transportPlan.mode === 'mixed' ||
+        (transportPlan.buses && transportPlan.buses.length > 0)) && (
+        <View style={styles.busSection}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionHeaderLeft}>
+              <Icon name="bus" size={18} color={c.accent} />
+              <Text style={styles.sectionHeaderTitle}>Bus & Minibus du Club</Text>
+            </View>
+            {canManage && (
+              <PressableSpring
+                style={styles.addBusBtn}
+                onPress={() => setAddBusModalOpen(true)}
+                scaleTo={0.96}
+                haptic
+              >
+                <Icon name="add" size={14} color="#0F172A" />
+                <Text style={styles.addBusBtnText}>Ajouter un bus</Text>
+              </PressableSpring>
+            )}
+          </View>
+
+          {transportPlan.buses.length === 0 ? (
+            <View style={styles.emptyBusBox}>
+              <Text style={styles.emptyBusText}>
+                Aucun bus ou navette n'a encore été configuré pour cet événement.
+              </Text>
+            </View>
+          ) : (
+            transportPlan.buses.map((bus) => (
+              <ClubBusCard
+                key={bus.id}
+                bus={bus}
+                eventId={event.id}
+                currentUid={profile.uid}
+                currentUserName={profile.display_name}
+                isStaff={canManage}
+                onUpdated={onUpdated}
+              />
+            ))
+          )}
+        </View>
+      )}
+
+      {/* Section Covoiturage */}
+      {showCarpool && (
+        <View style={styles.carpoolSectionWrap}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionHeaderLeft}>
+              <Icon name="car" size={18} color={c.accent} />
+              <Text style={styles.sectionHeaderTitle}>Covoiturage entre coéquipiers</Text>
+            </View>
+          </View>
 
       {canParticipate && !isDriver ? (
         <PressableSpring
@@ -721,6 +861,21 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
           <Text style={styles.secondaryBtnText}>Publier</Text>
         </PressableSpring>
       </View>
+      </View>
+      )}
+
+      {addBusModalOpen && (
+        <AddBusModal
+          visible={addBusModalOpen}
+          eventId={event.id}
+          defaultDeparturePlace={event.club_name ? `Stade ${event.club_name}` : 'Stade du club'}
+          defaultArrivalPlace={[event.location_label, event.city].filter(Boolean).join(' · ')}
+          editorUid={profile.uid}
+          editorName={profile.display_name}
+          onClose={() => setAddBusModalOpen(false)}
+          onAdded={onUpdated}
+        />
+      )}
     </View>
   );
 };
@@ -890,5 +1045,107 @@ function createStyles(c: AppColors) {
   msgAuthor: { fontSize: 12, fontWeight: '800', color: c.accent },
   msgBody: { fontSize: 14, color: c.text, marginTop: 2 },
   msgTime: { fontSize: 10, color: c.textMuted, marginTop: 2 },
+  independentBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: c.background,
+    borderWidth: 1,
+    borderColor: c.border,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+  },
+  independentBtnActive: {
+    borderColor: '#38BDF8',
+    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+  },
+  independentBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: c.textMuted,
+  },
+  independentBtnTextActive: {
+    color: '#38BDF8',
+    fontWeight: '700',
+  },
+  individualBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(148, 163, 184, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.2)',
+    padding: 14,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+  },
+  individualBannerText: {
+    flex: 1,
+  },
+  individualBannerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#F8FAFC',
+  },
+  individualBannerSub: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  busSection: {
+    marginBottom: spacing.lg,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionHeaderTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: c.text,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  addBusBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#38BDF8',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+  },
+  addBusBtnText: {
+    color: '#0F172A',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  emptyBusBox: {
+    backgroundColor: c.background,
+    borderWidth: 1,
+    borderColor: c.border,
+    borderRadius: radius.md,
+    padding: 16,
+    alignItems: 'center',
+  },
+  emptyBusText: {
+    fontSize: 13,
+    color: c.textMuted,
+    textAlign: 'center',
+  },
+  carpoolSectionWrap: {
+    marginTop: spacing.xs,
+  },
   });
 }

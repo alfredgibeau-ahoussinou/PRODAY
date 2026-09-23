@@ -1,4 +1,9 @@
 import React from 'react';
+import { PRO_DATA_VIOLET, proSemantic } from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import { COACH_SITE } from '../../content/coachPageIdentity';
+
+const tokens = COACH_SITE;
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { User } from '../../models/User';
@@ -19,16 +24,42 @@ function PanelHeader({
   kicker,
   title,
   subtitle,
+  onBack,
 }: {
   kicker: string;
   title: string;
   subtitle: string;
+  onBack?: () => void;
 }) {
+  const shellNav = useCoachShellNav();
+  const handleBack = () => {
+    prodayHaptics.press();
+    if (onBack) {
+      onBack();
+    } else if (shellNav?.canGoBack) {
+      shellNav.goBack();
+    } else {
+      shellNav?.requestNav('today');
+    }
+  };
+
   return (
     <View style={styles.panelHeader}>
-      <View style={styles.kickerBadge}>
-        <View style={styles.liveDot} />
-        <Text style={styles.kickerText}>{kicker}</Text>
+      <View style={styles.panelHeaderTopRow}>
+        <PressableSpring
+          onPress={handleBack}
+          scaleTo={0.92}
+          haptic
+          style={styles.panelBackBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+        >
+          <Ionicons name="arrow-back" size={18} color={tokens.foreground} />
+        </PressableSpring>
+        <View style={styles.kickerBadge}>
+          <View style={styles.liveDot} />
+          <Text style={styles.kickerText}>{kicker}</Text>
+        </View>
       </View>
       <Text style={styles.panelTitle}>{title}</Text>
       <Text style={styles.panelSubtitle}>{subtitle}</Text>
@@ -83,7 +114,7 @@ function MenuRow({
         <Text style={styles.menuTitle}>{title}</Text>
         <Text style={styles.menuSub}>{sub}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.3)" />
+      <Ionicons name="chevron-forward" size={16} color="withAlpha('FFFFFF', 0.3)" />
     </PressableSpring>
   );
 }
@@ -168,7 +199,7 @@ export function CoachVitrinePanel({
             haptic
             style={[styles.primaryBtn, { flex: 1 }]}
           >
-            <Ionicons name="create-outline" size={16} color="#000000" />
+            <Ionicons name="create-outline" size={16} color={tokens.bg} />
             <Text style={styles.primaryBtnText}>Modifier profil</Text>
           </PressableSpring>
 
@@ -181,7 +212,7 @@ export function CoachVitrinePanel({
             haptic
             style={[styles.outlineBtn, { flex: 1 }]}
           >
-            <Ionicons name="globe-outline" size={16} color="#FFFFFF" />
+            <Ionicons name="globe-outline" size={16} color={tokens.foreground} />
             <Text style={styles.outlineBtnText}>Vitrine publique</Text>
           </PressableSpring>
         </View>
@@ -243,7 +274,7 @@ export function CoachVitrinePanel({
           haptic
           style={[styles.outlineBtn, { marginTop: 12 }]}
         >
-          <Ionicons name="document-text" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+          <Ionicons name="document-text" size={16} color={tokens.foreground} style={{ marginRight: 6 }} />
           <Text style={styles.outlineBtnText}>Télécharger mon CV Coach (PDF)</Text>
         </PressableSpring>
       </SectionCard>
@@ -532,7 +563,7 @@ export function CoachParamsPanel({
             haptic
             style={styles.logoutBtn}
           >
-            <Ionicons name="log-out-outline" size={17} color="#F87171" style={{ marginRight: 6 }} />
+            <Ionicons name="log-out-outline" size={17} color={withAlpha('EF4444', 0.72)} style={{ marginRight: 6 }} />
             <Text style={styles.logoutBtnText}>Se déconnecter</Text>
           </PressableSpring>
         ) : null}
@@ -549,7 +580,7 @@ export function CoachParamsPanel({
             haptic
             style={styles.deleteBtn}
           >
-            <Ionicons name="trash-outline" size={16} color="#EF4444" style={{ marginRight: 6 }} />
+            <Ionicons name="trash-outline" size={16} color={proSemantic.danger} style={{ marginRight: 6 }} />
             <Text style={styles.deleteBtnText}>
               {deleting ? 'Suppression en cours…' : 'Supprimer définitivement mon compte'}
             </Text>
@@ -570,6 +601,22 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: 4,
   },
+  panelHeaderTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: 4,
+  },
+  panelBackBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: withAlpha('FFFFFF', 0.08),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: withAlpha('FFFFFF', 0.12),
+  },
   kickerBadge: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
@@ -580,7 +627,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: ELITE_COLORS.primarySoft,
     borderWidth: 1,
-    borderColor: 'rgba(0, 230, 118, 0.3)',
+    borderColor: withAlpha(tokens.accent, 0.3),
   },
   liveDot: {
     width: 6,
@@ -597,12 +644,12 @@ const styles = StyleSheet.create({
   panelTitle: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: tokens.foreground,
     letterSpacing: -0.5,
   },
   panelSubtitle: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: withAlpha('FFFFFF', 0.6),
     lineHeight: 18,
   },
   card: {
@@ -634,7 +681,7 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: withAlpha('FFFFFF', 0.5),
     marginTop: 1,
   },
   infoGrid: {
@@ -672,7 +719,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 230, 118, 0.2)',
+    borderColor: withAlpha(tokens.accent, 0.2),
   },
   tagText: {
     color: ELITE_COLORS.primary,
@@ -694,7 +741,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   primaryBtnText: {
-    color: '#000000',
+    color: tokens.bg,
     fontWeight: '800',
     fontSize: 13,
   },
@@ -710,7 +757,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   outlineBtnText: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontWeight: '700',
     fontSize: 13,
   },
@@ -720,7 +767,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: withAlpha('FFFFFF', 0.05),
   },
   diplomaIconBox: {
     width: 34,
@@ -760,7 +807,7 @@ const styles = StyleSheet.create({
   },
   timelineBorder: {
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: withAlpha('FFFFFF', 0.05),
   },
   dot: {
     width: 8,
@@ -788,7 +835,7 @@ const styles = StyleSheet.create({
   },
   emptyHint: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: withAlpha('FFFFFF', 0.5),
     fontStyle: 'italic',
   },
   menu: {
@@ -800,7 +847,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: withAlpha('FFFFFF', 0.05),
   },
   menuIconBox: {
     width: 36,
@@ -821,13 +868,13 @@ const styles = StyleSheet.create({
   },
   menuSub: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: withAlpha('FFFFFF', 0.5),
   },
   emptyBox: {
     alignItems: 'center',
     padding: 16,
     gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    backgroundColor: withAlpha('FFFFFF', 0.02),
     borderRadius: 12,
     borderWidth: 1,
     borderStyle: 'dashed',
@@ -840,7 +887,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: withAlpha('FFFFFF', 0.5),
     textAlign: 'center',
     lineHeight: 16,
   },
@@ -848,22 +895,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(248, 113, 113, 0.1)',
+    backgroundColor: withAlpha('EF4444', 0.1),
     borderWidth: 1,
-    borderColor: 'rgba(248, 113, 113, 0.3)',
+    borderColor: withAlpha('EF4444', 0.3),
     borderRadius: 12,
     paddingVertical: 12,
     marginTop: 6,
   },
   logoutBtnText: {
-    color: '#F87171',
+    color: withAlpha('EF4444', 0.72),
     fontWeight: '800',
     fontSize: 13,
   },
   dangerBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+    backgroundColor: withAlpha('EF4444', 0.05),
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: withAlpha('EF4444', 0.3),
     borderRadius: 14,
     padding: 12,
     marginTop: 8,
@@ -872,26 +919,26 @@ const styles = StyleSheet.create({
   dangerTitle: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#EF4444',
+    color: proSemantic.danger,
   },
   dangerSubtitle: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.55)',
+    color: withAlpha('FFFFFF', 0.55),
     lineHeight: 15,
   },
   deleteBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: withAlpha('EF4444', 0.15),
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.4)',
+    borderColor: withAlpha('EF4444', 0.4),
     borderRadius: 10,
     paddingVertical: 10,
     marginTop: 4,
   },
   deleteBtnText: {
-    color: '#EF4444',
+    color: proSemantic.danger,
     fontWeight: '800',
     fontSize: 12,
   },

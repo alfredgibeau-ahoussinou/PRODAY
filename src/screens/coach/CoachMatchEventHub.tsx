@@ -30,9 +30,12 @@ import { CoachKpiRow, CoachText } from '../../components/coach/coachPortalUi';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { Icon } from '../../components/ui/Icon';
 import { PushScreenTransition } from '../../components/motion';
-import { spacing } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { VeoMatchAssociateModal } from '../../components/video/VeoMatchAssociateModal';
+import { Ionicons } from '@expo/vector-icons';
+import { CoachShareConvocationModal } from '../../components/coach/convocation/CoachShareConvocationModal';
 
 type SubView = 'hub' | 'lineup_edit';
 
@@ -55,6 +58,8 @@ export function CoachMatchEventHub({
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [loading, setLoading] = useState(true);
   const [chapter, setChapter] = useState<MatchHubChapterId>(initialChapter);
+  const [associateVeoOpen, setAssociateVeoOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -150,6 +155,7 @@ export function CoachMatchEventHub({
             profile={profile}
             onOpenChapter={setChapter}
             onOpenCarpool={onOpenCarpool}
+            onOpenVeoAssociate={event.club_id ? () => setAssociateVeoOpen(true) : undefined}
           />
         );
       case 'effectif':
@@ -186,12 +192,25 @@ export function CoachMatchEventHub({
   return (
     <>
       <View style={styles.root}>
-        <Pressable onPress={onBack} style={styles.backRow} accessibilityRole="button">
-          <Icon name="arrow-back" size={22} color={tokens.foreground} />
-          <CoachText variant="body" accent>
-            Matchs
-          </CoachText>
-        </Pressable>
+        <View style={styles.topRow}>
+          <Pressable onPress={onBack} style={styles.backRow} accessibilityRole="button">
+            <Icon name="arrow-back" size={22} color={tokens.foreground} />
+            <CoachText variant="body" accent>
+              Matchs
+            </CoachText>
+          </Pressable>
+          <Pressable
+            onPress={() => setShareModalOpen(true)}
+            style={[styles.shareBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
+            accessibilityRole="button"
+            accessibilityLabel="Partager la convocation"
+          >
+            <Ionicons name="share-social-outline" size={15} color={tokens.accent} />
+            <CoachText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+              Partager convocation
+            </CoachText>
+          </Pressable>
+        </View>
 
         <View style={styles.meta}>
           <CoachText variant="caption" muted style={styles.type}>
@@ -267,6 +286,23 @@ export function CoachMatchEventHub({
           />
         ) : null}
       </PushScreenTransition>
+      {associateVeoOpen && event.club_id ? (
+        <VeoMatchAssociateModal
+          visible
+          clubId={event.club_id}
+          createdByUid={profile.uid}
+          eventId={event.id}
+          eventTitle={event.title}
+          scheduledAt={event.starts_at}
+          onClose={() => setAssociateVeoOpen(false)}
+          onSuccess={() => void load()}
+        />
+      ) : null}
+      <CoachShareConvocationModal
+        visible={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        event={event}
+      />
     </>
   );
 }
@@ -279,6 +315,21 @@ function createStyles(tokens: CoachThemeTokens) {
       backgroundColor: tokens.bg,
     },
     centered: { justifyContent: 'center', alignItems: 'center' },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingRight: spacing.lg,
+    },
+    shareBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+    },
     backRow: {
       flexDirection: 'row',
       alignItems: 'center',

@@ -209,7 +209,7 @@ export function CoachHourlyPane({ profile }: Props) {
   const upcoming = bookings.filter((b) => ['accepted', 'paid'].includes(b.status));
 
   return (
-    <CoachPane title={pageIdentity.title}>
+    <CoachPane title={pageIdentity.title} fallbackNavId="plus">
       <CoachChapterScroll>
         {/* Hero Card : Disponibilité & Statut du Coach */}
         <View style={styles.heroCard}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,6 +10,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { usersService } from '../../services/users.service';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import type { User } from '../../models/User';
+import { ADMIN_TOKENS } from '../../features/admin/theme/adminTokens';
 
 export interface StaffPermissions {
   matchSheets: boolean;
@@ -29,116 +33,86 @@ export interface StaffMember {
   permissions: StaffPermissions;
 }
 
+/** Rôle du profil réel => catégorie d'annuaire. Rôles inattendus => 'official'. */
+function staffCategory(role: string): StaffMember['category'] {
+  if (role === 'coach') return 'coach';
+  if (role === 'physio') return 'medical';
+  return 'official';
+}
+
+/** Construit la fiche annuaire depuis le profil réel — champs absents => « — ». */
+function toStaffMember(u: User): StaffMember {
+  return {
+    id: u.uid,
+    name: u.display_name,
+    role: u.role === 'coach' ? 'Coach' : u.role === 'physio' ? 'Kinésithérapeute' : 'Dirigeant',
+    category: staffCategory(u.role),
+    email: u.email || '—',
+    phone: u.phone || '—',
+    assignedTeams: [],
+    permissions: {
+      matchSheets: false,
+      accounting: false,
+      mercato: false,
+      announcements: false,
+    },
+  };
+}
+
 export const AdminStaffScreen: React.FC = () => {
+  const profile = useSessionProfile();
   const [filter, setFilter] = useState<'all' | 'coach' | 'medical' | 'official'>('all');
 
-  const [staffList, setStaffList] = useState<StaffMember[]>([
-    {
-      id: 's1',
-      name: 'Laurent Blanc',
-      role: 'Entraîneur Principal',
-      category: 'coach',
-      email: 'l.blanc@proday.fr',
-      phone: '+33 6 12 34 56 78',
-      assignedTeams: ['Seniors R1', 'U19 Nat'],
-      permissions: {
-        matchSheets: true,
-        accounting: false,
-        mercato: true,
-        announcements: true,
-      },
-    },
-    {
-      id: 's2',
-      name: 'Dr. Sophie Bernard',
-      role: 'Médecin Référent du Club',
-      category: 'medical',
-      email: 'dr.bernard@proday.fr',
-      phone: '+33 6 98 76 54 32',
-      assignedTeams: ['Tous Pôles & Équipes'],
-      permissions: {
-        matchSheets: false,
-        accounting: false,
-        mercato: false,
-        announcements: false,
-      },
-    },
-    {
-      id: 's3',
-      name: 'Marc Lefebvre',
-      role: 'Kiné du Sport',
-      category: 'medical',
-      email: 'm.lefebvre@proday.fr',
-      phone: '+33 6 45 67 89 01',
-      assignedTeams: ['Seniors A & B'],
-      permissions: {
-        matchSheets: false,
-        accounting: false,
-        mercato: false,
-        announcements: false,
-      },
-    },
-    {
-      id: 's4',
-      name: 'Antoine Rossi',
-      role: 'Responsable École de Foot & Formation',
-      category: 'coach',
-      email: 'a.rossi@proday.fr',
-      phone: '+33 6 23 45 67 89',
-      assignedTeams: ['U6 à U13'],
-      permissions: {
-        matchSheets: true,
-        accounting: true,
-        mercato: false,
-        announcements: true,
-      },
-    },
-    {
-      id: 's5',
-      name: 'Catherine Morin',
-      role: 'Secrétaire Générale',
-      category: 'official',
-      email: 'c.morin@proday.fr',
-      phone: '+33 6 34 56 78 90',
-      assignedTeams: ['Direction'],
-      permissions: {
-        matchSheets: true,
-        accounting: true,
-        mercato: true,
-        announcements: true,
-      },
-    },
-  ]);
+  /** Annuaire réel : membres actifs du club (rôles coach / kiné / dirigeant).
+   * null = chargement, [] = aucun membre, erreur = service injoignable. */
+  const [staffList, setStaffList] = useState<StaffMember[] | null>(null);
+  const [rosterError, setRosterError] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const [expandedId, setExpandedId] = useState<string | null>('s1');
+  useEffect(() => {
+    let alive = true;
+    const clubId = profile?.profile.club_id ?? '';
+    if (!clubId) {
+      setStaffList([]);
+      return;
+    }
+    setStaffList(null);
+    setRosterError(false);
+    usersService
+      .listMembersByClubId(clubId)
+      .then((rows) => {
+        if (!alive) return;
+        setStaffList(rows.map(toStaffMember));
+      })
+      .catch(() => {
+        if (!alive) return;
+        setStaffList([]);
+        setRosterError(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [profile?.uid]);
 
-  const filteredStaff = staffList.filter((m) => filter === 'all' || m.category === filter);
+  const filteredStaff = (staffList ?? []).filter(
+    (m) => filter === 'all' || m.category === filter,
+  );
 
-  const togglePermission = (
-    memberId: string,
-    key: keyof StaffPermissions,
-    value: boolean,
-  ) => {
-    prodayHaptics.selection();
-    setStaffList((prev) =>
-      prev.map((m) => {
-        if (m.id !== memberId) return m;
-        return {
-          ...m,
-          permissions: {
-            ...m.permissions,
-            [key]: value,
-          },
-        };
-      }),
+  /** Aucune écriture locale : les délégations réelles passeront par les rôles
+   * Firestore ( règles serveur faisant autorité). L'écran l'indique. */
+  const togglePermission = () => {
+    prodayHaptics.press();
+    Alert.alert(
+      'Délégation non modifiable',
+      'Les droits réels sont gérés par les rôles du club. La modification directe n’est pas encore connectée.',
     );
   };
 
   const handleAddStaff = () => {
     prodayHaptics.press();
     Alert.alert(
-      'Nouveau Collaborateur',
-      'Un lien d’invitation sécurisé a été généré pour intégrer un nouveau membre du staff.',
+      'Invitation non connectée',
+      'Aucun lien d’invitation n’est généré depuis cet écran : l’invitation de staff n’est pas encore branchée sur le service d’invitations.',
     );
   };
 
@@ -189,7 +163,19 @@ export const AdminStaffScreen: React.FC = () => {
 
       {/* 3. Liste du Staff */}
       <View style={styles.list}>
-        {filteredStaff.map((member) => {
+        {staffList === null ? (
+          <Text style={styles.honestNote}>Chargement de l’annuaire…</Text>
+        ) : rosterError ? (
+          <Text style={styles.honestNote}>
+            Impossible de charger l’annuaire. Vérifie ta connexion et réessaie.
+          </Text>
+        ) : filteredStaff.length === 0 ? (
+          <Text style={styles.honestNote}>
+            Aucun membre du staff dans ce club. Les coachs, kinés et dirigeants rattachés
+            au club apparaîtront ici.
+          </Text>
+        ) : (
+        filteredStaff.map((member) => {
           const isExpanded = expandedId === member.id;
           return (
             <View key={member.id} style={styles.card}>
@@ -259,7 +245,7 @@ export const AdminStaffScreen: React.FC = () => {
                     </View>
                     <Switch
                       value={member.permissions.matchSheets}
-                      onValueChange={(val) => togglePermission(member.id, 'matchSheets', val)}
+                      onValueChange={() => togglePermission()}
                       trackColor={{ false: '#26262E', true: '#30D158' }}
                       thumbColor="#FFF"
                     />
@@ -272,7 +258,7 @@ export const AdminStaffScreen: React.FC = () => {
                     </View>
                     <Switch
                       value={member.permissions.accounting}
-                      onValueChange={(val) => togglePermission(member.id, 'accounting', val)}
+                      onValueChange={() => togglePermission()}
                       trackColor={{ false: '#26262E', true: '#30D158' }}
                       thumbColor="#FFF"
                     />
@@ -285,7 +271,7 @@ export const AdminStaffScreen: React.FC = () => {
                     </View>
                     <Switch
                       value={member.permissions.mercato}
-                      onValueChange={(val) => togglePermission(member.id, 'mercato', val)}
+                      onValueChange={() => togglePermission()}
                       trackColor={{ false: '#26262E', true: '#30D158' }}
                       thumbColor="#FFF"
                     />
@@ -298,7 +284,7 @@ export const AdminStaffScreen: React.FC = () => {
                     </View>
                     <Switch
                       value={member.permissions.announcements}
-                      onValueChange={(val) => togglePermission(member.id, 'announcements', val)}
+                      onValueChange={() => togglePermission()}
                       trackColor={{ false: '#26262E', true: '#30D158' }}
                       thumbColor="#FFF"
                     />
@@ -307,7 +293,8 @@ export const AdminStaffScreen: React.FC = () => {
               )}
             </View>
           );
-        })}
+        })
+        )}
       </View>
     </ScrollView>
   );
@@ -360,7 +347,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterPill: {
-    backgroundColor: '#141418',
+    backgroundColor: ADMIN_TOKENS.surface,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 10,
@@ -383,8 +370,14 @@ const styles = StyleSheet.create({
   list: {
     gap: 12,
   },
+  honestNote: {
+    color: '#94A3B8',
+    fontSize: 12,
+    lineHeight: 17,
+    fontStyle: 'italic',
+  },
   card: {
-    backgroundColor: '#141418',
+    backgroundColor: ADMIN_TOKENS.surface,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',

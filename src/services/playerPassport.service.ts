@@ -46,40 +46,51 @@ export const playerPassportService = {
     coachName?: string;
   }): PlayerPassportData {
     const now = new Date().toISOString();
-    const license = params.licenseNumber || 'FFF-75482910';
-    const sig = generatePassportSignature(params.playerId, license, now);
+    // Aucune valeur inventée (invariant DATA-01) : sans licence réelle ni
+    // vérification côté serveur, le passeport n'est PAS certifié. Les anciens
+    // défauts (« FFF-75482910 », « FC ProDay », « Didier Deschamps », stats
+    // figées, coachVerified: true) étaient des données fictives.
+    const license = params.licenseNumber?.trim() || '—';
+    const isVerified = license !== '—';
+    const sig = isVerified
+      ? generatePassportSignature(params.playerId, license, now)
+      : '';
 
     return {
       playerId: params.playerId,
       fullName: params.fullName,
       licenseNumber: license,
-      clubName: params.clubName || 'FC ProDay',
-      clubAffiliation: params.clubAffiliation || 'FFF-582910',
-      category: params.category || 'Seniors R2',
-      position: params.position || 'Attaquant',
-      ovr: params.ovr || 84,
-      matchesPlayed: params.matchesPlayed ?? 18,
-      goals: params.goals ?? 12,
-      assists: params.assists ?? 7,
-      averageRating: params.averageRating ?? 7.8,
-      coachVerified: true,
-      coachName: params.coachName || 'Didier Deschamps',
-      verifiedAt: now,
+      clubName: params.clubName || '—',
+      clubAffiliation: params.clubAffiliation || '—',
+      category: params.category || '—',
+      position: params.position || '—',
+      ovr: params.ovr ?? 0,
+      matchesPlayed: params.matchesPlayed ?? 0,
+      goals: params.goals ?? 0,
+      assists: params.assists ?? 0,
+      averageRating: params.averageRating ?? 0,
+      // Aucune vérification serveur n'existe encore : jamais « vérifié » côté client.
+      coachVerified: false,
+      coachName: params.coachName || '—',
+      verifiedAt: isVerified ? now : '',
       signatureHash: sig,
     };
   },
 
   getPassportQrUrl(passport: PlayerPassportData): string {
-    // Generate secure scouting verification URL
+    // Lien de partage du profil joueur. Sans vérification serveur, l'URL ne
+    // prétend plus être un endpoint de vérification de recruteur.
+    if (!passport.signatureHash) {
+      return `https://proday.app/player/${encodeURIComponent(passport.playerId)}`;
+    }
     const payload = encodeURIComponent(
       JSON.stringify({
         id: passport.playerId,
         lic: passport.licenseNumber,
         sig: passport.signatureHash,
-        ovr: passport.ovr,
         v: 1,
       })
     );
-    return `https://proday.app/scout/verify?d=${payload}`;
+    return `https://proday.app/player/${encodeURIComponent(passport.playerId)}?d=${payload}`;
   },
 };

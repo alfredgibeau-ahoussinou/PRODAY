@@ -42,5 +42,6 @@ export const prodayHaptics = {
   impactMedium: () => impact('medium'),
   impactHeavy: () => impact('heavy'),
   selection: () => impact('light'),
+  light: () => impact('light'),
 };
 

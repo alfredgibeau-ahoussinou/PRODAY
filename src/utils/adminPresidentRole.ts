@@ -42,11 +42,27 @@ export function isAdminPresidentUser(
 }
 
 export function adminRoleOptionFromUser(
-  user: Pick<User, 'uid' | 'role' | 'profile'>,
+  user: Pick<User, 'uid' | 'role' | 'profile'> & { roles?: UserRole[] | null },
   clubs: Club[],
 ): AdminRoleOption {
   if (isAdminPresidentUser(user, clubs)) return 'president';
   return user.role;
+}
+
+/**
+ * Retourne la liste complète des options de rôles d’un utilisateur (multi-rôles).
+ */
+export function adminRoleOptionsFromUser(
+  user: Pick<User, 'uid' | 'role' | 'profile'> & { roles?: UserRole[] | null },
+  clubs: Club[],
+): AdminRoleOption[] {
+  const isPres = isAdminPresidentUser(user, clubs);
+  const roles = Array.isArray(user.roles) && user.roles.length > 0 ? user.roles : [user.role];
+  const mapped: AdminRoleOption[] = roles.map((r) => (r === 'club' && isPres ? 'president' : r));
+  if (isPres && !mapped.includes('president')) {
+    mapped.unshift('president');
+  }
+  return Array.from(new Set(mapped));
 }
 
 export function adminRoleOptionLabel(option: AdminRoleOption): string {
@@ -60,14 +76,20 @@ export function persistedUserRoleFromAdminOption(option: AdminRoleOption): UserR
 }
 
 export function adminUserMatchesRoleFilter(
-  user: Pick<User, 'uid' | 'role' | 'profile'>,
+  user: Pick<User, 'uid' | 'role' | 'profile'> & { roles?: UserRole[] | null },
   clubs: Club[],
   filter: 'all' | AdminRoleOption,
 ): boolean {
   if (filter === 'all') return true;
   if (filter === 'president') return isAdminPresidentUser(user, clubs);
   if (filter === 'club') {
-    return user.role === 'club' && !isAdminPresidentUser(user, clubs);
+    const isPres = isAdminPresidentUser(user, clubs);
+    const hasClubRole = user.role === 'club' || (user.roles?.includes('club') ?? false);
+    return hasClubRole && !isPres;
+  }
+  if (Array.isArray(user.roles) && user.roles.length > 0) {
+    return user.roles.includes(filter as UserRole);
   }
   return user.role === filter;
 }
+

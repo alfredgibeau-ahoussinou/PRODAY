@@ -14,6 +14,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { LiveFutPlayerCard, type LiveFutCardData } from './LiveFutPlayerCard';
+import { colors } from '../../theme/designTokens';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { APPLE_FONT_STACK } from '../../theme/appleTypography';
+import { CLUB_TOKENS } from '../../features/club/theme/clubTokens';
 
 export interface WeekendStats {
   matchTitle?: string;
@@ -23,7 +27,6 @@ export interface WeekendStats {
   assists?: number;
   distanceKm?: number;
   duelsPct?: number;
-  minutes?: number;
 }
 
 export interface PlayerStoryExportModalProps {
@@ -49,25 +52,30 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
 }) => {
   const [aspectFormat, setAspectFormat] = useState<'9_16' | '1_1'>('9_16');
 
-  const stats: WeekendStats = {
-    matchTitle: weekendStats?.matchTitle ?? 'J17 · Championnat R1',
-    result: weekendStats?.result ?? 'Victoire 3 - 1',
-    matchRating: weekendStats?.matchRating ?? 8.5,
-    goals: weekendStats?.goals ?? (player.goals != null && player.goals > 0 ? player.goals : 2),
-    assists: weekendStats?.assists ?? (player.assists != null && player.assists > 0 ? player.assists : 1),
-    distanceKm: weekendStats?.distanceKm ?? 10.4,
-    duelsPct: weekendStats?.duelsPct ?? 74,
-    minutes: weekendStats?.minutes ?? 90,
-  };
+  /** Uniquement les valeurs réellement publiées — aucune estimation. */
+  const stats: WeekendStats = weekendStats ?? {};
 
   const clubName = player.clubName || 'FC ProDay';
+
+  const formatStat = (value: number | undefined, suffix = '') =>
+    value != null && value > 0 ? `${value}${suffix}` : '—';
+
+  const metrics = [
+    { key: 'NOTE STAFF', value: formatStat(stats.matchRating), color: colors.bookmark },
+    { key: 'BUTS', value: formatStat(stats.goals), color: PLAYER_DARK.accent },
+    { key: 'PASSES D', value: formatStat(stats.assists), color: PLAYER_DARK.statBlue },
+    { key: 'DISTANCE', value: formatStat(stats.distanceKm, ' km'), color: PLAYER_DARK.text },
+    { key: 'DUELS', value: formatStat(stats.duelsPct, '%'), color: PLAYER_DARK.statGreen },
+  ];
+  const publishedLines = metrics.filter((metric) => metric.value !== '—');
+  const fixtureLabel = [stats.matchTitle, stats.result].filter(Boolean).join(' · ');
 
   const handleShare = async () => {
     prodayHaptics.impactMedium();
     try {
       await Share.share({
         title: `ProDay Flex & Share — ${player.name} (${player.pos} · OVR ${player.ovr})`,
-        message: `🔥 PRODAY FLEX & SHARE\n${player.name} | ${player.pos} · OVR ${player.ovr} (${clubName})\n⚽ Stats du week-end : ${stats.result} (${stats.matchTitle})\n⭐ Note Staff : ${stats.matchRating}/10 | ${stats.goals} But(s) | ${stats.assists} Passe(s) D | ${stats.distanceKm} km parcourus\n📲 Retrouve ma carte FUT officielle sur ProDay ! https://proday75.fr #ProDay #FlexAndShare #FUT #Football`,
+        message: `🔥 PRODAY FLEX & SHARE\n${player.name} | ${player.pos} · OVR ${player.ovr} (${clubName})\n⚽ ${[stats.matchTitle, stats.result].filter(Boolean).join(' · ') || 'Match en cours de saison'}\n${publishedLines.map((metric) => `${metric.key} : ${metric.value}`).join(' | ') || 'Stats du week-end non publiées'}\n📲 Retrouve ma carte FUT officielle sur ProDay ! https://proday75.fr #ProDay #FlexAndShare #FUT #Football`,
         url: 'https://proday75.fr',
       });
     } catch {
@@ -83,13 +91,15 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
               <View style={styles.flexBadge}>
-                <Ionicons name="sparkles" size={13} color="#000000" />
+                <Ionicons name="sparkles" size={13} color={PLAYER_DARK.bg} />
                 <Text style={styles.flexBadgeText}>FLEX & SHARE</Text>
               </View>
               <Text style={styles.headerTitle}>Story & Visuel HD</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Ionicons name="close" size={20} color="#94A3B8" />
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer">
+              <Ionicons name="close" size={20} color={PLAYER_DARK.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -109,7 +119,7 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
               <Ionicons
                 name="phone-portrait-outline"
                 size={14}
-                color={aspectFormat === '9_16' ? '#000000' : '#94A3B8'}
+                color={aspectFormat === '9_16' ? PLAYER_DARK.bg : PLAYER_DARK.textMuted}
               />
               <Text
                 style={[
@@ -135,7 +145,7 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
               <Ionicons
                 name="square-outline"
                 size={14}
-                color={aspectFormat === '1_1' ? '#000000' : '#94A3B8'}
+                color={aspectFormat === '1_1' ? PLAYER_DARK.bg : PLAYER_DARK.textMuted}
               />
               <Text
                 style={[
@@ -150,7 +160,7 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
 
           {/* Story / Post Canvas Preview */}
           <LinearGradient
-            colors={['#0F172A', '#090D16', '#020617']}
+            colors={PLAYER_DARK.cardGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
@@ -165,7 +175,7 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
                   <Image source={{ uri: clubLogoUrl }} style={styles.clubLogoImg} />
                 ) : (
                   <View style={styles.clubEmblemBox}>
-                    <Ionicons name="shield" size={16} color="#30D158" />
+                    <Ionicons name="shield" size={16} color={PLAYER_DARK.accent} />
                   </View>
                 )}
                 <View style={styles.clubInfoCol}>
@@ -173,14 +183,16 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
                   <Text style={styles.clubCategoryText}>EFFECTIF OFFICIEL · R1 SENIORS</Text>
                 </View>
                 <View style={styles.certifiedTag}>
-                  <Ionicons name="checkmark-circle" size={12} color="#30D158" />
+                  <Ionicons name="checkmark-circle" size={12} color={PLAYER_DARK.accent} />
                   <Text style={styles.certifiedTagText}>CERTIFIÉ</Text>
                 </View>
               </View>
 
-              <View style={styles.fixtureBanner}>
-                <Text style={styles.fixtureText}>{stats.matchTitle} — {stats.result}</Text>
-              </View>
+              {fixtureLabel ? (
+                <View style={styles.fixtureBanner}>
+                  <Text style={styles.fixtureText}>{fixtureLabel}</Text>
+                </View>
+              ) : null}
             </View>
 
             {/* Central FUT Player Card */}
@@ -188,54 +200,33 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
               <LiveFutPlayerCard player={player} size="hero" showFlipBio={false} />
             </View>
 
-            {/* Stats du Week-end Module */}
+            {/* Stats du Week-end — masqué tant que le staff n'a rien publié */}
+            {publishedLines.length > 0 ? (
             <View style={styles.weekendCard}>
               <View style={styles.weekendHeader}>
-                <Ionicons name="flame" size={13} color="#FF9F0A" />
+                <Ionicons name="flame" size={13} color={CLUB_TOKENS.warning} />
                 <Text style={styles.weekendHeaderTitle}>STATS DU WEEK-END</Text>
               </View>
 
               <View style={styles.weekendMetricsRow}>
-                <View style={styles.statMiniCol}>
-                  <Text style={[styles.statMiniVal, { color: '#FFD700' }]}>
-                    {stats.matchRating}
-                  </Text>
-                  <Text style={styles.statMiniKey}>NOTE STAFF</Text>
-                </View>
-                <View style={styles.miniPillDivider} />
-                <View style={styles.statMiniCol}>
-                  <Text style={[styles.statMiniVal, { color: '#30D158' }]}>
-                    {stats.goals}
-                  </Text>
-                  <Text style={styles.statMiniKey}>BUTS</Text>
-                </View>
-                <View style={styles.miniPillDivider} />
-                <View style={styles.statMiniCol}>
-                  <Text style={[styles.statMiniVal, { color: '#0A84FF' }]}>
-                    {stats.assists}
-                  </Text>
-                  <Text style={styles.statMiniKey}>PASSES D</Text>
-                </View>
-                <View style={styles.miniPillDivider} />
-                <View style={styles.statMiniCol}>
-                  <Text style={[styles.statMiniVal, { color: '#FFFFFF' }]}>
-                    {stats.distanceKm} km
-                  </Text>
-                  <Text style={styles.statMiniKey}>DISTANCE</Text>
-                </View>
-                <View style={styles.miniPillDivider} />
-                <View style={styles.statMiniCol}>
-                  <Text style={[styles.statMiniVal, { color: '#30D158' }]}>
-                    {stats.duelsPct}%
-                  </Text>
-                  <Text style={styles.statMiniKey}>DUELS</Text>
-                </View>
+                {metrics.map((metric, index) => (
+                  <React.Fragment key={metric.key}>
+                    {index > 0 ? <View style={styles.miniPillDivider} /> : null}
+                    <View style={styles.statMiniCol}>
+                      <Text style={[styles.statMiniVal, { color: metric.color }]}>
+                        {metric.value}
+                      </Text>
+                      <Text style={styles.statMiniKey}>{metric.key}</Text>
+                    </View>
+                  </React.Fragment>
+                ))}
               </View>
             </View>
+            ) : null}
 
             {/* Watermark Branding */}
             <View style={styles.watermarkRow}>
-              <MaterialCommunityIcons name="lightning-bolt" size={12} color="#30D158" />
+              <MaterialCommunityIcons name="lightning-bolt" size={12} color={PLAYER_DARK.accent} />
               <Text style={styles.storyWatermark}>proday75.fr · Flex & Share v4</Text>
             </View>
           </LinearGradient>
@@ -248,12 +239,12 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
               activeOpacity={0.88}
             >
               <LinearGradient
-                colors={['#30D158', '#22C55E']}
+                colors={[PLAYER_DARK.accent, PLAYER_DARK.statGreen]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.shareGradient}
               >
-                <Ionicons name="share-social" size={18} color="#000000" />
+                <Ionicons name="share-social" size={18} color={PLAYER_DARK.bg} />
                 <Text style={styles.shareBtnText}>Partager ma Story (Instagram / TikTok)</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -267,7 +258,7 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.88)',
+    backgroundColor: CLUB_TOKENS.scrim,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -275,10 +266,10 @@ const styles = StyleSheet.create({
   container: {
     width: Math.min(SCREEN_WIDTH - 24, 400),
     maxHeight: Math.min(SCREEN_HEIGHT - 40, 720),
-    backgroundColor: '#111319',
+    backgroundColor: PLAYER_DARK.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: PLAYER_DARK.borderStrong,
     overflow: 'hidden',
     paddingBottom: 16,
   },
@@ -289,7 +280,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: PLAYER_DARK.border,
   },
   headerTitleRow: {
     flexDirection: 'row',
@@ -300,7 +291,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFD700',
+    backgroundColor: colors.bookmark,
     borderRadius: 8,
     paddingHorizontal: 7,
     paddingVertical: 3,
@@ -308,20 +299,20 @@ const styles = StyleSheet.create({
   flexBadgeText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#000000',
+    color: PLAYER_DARK.bg,
     letterSpacing: 0.6,
   },
   headerTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 15,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: PLAYER_DARK.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -338,29 +329,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 7,
-    backgroundColor: '#181C26',
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: PLAYER_DARK.dockBorder,
   },
   formatBtnActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
+    backgroundColor: PLAYER_DARK.text,
+    borderColor: PLAYER_DARK.text,
   },
   formatBtnText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: PLAYER_DARK.textMuted,
   },
   formatBtnTextActive: {
-    color: '#000000',
+    color: PLAYER_DARK.bg,
     fontWeight: '800',
   },
   storyCanvas: {
     margin: 14,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.25)',
+    borderColor: PLAYER_DARK.accentSoft,
     paddingVertical: 14,
     paddingHorizontal: 12,
     alignItems: 'center',
@@ -381,11 +372,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     gap: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: PLAYER_DARK.dockBorder,
     borderRadius: 12,
     padding: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: PLAYER_DARK.dockBorder,
   },
   clubLogoImg: {
     width: 32,
@@ -396,11 +387,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+    backgroundColor: PLAYER_DARK.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: PLAYER_DARK.accent,
   },
   clubInfoCol: {
     flex: 1,
@@ -408,35 +399,35 @@ const styles = StyleSheet.create({
   clubNameText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
     letterSpacing: 0.5,
   },
   clubCategoryText: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: PLAYER_DARK.textMuted,
     marginTop: 1,
   },
   certifiedTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    backgroundColor: PLAYER_DARK.accentSoft,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: PLAYER_DARK.accent,
   },
   certifiedTagText: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#30D158',
+    color: PLAYER_DARK.accent,
     letterSpacing: 0.5,
   },
   fixtureBanner: {
     marginTop: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: PLAYER_DARK.dockBorder,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 3,
@@ -444,7 +435,7 @@ const styles = StyleSheet.create({
   fixtureText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#E2E8F0',
+    color: PLAYER_DARK.text,
     letterSpacing: 0.3,
   },
   cardContainer: {
@@ -452,9 +443,9 @@ const styles = StyleSheet.create({
   },
   weekendCard: {
     width: '100%',
-    backgroundColor: 'rgba(10, 12, 18, 0.85)',
+    backgroundColor: PLAYER_DARK.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: PLAYER_DARK.borderStrong,
     borderRadius: 14,
     paddingVertical: 8,
     paddingHorizontal: 10,
@@ -469,7 +460,7 @@ const styles = StyleSheet.create({
   weekendHeaderTitle: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#FF9F0A',
+    color: CLUB_TOKENS.warning,
     letterSpacing: 0.7,
   },
   weekendMetricsRow: {
@@ -482,21 +473,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statMiniVal: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 13,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
   },
   statMiniKey: {
     fontSize: 8,
     fontWeight: '800',
-    color: '#64748B',
+    color: PLAYER_DARK.textDim,
     marginTop: 2,
   },
   miniPillDivider: {
     width: 1,
     height: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: PLAYER_DARK.borderStrong,
   },
   watermarkRow: {
     flexDirection: 'row',
@@ -506,7 +497,7 @@ const styles = StyleSheet.create({
   },
   storyWatermark: {
     fontSize: 9,
-    color: '#64748B',
+    color: PLAYER_DARK.textDim,
     fontWeight: '600',
   },
   actionsRow: {
@@ -524,9 +515,9 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   shareBtnText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 14,
     fontWeight: '900',
-    color: '#000000',
+    color: PLAYER_DARK.bg,
   },
 });

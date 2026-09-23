@@ -23,7 +23,10 @@ type Props = {
 };
 
 /**
- * En-tête équipe / club — fond noir + pill status (couleur d’équipe).
+ * En-tête équipe / club — forme de la référence : **titre posé sur le canvas**
+ * (grand, gras, sans encart ni pastille), sous-titre discret dessous, crest du
+ * club conservé comme identité à gauche. L’ancienne pastille de statut à puce
+ * lumineuse est retirée : elle n’existe pas dans la référence.
  */
 export function ClubBrandHeader({
   title,
@@ -55,12 +58,9 @@ export function ClubBrandHeader({
           </View>
         ) : null}
         <View style={styles.textCol}>
-          <View style={styles.titlePill}>
-            <View style={[styles.statusDot, { backgroundColor: tokens.accent }]} />
-            <ClubText variant="h3" numberOfLines={1} style={styles.pillTitle}>
-              {title}
-            </ClubText>
-          </View>
+          <ClubText variant="h1" numberOfLines={2} style={styles.title}>
+            {title}
+          </ClubText>
           {subtitle ? (
             <ClubText variant="caption" muted numberOfLines={2} style={styles.sub}>
               {subtitle}
@@ -97,60 +97,33 @@ export function useClubHeaderParallax() {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
+    /** Titre sur le canvas : aucun encart, aucune bordure, aucun fond ajouté. */
     wrap: {
-      paddingTop: clubSpace.xl,
-      paddingBottom: clubSpace.xl,
+      paddingTop: clubSpace.md,
+      paddingBottom: clubSpace.sm,
       gap: clubSpace.sm,
-      overflow: 'hidden',
-      borderRadius: clubRadius.xl,
-      paddingHorizontal: clubSpace.lg,
-      marginHorizontal: -clubSpace.xs,
-      backgroundColor: tokens.bg,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.md,
-      minHeight: 56,
+      minHeight: 48,
     },
     logoWrap: {
-      width: 52,
-      height: 52,
-      borderRadius: clubRadius.pill,
+      width: 44,
+      height: 44,
+      borderRadius: clubRadius.md,
       overflow: 'hidden',
-      borderWidth: 2,
       backgroundColor: tokens.elevated,
       flexShrink: 0,
     },
     logo: { width: '100%', height: '100%' },
     logoPh: { alignItems: 'center', justifyContent: 'center' },
-    textCol: { flex: 1, minWidth: 0, gap: 8, justifyContent: 'center' },
-    titlePill: {
-      alignSelf: 'flex-start',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      maxWidth: '100%',
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: clubRadius.pill,
-      backgroundColor: `${tokens.accent}14`,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: `${tokens.accent}73`,
-    },
-    statusDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      flexShrink: 0,
-    },
-    pillTitle: {
+    textCol: { flex: 1, minWidth: 0, gap: 4, justifyContent: 'center' },
+    title: {
       color: tokens.foreground,
-      fontWeight: '800',
-      flexShrink: 1,
     },
     sub: {
-      paddingLeft: 4,
       color: tokens.muted,
     },
   });

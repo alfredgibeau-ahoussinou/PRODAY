@@ -1,891 +1,1754 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  RefreshControl,
   ScrollView,
-  TouchableOpacity,
-  Alert,
-  Platform,
+  StyleSheet,
+  TextInput,
+  View,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { teamEventsService } from '../../services/teamEvents.service';
+import type { TeamEvent } from '../../models/TeamEvent';
+import { countRsvpYes, getPendingInviteeUids, isCoachMatchEvent } from '../../models/TeamEvent';
+import { resolveLiveState } from '../../utils/matchLive';
+import { formatCalendarDate } from '../../utils/seasonCalendar';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import { proSemantic, PRO_DATA_VIOLET } from '../../theme/professionalDesign';
+import { CoachText, CoachKpiRow } from '../../components/coach/coachPortalUi';
+import { CoachScreenHeader } from '../../components/coach/CoachScreenHeader';
+import { CoachMatchSummaryTab } from '../../components/coach/match/CoachMatchSummaryTab';
+import { CoachEventAttendanceList } from '../../components/coach/match/CoachEventAttendanceList';
+import { MatchHubLineupTab } from '../../components/matchs/hub/MatchHubLineupTab';
+import { MatchHubLiveTab } from '../../components/matchs/hub/MatchHubLiveTab';
+import { MatchHubStatsTab } from '../../components/matchs/hub/MatchHubStatsTab';
+import { CoachMatchSkinProvider } from '../../components/matchs/matchCenterUi';
+import { EventLineupScreen } from '../EventLineupScreen';
+import { VeoMatchAssociateModal } from '../../components/video/VeoMatchAssociateModal';
+import { PushScreenTransition } from '../../components/motion';
+import { ProDayIntegratedVideoPlayer } from '../../components/video/ProDayIntegratedVideoPlayer';
+import { clubCamerasService } from '../../services/clubCameras.service';
+import type { ClubMatchVideo } from '../../models/ClubCameras';
+import { filterCapturesForRole } from '../../utils/matchVideoVisibility';
+import { Icon } from '../../components/ui/Icon';
+import { spacing } from '../../theme/designTokens';
+import {
+  PlayerStatsRatingModal,
+  type PlayerStatsRatingModalMode,
+} from '../../components/coach/PlayerStatsRatingModal';
+import { CoachMatchTalkPresentationModal } from '../../components/coach/match/CoachMatchTalkPresentationModal';
+import { CoachShareConvocationModal } from '../../components/coach/convocation/CoachShareConvocationModal';
+import { CoachQuickNoteModal } from '../../components/coach/notes/CoachQuickNoteModal';
+import { CoachOrganizeFriendlyModal } from '../../components/coach/matches/CoachOrganizeFriendlyModal';
+import {
+  generateVeoAiMatchEvaluations,
+  buildDraftStatFromProposal,
+} from '../../services/veoAiMatchEvaluation.service';
+import { usersService } from '../../services/users.service';
+import type { User } from '../../models/User';
+import type { PlayerMatchSheetStat } from '../../models/TeamEvent';
+import {
+  formatCoachRating,
+  formatEvaluationSourceLabel,
+  formatEvaluationStatusLabel,
+} from '../../utils/coachEvaluationRatings';
+import { PressableSpring } from '../../components/motion';
+import { tabBarScrollInset } from '../../navigation/tabBarLayout';
 
-interface LiveEvent {
-  id: string;
-  minute: number;
-  type: 'goal' | 'assist' | 'yellow' | 'red' | 'sub' | 'shot';
-  team: 'home' | 'away';
-  text: string;
-  officialFeed?: boolean;
-}
+type MatchFilter = 'all' | 'upcoming' | 'live' | 'completed';
+type MatchTab = 'apercu' | 'composition' | 'presences' | 'evenements' | 'stats' | 'video';
 
-interface MatchStat {
-  label: string;
-  home: number | string;
-  away: number | string;
-  homeRatio?: number; // 0..1
-}
+const MATCH_TABS: { id: MatchTab; label: string }[] = [
+  { id: 'apercu', label: 'Aperçu' },
+  { id: 'composition', label: 'Composition' },
+  { id: 'presences', label: 'Présences' },
+  { id: 'evenements', label: 'Événements' },
+  { id: 'stats', label: 'Stats & Notes' },
+  { id: 'video', label: 'Vidéo' },
+];
 
 export const CoachLiveMatchCenterScreen: React.FC = () => {
-  const [seconds, setSeconds] = useState(3840); // 64:00
-  const [isRunning, setIsRunning] = useState(true);
-  const [period, setPeriod] = useState<'1MT' | '2MT' | 'FIN'>('2MT');
-  const [homeScore, setHomeScore] = useState(2);
-  const [awayScore, setAwayScore] = useState(1);
+  const profile = useSessionProfile();
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
 
-  // Automated Official League Data Feed state
-  const [isAutoSync, setIsAutoSync] = useState(true);
-  const [activeTab, setActiveTab] = useState<'timeline' | 'stats' | 'voice'>('timeline');
+  const [matches, setMatches] = useState<TeamEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<MatchFilter>('all');
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<MatchTab>('apercu');
 
-  // Voice Scouting Notes (Innovation)
-  const [isRecording, setIsRecording] = useState(false);
-  const [voiceNote, setVoiceNote] = useState(
-    'Lucas doit resserrer son marquage sur le numéro 10 adverse à la perte de balle. Prévoir un travail de cadrage axial à la séance de mardi.'
-  );
-  const [drillConverted, setDrillConverted] = useState(false);
+  // Subviews
+  const [editingLineup, setEditingLineup] = useState(false);
+  const [associateVeoOpen, setAssociateVeoOpen] = useState(false);
+  const [scoreModalOpen, setScoreModalOpen] = useState(false);
+  const [homeScoreInput, setHomeScoreInput] = useState('0');
+  const [awayScoreInput, setAwayScoreInput] = useState('0');
+  const [savingScore, setSavingScore] = useState(false);
 
-  // Live match events
-  const [events, setEvents] = useState<LiveEvent[]>([
-    { id: 'e1', minute: 23, type: 'goal', team: 'home', text: 'But de Yanis B. (Passe décisive de Rayan K.)', officialFeed: true },
-    { id: 'e2', minute: 41, type: 'yellow', team: 'away', text: 'Carton Jaune pour Adv 4 (Tacle appuyé)', officialFeed: true },
-    { id: 'e3', minute: 52, type: 'goal', team: 'away', text: 'Égalisation de RC France (Frappe 18m)', officialFeed: true },
-    { id: 'e4', minute: 61, type: 'goal', team: 'home', text: 'But de Lucas M. (Transition offensive rapide)', officialFeed: true },
-  ]);
+  // Match video
+  const [matchVideos, setMatchVideos] = useState<ClubMatchVideo[]>([]);
+  const [videoLoading, setVideoLoading] = useState(false);
 
-  const triggerHaptic = () => {
+  // Members & Player Stats / Rating Modal
+  const [members, setMembers] = useState<User[]>([]);
+  const [evaluatingAi, setEvaluatingAi] = useState(false);
+  const [aiResultNotice, setAiResultNotice] = useState<string | null>(null);
+  const [publishingStats, setPublishingStats] = useState(false);
+  const [ratingModalPlayer, setRatingModalPlayer] = useState<{
+    uid: string;
+    name: string;
+    stat?: PlayerMatchSheetStat;
+    mode: PlayerStatsRatingModalMode;
+  } | null>(null);
+
+  const [talkPresentationOpen, setTalkPresentationOpen] = useState(false);
+  const [shareConvocationOpen, setShareConvocationOpen] = useState(false);
+  const [quickNoteModalOpen, setQuickNoteModalOpen] = useState(false);
+  const [organizeFriendlyOpen, setOrganizeFriendlyOpen] = useState(false);
+
+  const loadMatches = useCallback(async () => {
+    if (!profile?.uid) return;
     try {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const clubId = profile.profile.club_id || undefined;
+      const rows = await teamEventsService.listForUser(profile.uid, clubId);
+      const matchRows = rows
+        .filter((e) => isCoachMatchEvent(e))
+        .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime());
+      setMatches(matchRows);
+
+      if (matchRows.length > 0) {
+        setSelectedMatchId((prev) => {
+          if (prev && matchRows.some((m) => m.id === prev)) return prev;
+          const now = Date.now();
+          const liveMatch = matchRows.find((m) => {
+            const live = resolveLiveState(m);
+            return live.status === 'live' || live.status === 'halftime';
+          });
+          if (liveMatch) return liveMatch.id;
+          const upcoming = matchRows
+            .slice()
+            .reverse()
+            .find((m) => m.starts_at.getTime() >= now);
+          if (upcoming) return upcoming.id;
+          return matchRows[0].id;
+        });
+      }
     } catch {
-      // ignore
+      // Ignored in offline preview
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [profile?.uid, profile?.profile.club_id]);
 
-  // Chronometer timer effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isRunning) {
-      interval = setInterval(() => setSeconds((s) => s + 1), 1000);
+    void loadMatches();
+  }, [loadMatches]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadMatches();
+    setRefreshing(false);
+  };
+
+  const selectedMatch = useMemo(() => {
+    if (!selectedMatchId) return matches[0] ?? null;
+    return matches.find((m) => m.id === selectedMatchId) ?? matches[0] ?? null;
+  }, [matches, selectedMatchId]);
+
+  const selectedMatchLineup = useMemo(() => {
+    if (!selectedMatch?.lineup?.slots) return { starterUids: [], subUids: [] };
+    const starterUids = selectedMatch.lineup.slots
+      .filter((s) => s.role === 'starter')
+      .map((s) => s.uid);
+    const subUids = selectedMatch.lineup.slots
+      .filter((s) => s.role === 'sub')
+      .map((s) => s.uid);
+    return { starterUids, subUids };
+  }, [selectedMatch?.lineup?.slots]);
+
+  // Load video for selected match
+  useEffect(() => {
+    if (!selectedMatch?.club_id || !selectedMatch?.id) {
+      setMatchVideos([]);
+      return;
     }
-    return () => clearInterval(interval);
-  }, [isRunning]);
+    setVideoLoading(true);
+    let active = true;
+    void clubCamerasService
+      .listVideosForEvent(selectedMatch.club_id, selectedMatch.id)
+      .then((vids) => {
+        if (!active) return;
+        setMatchVideos(filterCapturesForRole(vids, profile?.role ?? 'coach'));
+      })
+      .catch(() => {
+        if (active) setMatchVideos([]);
+      })
+      .finally(() => {
+        if (active) setVideoLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedMatch?.club_id, selectedMatch?.id, profile?.role]);
 
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+  // Filtered match list for carousel / selector
+  const filteredMatches = useMemo(() => {
+    const now = Date.now();
+    return matches.filter((m) => {
+      const live = resolveLiveState(m);
+      const isLive = live.status === 'live' || live.status === 'halftime';
+      const isCompleted = m.match_report_finalized_at || m.starts_at.getTime() < now - 3 * 3600 * 1000;
+      if (filter === 'live') return isLive;
+      if (filter === 'upcoming') return !isLive && !isCompleted && m.starts_at.getTime() >= now;
+      if (filter === 'completed') return isCompleted && !isLive;
+      return true;
+    });
+  }, [matches, filter]);
+
+  const activeLive = selectedMatch ? resolveLiveState(selectedMatch) : null;
+  const isMatchLive = activeLive?.status === 'live' || activeLive?.status === 'halftime';
+  const isMatchCompleted = Boolean(
+    selectedMatch?.match_report_finalized_at ||
+      (selectedMatch && selectedMatch.starts_at.getTime() < Date.now() - 3 * 3600 * 1000),
+  );
+
+  const openScoreModal = () => {
+    if (!selectedMatch) return;
+    setHomeScoreInput(String(selectedMatch.live_state?.home_score ?? 0));
+    setAwayScoreInput(String(selectedMatch.live_state?.away_score ?? 0));
+    setScoreModalOpen(true);
   };
 
-  const showFffCertificationInfo = () => {
-    triggerHaptic();
-    Alert.alert(
-      'Feuille de Match Homologuée FFF',
-      'Cette rencontre officielle est synchronisée en direct avec les flux de la fédération. Les scores, cartons et buts sont certifiés par le corps arbitral et ne peuvent faire l’objet d’aucune altération manuelle.'
-    );
+  const handleSaveScore = async () => {
+    if (!selectedMatch || !profile?.uid) return;
+    const h = parseInt(homeScoreInput, 10);
+    const a = parseInt(awayScoreInput, 10);
+    if (isNaN(h) || isNaN(a) || h < 0 || a < 0) return;
+    setSavingScore(true);
+    try {
+      await teamEventsService.updateMatchLiveState(
+        selectedMatch.id,
+        {
+          home_score: h,
+          away_score: a,
+          status: isMatchCompleted ? 'finished' : isMatchLive ? 'live' : 'scheduled',
+        },
+        {
+          user: profile,
+          isAdmin: profile.role === 'coach',
+        },
+      );
+      await loadMatches();
+      setScoreModalOpen(false);
+    } catch {
+      // Offline fallback
+    } finally {
+      setSavingScore(false);
+    }
   };
 
-  const toggleRecording = () => {
-    triggerHaptic();
-    if (!isRecording) {
-      setIsRecording(true);
-      setTimeout(() => {
-        setIsRecording(false);
-        setVoiceNote(
-          'Dédoublement systématique de leur latéral gauche non suivi. Insister sur la couverture du second poteau à la prochaine séance.'
+  // Load club members for roster names & positions
+  useEffect(() => {
+    const clubId = profile?.profile.club_id;
+    if (!clubId) return;
+    void usersService.listMembersByClubId(clubId).then(setMembers).catch(() => {});
+  }, [profile?.profile.club_id]);
+
+  // Derive all players involved in the selected match
+  const matchRoster = useMemo(() => {
+    if (!selectedMatch) return [];
+    const map = new Map<string, { uid: string; name: string; role?: string; position?: string }>();
+
+    selectedMatch.lineup?.slots?.forEach((s) => {
+      map.set(s.uid, {
+        uid: s.uid,
+        name: s.display_name,
+        role: s.role === 'starter' ? 'Titulaire' : 'Remplaçant',
+        position: s.position_label,
+      });
+    });
+
+    if (selectedMatch.player_match_stats) {
+      Object.entries(selectedMatch.player_match_stats).forEach(([uid, stat]) => {
+        if (!map.has(uid)) {
+          map.set(uid, {
+            uid,
+            name: stat.player_name || 'Joueur',
+            role: 'Effectif',
+          });
+        }
+      });
+    }
+
+    if (selectedMatch.invitee_uids) {
+      selectedMatch.invitee_uids.forEach((uid) => {
+        if (!map.has(uid)) {
+          const member = members.find((m) => m.uid === uid);
+          map.set(uid, {
+            uid,
+            name: member?.display_name || 'Joueur',
+            role: 'Convoqué',
+            position: member?.profile?.position,
+          });
+        }
+      });
+    }
+
+    return Array.from(map.values());
+  }, [selectedMatch, members]);
+
+  // Handle running Veo AI evaluation
+  const handleRunVeoAiEvaluation = async () => {
+    if (!selectedMatch || !profile?.uid) return;
+    const video = matchVideos[0];
+    setEvaluatingAi(true);
+    setAiResultNotice(null);
+    try {
+      const result = generateVeoAiMatchEvaluations(selectedMatch, video, members);
+      const existing = selectedMatch.player_match_stats ?? {};
+      const newStatsMap: Record<string, PlayerMatchSheetStat> = {};
+
+      Object.entries(result.proposals).forEach(([uid, proposal]) => {
+        newStatsMap[uid] = buildDraftStatFromProposal(
+          proposal,
+          profile.uid,
+          profile.display_name || 'Coach',
+          existing[uid],
         );
-        setDrillConverted(false);
-      }, 2500);
-    } else {
-      setIsRecording(false);
+      });
+
+      await teamEventsService.batchUpdatePlayerMatchStats(selectedMatch.id, newStatsMap, {
+        user: profile,
+        isAdmin: profile.role === 'coach',
+      });
+
+      const totalCount = Object.keys(result.proposals).length;
+      const protectedCount = result.manual_protected_count;
+      setAiResultNotice(
+        `Évaluation IA terminée : ${totalCount} propositions en brouillon staff. ${
+          protectedCount > 0 ? `${protectedCount} saisie(s) manuelle(s) protégée(s) conservée(s).` : ''
+        }`,
+      );
+      await loadMatches();
+    } catch (err) {
+      console.error('[CoachLiveMatchCenter] Veo AI evaluation error:', err);
+    } finally {
+      setEvaluatingAi(false);
     }
   };
 
-  const convertNoteToDrill = () => {
-    triggerHaptic();
-    setDrillConverted(true);
-    Alert.alert(
-      'Atelier d’Entraînement Créé',
-      'La note vocale a été transformée en exercice : "Circuit Transition Défensive & Cadrage Axial", injecté directement dans votre Planificateur de Séances.'
-    );
+  // Handle publishing all match stats
+  const handlePublishAllStats = async () => {
+    if (!selectedMatch || !profile?.uid) return;
+    setPublishingStats(true);
+    try {
+      await teamEventsService.publishMatchStatsAndRatings(selectedMatch.id, {
+        user: profile,
+        isAdmin: profile.role === 'coach',
+      });
+      await loadMatches();
+    } catch (err) {
+      console.error('[CoachLiveMatchCenter] Publish stats error:', err);
+    } finally {
+      setPublishingStats(false);
+    }
   };
 
-  const officialStats: MatchStat[] = [
-    { label: 'Possession de Balle', home: '58%', away: '42%', homeRatio: 0.58 },
-    { label: 'Tirs Totaux', home: 12, away: 7, homeRatio: 12 / 19 },
-    { label: 'Tirs Cadrés', home: 6, away: 3, homeRatio: 6 / 9 },
-    { label: 'Corners', home: 5, away: 2, homeRatio: 5 / 7 },
-    { label: 'Fautes Commises', home: 8, away: 11, homeRatio: 8 / 19 },
-    { label: 'Hors-jeu', home: 1, away: 3, homeRatio: 1 / 4 },
-  ];
+  // Handle saving an individual player's stat / rating
+  const handleSavePlayerStat = async (patch: Partial<PlayerMatchSheetStat>) => {
+    if (!selectedMatch || !profile?.uid || !ratingModalPlayer) return;
+    await teamEventsService.updatePlayerMatchStat(
+      selectedMatch.id,
+      ratingModalPlayer.uid,
+      patch,
+      {
+        user: profile,
+        isAdmin: profile.role === 'coach',
+      },
+    );
+    await loadMatches();
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.root, styles.centered]}>
+        <ActivityIndicator color={tokens.accent} size="large" />
+      </View>
+    );
+  }
+
+  if (matches.length === 0) {
+    return (
+      <View style={styles.root}>
+        <CoachScreenHeader title="Match Center" fallbackNavId="today" />
+        <ScrollView
+          style={styles.root}
+          contentContainerStyle={styles.content}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.accent} />}
+        >
+          <View style={styles.emptyCard}>
+            <MaterialCommunityIcons name="soccer" size={40} color={tokens.muted} />
+            <CoachText variant="section" style={{ marginTop: spacing.sm }}>
+              Aucun match programmé
+            </CoachText>
+            <CoachText variant="body" muted style={styles.emptyBody}>
+              Le Match Center centralise le score, la composition, les convocations, les événements de jeu et les vidéos Veo de vos rencontres.
+            </CoachText>
+            <PressableSpring
+              onPress={() => setOrganizeFriendlyOpen(true)}
+              style={[styles.primaryActionBtn, { marginTop: spacing.md, alignSelf: 'center' }]}
+            >
+              <MaterialCommunityIcons name="soccer" size={16} color={tokens.onAccent} />
+              <CoachText variant="caption" style={[styles.actionBtnLabel, { color: tokens.onAccent, fontWeight: '800' }]}>
+                Organiser un amical
+              </CoachText>
+            </PressableSpring>
+          </View>
+        </ScrollView>
+        <CoachOrganizeFriendlyModal
+          visible={organizeFriendlyOpen}
+          onClose={() => setOrganizeFriendlyOpen(false)}
+          onSuccess={() => void loadMatches()}
+        />
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      {/* 1. Header: Apple Design & Official League Synchronization Status */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>Match Center Live</Text>
-            <Text style={styles.headerSubtitle}>R1 Poule B · J17 · Stade d’Honneur</Text>
+    <View style={styles.root}>
+      <CoachScreenHeader title="Match Center" fallbackNavId="today" />
+      <ScrollView
+        style={styles.root}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.accent} />}
+      >
+        {/* Match Filter & Actions Row */}
+        <View style={styles.topActionsRow}>
+          <View style={styles.filterRow}>
+            {(
+              [
+                { id: 'all', label: 'Tous' },
+                { id: 'upcoming', label: 'À venir' },
+                { id: 'live', label: 'En direct' },
+                { id: 'completed', label: 'Terminés' },
+              ] as { id: MatchFilter; label: string }[]
+            ).map((item) => {
+              const on = filter === item.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => setFilter(item.id)}
+                  style={[styles.filterChip, on && styles.filterChipActive]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                >
+                  <CoachText variant="caption" style={[styles.filterLabel, on && styles.filterLabelActive]}>
+                    {item.label}
+                  </CoachText>
+                </Pressable>
+              );
+            })}
           </View>
-
-          {/* Badge Homologation FFF Officiel */}
-          <TouchableOpacity
-            style={styles.overrideToggleBtn}
-            onPress={showFffCertificationInfo}
-            activeOpacity={0.8}
+          <PressableSpring
+            onPress={() => setOrganizeFriendlyOpen(true)}
+            style={[
+              styles.organizeHeaderBtn,
+              { borderColor: tokens.accent, backgroundColor: withAlpha(tokens.accent, 0.1) },
+            ]}
           >
-            <MaterialCommunityIcons
-              name="shield-check"
-              size={13}
-              color="#30D158"
-            />
-            <Text style={styles.overrideToggleText}>
-              Homologué FFF
-            </Text>
-          </TouchableOpacity>
+            <MaterialCommunityIcons name="soccer" size={15} color={tokens.accent} />
+            <CoachText variant="caption" style={{ fontWeight: '800', color: tokens.accent, marginLeft: 4 }}>
+              Organiser un amical
+            </CoachText>
+          </PressableSpring>
         </View>
 
-        {/* Automated League Feed Status Bar */}
-        <View style={styles.feedStatusBar}>
-          <View style={styles.feedStatusLeft}>
-            <View style={styles.feedDot} />
-            <Text style={styles.feedStatusText}>
-              🟢 Flux Officiel FFF en Direct · Feuille de match scellée (J17)
-            </Text>
-          </View>
-          <Text style={styles.feedStatusMeta}>Arbitrage officiel</Text>
-        </View>
-      </View>
-
-      {/* 2. Scoreboard Hero Centerpiece */}
-      <View style={styles.scoreHero}>
-        <View style={styles.periodRow}>
-          <View style={styles.liveIndicator}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>EN DIRECT · {period}</Text>
-          </View>
-          <Text style={styles.chronoText}>{formatTime(seconds)}</Text>
-          <TouchableOpacity
-            style={styles.chronoControlBtn}
-            onPress={() => {
-              triggerHaptic();
-              setIsRunning(!isRunning);
-            }}
+        {/* Horizontal Match Carousel */}
+        {filteredMatches.length > 1 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.carouselContainer}
           >
-            <Ionicons name={isRunning ? 'pause' : 'play'} size={13} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+            {filteredMatches.map((m) => {
+              const on = m.id === selectedMatchId;
+              const live = resolveLiveState(m);
+              const isL = live.status === 'live' || live.status === 'halftime';
+              return (
+                <Pressable
+                  key={m.id}
+                  onPress={() => setSelectedMatchId(m.id)}
+                  style={[styles.carouselCard, on && styles.carouselCardActive]}
+                  accessibilityRole="button"
+                >
+                  <View style={styles.carouselCardHeader}>
+                    <CoachText variant="caption" muted style={{ fontSize: 10 }}>
+                      {m.starts_at.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </CoachText>
+                    {isL ? (
+                      <View style={styles.liveDot} />
+                    ) : null}
+                  </View>
+                  <CoachText variant="caption" numberOfLines={1} style={[styles.carouselTitle, on && { color: tokens.accent }]}>
+                    {m.live_state?.opponent_name || m.title || 'Match'}
+                  </CoachText>
+                  <CoachText variant="caption" muted style={{ fontSize: 11 }}>
+                    {m.live_state?.home_score != null && m.live_state?.away_score != null
+                      ? `${m.live_state.home_score} - ${m.live_state.away_score}`
+                      : m.starts_at.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </CoachText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : null}
 
-        {/* Big Score Display */}
-        <View style={styles.scoreBoardRow}>
-          <View style={styles.scoreTeam}>
-            <Text numberOfLines={1} style={styles.scoreTeamName}>FC ProDay</Text>
-            <Text style={styles.scoreTeamLoc}>1er (38 pts)</Text>
-          </View>
-
-          <View style={styles.scoreDigitsBox}>
-            <Text style={styles.scoreDigit}>{homeScore}</Text>
-            <Text style={styles.scoreDash}>-</Text>
-            <Text style={styles.scoreDigit}>{awayScore}</Text>
-          </View>
-
-          <View style={styles.scoreTeam}>
-            <Text numberOfLines={1} style={styles.scoreTeamName}>RC France</Text>
-            <Text style={styles.scoreTeamLoc}>2e (35 pts)</Text>
-          </View>
-        </View>
-
-        {/* Live Standings Impact Strip */}
-        <View style={styles.standingsImpactStrip}>
-          <MaterialCommunityIcons name="trending-up" size={14} color="#30D158" />
-          <Text style={styles.standingsImpactText}>
-            Impact Direct : FC ProDay conforte sa 1ère place (41 pts) · +6 pts d’avance
-          </Text>
-        </View>
-
-        {/* Official FFF Verification Strip & Coach Scouting Access */}
-        <View style={styles.quickActionStrip}>
-          <View style={styles.officialLockBox}>
-            <MaterialCommunityIcons name="shield-lock-outline" size={13} color="#30D158" />
-            <Text style={styles.officialLockText}>
-              Feuille officielle FFF scellée · Arbitrage officiel
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.scoutingQuickBtn}
-            onPress={() => {
-              triggerHaptic();
-              setActiveTab('voice');
-            }}
-          >
-            <Feather name="mic" size={12} color="#C5A059" />
-            <Text style={styles.scoutingQuickBtnText}>Scouting Live</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* 3. Apple Segmented Control Bar */}
-      <View style={styles.segmentBar}>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeTab === 'timeline' && styles.segmentBtnActive]}
-          onPress={() => {
-            triggerHaptic();
-            setActiveTab('timeline');
-          }}
-        >
-          <MaterialCommunityIcons
-            name="timeline-clock-outline"
-            size={13}
-            color={activeTab === 'timeline' ? '#FFFFFF' : '#8B8B9A'}
-          />
-          <Text style={[styles.segmentBtnText, activeTab === 'timeline' && styles.segmentBtnTextActive]}>
-            Fil du Match ({events.length})
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeTab === 'stats' && styles.segmentBtnActive]}
-          onPress={() => {
-            triggerHaptic();
-            setActiveTab('stats');
-          }}
-        >
-          <MaterialCommunityIcons
-            name="chart-bar"
-            size={13}
-            color={activeTab === 'stats' ? '#FFFFFF' : '#8B8B9A'}
-          />
-          <Text style={[styles.segmentBtnText, activeTab === 'stats' && styles.segmentBtnTextActive]}>
-            Stats FFF
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeTab === 'voice' && styles.segmentBtnActive]}
-          onPress={() => {
-            triggerHaptic();
-            setActiveTab('voice');
-          }}
-        >
-          <MaterialCommunityIcons
-            name="microphone-outline"
-            size={13}
-            color={activeTab === 'voice' ? '#FFFFFF' : '#8B8B9A'}
-          />
-          <Text style={[styles.segmentBtnText, activeTab === 'voice' && styles.segmentBtnTextActive]}>
-            Dictée Coach
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* TAB 1: OFFICIAL MATCH TIMELINE */}
-      {activeTab === 'timeline' && (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialCommunityIcons name="shield-check-outline" size={16} color="#30D158" />
-            <Text style={styles.cardTitle}>Faits de Jeu & Homologation FFF</Text>
-          </View>
-
-          <View style={styles.timelineList}>
-            {events.map((ev) => (
-              <View key={ev.id} style={styles.eventRow}>
-                <View style={styles.eventMinBadge}>
-                  <Text style={styles.eventMinText}>{ev.minute}’</Text>
-                </View>
-
-                <View style={styles.eventIconWrap}>
-                  <MaterialCommunityIcons
-                    name={
-                      ev.type === 'goal'
-                        ? 'soccer'
-                        : ev.type === 'yellow'
-                        ? 'card'
-                        : ev.type === 'sub'
-                        ? 'swap-vertical'
-                        : 'bell-outline'
-                    }
-                    size={15}
-                    color={
-                      ev.type === 'goal'
-                        ? '#30D158'
-                        : ev.type === 'yellow'
-                        ? '#FFD60A'
-                        : '#0A84FF'
-                    }
-                  />
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.eventText}>{ev.text}</Text>
-                  <Text style={styles.eventMeta}>
-                    {ev.officialFeed ? 'Homologué Arbitre FFF' : 'Saisie Coach Locale'}
-                  </Text>
-                </View>
+        {/* Selected Match Hero Card */}
+        {selectedMatch ? (
+          <View style={styles.heroCard}>
+            {/* Header / Competition */}
+            <View style={styles.heroMetaRow}>
+              <View style={styles.competitionBadge}>
+                <Ionicons name="trophy-outline" size={12} color={tokens.accent} />
+                <CoachText variant="caption" accent style={{ fontWeight: '700', fontSize: 11 }}>
+                  {selectedMatch.competition_fixture_id ? 'Compétition officielle' : selectedMatch.event_type === 'competition' ? 'Compétition' : 'Match'}
+                </CoachText>
               </View>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* TAB 2: OFFICIAL MATCH STATS (FFF DATA SYNC) */}
-      {activeTab === 'stats' && (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialCommunityIcons name="chart-box-outline" size={16} color="#C5A059" />
-            <Text style={styles.cardTitle}>Statistiques Officielles en Direct</Text>
-          </View>
-
-          <View style={styles.statsList}>
-            {officialStats.map((st, i) => (
-              <View key={i} style={styles.statItem}>
-                <View style={styles.statLabelRow}>
-                  <Text style={styles.statValueHome}>{st.home}</Text>
-                  <Text style={styles.statLabel}>{st.label}</Text>
-                  <Text style={styles.statValueAway}>{st.away}</Text>
+              {isMatchLive ? (
+                <View style={styles.liveBadge}>
+                  <View style={styles.liveDot} />
+                  <CoachText variant="caption" style={styles.liveBadgeText}>
+                    EN DIRECT
+                  </CoachText>
                 </View>
+              ) : isMatchCompleted ? (
+                <View style={styles.completedBadge}>
+                  <CoachText variant="caption" muted style={{ fontSize: 10, fontWeight: '700' }}>
+                    TERMINÉ
+                  </CoachText>
+                </View>
+              ) : (
+                <View style={styles.upcomingBadge}>
+                  <Feather name="clock" size={11} color={tokens.muted} />
+                  <CoachText variant="caption" muted style={{ fontSize: 10 }}>
+                    {selectedMatch.starts_at.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </CoachText>
+                </View>
+              )}
+            </View>
 
-                {st.homeRatio !== undefined && (
-                  <View style={styles.statBarTrack}>
-                    <View style={[styles.statBarFillHome, { width: `${st.homeRatio * 100}%` }]} />
-                    <View style={[styles.statBarFillAway, { width: `${(1 - st.homeRatio) * 100}%` }]} />
+            {/* Score & Matchup */}
+            <View style={styles.scoreRow}>
+              <View style={styles.teamCol}>
+                <View style={styles.teamAvatar}>
+                  <MaterialCommunityIcons name="shield" size={20} color={tokens.accent} />
+                </View>
+                <CoachText variant="body" numberOfLines={1} style={styles.teamName}>
+                  {tokens.teamLabel || 'Mon Équipe'}
+                </CoachText>
+              </View>
+
+              <View style={styles.scoreCenter}>
+                {selectedMatch.live_state?.home_score != null && selectedMatch.live_state?.away_score != null ? (
+                  <Pressable onPress={openScoreModal} accessibilityRole="button">
+                    <CoachText variant="title" style={styles.scoreBig}>
+                      {selectedMatch.live_state.home_score} - {selectedMatch.live_state.away_score}
+                    </CoachText>
+                  </Pressable>
+                ) : (
+                  <View style={styles.vsBox}>
+                    <CoachText variant="body" style={styles.vsText}>
+                      VS
+                    </CoachText>
                   </View>
                 )}
+                <CoachText variant="caption" muted style={{ fontSize: 11 }}>
+                  {formatCalendarDate(selectedMatch.starts_at)}
+                </CoachText>
               </View>
-            ))}
-          </View>
-        </View>
-      )}
 
-      {/* TAB 3: VOICE-TO-TEXT LIVE SCOUTING & DRILL CONVERTER */}
-      {activeTab === 'voice' && (
-        <View style={styles.voiceCard}>
-          <View style={styles.voiceHeader}>
-            <View style={styles.voiceHeaderLeft}>
-              <MaterialCommunityIcons name="microphone-message" size={18} color="#0A84FF" />
-              <View>
-                <Text style={styles.voiceTitle}>Dictée de Banc & Ateliers IA</Text>
-                <Text style={styles.voiceSubtitle}>Remarques tactiques transformées en exercices</Text>
+              <View style={styles.teamCol}>
+                <View style={[styles.teamAvatar, { backgroundColor: tokens.elevated }]}>
+                  <MaterialCommunityIcons name="shield-outline" size={20} color={tokens.muted} />
+                </View>
+                <CoachText variant="body" numberOfLines={1} style={styles.teamName}>
+                  {selectedMatch.live_state?.opponent_name || selectedMatch.title || 'Adversaire'}
+                </CoachText>
               </View>
             </View>
 
-            <TouchableOpacity
-              style={[styles.micBtn, isRecording && styles.micBtnRecording]}
-              activeOpacity={0.8}
-              onPress={toggleRecording}
-            >
-              <Ionicons name={isRecording ? 'radio' : 'mic'} size={15} color="#FFFFFF" />
-              <Text style={styles.micBtnText}>{isRecording ? 'Écoute...' : 'Dicter'}</Text>
-            </TouchableOpacity>
-          </View>
+            {/* Location & Venue */}
+            {(selectedMatch.location_label || selectedMatch.city || selectedMatch.location) ? (
+              <View style={styles.venueRow}>
+                <Ionicons name="location-outline" size={13} color={tokens.muted} />
+                <CoachText variant="caption" muted numberOfLines={1} style={{ flex: 1 }}>
+                  {[selectedMatch.location_label, selectedMatch.city, selectedMatch.location].filter(Boolean).join(' · ')}
+                </CoachText>
+              </View>
+            ) : null}
 
-          <View style={styles.transcriptionBox}>
-            <Feather name="message-square" size={13} color="#C5A059" style={{ marginTop: 2 }} />
-            <Text style={styles.transcriptionText}>« {voiceNote} »</Text>
-          </View>
+            {/* Contextual Action Bar */}
+            <View style={styles.actionBar}>
+              {!isMatchCompleted ? (
+                <Pressable
+                  onPress={() => setEditingLineup(true)}
+                  style={styles.primaryActionBtn}
+                  accessibilityRole="button"
+                >
+                  <Icon name="shirt" size={14} color={tokens.onAccent} />
+                  <CoachText variant="caption" style={[styles.actionBtnLabel, { color: tokens.onAccent }]}>
+                    Préparer la compo
+                  </CoachText>
+                </Pressable>
+              ) : null}
 
-          <TouchableOpacity
-            style={[styles.convertDrillBtn, drillConverted && styles.convertDrillBtnDone]}
-            activeOpacity={0.8}
-            onPress={convertNoteToDrill}
-          >
-            <MaterialCommunityIcons
-              name={drillConverted ? 'check-circle' : 'auto-fix'}
-              size={16}
-              color={drillConverted ? '#30D158' : '#000000'}
-            />
-            <Text style={[styles.convertDrillText, drillConverted && { color: '#30D158' }]}>
-              {drillConverted
-                ? 'Exercice IA injecté dans le Planificateur'
-                : 'Convertir en Exercice d’Entraînement'}
-            </Text>
-          </TouchableOpacity>
+              <Pressable
+                onPress={openScoreModal}
+                style={styles.secondaryActionBtn}
+                accessibilityRole="button"
+              >
+                <Feather name="edit-2" size={14} color={tokens.foreground} />
+                <CoachText variant="caption" style={styles.actionBtnLabel}>
+                  {selectedMatch.live_state?.home_score != null ? 'Modifier score' : 'Saisir score'}
+                </CoachText>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setAssociateVeoOpen(true)}
+                style={styles.secondaryActionBtn}
+                accessibilityRole="button"
+              >
+                <Icon name="videocam" size={14} color={tokens.foreground} />
+                <CoachText variant="caption" style={styles.actionBtnLabel}>
+                  Vidéo Veo
+                </CoachText>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setTalkPresentationOpen(true)}
+                style={styles.secondaryActionBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Causerie Vestiaire"
+              >
+                <MaterialCommunityIcons name="presentation-play" size={14} color={tokens.accent} />
+                <CoachText variant="caption" style={[styles.actionBtnLabel, { color: tokens.accent, fontWeight: '700' }]}>
+                  Causerie
+                </CoachText>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setQuickNoteModalOpen(true)}
+                style={styles.secondaryActionBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Note rapide"
+              >
+                <Feather name="file-text" size={14} color={tokens.foreground} />
+                <CoachText variant="caption" style={styles.actionBtnLabel}>
+                  Note
+                </CoachText>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Tab Switcher */}
+        <View style={styles.tabBar}>
+          {MATCH_TABS.map((tab) => {
+            const on = activeTab === tab.id;
+            return (
+              <Pressable
+                key={tab.id}
+                onPress={() => setActiveTab(tab.id)}
+                style={[styles.tabItem, on && styles.tabItemActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+              >
+                <CoachText
+                  variant="caption"
+                  style={[styles.tabLabel, on && styles.tabLabelActive]}
+                >
+                  {tab.label}
+                </CoachText>
+              </Pressable>
+            );
+          })}
         </View>
-      )}
-    </ScrollView>
+
+        {/* Tab Content */}
+        {selectedMatch && profile ? (
+          <CoachMatchSkinProvider enabled>
+            {activeTab === 'apercu' && (
+              <CoachMatchSummaryTab
+                event={selectedMatch}
+                profile={profile}
+                onOpenChapter={(ch) => {
+                  if (ch === 'composition') setActiveTab('composition');
+                  else if (ch === 'effectif') setActiveTab('presences');
+                  else if (ch === 'live') setActiveTab('evenements');
+                }}
+                onOpenVeoAssociate={() => setAssociateVeoOpen(true)}
+              />
+            )}
+
+            {activeTab === 'composition' && (
+              <View style={styles.tabContentCard}>
+                <View style={styles.lineupHeaderRow}>
+                  <CoachText variant="section">Composition & Remplaçants</CoachText>
+                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <Pressable
+                      onPress={() => setTalkPresentationOpen(true)}
+                      style={[styles.editLineupBtn, { backgroundColor: withAlpha(tokens.accent, 0.14) }]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Causerie Vestiaire"
+                    >
+                      <MaterialCommunityIcons name="presentation-play" size={13} color={tokens.accent} />
+                      <CoachText variant="caption" accent style={{ fontWeight: '700' }}>
+                        Causerie
+                      </CoachText>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => setShareConvocationOpen(true)}
+                      style={[styles.editLineupBtn, { backgroundColor: withAlpha(tokens.accent, 0.08) }]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Partager la convocation"
+                    >
+                      <Ionicons name="share-social-outline" size={13} color={tokens.accent} />
+                      <CoachText variant="caption" accent style={{ fontWeight: '700' }}>
+                        Partager
+                      </CoachText>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => setEditingLineup(true)}
+                      style={styles.editLineupBtn}
+                      accessibilityRole="button"
+                    >
+                      <Feather name="edit-2" size={13} color={tokens.accent} />
+                      <CoachText variant="caption" accent style={{ fontWeight: '700' }}>
+                        Modifier
+                      </CoachText>
+                    </Pressable>
+                  </View>
+                </View>
+                <MatchHubLineupTab
+                  event={selectedMatch}
+                  canEdit={true}
+                  onEditLineup={() => setEditingLineup(true)}
+                />
+              </View>
+            )}
+
+            {activeTab === 'presences' && (
+              <View style={styles.tabContentCard}>
+                <View style={styles.kpiWrap}>
+                  <CoachKpiRow
+                    items={[
+                      { label: 'Confirmés', value: String(countRsvpYes(selectedMatch)) },
+                      { label: 'En attente', value: String(getPendingInviteeUids(selectedMatch).length) },
+                      { label: 'Pointés', value: String(Object.keys(selectedMatch.attendance_marks ?? {}).length) },
+                    ]}
+                  />
+                </View>
+                <CoachEventAttendanceList
+                  event={selectedMatch}
+                  profile={profile}
+                  onUpdated={loadMatches}
+                />
+              </View>
+            )}
+
+            {activeTab === 'evenements' && (
+              <View style={styles.tabContentCard}>
+                <MatchHubLiveTab
+                  event={selectedMatch}
+                  profile={profile}
+                  canManage={true}
+                  reportLocked={false}
+                  onUpdated={loadMatches}
+                />
+              </View>
+            )}
+
+            {activeTab === 'stats' && (
+              <View style={styles.tabContentCard}>
+                {/* Header with Actions */}
+                <View style={styles.lineupHeaderRow}>
+                  <View style={{ flex: 1 }}>
+                    <CoachText variant="section">Statistiques & Notations</CoachText>
+                    <CoachText variant="caption" muted>
+                      Saisie manuelle ou proposition IA depuis la captation Veo
+                    </CoachText>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                    {matchVideos.length > 0 ? (
+                      <PressableSpring
+                        onPress={handleRunVeoAiEvaluation}
+                        style={[styles.aiEvalBtn, { backgroundColor: withAlpha(PRO_DATA_VIOLET, 0.15), borderColor: PRO_DATA_VIOLET }]}
+                        disabled={evaluatingAi}
+                        accessibilityRole="button"
+                      >
+                        {evaluatingAi ? (
+                          <ActivityIndicator size="small" color={PRO_DATA_VIOLET} />
+                        ) : (
+                          <>
+                            <Ionicons name="sparkles" size={13} color={PRO_DATA_VIOLET} />
+                            <CoachText variant="caption" style={{ color: PRO_DATA_VIOLET, fontWeight: '700' }}>
+                              Évaluation IA Veo
+                            </CoachText>
+                          </>
+                        )}
+                      </PressableSpring>
+                    ) : null}
+
+                    <PressableSpring
+                      onPress={handlePublishAllStats}
+                      style={[styles.publishBtn, { backgroundColor: tokens.accent }]}
+                      disabled={publishingStats}
+                      accessibilityRole="button"
+                    >
+                      {publishingStats ? (
+                        <ActivityIndicator size="small" color={tokens.onAccent} />
+                      ) : (
+                        <>
+                          <Ionicons name="eye-outline" size={13} color={tokens.onAccent} />
+                          <CoachText variant="caption" style={{ color: tokens.onAccent, fontWeight: '700' }}>
+                            Publier les notes
+                          </CoachText>
+                        </>
+                      )}
+                    </PressableSpring>
+                  </View>
+                </View>
+
+                {/* AI Result Notice Banner */}
+                {aiResultNotice ? (
+                  <View style={styles.aiNoticeCard}>
+                    <Ionicons name="checkmark-circle" size={16} color={proSemantic.success} />
+                    <CoachText variant="caption" style={{ flex: 1, color: tokens.foreground }}>
+                      {aiResultNotice}
+                    </CoachText>
+                    <Pressable onPress={() => setAiResultNotice(null)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Fermer">
+                      <Ionicons name="close" size={16} color={tokens.muted} />
+                    </Pressable>
+                  </View>
+                ) : null}
+
+                {/* KPI Summary */}
+                {(() => {
+                  const statsObj = selectedMatch.player_match_stats ?? {};
+                  const statsList = Object.values(statsObj);
+                  const evaluated = statsList.filter((s) => s.rating !== undefined || s.minutes_played !== undefined);
+                  const rated = statsList.filter((s) => s.rating !== undefined);
+                  const avg = rated.length > 0
+                    ? rated.reduce((acc, s) => acc + (s.rating ?? 0), 0) / rated.length
+                    : null;
+                  const totalGoals = statsList.reduce((acc, s) => acc + (s.goals ?? 0), 0);
+                  const totalAssists = statsList.reduce((acc, s) => acc + (s.assists ?? 0), 0);
+
+                  return (
+                    <View style={styles.kpiWrap}>
+                      <CoachKpiRow
+                        items={[
+                          { label: 'Évalués', value: `${evaluated.length} / ${matchRoster.length}` },
+                          { label: 'Note moyenne', value: avg !== null ? formatCoachRating(avg) : '—' },
+                          { label: 'Buts', value: String(totalGoals) },
+                          { label: 'Passes', value: String(totalAssists) },
+                        ]}
+                      />
+                    </View>
+                  );
+                })()}
+
+                {/* Player List */}
+                <View style={styles.playerStatsList}>
+                  {matchRoster.length === 0 ? (
+                    <View style={styles.emptyStatsBox}>
+                      <CoachText variant="caption" muted style={{ textAlign: 'center' }}>
+                        Aucun joueur dans la composition ou convocation de ce match.
+                      </CoachText>
+                    </View>
+                  ) : (
+                    matchRoster.map((player) => {
+                      const stat = selectedMatch.player_match_stats?.[player.uid];
+                      const src = stat?.source ?? 'manual';
+                      const st = stat?.status ?? 'published';
+                      const isDraft = st === 'draft';
+                      const srcColor =
+                        src === 'ai_generated' ? PRO_DATA_VIOLET : src === 'coach_reviewed' ? proSemantic.success : tokens.accent;
+
+                      return (
+                        <View
+                          key={player.uid}
+                          style={[
+                            styles.playerStatCard,
+                            { backgroundColor: tokens.surface, borderColor: isDraft ? tokens.accent : tokens.border },
+                          ]}
+                        >
+                          {/* Player Header */}
+                          <View style={styles.playerCardHead}>
+                            <View style={{ flex: 1 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <CoachText variant="body" style={{ fontWeight: '800', fontSize: 15 }}>
+                                  {player.name}
+                                </CoachText>
+                                {player.role ? (
+                                  <View style={styles.roleTag}>
+                                    <CoachText variant="caption" muted style={{ fontSize: 10 }}>
+                                      {player.role}
+                                    </CoachText>
+                                  </View>
+                                ) : null}
+                              </View>
+                              {player.position ? (
+                                <CoachText variant="caption" muted style={{ fontSize: 11 }}>
+                                  {player.position}
+                                </CoachText>
+                              ) : null}
+                            </View>
+
+                            {/* Rating Display */}
+                            <View style={styles.ratingBadge}>
+                              <CoachText
+                                variant="caption"
+                                style={[
+                                  styles.ratingBadgeVal,
+                                  { color: stat?.rating !== undefined ? tokens.accent : tokens.muted },
+                                ]}
+                              >
+                                {formatCoachRating(stat?.rating)}
+                              </CoachText>
+                            </View>
+                          </View>
+
+                          {/* Stats Metrics Line */}
+                          <View style={styles.statsMetricsRow}>
+                            <View style={styles.statPill}>
+                              <CoachText variant="caption" muted style={styles.statPillLbl}>Temps</CoachText>
+                              <CoachText variant="caption" style={styles.statPillVal}>
+                                {stat?.minutes_played !== undefined ? `${stat.minutes_played}'` : '—'}
+                              </CoachText>
+                            </View>
+
+                            <View style={styles.statPill}>
+                              <CoachText variant="caption" muted style={styles.statPillLbl}>Buts</CoachText>
+                              <CoachText variant="caption" style={styles.statPillVal}>
+                                {stat?.goals ?? 0}
+                              </CoachText>
+                            </View>
+
+                            <View style={styles.statPill}>
+                              <CoachText variant="caption" muted style={styles.statPillLbl}>Passes</CoachText>
+                              <CoachText variant="caption" style={styles.statPillVal}>
+                                {stat?.assists ?? 0}
+                              </CoachText>
+                            </View>
+
+                            <View style={styles.statPill}>
+                              <CoachText variant="caption" muted style={styles.statPillLbl}>Cartons</CoachText>
+                              <CoachText variant="caption" style={styles.statPillVal}>
+                                {stat?.yellow_cards ? `${stat.yellow_cards}J ` : ''}
+                                {stat?.red_cards ? '1R' : ''}
+                                {!stat?.yellow_cards && !stat?.red_cards ? '0' : ''}
+                              </CoachText>
+                            </View>
+
+                            {stat?.clean_sheet ? (
+                              <View style={[styles.statPill, { backgroundColor: withAlpha(proSemantic.success, 0.15) }]}>
+                                <CoachText variant="caption" style={{ color: proSemantic.success, fontWeight: '700', fontSize: 10 }}>
+                                  Clean sheet
+                                </CoachText>
+                              </View>
+                            ) : null}
+                          </View>
+
+                          {/* Provenance & Status Tags */}
+                          <View style={styles.tagRow}>
+                            <View style={[styles.sourceTag, { borderColor: srcColor, backgroundColor: withAlpha(srcColor, 0.1) }]}>
+                              <CoachText variant="caption" style={{ color: srcColor, fontWeight: '700', fontSize: 10 }}>
+                                {formatEvaluationSourceLabel(src)}
+                              </CoachText>
+                            </View>
+
+                            <View style={[styles.statusTag, { borderColor: isDraft ? tokens.muted : proSemantic.success }]}>
+                              <CoachText variant="caption" muted style={{ fontSize: 10, fontWeight: '700' }}>
+                                {formatEvaluationStatusLabel(st)}
+                              </CoachText>
+                            </View>
+                          </View>
+
+                          {/* Coach observation / AI note */}
+                          {stat?.rating_explanation ? (
+                            <View style={styles.observationBox}>
+                              <Ionicons name="chatbubble-ellipses-outline" size={12} color={tokens.muted} />
+                              <CoachText variant="caption" muted numberOfLines={2} style={{ flex: 1, fontSize: 11 }}>
+                                {stat.rating_explanation}
+                              </CoachText>
+                            </View>
+                          ) : null}
+
+                          {/* Actions: Modifier les statistiques & Ajouter ou modifier la note */}
+                          <View style={styles.cardActionsRow}>
+                            <PressableSpring
+                              onPress={() =>
+                                setRatingModalPlayer({
+                                  uid: player.uid,
+                                  name: player.name,
+                                  stat,
+                                  mode: 'stats',
+                                })
+                              }
+                              style={styles.cardActionBtn}
+                              accessibilityRole="button"
+                            >
+                              <Ionicons name="stats-chart-outline" size={13} color={tokens.foreground} />
+                              <CoachText variant="caption" style={styles.cardActionBtnText}>
+                                Modifier les statistiques
+                              </CoachText>
+                            </PressableSpring>
+
+                            <PressableSpring
+                              onPress={() =>
+                                setRatingModalPlayer({
+                                  uid: player.uid,
+                                  name: player.name,
+                                  stat,
+                                  mode: 'rating',
+                                })
+                              }
+                              style={[styles.cardActionBtn, { borderColor: tokens.accent }]}
+                              accessibilityRole="button"
+                            >
+                              <Ionicons name="star-outline" size={13} color={tokens.accent} />
+                              <CoachText variant="caption" accent style={{ fontWeight: '700' }}>
+                                Ajouter ou modifier la note
+                              </CoachText>
+                            </PressableSpring>
+                          </View>
+                        </View>
+                      );
+                    })
+                  )}
+                </View>
+              </View>
+            )}
+
+            {activeTab === 'video' && (
+              <View style={styles.tabContentCard}>
+                <View style={styles.lineupHeaderRow}>
+                  <CoachText variant="section">Captation & Vidéo Veo</CoachText>
+                  <Pressable
+                    onPress={() => setAssociateVeoOpen(true)}
+                    style={styles.editLineupBtn}
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="link-outline" size={13} color={tokens.accent} />
+                    <CoachText variant="caption" accent style={{ fontWeight: '700' }}>
+                      Associer une vidéo
+                    </CoachText>
+                  </Pressable>
+                </View>
+
+                {videoLoading ? (
+                  <ActivityIndicator color={tokens.accent} style={{ padding: spacing.lg }} />
+                ) : matchVideos.length > 0 && matchVideos[0].storage_url ? (
+                  <View style={{ gap: spacing.md }}>
+                    <ProDayIntegratedVideoPlayer
+                      sourceUrl={matchVideos[0].storage_url}
+                      title={matchVideos[0].title || selectedMatch.title}
+                      userRole="coach"
+                    />
+                    <CoachText variant="caption" muted>
+                      {matchVideos[0].title} · Synchronisé depuis la captation club.
+                    </CoachText>
+                  </View>
+                ) : selectedMatch.public_watch_url ? (
+                  <View style={{ gap: spacing.md }}>
+                    <ProDayIntegratedVideoPlayer
+                      sourceUrl={selectedMatch.public_watch_url}
+                      title={selectedMatch.title}
+                      userRole="coach"
+                    />
+                    <CoachText variant="caption" muted>
+                      Lien vidéo associé : {selectedMatch.public_watch_url}
+                    </CoachText>
+                  </View>
+                ) : (
+                  <View style={styles.noVideoCard}>
+                    <Icon name="videocam" size={28} color={tokens.muted} />
+                    <CoachText variant="body" style={{ fontWeight: '600', marginTop: 6 }}>
+                      Aucune vidéo associée à ce match
+                    </CoachText>
+                    <CoachText variant="caption" muted style={{ textAlign: 'center', lineHeight: 18 }}>
+                      Associez une captation Veo Cam ou un flux vidéo pour accéder au visionnage et à l’analyse directement dans ProDay.
+                    </CoachText>
+                    <Pressable
+                      onPress={() => setAssociateVeoOpen(true)}
+                      style={[styles.primaryActionBtn, { marginTop: spacing.sm }]}
+                      accessibilityRole="button"
+                    >
+                      <Ionicons name="add-circle-outline" size={14} color={tokens.onAccent} />
+                      <CoachText variant="caption" style={[styles.actionBtnLabel, { color: tokens.onAccent }]}>
+                        Associer une captation Veo
+                      </CoachText>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+            )}
+          </CoachMatchSkinProvider>
+        ) : null}
+      </ScrollView>
+
+      {/* Lineup Editor Push Screen */}
+      <PushScreenTransition active={editingLineup} backgroundColor={tokens.bg}>
+        {editingLineup && selectedMatch ? (
+          <EventLineupScreen
+            eventId={selectedMatch.id}
+            onBack={() => {
+              setEditingLineup(false);
+              void loadMatches();
+            }}
+          />
+        ) : null}
+      </PushScreenTransition>
+
+      {/* Veo Associate Modal */}
+      {selectedMatch?.club_id && profile ? (
+        <VeoMatchAssociateModal
+          visible={associateVeoOpen}
+          clubId={selectedMatch.club_id}
+          createdByUid={profile.uid}
+          eventId={selectedMatch.id}
+          eventTitle={selectedMatch.title}
+          scheduledAt={selectedMatch.starts_at}
+          onClose={() => setAssociateVeoOpen(false)}
+          onSuccess={() => {
+            setAssociateVeoOpen(false);
+            void loadMatches();
+          }}
+        />
+      ) : null}
+
+      {/* Quick Score Modal */}
+      <Modal visible={scoreModalOpen} transparent animationType="fade" onRequestClose={() => setScoreModalOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <CoachText variant="section">Saisie du score</CoachText>
+              <Pressable onPress={() => setScoreModalOpen(false)}>
+                <Icon name="close" size={18} color={tokens.muted} />
+              </Pressable>
+            </View>
+
+            <View style={styles.modalScoreRow}>
+              <View style={styles.modalScoreInputWrap}>
+                <CoachText variant="caption" muted style={{ textAlign: 'center', marginBottom: 4 }}>
+                  {tokens.teamLabel || 'Mon Équipe'}
+                </CoachText>
+                <TextInput
+                  value={homeScoreInput}
+                  onChangeText={setHomeScoreInput}
+                  keyboardType="number-pad"
+                  style={styles.modalScoreInput}
+                />
+              </View>
+
+              <CoachText variant="title" style={{ marginTop: 20 }}>-</CoachText>
+
+              <View style={styles.modalScoreInputWrap}>
+                <CoachText variant="caption" muted style={{ textAlign: 'center', marginBottom: 4 }}>
+                  {selectedMatch?.live_state?.opponent_name || selectedMatch?.title || 'Adversaire'}
+                </CoachText>
+                <TextInput
+                  value={awayScoreInput}
+                  onChangeText={setAwayScoreInput}
+                  keyboardType="number-pad"
+                  style={styles.modalScoreInput}
+                />
+              </View>
+            </View>
+
+            <View style={styles.modalActions}>
+              <Pressable onPress={() => setScoreModalOpen(false)} style={styles.modalCancelBtn}>
+                <CoachText variant="caption" muted>Annuler</CoachText>
+              </Pressable>
+              <Pressable
+                onPress={handleSaveScore}
+                disabled={savingScore}
+                style={[styles.modalSaveBtn, savingScore && { opacity: 0.6 }]}
+              >
+                {savingScore ? (
+                  <ActivityIndicator size="small" color={tokens.onAccent} />
+                ) : (
+                  <CoachText variant="caption" style={{ color: tokens.onAccent, fontWeight: '700' }}>
+                    Enregistrer le score
+                  </CoachText>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Player Stats & Rating Modal */}
+      {selectedMatch && ratingModalPlayer ? (
+        <PlayerStatsRatingModal
+          visible={ratingModalPlayer !== null}
+          onClose={() => setRatingModalPlayer(null)}
+          playerUid={ratingModalPlayer.uid}
+          playerName={ratingModalPlayer.name}
+          matchTitle={selectedMatch.title}
+          matchDateLabel={formatCalendarDate(selectedMatch.starts_at)}
+          initialStat={ratingModalPlayer.stat}
+          initialMode={ratingModalPlayer.mode}
+          onSave={handleSavePlayerStat}
+        />
+      ) : null}
+
+      {/* Causerie Vestiaire Modal */}
+      {selectedMatch && talkPresentationOpen ? (
+        <CoachMatchTalkPresentationModal
+          visible={talkPresentationOpen}
+          onClose={() => setTalkPresentationOpen(false)}
+          event={selectedMatch}
+          lineup={selectedMatchLineup}
+          members={members}
+          coachProfile={profile ?? undefined}
+        />
+      ) : null}
+
+      {/* Partage Convocation Modal */}
+      {selectedMatch && shareConvocationOpen ? (
+        <CoachShareConvocationModal
+          visible={shareConvocationOpen}
+          onClose={() => setShareConvocationOpen(false)}
+          event={selectedMatch}
+          members={members}
+        />
+      ) : null}
+
+      {/* Note Rapide Staff Modal */}
+      {selectedMatch && quickNoteModalOpen && profile ? (
+        <CoachQuickNoteModal
+          visible={quickNoteModalOpen}
+          onClose={() => setQuickNoteModalOpen(false)}
+          coachUid={profile.uid}
+          clubId={profile.profile.club_id || 'proday_club'}
+          teamId={selectedMatch.team_id || undefined}
+          eventId={selectedMatch.id}
+          sessionTitle={selectedMatch.title}
+          players={members.map((m) => ({ uid: m.uid, name: m.display_name }))}
+        />
+      ) : null}
+
+      <CoachOrganizeFriendlyModal
+        visible={organizeFriendlyOpen}
+        onClose={() => setOrganizeFriendlyOpen(false)}
+        onSuccess={() => void loadMatches()}
+      />
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  content: {
-    padding: 14,
-    paddingBottom: 48,
-  },
-  header: {
-    marginBottom: 10,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 19,
-    fontWeight: '900',
-    fontFamily: '-apple-system',
-    letterSpacing: -0.3,
-  },
-  headerSubtitle: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontFamily: '-apple-system',
-    marginTop: 1,
-  },
-  overrideToggleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#16161E',
-    borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
-    borderRadius: 12,
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-  },
-  overrideToggleBtnActive: {
-    borderColor: 'rgba(255, 215, 0, 0.4)',
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
-  },
-  overrideToggleText: {
-    color: '#30D158',
-    fontSize: 10.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  overrideToggleTextActive: {
-    color: '#FFD700',
-  },
-  feedStatusBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#141418',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  feedStatusLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  feedDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#30D158',
-  },
-  feedDotManual: {
-    backgroundColor: '#FFD700',
-  },
-  feedStatusText: {
-    color: '#E5E5EA',
-    fontSize: 10,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  feedStatusMeta: {
-    color: '#8B8B9A',
-    fontSize: 9.5,
-    fontFamily: '-apple-system',
-  },
-  scoreHero: {
-    backgroundColor: '#141418',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 14,
-    marginBottom: 10,
-  },
-  periodRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  liveIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(255, 69, 58, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#FF453A',
-  },
-  liveText: {
-    color: '#FF453A',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  chronoText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '900',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.5,
-  },
-  chronoControlBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#1E1E28',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreBoardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  scoreTeam: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  scoreTeamName: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  scoreTeamLoc: {
-    color: '#8B8B9A',
-    fontSize: 10.5,
-    fontFamily: '-apple-system',
-    marginTop: 2,
-  },
-  scoreDigitsBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#0F0F14',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  scoreDigit: {
-    color: '#FFD700',
-    fontSize: 28,
-    fontWeight: '900',
-    fontFamily: '-apple-system',
-  },
-  scoreDash: {
-    color: '#8B8B9A',
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  standingsImpactStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(48, 209, 88, 0.08)',
-    borderRadius: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-  },
-  standingsImpactText: {
-    color: '#30D158',
-    fontSize: 10.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  quickActionStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 6,
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  officialLockBox: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(48, 209, 88, 0.1)',
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-  },
-  officialLockText: {
-    color: '#30D158',
-    fontSize: 10,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  scoutingQuickBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(197, 160, 89, 0.15)',
-    borderWidth: 1,
-    borderColor: '#C5A059',
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-  },
-  scoutingQuickBtnText: {
-    color: '#C5A059',
-    fontSize: 10,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  quickEventBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  quickEventText: {
-    fontSize: 10,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  segmentBar: {
-    flexDirection: 'row',
-    backgroundColor: '#141418',
-    borderRadius: 10,
-    padding: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    marginBottom: 10,
-  },
-  segmentBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  segmentBtnActive: {
-    backgroundColor: '#1F1F27',
-  },
-  segmentBtnText: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  segmentBtnTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  card: {
-    backgroundColor: '#141418',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    padding: 14,
-    marginBottom: 10,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
-  },
-  cardTitle: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  timelineList: {
-    gap: 8,
-  },
-  eventRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
-  },
-  eventMinBadge: {
-    backgroundColor: '#1E1E28',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  eventMinText: {
-    color: '#FFD700',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  eventIconWrap: {
-    width: 22,
-    alignItems: 'center',
-  },
-  eventText: {
-    color: '#FFFFFF',
-    fontSize: 11.5,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  eventMeta: {
-    color: '#8B8B9A',
-    fontSize: 9.5,
-    fontFamily: '-apple-system',
-    marginTop: 1,
-  },
-  statsList: {
-    gap: 12,
-  },
-  statItem: {
-    gap: 4,
-  },
-  statLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  statValueHome: {
-    color: '#FFD700',
-    fontSize: 12,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    width: 40,
-  },
-  statLabel: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-    textAlign: 'center',
-    flex: 1,
-  },
-  statValueAway: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    width: 40,
-    textAlign: 'right',
-  },
-  statBarTrack: {
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    flexDirection: 'row',
-    overflow: 'hidden',
-  },
-  statBarFillHome: {
-    height: '100%',
-    backgroundColor: '#FFD700',
-  },
-  statBarFillAway: {
-    height: '100%',
-    backgroundColor: '#0A84FF',
-  },
-  voiceCard: {
-    backgroundColor: '#141418',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(10, 132, 255, 0.25)',
-    padding: 14,
-    marginBottom: 10,
-  },
-  voiceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  voiceHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
-  voiceTitle: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  voiceSubtitle: {
-    color: '#8B8B9A',
-    fontSize: 10,
-    fontFamily: '-apple-system',
-  },
-  micBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#0A84FF',
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  micBtnRecording: {
-    backgroundColor: '#FF453A',
-  },
-  micBtnText: {
-    color: '#FFFFFF',
-    fontSize: 10.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  transcriptionBox: {
-    flexDirection: 'row',
-    gap: 8,
-    backgroundColor: '#1C1C24',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
-  },
-  transcriptionText: {
-    flex: 1,
-    color: '#D1D1D6',
-    fontSize: 11,
-    lineHeight: 16,
-    fontStyle: 'italic',
-    fontFamily: '-apple-system',
-  },
-  convertDrillBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#C5A059',
-    borderRadius: 10,
-    paddingVertical: 9,
-  },
-  convertDrillBtnDone: {
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
-    borderWidth: 1,
-    borderColor: '#30D158',
-  },
-  convertDrillText: {
-    color: '#000000',
-    fontSize: 11.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-});
+const createStyles = (tokens: CoachThemeTokens) =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: tokens.bg,
+    },
+    centered: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    content: {
+      padding: 16,
+      paddingBottom: tabBarScrollInset({ extra: spacing.xl }),
+      gap: 14,
+    },
+    topActionsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    organizeHeaderBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 20,
+      borderWidth: 1,
+    },
+    emptyCard: {
+      backgroundColor: tokens.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      padding: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+    },
+    emptyBody: {
+      textAlign: 'center',
+      maxWidth: 280,
+      marginTop: 4,
+    },
+    filterRow: {
+      flexDirection: 'row',
+      gap: 8,
+      paddingHorizontal: 2,
+    },
+    filterChip: {
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 20,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    filterChipActive: {
+      backgroundColor: tokens.accent,
+      borderColor: tokens.accent,
+    },
+    filterLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: tokens.muted,
+    },
+    filterLabelActive: {
+      color: tokens.onAccent,
+      fontWeight: '700',
+    },
+    carouselContainer: {
+      gap: 10,
+      paddingVertical: 4,
+    },
+    carouselCard: {
+      width: 140,
+      padding: 10,
+      borderRadius: 12,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: 4,
+    },
+    carouselCardActive: {
+      borderColor: tokens.accent,
+      backgroundColor: tokens.elevated,
+    },
+    carouselCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    liveDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: proSemantic.danger,
+    },
+    carouselTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: tokens.foreground,
+    },
+    heroCard: {
+      backgroundColor: tokens.surface,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      padding: 16,
+      gap: 14,
+    },
+    heroMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    competitionBadge: {
+      paddingVertical: 3,
+      paddingHorizontal: 8,
+      borderRadius: 6,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    liveBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 3,
+      paddingHorizontal: 8,
+      borderRadius: 6,
+      backgroundColor: withAlpha(proSemantic.danger, 0.15),
+      borderWidth: 1,
+      borderColor: proSemantic.danger,
+    },
+    liveBadgeText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: proSemantic.danger,
+      letterSpacing: 0.5,
+    },
+    completedBadge: {
+      paddingVertical: 3,
+      paddingHorizontal: 8,
+      borderRadius: 6,
+      backgroundColor: withAlpha(proSemantic.success, 0.15),
+      borderWidth: 1,
+      borderColor: proSemantic.success,
+    },
+    upcomingBadge: {
+      paddingVertical: 3,
+      paddingHorizontal: 8,
+      borderRadius: 6,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    scoreRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 4,
+    },
+    teamCol: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 6,
+    },
+    teamAvatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: withAlpha(tokens.accent, 0.2),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    teamName: {
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    scoreCenter: {
+      alignItems: 'center',
+      minWidth: 80,
+    },
+    scoreBig: {
+      fontSize: 32,
+      fontWeight: '900',
+      letterSpacing: 2,
+      color: tokens.foreground,
+    },
+    vsBox: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+      backgroundColor: tokens.surface,
+    },
+    vsText: {
+      fontWeight: '800',
+      color: tokens.muted,
+    },
+    venueRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+    },
+    actionBar: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      paddingTop: 6,
+      borderTopWidth: 1,
+      borderTopColor: tokens.border,
+    },
+    primaryActionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: tokens.accent,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 10,
+    },
+    actionBtnLabel: {
+      fontWeight: '700',
+    },
+    secondaryActionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+    },
+    tabBar: {
+      flexDirection: 'row',
+      backgroundColor: tokens.surface,
+      borderRadius: 12,
+      padding: 3,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    tabItem: {
+      flex: 1,
+      paddingVertical: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 9,
+    },
+    tabItemActive: {
+      backgroundColor: tokens.elevated,
+    },
+    tabLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: tokens.muted,
+    },
+    tabLabelActive: {
+      color: tokens.foreground,
+      fontWeight: '700',
+    },
+    tabContentCard: {
+      backgroundColor: tokens.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      padding: 14,
+      gap: 12,
+    },
+    lineupHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    editLineupBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      backgroundColor: withAlpha(tokens.accent, 0.12),
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.accent, 0.3),
+    },
+    kpiWrap: {
+      paddingVertical: 4,
+    },
+    noVideoCard: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 24,
+      gap: 8,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: withAlpha(tokens.bg, 0.85),
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+    },
+    modalCard: {
+      width: '100%',
+      maxWidth: 360,
+      backgroundColor: tokens.surface,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      padding: 20,
+      gap: 16,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    modalScoreRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+    },
+    modalScoreInputWrap: {
+      alignItems: 'center',
+      width: 90,
+    },
+    modalScoreInput: {
+      width: 70,
+      height: 50,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      backgroundColor: tokens.surface,
+      textAlign: 'center',
+      fontSize: 24,
+      fontWeight: '800',
+      color: tokens.foreground,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: 10,
+    },
+    modalCancelBtn: {
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      backgroundColor: tokens.surface,
+    },
+    modalSaveBtn: {
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      backgroundColor: tokens.accent,
+    },
+    aiEvalBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    publishBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+    },
+    aiNoticeCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: 10,
+      borderRadius: 10,
+      backgroundColor: withAlpha(proSemantic.success, 0.12),
+      borderWidth: 1,
+      borderColor: withAlpha(proSemantic.success, 0.3),
+    },
+    playerStatsList: {
+      gap: 10,
+      marginTop: 6,
+    },
+    emptyStatsBox: {
+      padding: 20,
+      alignItems: 'center',
+    },
+    playerStatCard: {
+      borderRadius: 12,
+      borderWidth: 1,
+      padding: 12,
+      gap: 8,
+    },
+    playerCardHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    roleTag: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      backgroundColor: tokens.elevated,
+    },
+    ratingBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      backgroundColor: tokens.elevated,
+    },
+    ratingBadgeVal: {
+      fontWeight: '900',
+      fontSize: 14,
+    },
+    statsMetricsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    statPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: 6,
+      backgroundColor: tokens.elevated,
+    },
+    statPillLbl: {
+      fontSize: 10,
+    },
+    statPillVal: {
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    tagRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    sourceTag: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      borderWidth: 1,
+    },
+    statusTag: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      borderWidth: 1,
+      backgroundColor: tokens.elevated,
+    },
+    observationBox: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 6,
+      padding: 8,
+      borderRadius: 6,
+      backgroundColor: tokens.elevated,
+    },
+    cardActionsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 2,
+    },
+    cardActionBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+      paddingVertical: 7,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
+    },
+    cardActionBtnText: {
+      fontSize: 11,
+      fontWeight: '600',
+    },
+  });

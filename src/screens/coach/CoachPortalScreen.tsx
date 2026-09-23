@@ -21,7 +21,7 @@ import { CoachSquadScreen } from './CoachSquadScreen';
 import { CoachLiveMatchCenterScreen } from './CoachLiveMatchCenterScreen';
 import { CoachWorkloadHealthScreen } from './CoachWorkloadHealthScreen';
 import { CoachScoutingGrowthScreen } from './CoachScoutingGrowthScreen';
-import { CoachMessagingScreen } from './CoachMessagingScreen';
+import { MessagesScreen } from '../MessagesScreen';
 
 const COACH_CHAPTER_ORDER: CoachPortalChapterId[] = [
   'cockpit',
@@ -101,8 +101,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
           {chapter === 'effectif' ? <CoachSquadScreen /> : null}
           {chapter === 'matchs' ? <CoachLiveMatchCenterScreen /> : null}
           {chapter === 'performance' ? <CoachWorkloadHealthScreen /> : null}
-          {chapter === 'communication' ? <CoachMessagingScreen /> : null}
-        </AnimatedRouteContent>
+          {chapter === 'communication' ? <MessagesScreen /> : null}        </AnimatedRouteContent>
       </View>
     </View>
   );

@@ -62,6 +62,9 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   add: 'add',
   close: 'close',
   play: 'play',
+  pause: 'pause',
+  expand: 'expand-outline',
+  contract: 'contract-outline',
   tune: 'options-outline',
   share: 'share-outline',
   star: 'star',
@@ -100,11 +103,13 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   fitness: 'fitness-outline',
   'cloud-upload': 'cloud-upload-outline',
   download: 'download-outline',
+  bus: 'bus-outline',
 };
 
 const FILLED_MAP: Partial<Record<IconName, keyof typeof Ionicons.glyphMap>> = {
   home: 'home',
   search: 'search',
+  bus: 'bus',
   chat: 'chatbubbles',
   person: 'person',
   handshake: 'people',

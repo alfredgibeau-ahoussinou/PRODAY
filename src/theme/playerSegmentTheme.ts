@@ -18,10 +18,10 @@ export const proPlayerMaleOverrides = {
   brandSoft: poleAccentSoft('player', 0.1),
   ink: '#FAFAFA',
   inkSecondary: '#D4D4D4',
-  border: 'rgba(255, 255, 255, 0.1)',
+  border: 'rgba(255, 255, 255, 0.08)',
   borderStrong: poleAccentSoft('player', 0.55),
   background: '#000000',
-  backgroundAlt: '#0A0A0A',
+  backgroundAlt: '#0A0A0F',
   gradientStart: '#000000',
   gradientEnd: '#E5E5E5',
 } as const;
@@ -37,10 +37,10 @@ export const proPlayerFemaleOverrides = {
   brandSoft: 'rgba(91, 115, 255, 0.1)',
   ink: '#FAFAFA',
   inkSecondary: '#D4D4D4',
-  border: 'rgba(255, 255, 255, 0.1)',
+  border: 'rgba(255, 255, 255, 0.08)',
   borderStrong: 'rgba(91, 115, 255, 0.55)',
   background: '#000000',
-  backgroundAlt: '#0A0A0A',
+  backgroundAlt: '#0A0A0F',
   gradientStart: '#000000',
   gradientEnd: '#1E3AFF',
 } as const;
@@ -83,7 +83,7 @@ export const amateurMinorOverrides = {
   tone2: '#5B73FF',
   tone3: '#FFFFFF',
   tone4: '#D4D4D4',
-  gradientEnd: '#0A0A0A',
+  gradientEnd: '#0A0A0F',
 } as const;
 
 function mergeColors(overrides: Record<string, string>): AppColors {

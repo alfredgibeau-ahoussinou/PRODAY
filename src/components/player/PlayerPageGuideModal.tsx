@@ -7,11 +7,12 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { colors } from '../../theme/designTokens';
+import { APPLE_FONT_STACK } from '../../theme/appleTypography';
 
 export interface GuideSection {
   icon: keyof typeof Ionicons.glyphMap;
@@ -34,7 +35,6 @@ export interface PlayerPageGuideModalProps {
   ctaLabel?: string;
 }
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const PlayerPageGuideModal: React.FC<PlayerPageGuideModalProps> = ({
   visible,
@@ -180,7 +180,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     borderTopWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    maxHeight: SCREEN_HEIGHT * 0.82,
+    /** 82 % de la fenêtre RÉELLE : la valeur calculée au chargement du module
+     *  débordait dès que la hauteur changeait (clavier ouvert, rotation) et
+     *  poussait le bouton principal hors écran. */
+    maxHeight: '82%',
     paddingTop: 8,
     paddingBottom: Platform.select({ ios: 34, default: 24 }),
   },
@@ -214,20 +217,20 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   badgeText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   title: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.display,
     fontSize: 20,
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.3,
   },
   subtitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12,
     color: '#94A3B8',
     marginTop: 2,
@@ -241,13 +244,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollArea: {
+    flex: 1,
     paddingHorizontal: 20,
   },
   scrollContent: {
     paddingBottom: 16,
   },
   intro: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 13,
     lineHeight: 18,
     color: '#CBD5E1',
@@ -260,7 +264,7 @@ const styles = StyleSheet.create({
   sectionItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#181820',
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
@@ -285,7 +289,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 13,
     fontWeight: '700',
     color: '#FFFFFF',
@@ -297,13 +301,13 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   sectionBadgeText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9,
     fontWeight: '700',
     color: '#94A3B8',
   },
   sectionDesc: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11.5,
     lineHeight: 16,
     color: '#94A3B8',
@@ -323,14 +327,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   proTipLabel: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10,
     fontWeight: '800',
     color: '#FFD700',
     letterSpacing: 0.5,
   },
   proTipText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11.5,
     lineHeight: 16,
     color: '#E2E8F0',
@@ -353,7 +357,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   ctaText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 14,
     fontWeight: '800',
     color: '#000000',

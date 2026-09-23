@@ -25,6 +25,10 @@ export function coachVideoLiveUnavailableBody(): string {
   return 'Live Center affiche l’état réel dès qu’une captation club est en cours. Aucune jauge inventée (batterie, chrono) sans flux.';
 }
 
+export function coachVideoMissingSourceAlert(): string {
+  return 'Aucun fichier vidéo associé à cette captation. Importez ou associez une source réelle depuis le Centre Vidéo — aucune vidéo de démonstration n’est lue.';
+}
+
 export function coachVideoAiHonestAlert(topic: string): string {
   return `${topic} : disponible quand une vidéo club est synchronisée et analysée. Aucun clip magique sans média.`;
 }

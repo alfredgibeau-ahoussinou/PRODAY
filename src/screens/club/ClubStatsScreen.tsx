@@ -14,7 +14,7 @@ import {
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { isCoachMatchEvent, isCoachTrainingEvent } from '../../models/TeamEvent';
-import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { CLUB_TOKENS, type ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
 import { Icon } from '../../components/ui/Icon';
 import { ProDayText } from '../../components/ui/ProDayText';
@@ -101,7 +101,7 @@ export function ClubStatsScreen() {
               {/* 1. Baromètre Synthétique : 4 Métriques Sportives Clés */}
               <View style={styles.metricsGrid}>
                 {/* Assiduité Globale */}
-                <View style={[styles.techMetricCard, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                <View style={[styles.techMetricCard, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border }]}>
                   <View style={styles.metricCardHeader}>
                     <Icon name="checkmark-circle" size={15} color="#10B981" />
                     <ProDayText style={[styles.metricCardLabel, { color: tokens.muted }]}>
@@ -117,7 +117,7 @@ export function ClubStatsScreen() {
                 </View>
 
                 {/* Efficacité Offensive / Défensive */}
-                <View style={[styles.techMetricCard, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                <View style={[styles.techMetricCard, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border }]}>
                   <View style={styles.metricCardHeader}>
                     <Icon name="football" size={15} color={tokens.accent} />
                     <ProDayText style={[styles.metricCardLabel, { color: tokens.muted }]}>
@@ -133,7 +133,7 @@ export function ClubStatsScreen() {
                 </View>
 
                 {/* Volume Horaire Dispensé */}
-                <View style={[styles.techMetricCard, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                <View style={[styles.techMetricCard, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border }]}>
                   <View style={styles.metricCardHeader}>
                     <Icon name="time" size={15} color="#38BDF8" />
                     <ProDayText style={[styles.metricCardLabel, { color: tokens.muted }]}>
@@ -149,7 +149,7 @@ export function ClubStatsScreen() {
                 </View>
 
                 {/* Temps de Jeu Équitable */}
-                <View style={[styles.techMetricCard, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                <View style={[styles.techMetricCard, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border }]}>
                   <View style={styles.metricCardHeader}>
                     <Icon name="shield" size={15} color="#A78BFA" />
                     <ProDayText style={[styles.metricCardLabel, { color: tokens.muted }]}>
@@ -166,7 +166,7 @@ export function ClubStatsScreen() {
               </View>
 
               {/* 2. Baromètre de Progression Technique par Pôle */}
-              <View style={[styles.polesProgressionBox, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+              <View style={[styles.polesProgressionBox, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border }]}>
                 <ProDayText style={[styles.polesTitle, { color: tokens.foreground }]}>
                   Baromètre de Maîtrise Technique par Pôle
                 </ProDayText>

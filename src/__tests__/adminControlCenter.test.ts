@@ -94,11 +94,12 @@ describe('Espace Admin navigation', () => {
     expect(cmds.some((c) => c.section === 'users')).toBe(true);
   });
 
-  it('utilise un thème control room sombre premium', () => {
+  it('utilise un thème Apple sombre premium', () => {
     expect(ADMIN_TOKENS.bg.toLowerCase()).toMatch(/^#0/);
-    expect(ADMIN_TOKENS.foreground).toBe('#EEF1F5');
-    expect(ADMIN_TOKENS.signal).toBe('#D4AF5F');
+    expect(ADMIN_TOKENS.foreground).toBe('#FFFFFF');
+    expect(ADMIN_TOKENS.signal).toBe('#0A84FF');
   });
+
 });
 
 describe('Admin pricing / devis', () => {

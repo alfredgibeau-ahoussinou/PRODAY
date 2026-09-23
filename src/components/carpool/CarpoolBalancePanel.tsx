@@ -11,6 +11,7 @@ import {
   useCarpoolThemedStyles,
   useCarpoolUi,
 } from './CarpoolUiContext';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 interface CarpoolBalancePanelProps {
   events: TeamEvent[];
@@ -115,9 +116,9 @@ function createStyles(palette: CarpoolUiPalette) {
       alignItems: 'center',
       gap: 14,
       padding: 16,
-      backgroundColor: '#14141A',
+      backgroundColor: CARPOOL_SITE.surface,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: CARPOOL_SITE.lane,
       borderRadius: 18,
       marginBottom: 8,
     },
@@ -165,8 +166,8 @@ function createStyles(palette: CarpoolUiPalette) {
       alignItems: 'center',
       gap: 12,
       borderWidth: 1,
-      borderColor: '#22222E',
-      backgroundColor: '#14141A',
+      borderColor: CARPOOL_SITE.lane,
+      backgroundColor: CARPOOL_SITE.surface,
       borderRadius: 16,
       padding: 14,
       marginBottom: 4,
@@ -212,9 +213,9 @@ function createStyles(palette: CarpoolUiPalette) {
     emptyWrap: {
       paddingVertical: 32,
       paddingHorizontal: 20,
-      backgroundColor: '#14141A',
+      backgroundColor: CARPOOL_SITE.surface,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: CARPOOL_SITE.lane,
       borderRadius: 18,
       alignItems: 'center',
       gap: 10,

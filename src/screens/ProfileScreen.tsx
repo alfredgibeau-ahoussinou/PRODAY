@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Alert } from 'react-native';
+import { prodayAlert } from '../utils/prodayAlert';
 import type { User } from '../models/User';
 import { profileService } from '../services/profile.service';
 import { pickGalleryImage, pickProfileImage } from '../utils/pickMedia';
@@ -142,9 +142,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     try {
       await profileService.uploadAvatar(profile.uid, file);
       await onRefresh();
-      Alert.alert('Photo mise à jour', 'Votre photo de profil est en ligne.');
+      prodayAlert.alert('Photo mise à jour', 'Votre photo de profil est en ligne.');
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Upload impossible.');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Upload impossible.');
     } finally {
       setUploadingAvatar(false);
     }
@@ -158,14 +158,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       await profileService.addGalleryPhoto(profile.uid, file);
       await onRefresh();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Ajout impossible.');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Ajout impossible.');
     } finally {
       setUploadingGallery(false);
     }
   };
 
   const handleGalleryRemove = (url: string) => {
-    Alert.alert('Supprimer la photo', 'Retirer cette image de votre galerie ?', [
+    prodayAlert.alert('Supprimer la photo', 'Retirer cette image de votre galerie ?', [
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Supprimer',
@@ -175,7 +175,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             await profileService.removeGalleryPhoto(profile.uid, url);
             await onRefresh();
           } catch (e) {
-            Alert.alert('Erreur', e instanceof Error ? e.message : 'Suppression impossible.');
+            prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Suppression impossible.');
           }
         },
       },
@@ -189,7 +189,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       await profileService.updateProfile(profile.uid, { profile: { position } });
       await onRefresh();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Mise à jour impossible.');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Mise à jour impossible.');
     } finally {
       setSavingPosition(false);
     }
@@ -203,7 +203,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       });
       await onRefresh();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Mise à jour impossible.');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Mise à jour impossible.');
     }
   };
 
@@ -220,9 +220,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       );
       if (!result.success) throw new Error(result.error);
       await onRefresh();
-      Alert.alert('Document envoyé', 'Votre dossier est en cours de validation.');
+      prodayAlert.alert('Document envoyé', 'Votre dossier est en cours de validation.');
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Envoi impossible.');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Envoi impossible.');
     } finally {
       setDocLoading(false);
     }
@@ -232,7 +232,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     setRemindingId(eventId);
     try {
       const n = await teamEventsService.sendReminders(eventId);
-      Alert.alert(
+      prodayAlert.alert(
         'Relance',
         n > 0
           ? isWoman
@@ -242,7 +242,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       );
       refreshReminders();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Relance impossible.');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Relance impossible.');
     } finally {
       setRemindingId(null);
     }
@@ -342,7 +342,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   };
 
   const handleSignOutPress = () => {
-    Alert.alert('Déconnexion', 'Voulez-vous quitter votre session ?', [
+    prodayAlert.alert('Déconnexion', 'Voulez-vous quitter votre session ?', [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Déconnexion', style: 'destructive', onPress: () => void onSignOut() },
     ]);

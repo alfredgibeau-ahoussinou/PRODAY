@@ -9,7 +9,8 @@ import {
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
-import { fontFamily, textVariants, type TextVariant } from '../../theme/typography';
+import { textVariants, type TextVariant } from '../../theme/typography';
+import { resolveProDayTextStyle } from '../../theme/proDayTextStyle';
 
 type ProDayTextProps = TextProps & {
   variant?: TextVariant;
@@ -29,55 +30,6 @@ const COLOR_KEY: Record<TextVariant, 'text' | 'textSecondary' | 'textMuted'> = {
   body: 'textSecondary',
   caption: 'textMuted',
 };
-
-/** Variantes qui utilisaient Syne — désormais Inter sauf `brand`. */
-const DISPLAY_WEIGHT_VARIANTS = new Set<TextVariant>([
-  'hero',
-  'title',
-  'section',
-  'brand',
-]);
-
-function numericWeight(weight: TextStyle['fontWeight'] | undefined): number | null {
-  if (weight == null) return null;
-  if (typeof weight === 'number') return weight;
-  if (weight === 'normal') return 400;
-  if (weight === 'bold') return 700;
-  const n = Number(weight);
-  return Number.isFinite(n) ? n : null;
-}
-
-/**
- * Expo Google Fonts : chaque graisse = un fichier.
- * On mappe fontWeight → famille, puis on retire fontWeight du style final.
- */
-function resolveLoadedFont(
-  variant: TextVariant,
-  weight: TextStyle['fontWeight'] | undefined,
-): string {
-  const w = numericWeight(weight);
-
-  if (variant === 'brand') {
-    if (w != null && w >= 800) return fontFamily.displayBold;
-    return fontFamily.display;
-  }
-
-  if (w == null) return textVariants[variant]?.fontFamily || fontFamily.regular;
-
-  if (DISPLAY_WEIGHT_VARIANTS.has(variant) || variant === 'eyebrow') {
-    if (w >= 900) return fontFamily.black;
-    if (w >= 800) return fontFamily.extrabold;
-    if (w >= 700) return fontFamily.bold;
-    if (w >= 600) return fontFamily.semibold;
-    return fontFamily.regular;
-  }
-
-  if (w >= 900) return fontFamily.black;
-  if (w >= 800) return fontFamily.extrabold;
-  if (w >= 700) return fontFamily.bold;
-  if (w >= 600) return fontFamily.semibold;
-  return fontFamily.regular;
-}
 
 export const ProDayText: React.FC<ProDayTextProps> = ({
   variant = 'body',
@@ -104,23 +56,27 @@ export const ProDayText: React.FC<ProDayTextProps> = ({
 
   const resolved = useMemo((): StyleProp<TextStyle> => {
     const flat = StyleSheet.flatten([base, style]) as TextStyle;
-    const {
-      fontFamily: _fontFamily,
-      fontWeight,
-      color: styleColor,
-      transform: _transform,
-      ...restStyle
-    } = flat;
+    const styleColor = flat.color;
 
     // Jamais de skew / transform sur le texte UI (lisibilité).
     if (emoji) {
+      const {
+        color: _color,
+        fontFamily: _fontFamily,
+        fontWeight: _fontWeight,
+        transform: _transform,
+        ...restStyle
+      } = flat;
       return [{ color: styleColor ?? themeColor }, restStyle];
     }
 
+    // Famille système imposée **et graisse conservée** : les alias de famille
+    // pointent tous vers la même pile, donc `fontWeight` doit être transmis
+    // explicitement (sinon les titres retombent en graisse normale). Voir
+    // `theme/proDayTextStyle.ts`.
     return [
       {
-        ...restStyle,
-        fontFamily: resolveLoadedFont(variant, fontWeight),
+        ...resolveProDayTextStyle(variant, style),
         color: styleColor ?? themeColor,
       },
     ];

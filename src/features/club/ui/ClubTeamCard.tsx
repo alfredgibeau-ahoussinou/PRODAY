@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { AnimatedEntrance, PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { useClubTheme } from '../shell/ClubThemeContext';
@@ -8,6 +7,7 @@ import type { ClubThemeTokens } from '../theme/clubTokens';
 import type { ClubTeamRow } from '../../../utils/clubStructureView';
 import { buildClubTeamCardMeta } from './clubTeamsModel';
 import { ProDayText } from '../../../components/ui/ProDayText';
+import { clubForm } from '../theme/clubDesignSystem';
 
 type Props = {
   row: ClubTeamRow;
@@ -32,14 +32,6 @@ export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
         accessibilityRole="button"
         accessibilityLabel={`${meta.title}${meta.hasCoach ? '' : ', sans coach'}`}
       >
-        <LinearGradient
-          colors={['rgba(255, 255, 255, 0.03)', 'rgba(14, 14, 20, 0.7)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
         <View style={styles.cardHeader}>
           <View style={styles.categoryBadge}>
             <Icon name="football" size={12} color={tokens.accent} />
@@ -61,7 +53,7 @@ export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
             {logoUrl ? (
               <Image source={{ uri: logoUrl }} style={styles.logo} resizeMode="cover" />
             ) : (
-              <View style={[styles.logoPh, { backgroundColor: 'rgba(255, 255, 255, 0.06)' }]}>
+              <View style={[styles.logoPh, { backgroundColor: tokens.elevated }]}>
                 <ProDayText variant="section" style={[styles.crestLetter, { color: tokens.accent }]}>
                   {(row.name.trim().charAt(0) || 'E').toUpperCase()}
                 </ProDayText>
@@ -111,9 +103,7 @@ const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     cardContainer: {
       backgroundColor: tokens.surface,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderRadius: clubForm.groupRadius,
       padding: 16,
       gap: 12,
       overflow: 'hidden',
@@ -127,7 +117,7 @@ const createStyles = (tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      backgroundColor: tokens.elevated,
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 6,
@@ -141,12 +131,12 @@ const createStyles = (tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      backgroundColor: tokens.elevated,
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 6,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.06)',
+      borderColor: tokens.border,
     },
     licensedText: {
       color: '#9CA3AF',

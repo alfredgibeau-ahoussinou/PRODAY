@@ -9,8 +9,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../../hooks/useReducedMotion';
-import { AdminText } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { AdminText } from '../ui/AdminText';
+import { useAdminTokens } from '../theme/adminTokens';
 import { adminRadius, adminShadow, adminSpace } from '../theme/adminDesignSystem';
 import { adminMotion } from './adminMotion';
 
@@ -27,7 +27,7 @@ type HostProps = {
 };
 
 export function AdminToastHost({ toast, onDismiss }: HostProps) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const progress = useSharedValue(0);

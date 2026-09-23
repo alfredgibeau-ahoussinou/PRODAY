@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, RefreshControl, View, StyleSheet } from 'react-native';
+import { ScrollView, RefreshControl, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { User } from '../../models/User';
@@ -52,6 +52,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import { usePlayerTheme, usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { CrestWatermark } from '../../screens/joueur/PlayerSaisonIcons';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { playerType } from '../../theme/playerDesignSystem';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
 import { spacing } from '../../theme/designTokens';
@@ -320,6 +321,9 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           canManageEvents={canManageEvents}
           pendingConvocationsCount={pendingConvocations.length}
           onOpenConvocations={() => setChapter('convocations')}
+          onNavigateChapter={(ch) => setChapter(ch)}
+          clubName={clubName ?? undefined}
+          teamName={profile?.profile?.category ? `Équipe ${profile.profile.category}` : undefined}
           onRsvp={onRsvp}
           onOpenCarpoolForEvent={onOpenCarpoolForEvent}
           rsvpBusy={rsvpBusy}
@@ -538,87 +542,33 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   const body = (
     <View style={styles.bodyWrap}>
       {isJoueur ? (
-        <View style={[styles.joueurTopHeader, { paddingTop: 6 }]}>
-          <View style={styles.joueurHeaderTitleRow}>
-            <View
-              style={[
-                styles.clubCrest,
-                { borderColor: `${teamPrimary}40`, backgroundColor: `${teamPrimary}18` },
-              ]}
+        chapter !== 'calendrier' ? (
+          <View style={styles.subChapterHeader}>
+            <TouchableOpacity
+              onPress={() => {
+                prodayHaptics.press();
+                setChapter('calendrier');
+              }}
+              style={styles.subChapterBackBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <CrestWatermark width={20} height={24} color={teamPrimary} opacity={0.95} />
-            </View>
-            <View style={styles.joueurTitleCol}>
-              <ProDayText variant="title" style={styles.joueurHeaderTitleText}>
-                Centre Match
+              <Ionicons name="chevron-back" size={20} color={teamPrimary} />
+              <ProDayText style={[styles.subChapterBackText, { color: teamPrimary }]}>
+                Calendrier
               </ProDayText>
-              {clubName ? (
-                <View style={styles.clubSubtitleRow}>
-                  <View style={[styles.clubDot, { backgroundColor: teamPrimary }]} />
-                  <ProDayText
-                    variant="caption"
-                    style={[styles.clubSubtitleText, { color: `${teamPrimary}D0` }]}
-                  >
-                    {clubName}
-                  </ProDayText>
-                </View>
-              ) : null}
-            </View>
+            </TouchableOpacity>
 
-            {canManageEvents && profile ? (
-              <PressableSpring
-                onPress={() => {
-                  prodayHaptics.press();
-                  onPropose();
-                }}
-                style={[
-                  styles.headerActionBtn,
-                  { backgroundColor: 'transparent', borderColor: teamPrimary },
-                ]}
-                scaleTo={0.95}
-                haptic
-              >
-                <Ionicons name="add" size={15} color={teamPrimary} />
-                <ProDayText
-                  variant="caption"
-                  style={[styles.headerActionText, { color: teamPrimary }]}
-                >
-                  Proposer
-                </ProDayText>
-              </PressableSpring>
-            ) : pendingConvocations.length > 0 ? (
-              <PressableSpring
-                onPress={() => {
-                  prodayHaptics.press();
-                  setChapter('convocations');
-                }}
-                style={[
-                  styles.headerActionBtn,
-                  { backgroundColor: `${teamPrimary}1C`, borderColor: `${teamPrimary}40` },
-                ]}
-                scaleTo={0.95}
-                haptic
-              >
-                <Ionicons name="mail" size={13} color={teamPrimary} />
-                <ProDayText
-                  variant="caption"
-                  style={[styles.headerActionText, { color: teamPrimary }]}
-                >
-                  {pendingConvocations.length} {pendingConvocations.length > 1 ? 'convocs' : 'convoc'}
-                </ProDayText>
-              </PressableSpring>
-            ) : null}
+            <ProDayText style={styles.subChapterTitle}>
+              {chapter === 'convocations'
+                ? 'Convocations'
+                : chapter === 'centre'
+                  ? 'Carte & Terrains'
+                  : chapter === 'stats'
+                    ? 'Statistiques'
+                    : 'Compétitions'}
+            </ProDayText>
           </View>
-
-          <MatchBigTileRail
-            active={chapter}
-            onSelect={setChapter}
-            amicauxBadge={openMatchesCount}
-            convocationsBadge={pendingConvocations.length}
-            accentColor={teamPrimary}
-          />
-          <OfflineCacheBanner visible={fromCache} onRefresh={onRefresh} />
-        </View>
+        ) : null
       ) : !hidePoleHero ? (
         <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>
           <ImmersivePoleHero
@@ -702,38 +652,58 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   joueurHeaderTitleText: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: -0.4,
+    ...playerType.title,
+    fontSize: 22,
+    color: PLAYER_DARK.text,
   },
   clubSubtitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 0,
+    gap: 5,
+    marginTop: 1,
   },
   clubDot: {
     width: 5,
     height: 5,
-    borderRadius: 3,
+    borderRadius: 2.5,
   },
   clubSubtitleText: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.1,
+    ...playerType.caption,
+    fontWeight: '600',
+    color: PLAYER_DARK.textMuted,
   },
   headerActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
     paddingVertical: 5,
     paddingHorizontal: 12,
-    borderRadius: 999,
-    borderWidth: 1.2,
+    borderRadius: 10,
+    borderWidth: 1,
   },
   headerActionText: {
-    fontSize: 11.5,
-    fontWeight: '800',
+    ...playerType.caption,
+    fontWeight: '700',
+  },
+  subChapterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 10,
+  },
+  subChapterBackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  subChapterBackText: {
+    ...playerType.caption,
+    fontWeight: '700',
+  },
+  subChapterTitle: {
+    ...playerType.headline,
+    color: PLAYER_DARK.text,
   },
 });

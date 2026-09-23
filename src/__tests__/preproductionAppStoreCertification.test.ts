@@ -1,7 +1,8 @@
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APPLE_TYPOGRAPHY, APPLE_FONT_STACK } from '../theme/appleTypography';
-import { TACTICAL_BOARD_STORAGE_KEY } from '../screens/coach/CoachTacticalBoardScreen';
+/** La clé vit avec le modèle du tableau, pas avec l'écran (import léger). */
+import { TACTICAL_BOARD_STORAGE_KEY } from '../utils/coachTacticalBoard';
 import appConfig from '../../app.json';
 
 // Mocks

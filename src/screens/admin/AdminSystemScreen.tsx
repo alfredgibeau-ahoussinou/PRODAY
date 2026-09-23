@@ -15,6 +15,7 @@ import { prodayHaptics } from '../../utils/prodayHaptics';
 import { platformConfigService } from '../../services/platformConfig.service';
 import type { PlatformConfig } from '../../models/PlatformConfig';
 import { MaintenanceBlockedScreen } from '../MaintenanceBlockedScreen';
+import { ADMIN_TOKENS } from '../../features/admin/theme/adminTokens';
 
 interface ServerMetric {
   name: string;
@@ -246,7 +247,7 @@ export const AdminSystemScreen: React.FC = () => {
           activeOpacity={0.8}
           disabled={isUpdating}
         >
-          <Ionicons name="save" size={15} color="#000" />
+          <Ionicons name="save" size={15} color="#FFFFFF" />
           <Text style={styles.saveBtnText}>Enregistrer le Message</Text>
         </TouchableOpacity>
       </View>
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   killSwitchCard: {
-    backgroundColor: '#141418',
+    backgroundColor: ADMIN_TOKENS.surface,
     borderRadius: 20,
     padding: 18,
     borderWidth: 1.5,
@@ -385,7 +386,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   card: {
-    backgroundColor: '#141418',
+    backgroundColor: ADMIN_TOKENS.surface,
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
@@ -416,13 +417,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0A84FF',
     paddingVertical: 11,
     borderRadius: 12,
     gap: 6,
   },
   saveBtnText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700',
   },

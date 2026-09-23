@@ -1,7 +1,6 @@
 /**
  * Design system inscription / gate / login —
- * mêmes accents officiels que les shells authentifiés (PRODAY_POLE_ACCENTS).
- * Pas de feuille blanche legacy, pas d’or forcé sur le pôle Joueur.
+ * Palette Electric Athletic & Deep Midnight Slate.
  */
 
 import type { UserRole } from '../../models/User';
@@ -9,16 +8,10 @@ import type { ProductLineId } from '../../models/ProductLine';
 import type { CarouselPoleId } from '../../models/CarouselPole';
 import {
   PRODAY_MASTER,
-  PRODAY_POLE_ACCENTS,
   PRODAY_POLE_LABELS,
-  brandVariantForProductLine,
-  poleAccent,
-  poleAccentSoft,
-  poleOnAccent,
   type ProDayBrandVariant,
 } from '../../theme/prodayBrand';
 import { brandVariantForCarouselPole } from '../../components/branding/intro/universePoleBrand';
-import { santeColorOverrides } from '../../theme/prodaySanteTheme';
 
 export type SignupVisualChrome = {
   variant: ProDayBrandVariant;
@@ -27,7 +20,6 @@ export type SignupVisualChrome = {
   accent: string;
   accentSoft: string;
   onAccent: string;
-  /** Focus input / progress — blanc joueur → or pour lisibilité fine. */
   focus: string;
   bg: string;
   surface: string;
@@ -37,7 +29,6 @@ export type SignupVisualChrome = {
   text: string;
   textMuted: string;
   textFaint: string;
-  /** Wash haut d’écran (comme ClubAppShell). */
   washTop: string;
   washMid: string;
   washTransparent: string;
@@ -45,14 +36,25 @@ export type SignupVisualChrome = {
   dangerSoft: string;
 };
 
-function hexToWash(hex: string, alpha: number): string {
-  const h = hex.replace('#', '');
-  if (h.length !== 6) return `rgba(197, 160, 89, ${alpha})`;
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+/** Palette Electric Athletic moderne et contrastée */
+export const ATHLETIC_PALETTE = {
+  bg: '#0B0F19',
+  surface: '#111827',
+  elevated: 'rgba(22, 33, 58, 0.88)',
+  border: 'rgba(255, 255, 255, 0.12)',
+  borderStrong: 'rgba(255, 255, 255, 0.22)',
+  text: '#FFFFFF',
+  textMuted: '#94A3B8',
+  textFaint: '#64748B',
+  electricMint: '#00F0A8',
+  onMint: '#051B14',
+  iceCyan: '#38BDF8',
+  onCyan: '#082F49',
+  amberSunset: '#F59E0B',
+  onAmber: '#451A03',
+  danger: '#F87171',
+  dangerSoft: 'rgba(248, 113, 113, 0.16)',
+} as const;
 
 export function brandVariantForSignupRole(role: UserRole): ProDayBrandVariant {
   switch (role) {
@@ -86,25 +88,27 @@ export function resolveSignupBrandVariant(opts: {
 }): ProDayBrandVariant {
   if (opts.pole) return brandVariantForCarouselPole(opts.pole);
   if (opts.role) return brandVariantForSignupRole(opts.role);
-  return brandVariantForProductLine(opts.productLine, {
-    sponsor: opts.productLine === 'sponsor',
-  });
+  return 'player';
 }
 
-/**
- * Chrome inscription = look shell (noir + wash pôle + charcoal).
- * Santé : teal legacy conservé.
- */
 export function buildSignupVisualChrome(
   variant: ProDayBrandVariant,
 ): SignupVisualChrome {
-  const accent = poleAccent(variant);
-  const accentSoft = poleAccentSoft(variant, 0.22);
-  const onAccent = poleOnAccent(variant);
-  const poleLabel = PRODAY_POLE_LABELS[variant] || 'PRODAY';
+  let accent: string = ATHLETIC_PALETTE.electricMint;
+  let onAccent: string = ATHLETIC_PALETTE.onMint;
+  let accentSoft: string = 'rgba(0, 240, 168, 0.16)';
 
-  const focus =
-    accent.toUpperCase() === '#FFFFFF' ? PRODAY_MASTER.goldBright : accent;
+  if (variant === 'coach' || variant === 'admin' || variant === 'supporter') {
+    accent = ATHLETIC_PALETTE.iceCyan;
+    onAccent = ATHLETIC_PALETTE.onCyan;
+    accentSoft = 'rgba(56, 189, 248, 0.16)';
+  } else if (variant === 'club' || variant === 'sponsor') {
+    accent = ATHLETIC_PALETTE.amberSunset;
+    onAccent = ATHLETIC_PALETTE.onAmber;
+    accentSoft = 'rgba(245, 158, 11, 0.16)';
+  }
+
+  const poleLabel = PRODAY_POLE_LABELS[variant] || 'PRODAY';
 
   return {
     variant,
@@ -112,46 +116,20 @@ export function buildSignupVisualChrome(
     accent,
     accentSoft,
     onAccent,
-    focus,
-    bg: PRODAY_MASTER.black,
-    surface: PRODAY_MASTER.surfaceAlt,
-    elevated: PRODAY_MASTER.surface,
-    border: 'rgba(255, 255, 255, 0.10)',
-    borderStrong: 'rgba(255, 255, 255, 0.18)',
-    text: '#F4F7FC',
-    textMuted: 'rgba(244, 247, 252, 0.68)',
-    textFaint: 'rgba(244, 247, 252, 0.44)',
-    washTop: hexToWash(accent, 0.16),
-    washMid: hexToWash(accent, 0.06),
-    washTransparent: 'transparent',
-    danger: '#F87171',
-    dangerSoft: 'rgba(248, 113, 113, 0.16)',
-  };
-}
-
-/** Santé / physio — accent teal produit. */
-export function buildSanteSignupVisualChrome(): SignupVisualChrome {
-  const accent = santeColorOverrides.accent;
-  return {
-    variant: 'master',
-    poleLabel: 'SANTÉ',
-    accent,
-    accentSoft: santeColorOverrides.accentSoft,
-    onAccent: PRODAY_MASTER.black,
     focus: accent,
-    bg: PRODAY_MASTER.black,
-    surface: PRODAY_MASTER.surfaceAlt,
-    elevated: PRODAY_MASTER.surface,
-    border: 'rgba(255, 255, 255, 0.10)',
-    borderStrong: 'rgba(255, 255, 255, 0.18)',
-    text: '#F4F7FC',
-    textMuted: 'rgba(244, 247, 252, 0.68)',
-    textFaint: 'rgba(244, 247, 252, 0.44)',
-    washTop: hexToWash(accent, 0.16),
-    washMid: hexToWash(accent, 0.06),
+    bg: ATHLETIC_PALETTE.bg,
+    surface: ATHLETIC_PALETTE.surface,
+    elevated: ATHLETIC_PALETTE.elevated,
+    border: ATHLETIC_PALETTE.border,
+    borderStrong: ATHLETIC_PALETTE.borderStrong,
+    text: ATHLETIC_PALETTE.text,
+    textMuted: ATHLETIC_PALETTE.textMuted,
+    textFaint: ATHLETIC_PALETTE.textFaint,
+    washTop: `rgba(${accent === ATHLETIC_PALETTE.iceCyan ? '56, 189, 248' : accent === ATHLETIC_PALETTE.amberSunset ? '245, 158, 11' : '0, 240, 168'}, 0.12)`,
+    washMid: 'rgba(15, 23, 42, 0.04)',
     washTransparent: 'transparent',
-    danger: '#F87171',
-    dangerSoft: 'rgba(248, 113, 113, 0.16)',
+    danger: ATHLETIC_PALETTE.danger,
+    dangerSoft: ATHLETIC_PALETTE.dangerSoft,
   };
 }
 
@@ -161,19 +139,15 @@ export function resolveSignupVisual(opts: {
   pole?: CarouselPoleId | null;
   sante?: boolean;
 }): SignupVisualChrome {
-  if (opts.sante || opts.productLine === 'sante' || opts.role === 'physio') {
-    return buildSanteSignupVisualChrome();
-  }
   const variant = resolveSignupBrandVariant(opts);
   return buildSignupVisualChrome(variant);
 }
 
-/** Accents officiels exposés pour les tests / audit. */
 export const SIGNUP_POLE_ACCENT_MAP = {
-  player: PRODAY_POLE_ACCENTS.player,
-  coach: PRODAY_POLE_ACCENTS.coach,
-  club: PRODAY_POLE_ACCENTS.club,
-  parent: PRODAY_POLE_ACCENTS.parent,
-  sponsor: PRODAY_POLE_ACCENTS.sponsor,
-  supporter: PRODAY_POLE_ACCENTS.supporter,
+  player: ATHLETIC_PALETTE.electricMint,
+  coach: ATHLETIC_PALETTE.iceCyan,
+  club: ATHLETIC_PALETTE.amberSunset,
+  parent: ATHLETIC_PALETTE.electricMint,
+  sponsor: ATHLETIC_PALETTE.amberSunset,
+  supporter: ATHLETIC_PALETTE.iceCyan,
 } as const;

@@ -21,6 +21,7 @@ import {
   useCarpoolThemedStyles,
   useCarpoolUi,
 } from './CarpoolUiContext';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 interface CarpoolProposePanelProps {
   profile: User | null;
@@ -291,9 +292,9 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
 function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     heroCard: {
-      backgroundColor: '#14141A',
+      backgroundColor: CARPOOL_SITE.surface,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: CARPOOL_SITE.lane,
       borderRadius: 20,
       padding: 16,
       marginBottom: 16,

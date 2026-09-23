@@ -32,14 +32,14 @@ export function ClubCommInboxHero({
     <AnimatedEntrance kind="fadeUp" index={0} delayStep={36}>
       <View style={styles.card}>
         <LinearGradient
-          colors={['rgba(255, 255, 255, 0.03)', 'rgba(14, 14, 20, 0.85)']}
+          colors={[tokens.elevated, tokens.bgElevated]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
         <View style={styles.iconBadge}>
-          <Icon name="chat" size={20} color="#FFFFFF" />
+          <Icon name="chat" size={20} color={tokens.foreground} />
         </View>
         <View style={styles.col}>
           <View style={styles.kickerRow}>
@@ -59,7 +59,7 @@ export function ClubCommInboxHero({
               <ClubText variant="caption" style={styles.ctaPrimaryLabel}>
                 Ouvrir
               </ClubText>
-              <Icon name="chevron-forward" size={12} color="#000000" />
+              <Icon name="chevron-forward" size={12} color={tokens.onAccent} />
             </PressableSpring>
             {onOpenNotifications ? (
               <PressableSpring
@@ -68,7 +68,7 @@ export function ClubCommInboxHero({
                 haptic
                 style={styles.ctaGhost}
               >
-                <Icon name="notifications" size={13} color="#8E8E9F" />
+                <Icon name="notifications" size={13} color={tokens.muted} />
                 <ClubText variant="caption" style={styles.ctaGhostLabel}>
                   {unreadNotifications && unreadNotifications > 0
                     ? `Alertes (${unreadNotifications})`
@@ -111,13 +111,14 @@ export function ClubUrgentAnnouncementsCard({
   const getTypeMeta = (type: UrgentAnnouncementType) => {
     switch (type) {
       case 'weather':
-        return { icon: 'warning' as const, label: 'Intempéries', tone: '#F59E0B' };
+        return { icon: 'warning' as const, label: 'Intempéries', tone: tokens.warning };
       case 'match_postponed':
-        return { icon: 'time' as const, label: 'Report de match', tone: '#F59E0B' };
+        return { icon: 'time' as const, label: 'Report de match', tone: tokens.warning };
       case 'pitch_change':
-        return { icon: 'football' as const, label: 'Changement terrain', tone: '#3B82F6' };
+        // L'ancien bleu codé en dur ne faisait pas partie de la palette du pôle.
+        return { icon: 'football' as const, label: 'Changement terrain', tone: tokens.accent };
       default:
-        return { icon: 'alert-circle' as const, label: 'Alerte urgente', tone: '#EF4444' };
+        return { icon: 'alert-circle' as const, label: 'Alerte urgente', tone: tokens.danger };
     }
   };
 
@@ -127,8 +128,8 @@ export function ClubUrgentAnnouncementsCard({
         <LinearGradient
           colors={
             announcements.length > 0
-              ? ['rgba(245, 158, 11, 0.08)', 'rgba(20, 20, 26, 0.95)']
-              : ['rgba(255, 255, 255, 0.03)', 'rgba(14, 14, 20, 0.7)']
+              ? [tokens.warningSoft, tokens.surface]
+              : [tokens.elevated, tokens.surface]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -146,13 +147,13 @@ export function ClubUrgentAnnouncementsCard({
               <Icon
                 name={announcements.length > 0 ? 'alert-circle' : 'checkmark-circle'}
                 size={12}
-                color={announcements.length > 0 ? '#F59E0B' : '#10B981'}
+                color={announcements.length > 0 ? tokens.warning : tokens.success}
               />
               <ClubText
                 variant="caption"
                 style={[
                   styles.badgePriorityText,
-                  { color: announcements.length > 0 ? '#F59E0B' : '#10B981' },
+                  { color: announcements.length > 0 ? tokens.warning : tokens.success },
                 ]}
               >
                 {announcements.length > 0 ? 'FLASH INFO CLUB' : 'STATUT NORMAL'}
@@ -164,7 +165,7 @@ export function ClubUrgentAnnouncementsCard({
           </View>
           {onCreateUrgent ? (
             <PressableSpring onPress={onCreateUrgent} scaleTo={0.96} haptic style={styles.btnCreate}>
-              <Icon name="add" size={13} color="#D1D5DB" />
+              <Icon name="add" size={13} color={tokens.muted} />
               <ClubText variant="caption" style={styles.btnCreateText}>
                 Publier
               </ClubText>
@@ -174,7 +175,7 @@ export function ClubUrgentAnnouncementsCard({
 
         {announcements.length === 0 ? (
           <View style={styles.emptyWrap}>
-            <Icon name="checkmark-circle" size={15} color="#10B981" />
+            <Icon name="checkmark-circle" size={15} color={tokens.success} />
             <ClubText variant="caption" muted style={styles.emptyText}>
               Infrastructures, terrains et rencontres 100% opérationnels.
             </ClubText>
@@ -207,14 +208,14 @@ export function ClubUrgentAnnouncementsCard({
                         </ClubText>
                       ) : null}
                     </View>
-                    <ClubText variant="body" numberOfLines={1} style={{ fontWeight: '700', marginTop: 2, color: '#FFFFFF' }}>
+                    <ClubText variant="body" numberOfLines={1} style={{ fontWeight: '700', marginTop: 2, color: tokens.foreground }}>
                       {ann.title}
                     </ClubText>
                     <ClubText variant="caption" muted numberOfLines={2}>
                       {ann.message}
                     </ClubText>
                   </View>
-                  <Icon name="chevron-forward" size={14} color="#8E8E9F" />
+                  <Icon name="chevron-forward" size={14} color={tokens.muted} />
                 </PressableSpring>
               );
             })}
@@ -256,7 +257,7 @@ export function ClubOperationalCanalsGrid({
               style={styles.gridCard}
             >
               <LinearGradient
-                colors={['rgba(255, 255, 255, 0.03)', 'rgba(14, 14, 20, 0.7)']}
+                colors={[tokens.elevated, tokens.surface]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={StyleSheet.absoluteFill}
@@ -264,7 +265,7 @@ export function ClubOperationalCanalsGrid({
               />
               <View style={styles.gridCardHeader}>
                 <View style={styles.gridIconWrap}>
-                  <Icon name={item.icon} size={17} color="#FFFFFF" />
+                  <Icon name={item.icon} size={17} color={tokens.foreground} />
                 </View>
                 {item.badgeLabel ? (
                   <View
@@ -307,7 +308,7 @@ export function ClubOperationalCanalsGrid({
                 <ClubText variant="caption" style={styles.gridActionText}>
                   Accéder
                 </ClubText>
-                <Icon name="chevron-forward" size={12} color="#8E8E9F" />
+                <Icon name="chevron-forward" size={12} color={tokens.muted} />
               </View>
             </PressableSpring>
           </AnimatedEntrance>
@@ -371,7 +372,7 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       borderRadius: 16,
       backgroundColor: tokens.surface,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
       overflow: 'hidden',
     },
     iconBadge: {
@@ -380,9 +381,9 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      backgroundColor: tokens.elevated,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
       flexShrink: 0,
       marginTop: 2,
     },
@@ -396,10 +397,10 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       width: 6,
       height: 6,
       borderRadius: 3,
-      backgroundColor: '#10B981',
+      backgroundColor: tokens.success,
     },
     kickerText: {
-      color: '#8E8E9F',
+      color: tokens.muted,
       fontSize: 10,
       fontWeight: '800',
       letterSpacing: 0.5,
@@ -408,11 +409,11 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       fontWeight: '800',
       fontSize: 16,
       letterSpacing: -0.2,
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     subtitle: {
       fontSize: 12,
-      color: '#8E8E9F',
+      color: tokens.muted,
       lineHeight: 16,
     },
     ctaRow: {
@@ -428,10 +429,10 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       paddingVertical: 7,
       paddingHorizontal: 14,
       borderRadius: 10,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: tokens.accent,
     },
     ctaPrimaryLabel: {
-      color: '#000000',
+      color: tokens.onAccent,
       fontWeight: '800',
       fontSize: 12,
     },
@@ -443,11 +444,11 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       paddingHorizontal: 12,
       borderRadius: 10,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
-      backgroundColor: '#181820',
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
     },
     ctaGhostLabel: {
-      color: '#D1D5DB',
+      color: tokens.muted,
       fontWeight: '700',
       fontSize: 12,
     },
@@ -461,7 +462,7 @@ const urgentStyles = (tokens: ClubThemeTokens) =>
       borderRadius: 16,
       backgroundColor: tokens.surface,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
       overflow: 'hidden',
     },
     header: {
@@ -483,10 +484,10 @@ const urgentStyles = (tokens: ClubThemeTokens) =>
       borderRadius: 6,
     },
     badgePriorityWarn: {
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+      backgroundColor: tokens.warningSoft,
     },
     badgePriorityNormal: {
-      backgroundColor: 'rgba(16, 185, 129, 0.12)',
+      backgroundColor: tokens.successSoft,
     },
     badgePriorityText: {
       fontWeight: '900',
@@ -496,7 +497,7 @@ const urgentStyles = (tokens: ClubThemeTokens) =>
     headerTitle: {
       fontWeight: '800',
       fontSize: 14,
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     btnCreate: {
       flexDirection: 'row',
@@ -505,12 +506,12 @@ const urgentStyles = (tokens: ClubThemeTokens) =>
       paddingVertical: 4,
       paddingHorizontal: 9,
       borderRadius: 8,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      backgroundColor: tokens.elevated,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
     },
     btnCreateText: {
-      color: '#D1D5DB',
+      color: tokens.muted,
       fontWeight: '700',
       fontSize: 11,
     },
@@ -522,7 +523,7 @@ const urgentStyles = (tokens: ClubThemeTokens) =>
     },
     emptyText: {
       fontSize: 12,
-      color: '#8E8E9F',
+      color: tokens.muted,
       flex: 1,
     },
     list: {
@@ -535,7 +536,7 @@ const urgentStyles = (tokens: ClubThemeTokens) =>
       gap: 10,
       padding: 10,
       borderRadius: 12,
-      backgroundColor: '#181820',
+      backgroundColor: tokens.elevated,
       borderWidth: 1,
     },
     annIconBadge: {
@@ -580,7 +581,7 @@ const gridStyles = (tokens: ClubThemeTokens) =>
       backgroundColor: tokens.surface,
       borderRadius: 16,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
       padding: 14,
       gap: 10,
       overflow: 'hidden',
@@ -594,7 +595,7 @@ const gridStyles = (tokens: ClubThemeTokens) =>
       width: 34,
       height: 34,
       borderRadius: 10,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      backgroundColor: tokens.elevated,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -604,37 +605,37 @@ const gridStyles = (tokens: ClubThemeTokens) =>
       borderRadius: 6,
     },
     gridBadgeDefault: {
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      backgroundColor: tokens.elevated,
     },
     gridBadgeWarn: {
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+      backgroundColor: tokens.warningSoft,
     },
     gridBadgeGood: {
-      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+      backgroundColor: tokens.successSoft,
     },
     gridBadgeText: {
       fontSize: 10,
       fontWeight: '700',
     },
     gridBadgeTextDefault: {
-      color: '#9CA3AF',
+      color: tokens.muted,
     },
     gridBadgeTextWarn: {
-      color: '#F59E0B',
+      color: tokens.warning,
     },
     gridBadgeTextGood: {
-      color: '#10B981',
+      color: tokens.success,
     },
     gridCardBody: {
       gap: 2,
     },
     gridTitle: {
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontSize: 14,
       fontWeight: '800',
     },
     gridSubtitle: {
-      color: '#8E8E9F',
+      color: tokens.muted,
       fontSize: 11,
     },
     gridCardFooter: {
@@ -643,10 +644,10 @@ const gridStyles = (tokens: ClubThemeTokens) =>
       justifyContent: 'space-between',
       paddingTop: 6,
       borderTopWidth: 1,
-      borderTopColor: 'rgba(255, 255, 255, 0.05)',
+      borderTopColor: tokens.border,
     },
     gridActionText: {
-      color: '#8E8E9F',
+      color: tokens.muted,
       fontSize: 11,
       fontWeight: '600',
     },

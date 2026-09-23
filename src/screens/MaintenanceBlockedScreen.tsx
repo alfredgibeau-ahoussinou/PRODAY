@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { prodayHaptics } from '../utils/prodayHaptics';
 import { platformConfigService } from '../services/platformConfig.service';
+import { colors } from '../theme/designTokens';
 
 type MaintenanceBlockedScreenProps = {
   message: string;
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: '#141418',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',

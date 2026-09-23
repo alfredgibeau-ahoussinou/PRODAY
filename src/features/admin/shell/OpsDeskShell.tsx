@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   Platform,
   StatusBar as RNStatusBar,
   StyleSheet,
   View,
   useWindowDimensions,
 } from 'react-native';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import Constants from 'expo-constants';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,6 +20,7 @@ import { AdminCommandPalette } from '../ui/AdminCommandPalette';
 import { AdminText } from '../ui/adminUi';
 import { useIsAdmin } from '../../../hooks/useIsAdmin';
 import { useAuth } from '../../../context/AuthContext';
+import { AppearanceProvider } from '../../../context/AppearanceContext';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminChrome, adminSpace } from '../theme/adminDesignSystem';
@@ -37,14 +38,15 @@ interface OpsDeskShellProps {
   onPreviewPresidentPole?: () => void;
 }
 
-/** Inset top fiable (hook + fallback status bar — évite le collé sous le notch). */
+/** Inset top fiable avec marge Dynamic Island iOS. */
 function useAdminTopInset(): number {
   const insets = useSafeAreaInsets();
   const fallback =
     Platform.OS === 'android'
       ? RNStatusBar.currentHeight ?? 0
       : Constants.statusBarHeight ?? 0;
-  return Math.max(insets.top, fallback);
+  const minIos = Platform.OS === 'ios' ? 52 : 0;
+  return Math.max(insets.top, fallback, minIos);
 }
 
 function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShellProps) {
@@ -76,7 +78,7 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
   const openCommand = useCallback(() => setCommandOpen(true), []);
 
   const requestSignOut = useCallback(() => {
-    Alert.alert('Déconnexion', 'Quitter l’Espace Admin ?', [
+    prodayAlert.alert('Déconnexion', 'Quitter l’Espace Admin ?', [
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Déconnexion',
@@ -207,14 +209,16 @@ export const OpsDeskShell: React.FC<OpsDeskShellProps> = ({
   }
 
   return (
-    <AdminDataProvider>
-      <AdminMotionProvider>
-        <OpsDeskInner
-          onPreviewUserApp={onPreviewUserApp}
-          onPreviewPresidentPole={onPreviewPresidentPole}
-        />
-      </AdminMotionProvider>
-    </AdminDataProvider>
+    <AppearanceProvider>
+      <AdminDataProvider>
+        <AdminMotionProvider>
+          <OpsDeskInner
+            onPreviewUserApp={onPreviewUserApp}
+            onPreviewPresidentPole={onPreviewPresidentPole}
+          />
+        </AdminMotionProvider>
+      </AdminDataProvider>
+    </AppearanceProvider>
   );
 };
 

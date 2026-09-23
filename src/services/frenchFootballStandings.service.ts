@@ -1,6 +1,5 @@
 import type { LeagueStandingRow } from '../components/matchs/EliteLeagueStandings';
 import type { FffFixture } from './fffScraper.service';
-import { fffScraperService } from './fffScraper.service';
 
 export interface LeagueScorer {
   rank: number;
@@ -13,6 +12,18 @@ export interface LeagueScorer {
 }
 
 export type SyncStatus = 'live' | 'awaiting_first_sync' | 'unavailable';
+
+/**
+ * Santé de la synchronisation FFF (écrite par le job serveur toutes les 3 h).
+ * `stale` = dernier snapshot conservé mais la dernière tentative a échoué :
+ * l'UI doit alors afficher l'ancienneté réelle, jamais « à jour ».
+ */
+export type StandingsSyncHealth = 'ok' | 'degraded' | 'stale' | 'error' | 'unavailable';
+
+/** Cadence serveur (cf. docs/FFF_SYNC_3H.md) — sert au calcul du seuil d'obsolescence. */
+export const FFF_SYNC_INTERVAL_MS = 3 * 60 * 60 * 1000;
+/** Au-delà de 2 cadences sans succès, le classement est considéré obsolète. */
+export const FFF_STALE_AFTER_MS = FFF_SYNC_INTERVAL_MS * 2 + 30 * 60 * 1000;
 
 export interface FrenchLeagueData {
   id: string;
@@ -31,6 +42,12 @@ export interface FrenchLeagueData {
   lastSyncAt?: string;
   /** Etat affichable par le badge de fraîcheur. */
   syncStatus?: SyncStatus;
+  /** Santé de la sync serveur (`sync_health` Firestore). */
+  syncHealth?: StandingsSyncHealth;
+  /** Dernier message d'erreur serveur (conservé quand le snapshot est obsolète). */
+  lastError?: string;
+  /** Date ISO de la dernière tentative de synchronisation. */
+  lastAttemptAt?: string;
   /** Calendrier officiel publié par le sync DOFA pour cette compétition. */
   fixtures?: FffFixture[];
 }
@@ -38,8 +55,8 @@ export interface FrenchLeagueData {
 export const SYNC_STATUS_LABELS: Record<SyncStatus | 'unknown', string> = {
   live: '● LIVE FFF',
   awaiting_first_sync: '● OFFICIEL FFF',
-  unavailable: '● CERTIFIÉ FFF',
-  unknown: '● OFFICIEL FFF',
+  unavailable: '● DONNÉES NON DISPONIBLES',
+  unknown: '● SOURCE NON CONFIRMÉE',
 };
 
 export const SYNC_STATUS_COLORS: Record<
@@ -278,367 +295,28 @@ function toFixtures(value: unknown): FffFixture[] {
     .filter((fixture) =>        fixture.homeTeamName && fixture.awayTeamName && /^\d{4}-\d{2}-\d{2}$/.test(fixture.date));
 }
 
+/**
+ * Dégrade en structure vide honnête quand aucune source réelle n'est disponible
+ * (Firestore vide, scraper FFF injoignable, hors ligne).
+ * Aucun classement ni buteur inventé : les anciens tableaux « certified seed »
+ * étaient des données fictives étiquetées à tort comme certifiées FFF — ils ont
+ * été retirés (invariant DATA-01 : zéro donnée de démonstration).
+ */
 export function buildCertifiedSeedLeague(leagueId: string, requestedSeason?: string): FrenchLeagueData {
   const meta = FRENCH_LEAGUE_METADATA[leagueId];
-  const season = requestedSeason || activeFffSeason();
-  const baseName = meta?.name ?? `Championnat FFF · ${leagueId.toUpperCase()}`;
-  const seasonTag = season === '2026-2027' ? 'En Cours' : 'Archive Officielle FFF';
-  const divisionLabel = `${season} · ${meta?.divisionLabelBase ?? 'Championnat FFF Officiel'} (${seasonTag})`;
-
-  let standings: LeagueStandingRow[] = [];
-  let scorers: LeagueScorer[] = [];
-
-  const isArchive25 = season === '2025-2026';
-  const isArchive24 = season === '2024-2025';
-  const matchMultiplier = isArchive25 || isArchive24 ? 1.5 : 1.0;
-
-  switch (leagueId) {
-    case 'ligue1':
-      if (isArchive25) {
-        standings = [
-          { rank: 1, team_id: 'psg', name: 'Paris Saint-Germain', played: 34, won: 24, drawn: 7, lost: 3, goals_for: 81, goals_against: 33, goal_diff: 48, points: 79, form: ['V', 'V', 'V', 'V', 'N'] },
-          { rank: 2, team_id: 'monaco', name: 'AS Monaco', played: 34, won: 20, drawn: 7, lost: 7, goals_for: 68, goals_against: 42, goal_diff: 26, points: 67, form: ['V', 'D', 'V', 'V', 'V'] },
-          { rank: 3, team_id: 'brest', name: 'Stade Brestois 29', played: 34, won: 17, drawn: 10, lost: 7, goals_for: 53, goals_against: 34, goal_diff: 19, points: 61, form: ['V', 'N', 'V', 'D', 'V'] },
-          { rank: 4, team_id: 'lille', name: 'LOSC Lille', played: 34, won: 16, drawn: 11, lost: 7, goals_for: 52, goals_against: 34, goal_diff: 18, points: 59, form: ['D', 'V', 'V', 'N', 'V'] },
-          { rank: 5, team_id: 'nice', name: 'OGC Nice', played: 34, won: 15, drawn: 10, lost: 9, goals_for: 40, goals_against: 29, goal_diff: 11, points: 55, form: ['V', 'V', 'N', 'D', 'V'] },
-          { rank: 6, team_id: 'lyon', name: 'Olympique Lyonnais', played: 34, won: 16, drawn: 5, lost: 13, goals_for: 49, goals_against: 55, goal_diff: -6, points: 53, form: ['V', 'V', 'V', 'V', 'D'] },
-          { rank: 7, team_id: 'lens', name: 'RC Lens', played: 34, won: 14, drawn: 9, lost: 11, goals_for: 45, goals_against: 37, goal_diff: 8, points: 51, form: ['N', 'V', 'D', 'V', 'D'] },
-          { rank: 8, team_id: 'marseille', name: 'Olympique de Marseille', played: 34, won: 13, drawn: 11, lost: 10, goals_for: 52, goals_against: 42, goal_diff: 10, points: 50, form: ['V', 'D', 'V', 'N', 'V'] },
-          { rank: 9, team_id: 'reims', name: 'Stade de Reims', played: 34, won: 13, drawn: 8, lost: 13, goals_for: 42, goals_against: 47, goal_diff: -5, points: 47, form: ['D', 'N', 'V', 'D', 'V'] },
-          { rank: 10, team_id: 'rennes', name: 'Stade Rennais FC', played: 34, won: 12, drawn: 10, lost: 12, goals_for: 53, goals_against: 46, goal_diff: 7, points: 46, form: ['V', 'D', 'D', 'V', 'N'] },
-          { rank: 11, team_id: 'toulouse', name: 'Toulouse FC', played: 34, won: 11, drawn: 10, lost: 13, goals_for: 42, goals_against: 46, goal_diff: -4, points: 43, form: ['V', 'V', 'N', 'D', 'D'] },
-          { rank: 12, team_id: 'montpellier', name: 'Montpellier Hérault', played: 34, won: 10, drawn: 12, lost: 12, goals_for: 43, goals_against: 48, goal_diff: -5, points: 41, form: ['N', 'D', 'V', 'V', 'N'] },
-          { rank: 13, team_id: 'strasbourg', name: 'RC Strasbourg Alsace', played: 34, won: 10, drawn: 9, lost: 15, goals_for: 38, goals_against: 50, goal_diff: -12, points: 39, form: ['D', 'D', 'N', 'V', 'D'] },
-          { rank: 14, team_id: 'nantes', name: 'FC Nantes', played: 34, won: 9, drawn: 6, lost: 19, goals_for: 30, goals_against: 55, goal_diff: -25, points: 33, form: ['D', 'V', 'D', 'D', 'V'] },
-          { rank: 15, team_id: 'lehavre', name: 'Le Havre AC', played: 34, won: 7, drawn: 11, lost: 16, goals_for: 34, goals_against: 45, goal_diff: -11, points: 32, form: ['V', 'D', 'D', 'N', 'D'] },
-          { rank: 16, team_id: 'metz', name: 'FC Metz', played: 34, won: 8, drawn: 5, lost: 21, goals_for: 35, goals_against: 58, goal_diff: -23, points: 29, form: ['D', 'D', 'D', 'V', 'D'] },
-          { rank: 17, team_id: 'lorient', name: 'FC Lorient', played: 34, won: 7, drawn: 8, lost: 19, goals_for: 43, goals_against: 66, goal_diff: -23, points: 29, form: ['V', 'D', 'D', 'D', 'D'] },
-          { rank: 18, team_id: 'clermont', name: 'Clermont Foot 63', played: 34, won: 5, drawn: 10, lost: 19, goals_for: 26, goals_against: 60, goal_diff: -34, points: 25, form: ['D', 'N', 'D', 'D', 'D'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Kylian Mbappé', club: 'Paris Saint-Germain', goals: 27, matches: 29, ratio: '0.93' },
-          { rank: 2, name: 'Jonathan David', club: 'LOSC Lille', goals: 19, matches: 34, ratio: '0.56' },
-          { rank: 3, name: 'Alexandre Lacazette', club: 'Olympique Lyonnais', goals: 19, matches: 29, ratio: '0.66' },
-          { rank: 4, name: 'Pierre-Emerick Aubameyang', club: 'Olympique de Marseille', goals: 17, matches: 34, ratio: '0.50' },
-          { rank: 5, name: 'Wissam Ben Yedder', club: 'AS Monaco', goals: 16, matches: 32, ratio: '0.50' },
-        ];
-      } else {
-        // Saison 2026-2027 (Début de Saison - Septembre 2026 - J3/J4)
-        standings = [
-          { rank: 1, team_id: 'psg', name: 'Paris Saint-Germain', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 10, goals_against: 2, goal_diff: 8, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: 'monaco', name: 'AS Monaco', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 7, goals_against: 3, goal_diff: 4, points: 7, form: ['V', 'V', 'N'] },
-          { rank: 3, team_id: 'marseille', name: 'Olympique de Marseille', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 8, goals_against: 4, goal_diff: 4, points: 7, form: ['V', 'N', 'V'] },
-          { rank: 4, team_id: 'lille', name: 'LOSC Lille', played: 3, won: 2, drawn: 0, lost: 1, goals_for: 5, goals_against: 3, goal_diff: 2, points: 6, form: ['V', 'D', 'V'] },
-          { rank: 5, team_id: 'lyon', name: 'Olympique Lyonnais', played: 3, won: 1, drawn: 1, lost: 1, goals_for: 4, goals_against: 4, goal_diff: 0, points: 4, form: ['V', 'D', 'N'] },
-          { rank: 6, team_id: 'lens', name: 'RC Lens', played: 3, won: 1, drawn: 1, lost: 1, goals_for: 3, goals_against: 3, goal_diff: 0, points: 4, form: ['D', 'V', 'N'] },
-          { rank: 7, team_id: 'nice', name: 'OGC Nice', played: 3, won: 1, drawn: 1, lost: 1, goals_for: 4, goals_against: 5, goal_diff: -1, points: 4, form: ['N', 'V', 'D'] },
-          { rank: 8, team_id: 'reims', name: 'Stade de Reims', played: 3, won: 1, drawn: 0, lost: 2, goals_for: 3, goals_against: 5, goal_diff: -2, points: 3, form: ['D', 'V', 'D'] },
-          { rank: 9, team_id: 'rennes', name: 'Stade Rennais FC', played: 3, won: 1, drawn: 0, lost: 2, goals_for: 3, goals_against: 5, goal_diff: -2, points: 3, form: ['V', 'D', 'D'] },
-          { rank: 10, team_id: 'brest', name: 'Stade Brestois 29', played: 3, won: 1, drawn: 0, lost: 2, goals_for: 3, goals_against: 6, goal_diff: -3, points: 3, form: ['D', 'D', 'V'] },
-          { rank: 11, team_id: 'strasbourg', name: 'RC Strasbourg Alsace', played: 3, won: 1, drawn: 0, lost: 2, goals_for: 2, goals_against: 5, goal_diff: -3, points: 3, form: ['D', 'V', 'D'] },
-          { rank: 12, team_id: 'toulouse', name: 'Toulouse FC', played: 3, won: 0, drawn: 2, lost: 1, goals_for: 2, goals_against: 3, goal_diff: -1, points: 2, form: ['N', 'N', 'D'] },
-          { rank: 13, team_id: 'montpellier', name: 'Montpellier Hérault', played: 3, won: 0, drawn: 2, lost: 1, goals_for: 2, goals_against: 4, goal_diff: -2, points: 2, form: ['N', 'D', 'N'] },
-          { rank: 14, team_id: 'nantes', name: 'FC Nantes', played: 3, won: 0, drawn: 1, lost: 2, goals_for: 1, goals_against: 4, goal_diff: -3, points: 1, form: ['D', 'N', 'D'] },
-          { rank: 15, team_id: 'auxerre', name: 'AJ Auxerre', played: 3, won: 0, drawn: 1, lost: 2, goals_for: 1, goals_against: 5, goal_diff: -4, points: 1, form: ['D', 'D', 'N'] },
-          { rank: 16, team_id: 'asse', name: 'AS Saint-Étienne', played: 3, won: 0, drawn: 1, lost: 2, goals_for: 1, goals_against: 6, goal_diff: -5, points: 1, form: ['D', 'N', 'D'] },
-          { rank: 17, team_id: 'angers', name: 'Angers SCO', played: 3, won: 0, drawn: 0, lost: 3, goals_for: 1, goals_against: 7, goal_diff: -6, points: 0, form: ['D', 'D', 'D'] },
-          { rank: 18, team_id: 'lehavre', name: 'Le Havre AC', played: 3, won: 0, drawn: 0, lost: 3, goals_for: 0, goals_against: 7, goal_diff: -7, points: 0, form: ['D', 'D', 'D'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Bradley Barcola', club: 'Paris Saint-Germain', goals: 4, matches: 3, ratio: '1.33' },
-          { rank: 2, name: 'Mason Greenwood', club: 'Olympique de Marseille', goals: 3, matches: 3, ratio: '1.00' },
-          { rank: 3, name: 'Jonathan David', club: 'LOSC Lille', goals: 3, matches: 3, ratio: '1.00' },
-          { rank: 4, name: 'Ousmane Dembélé', club: 'Paris Saint-Germain', goals: 2, matches: 3, ratio: '0.67' },
-          { rank: 5, name: 'Mika Biereth', club: 'AS Monaco', goals: 2, matches: 3, ratio: '0.67' },
-        ];
-      }
-      break;
-
-    case 'd1_d92':
-      if (isArchive25) {
-        standings = [
-          { rank: 1, team_id: 'montrouge', name: 'Montrouge FC 92', played: 22, won: 17, drawn: 3, lost: 2, goals_for: 52, goals_against: 20, goal_diff: 32, points: 54, form: ['V', 'V', 'V', 'V', 'N'] },
-          { rank: 2, team_id: 'suresnes', name: 'JS Suresnes', played: 22, won: 16, drawn: 4, lost: 2, goals_for: 48, goals_against: 22, goal_diff: 26, points: 52, form: ['V', 'V', 'N', 'V', 'V'] },
-          { rank: 3, team_id: 'issy', name: 'FC Issy', played: 22, won: 13, drawn: 5, lost: 4, goals_for: 41, goals_against: 25, goal_diff: 16, points: 44, form: ['V', 'N', 'V', 'D', 'V'] },
-          { rank: 4, team_id: 'meudon', name: 'CS Meudon', played: 22, won: 11, drawn: 6, lost: 5, goals_for: 38, goals_against: 28, goal_diff: 10, points: 39, form: ['N', 'V', 'V', 'D', 'N'] },
-          { rank: 5, team_id: 'acbb', name: 'AC Boulogne-Billancourt', played: 22, won: 10, drawn: 6, lost: 6, goals_for: 34, goals_against: 29, goal_diff: 5, points: 36, form: ['D', 'V', 'N', 'V', 'V'] },
-          { rank: 6, team_id: 'nanterre', name: 'ES Nanterre', played: 22, won: 9, drawn: 6, lost: 7, goals_for: 31, goals_against: 30, goal_diff: 1, points: 33, form: ['V', 'D', 'D', 'V', 'N'] },
-          { rank: 7, team_id: 'antony', name: 'Antony Métropole', played: 22, won: 8, drawn: 5, lost: 9, goals_for: 30, goals_against: 33, goal_diff: -3, points: 29, form: ['D', 'V', 'D', 'N', 'V'] },
-          { rank: 8, team_id: 'chatillon', name: 'AS Châtillon', played: 22, won: 7, drawn: 4, lost: 11, goals_for: 27, goals_against: 36, goal_diff: -9, points: 25, form: ['N', 'D', 'V', 'D', 'D'] },
-          { rank: 9, team_id: 'sevres', name: 'Sèvres FC', played: 22, won: 6, drawn: 5, lost: 11, goals_for: 25, goals_against: 38, goal_diff: -13, points: 23, form: ['D', 'D', 'N', 'V', 'D'] },
-          { rank: 10, team_id: 'rueil', name: 'FC Rueil-Malmaison', played: 22, won: 5, drawn: 6, lost: 11, goals_for: 23, goals_against: 39, goal_diff: -16, points: 21, form: ['D', 'N', 'D', 'D', 'V'] },
-          { rank: 11, team_id: 'bagneux', name: 'CA Bagneux', played: 22, won: 4, drawn: 3, lost: 15, goals_for: 20, goals_against: 45, goal_diff: -25, points: 15, form: ['D', 'D', 'D', 'V', 'D'] },
-          { rank: 12, team_id: 'clichy', name: 'USA Clichy', played: 22, won: 2, drawn: 3, lost: 17, goals_for: 15, goals_against: 55, goal_diff: -40, points: 9, form: ['D', 'D', 'N', 'D', 'D'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Sofiane Haddad', club: 'Montrouge FC 92', goals: 19, matches: 21, ratio: '0.90' },
-          { rank: 2, name: 'Kylian Diallo', club: 'JS Suresnes', goals: 18, matches: 20, ratio: '0.90' },
-          { rank: 3, name: 'Alexandre Dupont', club: 'FC Issy', goals: 14, matches: 22, ratio: '0.63' },
-        ];
-      } else {
-        // Saison 2026-2027 (Début de Saison - Septembre 2026 - J3)
-        standings = [
-          { rank: 1, team_id: 'suresnes', name: 'JS Suresnes', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 7, goals_against: 2, goal_diff: 5, points: 7, form: ['V', 'V', 'N'] },
-          { rank: 2, team_id: 'montrouge', name: 'Montrouge FC 92', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 6, goals_against: 2, goal_diff: 4, points: 7, form: ['V', 'N', 'V'] },
-          { rank: 3, team_id: 'issy', name: 'FC Issy', played: 3, won: 2, drawn: 0, lost: 1, goals_for: 5, goals_against: 3, goal_diff: 2, points: 6, form: ['V', 'D', 'V'] },
-          { rank: 4, team_id: 'meudon', name: 'CS Meudon', played: 3, won: 1, drawn: 2, lost: 0, goals_for: 4, goals_against: 2, goal_diff: 2, points: 5, form: ['N', 'V', 'N'] },
-          { rank: 5, team_id: 'acbb', name: 'AC Boulogne-Billancourt', played: 3, won: 1, drawn: 1, lost: 1, goals_for: 4, goals_against: 3, goal_diff: 1, points: 4, form: ['D', 'V', 'N'] },
-          { rank: 6, team_id: 'nanterre', name: 'ES Nanterre', played: 3, won: 1, drawn: 1, lost: 1, goals_for: 3, goals_against: 3, goal_diff: 0, points: 4, form: ['V', 'D', 'N'] },
-          { rank: 7, team_id: 'antony', name: 'Antony Métropole', played: 3, won: 1, drawn: 0, lost: 2, goals_for: 3, goals_against: 4, goal_diff: -1, points: 3, form: ['D', 'V', 'D'] },
-          { rank: 8, team_id: 'chatillon', name: 'AS Châtillon', played: 3, won: 1, drawn: 0, lost: 2, goals_for: 2, goals_against: 4, goal_diff: -2, points: 3, form: ['N', 'D', 'V'] },
-          { rank: 9, team_id: 'sevres', name: 'Sèvres FC', played: 3, won: 0, drawn: 2, lost: 1, goals_for: 2, goals_against: 4, goal_diff: -2, points: 2, form: ['D', 'N', 'N'] },
-          { rank: 10, team_id: 'rueil', name: 'FC Rueil-Malmaison', played: 3, won: 0, drawn: 1, lost: 2, goals_for: 1, goals_against: 4, goal_diff: -3, points: 1, form: ['D', 'N', 'D'] },
-          { rank: 11, team_id: 'bagneux', name: 'CA Bagneux', played: 3, won: 0, drawn: 1, lost: 2, goals_for: 1, goals_against: 5, goal_diff: -4, points: 1, form: ['D', 'D', 'N'] },
-          { rank: 12, team_id: 'clichy', name: 'USA Clichy', played: 3, won: 0, drawn: 0, lost: 3, goals_for: 0, goals_against: 6, goal_diff: -6, points: 0, form: ['D', 'D', 'D'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Kylian Diallo', club: 'JS Suresnes', goals: 3, matches: 3, ratio: '1.00' },
-          { rank: 2, name: 'Sofiane Haddad', club: 'Montrouge FC 92', goals: 3, matches: 3, ratio: '1.00' },
-          { rank: 3, name: 'Alexandre Dupont', club: 'FC Issy', goals: 2, matches: 3, ratio: '0.67' },
-          { rank: 4, name: 'Maxime Lemoine', club: 'CS Meudon', goals: 2, matches: 3, ratio: '0.67' },
-        ];
-      }
-      break;
-
-    case 'r1_idf_b':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'fc_proday', name: 'FC ProDay', played: 22, won: 17, drawn: 3, lost: 2, goals_for: 51, goals_against: 18, goal_diff: 33, points: 54, form: ['V', 'V', 'V', 'N', 'V'], isMyTeam: true },
-          { rank: 2, team_id: 'rc_france', name: 'Racing CFF', played: 22, won: 15, drawn: 4, lost: 3, goals_for: 45, goals_against: 20, goal_diff: 25, points: 49, form: ['V', 'V', 'D', 'V', 'V'] },
-          { rank: 3, team_id: 'entente_ssg', name: 'Entente SSG', played: 22, won: 13, drawn: 5, lost: 4, goals_for: 39, goals_against: 22, goal_diff: 17, points: 44, form: ['V', 'N', 'V', 'D', 'V'] },
-          { rank: 4, team_id: 'creteil_b', name: 'US Créteil-Lusitanos B', played: 22, won: 11, drawn: 6, lost: 5, goals_for: 36, goals_against: 26, goal_diff: 10, points: 39, form: ['N', 'V', 'V', 'D', 'N'] },
-          { rank: 5, team_id: 'redstar_b', name: 'Red Star FC B', played: 22, won: 10, drawn: 6, lost: 6, goals_for: 34, goals_against: 27, goal_diff: 7, points: 36, form: ['D', 'V', 'N', 'V', 'V'] },
-          { rank: 6, team_id: 'paris13_b', name: 'Paris 13 Atletico B', played: 22, won: 9, drawn: 6, lost: 7, goals_for: 30, goals_against: 29, goal_diff: 1, points: 33, form: ['V', 'D', 'D', 'V', 'N'] },
-          { rank: 7, team_id: 'meudon', name: 'AS Meudon', played: 22, won: 8, drawn: 5, lost: 9, goals_for: 28, goals_against: 31, goal_diff: -3, points: 29, form: ['D', 'V', 'D', 'N', 'V'] },
-          { rank: 8, team_id: 'colombienne', name: 'ES Colombienne', played: 22, won: 7, drawn: 5, lost: 10, goals_for: 26, goals_against: 34, goal_diff: -8, points: 26, form: ['N', 'D', 'V', 'D', 'D'] },
-          { rank: 9, team_id: 'rueil', name: 'FC Rueil-Malmaison', played: 22, won: 6, drawn: 6, lost: 10, goals_for: 24, goals_against: 36, goal_diff: -12, points: 24, form: ['D', 'N', 'D', 'V', 'D'] },
-          { rank: 10, team_id: 'suresnes', name: 'JS Suresnes', played: 22, won: 5, drawn: 5, lost: 12, goals_for: 22, goals_against: 38, goal_diff: -16, points: 20, form: ['D', 'D', 'N', 'D', 'V'] },
-          { rank: 11, team_id: 'montrouge_b', name: 'Montrouge FC 92 B', played: 22, won: 4, drawn: 4, lost: 14, goals_for: 19, goals_against: 44, goal_diff: -25, points: 16, form: ['D', 'D', 'D', 'V', 'D'] },
-          { rank: 12, team_id: 'bretigny_b', name: 'CS Brétigny B', played: 22, won: 2, drawn: 3, lost: 17, goals_for: 15, goals_against: 48, goal_diff: -33, points: 9, form: ['D', 'D', 'N', 'D', 'D'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Kylian Perez', club: 'FC ProDay', goals: 21, matches: 22, ratio: '0.95' },
-          { rank: 2, name: 'Rayan Benali', club: 'Racing CFF', goals: 17, matches: 21, ratio: '0.81' },
-          { rank: 3, name: 'Mehdi Traoré', club: 'Entente SSG', goals: 14, matches: 20, ratio: '0.70' },
-          { rank: 4, name: 'Thomas Martin', club: 'FC ProDay', goals: 11, matches: 22, ratio: '0.50' },
-          { rank: 5, name: 'Sofiane Haddad', club: 'AS Meudon', goals: 9, matches: 22, ratio: '0.41' },
-        ];
-      } else {
-        // Saison 2026-2027 officielle : FC ProDay 1er, 39 pts, 12V 3N 1D, +22 diff
-        standings = [
-          { rank: 1, team_id: 'fc_proday', name: 'FC ProDay', played: 16, won: 12, drawn: 3, lost: 1, goals_for: 35, goals_against: 13, goal_diff: 22, points: 39, form: ['V', 'V', 'V', 'N', 'V'], isMyTeam: true },
-          { rank: 2, team_id: 'rc_france', name: 'Racing CFF', played: 16, won: 11, drawn: 3, lost: 2, goals_for: 31, goals_against: 15, goal_diff: 16, points: 36, form: ['V', 'V', 'N', 'V', 'V'] },
-          { rank: 3, team_id: 'entente_ssg', name: 'Entente SSG', played: 16, won: 9, drawn: 4, lost: 3, goals_for: 27, goals_against: 16, goal_diff: 11, points: 31, form: ['V', 'N', 'V', 'D', 'V'] },
-          { rank: 4, team_id: 'creteil_b', name: 'US Créteil-Lusitanos B', played: 16, won: 8, drawn: 4, lost: 4, goals_for: 25, goals_against: 18, goal_diff: 7, points: 28, form: ['N', 'V', 'V', 'D', 'N'] },
-          { rank: 5, team_id: 'redstar_b', name: 'Red Star FC B', played: 16, won: 7, drawn: 5, lost: 4, goals_for: 24, goals_against: 19, goal_diff: 5, points: 26, form: ['D', 'V', 'N', 'V', 'V'] },
-          { rank: 6, team_id: 'paris13_b', name: 'Paris 13 Atletico B', played: 16, won: 7, drawn: 3, lost: 6, goals_for: 21, goals_against: 20, goal_diff: 1, points: 24, form: ['V', 'D', 'D', 'V', 'N'] },
-          { rank: 7, team_id: 'meudon', name: 'AS Meudon', played: 16, won: 6, drawn: 4, lost: 6, goals_for: 20, goals_against: 22, goal_diff: -2, points: 22, form: ['D', 'V', 'D', 'N', 'V'] },
-          { rank: 8, team_id: 'colombienne', name: 'ES Colombienne', played: 16, won: 5, drawn: 5, lost: 6, goals_for: 19, goals_against: 23, goal_diff: -4, points: 20, form: ['N', 'D', 'V', 'D', 'D'] },
-          { rank: 9, team_id: 'rueil', name: 'FC Rueil-Malmaison', played: 16, won: 4, drawn: 5, lost: 7, goals_for: 17, goals_against: 24, goal_diff: -7, points: 17, form: ['D', 'N', 'D', 'V', 'D'] },
-          { rank: 10, team_id: 'suresnes', name: 'JS Suresnes', played: 16, won: 3, drawn: 5, lost: 8, goals_for: 15, goals_against: 26, goal_diff: -11, points: 14, form: ['D', 'D', 'N', 'D', 'V'] },
-          { rank: 11, team_id: 'montrouge_b', name: 'Montrouge FC 92 B', played: 16, won: 3, drawn: 2, lost: 11, goals_for: 14, goals_against: 31, goal_diff: -17, points: 11, form: ['D', 'D', 'D', 'V', 'D'] },
-          { rank: 12, team_id: 'bretigny_b', name: 'CS Brétigny B', played: 16, won: 1, drawn: 4, lost: 11, goals_for: 11, goals_against: 32, goal_diff: -21, points: 7, form: ['D', 'D', 'N', 'D', 'D'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Kylian Perez', club: 'FC ProDay', goals: 14, matches: 16, ratio: '0.88' },
-          { rank: 2, name: 'Rayan Benali', club: 'Racing CFF', goals: 11, matches: 15, ratio: '0.73' },
-          { rank: 3, name: 'Mehdi Traoré', club: 'Entente SSG', goals: 9, matches: 14, ratio: '0.64' },
-          { rank: 4, name: 'Thomas Martin', club: 'FC ProDay', goals: 7, matches: 16, ratio: '0.44' },
-          { rank: 5, name: 'Sofiane Haddad', club: 'AS Meudon', goals: 6, matches: 15, ratio: '0.40' },
-        ];
-      }
-      break;
-
-    case 'r1_idf_a':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'cergy', name: 'Cergy Pontoise FC', played: 22, won: 16, drawn: 4, lost: 2, goals_for: 47, goals_against: 19, goal_diff: 28, points: 52, form: ['V', 'V', 'V', 'V', 'N'] },
-          { rank: 2, team_id: 'saint_leu', name: 'FC Saint-Leu', played: 22, won: 14, drawn: 5, lost: 3, goals_for: 42, goals_against: 21, goal_diff: 21, points: 47, form: ['V', 'V', 'N', 'V', 'V'] },
-          { rank: 3, team_id: 'les_mureaux', name: 'OFC Les Mureaux', played: 22, won: 13, drawn: 4, lost: 5, goals_for: 38, goals_against: 23, goal_diff: 15, points: 43, form: ['V', 'N', 'V', 'D', 'V'] },
-        ];
-      } else {
-        standings = [
-          { rank: 1, team_id: 'cergy', name: 'Cergy Pontoise FC', played: 16, won: 11, drawn: 3, lost: 2, goals_for: 32, goals_against: 14, goal_diff: 18, points: 36, form: ['V', 'V', 'V', 'N', 'V'] },
-          { rank: 2, team_id: 'saint_leu', name: 'FC Saint-Leu', played: 16, won: 10, drawn: 4, lost: 2, goals_for: 29, goals_against: 15, goal_diff: 14, points: 34, form: ['V', 'V', 'N', 'V', 'V'] },
-          { rank: 3, team_id: 'les_mureaux', name: 'OFC Les Mureaux', played: 16, won: 9, drawn: 3, lost: 4, goals_for: 26, goals_against: 17, goal_diff: 9, points: 30, form: ['V', 'N', 'V', 'D', 'V'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Amine Hamadi', club: 'Cergy Pontoise FC', goals: 12, matches: 15, ratio: '0.80' },
-        ];
-      }
-      break;
-
-    case 'ligue2':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'lorient', name: 'FC Lorient', played: 34, won: 20, drawn: 7, lost: 7, goals_for: 62, goals_against: 31, goal_diff: 31, points: 67, form: ['V', 'V', 'N', 'V', 'V'] },
-          { rank: 2, team_id: 'paris_fc', name: 'Paris FC', played: 34, won: 19, drawn: 8, lost: 7, goals_for: 56, goals_against: 32, goal_diff: 24, points: 65, form: ['V', 'N', 'V', 'V', 'D'] },
-          { rank: 3, team_id: 'metz', name: 'FC Metz', played: 34, won: 18, drawn: 9, lost: 7, goals_for: 52, goals_against: 30, goal_diff: 22, points: 63, form: ['N', 'V', 'V', 'V', 'N'] },
-          { rank: 4, team_id: 'dunkerque', name: 'USL Dunkerque', played: 34, won: 17, drawn: 6, lost: 11, goals_for: 48, goals_against: 40, goal_diff: 8, points: 57, form: ['V', 'D', 'V', 'D', 'V'] },
-        ];
-      } else {
-        // Saison 2026-2027 (Début de Saison - J3)
-        standings = [
-          { rank: 1, team_id: 'lorient', name: 'FC Lorient', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 7, goals_against: 1, goal_diff: 6, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: 'paris_fc', name: 'Paris FC', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 6, goals_against: 2, goal_diff: 4, points: 7, form: ['V', 'N', 'V'] },
-          { rank: 3, team_id: 'metz', name: 'FC Metz', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 5, goals_against: 2, goal_diff: 3, points: 7, form: ['N', 'V', 'V'] },
-          { rank: 4, team_id: 'dunkerque', name: 'USL Dunkerque', played: 3, won: 2, drawn: 0, lost: 1, goals_for: 4, goals_against: 3, goal_diff: 1, points: 6, form: ['V', 'D', 'V'] },
-          { rank: 5, team_id: 'annecy', name: 'FC Annecy', played: 3, won: 1, drawn: 1, lost: 1, goals_for: 3, goals_against: 3, goal_diff: 0, points: 4, form: ['V', 'D', 'N'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Eli Junior Kroupi', club: 'FC Lorient', goals: 3, matches: 3, ratio: '1.00' },
-          { rank: 2, name: 'Jean-Philippe Krasso', club: 'Paris FC', goals: 2, matches: 3, ratio: '0.67' },
-        ];
-      }
-      break;
-
-    case 'national1':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'nancy', name: 'AS Nancy-Lorraine', played: 34, won: 19, drawn: 8, lost: 7, goals_for: 54, goals_against: 32, goal_diff: 22, points: 65, form: ['V', 'V', 'N', 'V', 'V'] },
-          { rank: 2, team_id: 'boulogne', name: 'US Boulogne CO', played: 34, won: 18, drawn: 9, lost: 7, goals_for: 50, goals_against: 30, goal_diff: 20, points: 63, form: ['V', 'N', 'V', 'V', 'D'] },
-        ];
-      } else {
-        // Saison 2026-2027 (Début de Saison - J3)
-        standings = [
-          { rank: 1, team_id: 'nancy', name: 'AS Nancy-Lorraine', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 6, goals_against: 1, goal_diff: 5, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: 'boulogne', name: 'US Boulogne CO', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 5, goals_against: 2, goal_diff: 3, points: 7, form: ['V', 'N', 'V'] },
-          { rank: 3, team_id: 'orleans', name: 'US Orléans', played: 3, won: 2, drawn: 0, lost: 1, goals_for: 4, goals_against: 2, goal_diff: 2, points: 6, form: ['V', 'D', 'V'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Hicham Benkaid', club: 'FC Rouen 1899', goals: 3, matches: 3, ratio: '1.00' },
-        ];
-      }
-      break;
-
-    case 'd1_d93':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'stdenis', name: 'AS Saint-Denis', played: 22, won: 17, drawn: 3, lost: 2, goals_for: 52, goals_against: 19, goal_diff: 33, points: 54, form: ['V', 'V', 'V', 'V', 'N'] },
-        ];
-      } else {
-        standings = [
-          { rank: 1, team_id: 'stdenis', name: 'AS Saint-Denis', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 8, goals_against: 2, goal_diff: 6, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: 'bobigny2', name: 'FC 93 Bobigny-BG-Gagny 2', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 6, goals_against: 2, goal_diff: 4, points: 7, form: ['V', 'V', 'N'] },
-        ];
-      }
-      break;
-
-    case 'd1_d75':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'paris_fc2', name: 'Paris FC 3', played: 22, won: 16, drawn: 4, lost: 2, goals_for: 48, goals_against: 20, goal_diff: 28, points: 52, form: ['V', 'V', 'V', 'V', 'N'] },
-        ];
-      } else {
-        standings = [
-          { rank: 1, team_id: 'paris_fc2', name: 'Paris FC 3', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 7, goals_against: 1, goal_diff: 6, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: 'esc11', name: 'ESC XI Paris', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 5, goals_against: 2, goal_diff: 3, points: 7, form: ['V', 'V', 'N'] },
-        ];
-      }
-      break;
-
-    case 'd1_d94':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'creteil2', name: 'US Créteil-Lusitanos 2', played: 22, won: 17, drawn: 3, lost: 2, goals_for: 50, goals_against: 18, goal_diff: 32, points: 54, form: ['V', 'V', 'V', 'V', 'N'] },
-        ];
-      } else {
-        standings = [
-          { rank: 1, team_id: 'creteil2', name: 'US Créteil-Lusitanos 2', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 7, goals_against: 1, goal_diff: 6, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: 'vitry', name: 'US Vitry', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 5, goals_against: 2, goal_diff: 3, points: 7, form: ['V', 'V', 'N'] },
-        ];
-      }
-      break;
-
-    case 'd1_d69':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'laduchere', name: 'Lyon La Duchère 2', played: 22, won: 16, drawn: 4, lost: 2, goals_for: 49, goals_against: 19, goal_diff: 30, points: 52, form: ['V', 'V', 'V', 'V', 'N'] },
-        ];
-      } else {
-        standings = [
-          { rank: 1, team_id: 'laduchere', name: 'Lyon La Duchère 2', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 7, goals_against: 2, goal_diff: 5, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: 'stpriest2', name: 'AS Saint-Priest 2', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 5, goals_against: 2, goal_diff: 3, points: 7, form: ['V', 'V', 'N'] },
-        ];
-      }
-      break;
-
-    case 'd1_d13':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'euga', name: 'EUGA Ardziv Marseille', played: 22, won: 16, drawn: 3, lost: 3, goals_for: 47, goals_against: 21, goal_diff: 26, points: 51, form: ['V', 'V', 'V', 'V', 'N'] },
-        ];
-      } else {
-        standings = [
-          { rank: 1, team_id: 'euga', name: 'EUGA Ardziv Marseille', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 7, goals_against: 2, goal_diff: 5, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: 'marignane2', name: 'Marignane Gignac CB 2', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 5, goals_against: 2, goal_diff: 3, points: 7, form: ['V', 'V', 'N'] },
-        ];
-      }
-      break;
-
-    case 'd1_d59':
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: 'marcquois', name: 'Olympique Marcquois', played: 22, won: 17, drawn: 3, lost: 2, goals_for: 50, goals_against: 18, goal_diff: 32, points: 54, form: ['V', 'V', 'V', 'V', 'N'] },
-        ];
-      } else {
-        standings = [
-          { rank: 1, team_id: 'marcquois', name: 'Olympique Marcquois', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 8, goals_against: 2, goal_diff: 6, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: 'croix', name: 'Iris Club de Croix 2', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 6, goals_against: 2, goal_diff: 4, points: 7, form: ['V', 'V', 'N'] },
-        ];
-      }
-      break;
-
-    default:
-      if (isArchive25 || isArchive24) {
-        standings = [
-          { rank: 1, team_id: `${leagueId}_1`, name: 'AS Saint-Denis', played: 22, won: 17, drawn: 3, lost: 2, goals_for: 50, goals_against: 18, goal_diff: 32, points: 54, form: ['V', 'V', 'V', 'V', 'N'] },
-          { rank: 2, team_id: `${leagueId}_2`, name: 'FC Créteil 2', played: 22, won: 15, drawn: 4, lost: 3, goals_for: 46, goals_against: 20, goal_diff: 26, points: 49, form: ['V', 'V', 'N', 'V', 'V'] },
-          { rank: 3, team_id: `${leagueId}_3`, name: 'US Vitry', played: 22, won: 13, drawn: 5, lost: 4, goals_for: 40, goals_against: 24, goal_diff: 16, points: 44, form: ['V', 'N', 'V', 'D', 'V'] },
-          { rank: 4, team_id: `${leagueId}_4`, name: 'JS Versailles 2', played: 22, won: 11, drawn: 6, lost: 5, goals_for: 36, goals_against: 27, goal_diff: 9, points: 39, form: ['N', 'V', 'V', 'D', 'N'] },
-          { rank: 5, team_id: `${leagueId}_5`, name: 'ES Colombes', played: 22, won: 10, drawn: 6, lost: 6, goals_for: 33, goals_against: 28, goal_diff: 5, points: 36, form: ['D', 'V', 'N', 'V', 'V'] },
-          { rank: 6, team_id: `${leagueId}_6`, name: 'CA Aubervilliers 2', played: 22, won: 9, drawn: 5, lost: 8, goals_for: 30, goals_against: 30, goal_diff: 0, points: 32, form: ['V', 'D', 'D', 'V', 'N'] },
-          { rank: 7, team_id: `${leagueId}_7`, name: 'AS Poissy 2', played: 22, won: 8, drawn: 5, lost: 9, goals_for: 28, goals_against: 32, goal_diff: -4, points: 29, form: ['D', 'V', 'D', 'N', 'V'] },
-          { rank: 8, team_id: `${leagueId}_8`, name: 'US Ivry 2', played: 22, won: 7, drawn: 4, lost: 11, goals_for: 26, goals_against: 35, goal_diff: -9, points: 25, form: ['N', 'D', 'V', 'D', 'D'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Lucas Martin', club: 'AS Saint-Denis', goals: 18, matches: 21, ratio: '0.86' },
-          { rank: 2, name: 'Thomas Bernard', club: 'FC Créteil 2', goals: 15, matches: 22, ratio: '0.68' },
-        ];
-      } else {
-        // Début de saison 2026-2027 (J3 - Septembre 2026)
-        standings = [
-          { rank: 1, team_id: `${leagueId}_1`, name: 'AS Saint-Denis', played: 3, won: 3, drawn: 0, lost: 0, goals_for: 8, goals_against: 2, goal_diff: 6, points: 9, form: ['V', 'V', 'V'] },
-          { rank: 2, team_id: `${leagueId}_2`, name: 'FC Créteil 2', played: 3, won: 2, drawn: 1, lost: 0, goals_for: 6, goals_against: 2, goal_diff: 4, points: 7, form: ['V', 'V', 'N'] },
-          { rank: 3, team_id: `${leagueId}_3`, name: 'US Vitry', played: 3, won: 2, drawn: 0, lost: 1, goals_for: 5, goals_against: 3, goal_diff: 2, points: 6, form: ['V', 'D', 'V'] },
-          { rank: 4, team_id: `${leagueId}_4`, name: 'JS Versailles 2', played: 3, won: 1, drawn: 2, lost: 0, goals_for: 4, goals_against: 2, goal_diff: 2, points: 5, form: ['N', 'V', 'N'] },
-          { rank: 5, team_id: `${leagueId}_5`, name: 'ES Colombes', played: 3, won: 1, drawn: 1, lost: 1, goals_for: 4, goals_against: 3, goal_diff: 1, points: 4, form: ['D', 'V', 'N'] },
-          { rank: 6, team_id: `${leagueId}_6`, name: 'CA Aubervilliers 2', played: 3, won: 1, drawn: 1, lost: 1, goals_for: 3, goals_against: 3, goal_diff: 0, points: 4, form: ['V', 'D', 'N'] },
-          { rank: 7, team_id: `${leagueId}_7`, name: 'AS Poissy 2', played: 3, won: 1, drawn: 0, lost: 2, goals_for: 3, goals_against: 5, goal_diff: -2, points: 3, form: ['D', 'V', 'D'] },
-          { rank: 8, team_id: `${leagueId}_8`, name: 'US Ivry 2', played: 3, won: 0, drawn: 1, lost: 2, goals_for: 2, goals_against: 6, goal_diff: -4, points: 1, form: ['D', 'N', 'D'] },
-        ];
-        scorers = [
-          { rank: 1, name: 'Lucas Martin', club: 'AS Saint-Denis', goals: 3, matches: 3, ratio: '1.00' },
-          { rank: 2, name: 'Thomas Bernard', club: 'FC Créteil 2', goals: 2, matches: 3, ratio: '0.67' },
-        ];
-      }
-      break;
-  }
-
   return {
     id: leagueId,
-    name: baseName,
+    name: meta?.name ?? `Compétition ${leagueId}`,
     category: meta?.category ?? 'district',
     region: meta?.region,
     districtCode: meta?.districtCode,
-    divisionLabel,
-    season,
-    standings,
-    scorers,
-    source: 'certified_seed',
-    officialFffCertified: true,
-    lastSyncAt: new Date().toISOString(),
-    syncStatus: 'live',
+    divisionLabel: meta?.name ?? `Compétition ${leagueId}`,
+    season: requestedSeason || activeFffSeason(),
+    standings: [],
+    scorers: [],
+    source: 'no_source',
+    officialFffCertified: false,
+    syncStatus: 'unavailable',
     fixtures: [],
   };
 }
@@ -661,6 +339,7 @@ export const frenchFootballStandingsService = {
   async getLocalFallback(leagueId: string, season?: string): Promise<FrenchLeagueData> {
     const s = season || activeFffSeason();
     try {
+      const { fffScraperService } = await import('./fffScraper.service');
       const scraped = await fffScraperService.syncOfficialStandings(leagueId);
       if (scraped && scraped.standings && scraped.standings.length > 0 && (!season || scraped.season === season)) {
         const rows = toStandingRows(scraped.standings);
@@ -673,7 +352,7 @@ export const frenchFootballStandingsService = {
           divisionLabel: scraped.divisionLabel,
           season: scraped.season,
           standings: rows,
-          scorers: scraped.scorers && scraped.scorers.length > 0 ? scraped.scorers : buildCertifiedSeedLeague(leagueId, s).scorers,
+          scorers: scraped.scorers && scraped.scorers.length > 0 ? scraped.scorers : [],
           source: scraped.source,
           officialFffCertified: true,
           lastSyncAt: scraped.lastSyncAt,
@@ -682,7 +361,7 @@ export const frenchFootballStandingsService = {
         };
       }
     } catch {
-      // Fallback certifié riche
+      // Source officielle injoignable : dégradation vide, jamais un classement inventé
     }
     return buildCertifiedSeedLeague(leagueId, s);
   },
@@ -707,10 +386,9 @@ export const frenchFootballStandingsService = {
       if (standings.length === 0) return buildCertifiedSeedLeague(leagueId, targetSeason);
 
       const source = data.source ? String(data.source) : undefined;
-      const seedScorers = buildCertifiedSeedLeague(leagueId, targetSeason).scorers;
       const scorers = Array.isArray(data.scorers) && data.scorers.length > 0
         ? (data.scorers as LeagueScorer[])
-        : seedScorers;
+        : [];
 
       return {
         id: String(data.id ?? leagueId),
@@ -725,7 +403,12 @@ export const frenchFootballStandingsService = {
         source,
         officialFffCertified: true,
         lastSyncAt: isoDate(data.lastSyncAt) ?? isoDate(data.updated_at),
+        // Le snapshot existe : le badge de fraîcheur est piloté par `sync_health`,
+        // jamais par la seule présence de lignes (une donnée ancienne n'est pas fraîche).
         syncStatus: 'live',
+        syncHealth: normalizeSyncHealth(data.sync_health),
+        lastError: typeof data.last_error === 'string' ? data.last_error : undefined,
+        lastAttemptAt: isoDate(data.last_attempt_at),
         fixtures: toFixtures(data.fixtures),
       };
     } catch {
@@ -747,17 +430,6 @@ export const frenchFootballStandingsService = {
       });
     });
 
-    // Incursion toujours dans les données certifiées pour qu'aucun club ne manque jamais
-    leagueIds.forEach((id) => {
-      const seed = buildCertifiedSeedLeague(id);
-      seed.standings.forEach((club) => {
-        const alreadyIn = results.some((r) => r.club.name.toLowerCase() === club.name.toLowerCase());
-        if (!alreadyIn && club.name.toLowerCase().includes(query)) {
-          results.push({ league: seed, club });
-        }
-      });
-    });
-
     return results;
   },
 
@@ -767,6 +439,7 @@ export const frenchFootballStandingsService = {
     if (cloud && cloud.standings && cloud.standings.length > 0) return cloud;
 
     try {
+      const { fffScraperService } = await import('./fffScraper.service');
       const scraped = await fffScraperService.syncOfficialStandings(leagueId);
       const rows = toStandingRows(scraped.standings);
       if (rows.length > 0) {
@@ -779,7 +452,7 @@ export const frenchFootballStandingsService = {
           divisionLabel: scraped.divisionLabel,
           season: scraped.season || s,
           standings: rows,
-          scorers: scraped.scorers && scraped.scorers.length > 0 ? scraped.scorers : buildCertifiedSeedLeague(leagueId, s).scorers,
+          scorers: scraped.scorers && scraped.scorers.length > 0 ? scraped.scorers : [],
           source: scraped.source,
           officialFffCertified: true,
           lastSyncAt: scraped.lastSyncAt,
@@ -788,8 +461,101 @@ export const frenchFootballStandingsService = {
         };
       }
     } catch {
-      // Fallback certifié
+      // Source officielle injoignable : dégradation vide, jamais un classement inventé
     }
     return buildCertifiedSeedLeague(leagueId, s);
   },
+
+  /**
+   * Rafraîchissement manuel (admin) — Cloud Function verrouillée et limitée à
+   * un déclenchement toutes les 15 minutes. Ne trompe jamais l'utilisateur :
+   * en cas de refus (rate limit / verrou), une erreur explicite est remontée.
+   */
+  async refreshNow(): Promise<{ updated: number; failed: number; ranAt: string }> {
+    const { callFunction } = await import('../lib/firebaseFunctions');
+    return callFunction<Record<string, never>, { updated: number; failed: number; ranAt: string }>(
+      'syncFffStandingsNow',
+      {},
+    );
+  },
 };
+
+function normalizeSyncHealth(value: unknown): StandingsSyncHealth | undefined {
+  if (typeof value !== 'string') return undefined;
+  const v = value.trim().toLowerCase();
+  if (
+    v === 'ok' ||
+    v === 'degraded' ||
+    v === 'stale' ||
+    v === 'error' ||
+    v === 'unavailable'
+  ) {
+    return v;
+  }
+  return undefined;
+}
+
+/**
+ * Décrit l'état de fraîcheur d'un classement pour l'UI.
+ * `isStale` est vrai dès que la dernière synchronisation réussie date de plus de
+ * deux cadences, ou dès que le serveur signale une erreur : l'ancienneté réelle
+ * est alors affichée, jamais un faux « à jour ».
+ */
+export function describeStandingsFreshness(
+  data: FrenchLeagueData | null,
+  now = new Date(),
+): {
+  health: StandingsSyncHealth;
+  label: string;
+  detail: string;
+  color: string;
+  isStale: boolean;
+  ageLabel: string | null;
+} {
+  const ageMs = data?.lastSyncAt ? now.getTime() - new Date(data.lastSyncAt).getTime() : null;
+  const ageLabel = ageMs != null && ageMs >= 0 ? formatAge(ageMs) : null;
+
+  if (!data || data.syncStatus === 'unavailable' || !data.lastSyncAt) {
+    return {
+      health: 'unavailable',
+      label: 'Aucune donnée officielle disponible',
+      detail: data?.lastError
+        ? `Dernière erreur : ${data.lastError}`
+        : 'La synchronisation FFF n’a pas encore publié de classement pour cette compétition.',
+      color: '#94A3B8',
+      isStale: true,
+      ageLabel: null,
+    };
+  }
+
+  const reported = data.syncHealth ?? 'ok';
+  const tooOld = ageMs != null && ageMs > FFF_STALE_AFTER_MS;
+  const health: StandingsSyncHealth = tooOld && reported === 'ok' ? 'stale' : reported;
+  const isStale = health !== 'ok';
+  const color =
+    health === 'ok' ? '#10B981' : health === 'degraded' ? '#F59E0B' : '#EF4444';
+
+  const label =
+    health === 'ok'
+      ? 'Classement officiel synchronisé'
+      : health === 'degraded'
+        ? 'Synchronisation partielle'
+        : health === 'stale'
+          ? 'Classement potentiellement obsolète'
+          : 'Erreur de synchronisation';
+
+  const base = `Dernière mise à jour réussie : ${ageLabel ?? 'date inconnue'}`;
+  const detail = isStale && data.lastError ? `${base} · ${data.lastError}` : base;
+
+  return { health, label, detail, color, isStale, ageLabel };
+}
+
+function formatAge(ms: number): string {
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return 'à l’instant';
+  if (min < 60) return `il y a ${min} min`;
+  const hours = Math.floor(min / 60);
+  if (hours < 24) return `il y a ${hours} h`;
+  const days = Math.floor(hours / 24);
+  return `il y a ${days} j`;
+}

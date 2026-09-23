@@ -10,7 +10,7 @@ export type ParentPageIdentity = {
 };
 
 export const PARENT_SITE = {
-  bg: '#0A0A0A',
+  bg: '#000000',
   accent: '#F97316',
   accentSoft: 'rgba(249, 115, 22, 0.14)',
   ink: '#FAFAFA',

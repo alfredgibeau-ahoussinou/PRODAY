@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useReducedMotion } from '../../../hooks/useReducedMotion';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { adminMotion } from './adminMotion';
 
@@ -19,7 +19,7 @@ type BlockProps = {
 };
 
 export function AdminSkeletonBlock({ height = 14, width = '100%', style }: BlockProps) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const reduced = useReducedMotion();
   const shimmer = useSharedValue(0);
 

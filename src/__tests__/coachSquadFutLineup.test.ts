@@ -107,25 +107,6 @@ describe('CoachSquadFutLineup & Pitch View Architecture', () => {
     });
   });
 
-  it('calculates squad average OVR rating accurately', () => {
-    const mockStarters = [
-      { ovr: 86 },
-      { ovr: 82 },
-      { ovr: 87 },
-      { ovr: 83 },
-      { ovr: 81 },
-      { ovr: 85 },
-      { ovr: 84 },
-      { ovr: 88 },
-      { ovr: 83 },
-      { ovr: 89 },
-      { ovr: 84 },
-    ];
-    const total = mockStarters.reduce((acc, p) => acc + p.ovr, 0);
-    const avg = Math.round(total / mockStarters.length);
-    expect(avg).toBe(85);
-  });
-
   it('partitions players into starters and reserves dynamically based on active format starterCount', () => {
     const fullSquad = Array.from({ length: 18 }).map((_, i) => ({
       id: `p-${i + 1}`,
@@ -162,49 +143,6 @@ describe('CoachSquadFutLineup & Pitch View Architecture', () => {
     const bench3 = fullSquad.slice(MATCH_FORMATS_CONFIG['3v3'].starterCount);
     expect(starters3).toHaveLength(3);
     expect(bench3).toHaveLength(15);
-  });
-
-  it('cycles player RSVP through present -> pending -> absent -> injured -> present and demotes absent/injured starters', () => {
-    const nextMap = {
-      present: 'pending',
-      pending: 'absent',
-      absent: 'injured',
-      injured: 'present',
-    } as const;
-
-    expect(nextMap['present']).toBe('pending');
-    expect(nextMap['pending']).toBe('absent');
-    expect(nextMap['absent']).toBe('injured');
-    expect(nextMap['injured']).toBe('present');
-
-    const cyclePlayer = (p: { rsvp: 'present' | 'pending' | 'absent' | 'injured'; role: 'starter' | 'sub' }) => {
-      const nextRsvp = nextMap[p.rsvp];
-      const demote = (nextRsvp === 'absent' || nextRsvp === 'injured') && p.role === 'starter';
-      return {
-        ...p,
-        rsvp: nextRsvp,
-        role: demote ? ('sub' as const) : p.role,
-      };
-    };
-
-    let player: {
-      rsvp: 'present' | 'pending' | 'absent' | 'injured';
-      role: 'starter' | 'sub';
-    } = { rsvp: 'present', role: 'starter' };
-    player = cyclePlayer(player); // pending
-    expect(player.rsvp).toBe('pending');
-    expect(player.role).toBe('starter');
-
-    player = cyclePlayer(player); // absent -> demoted to sub
-    expect(player.rsvp).toBe('absent');
-    expect(player.role).toBe('sub');
-
-    player = cyclePlayer(player); // injured
-    expect(player.rsvp).toBe('injured');
-    expect(player.role).toBe('sub');
-
-    player = cyclePlayer(player); // present
-    expect(player.rsvp).toBe('present');
   });
 
   it('houses the exhaustive global tactical matrix with 57+ distinct formations', () => {

@@ -25,6 +25,21 @@ export interface MatchTalkConsigne {
   text: string;
 }
 
+export interface SetPieceTakers {
+  penalties?: string[];
+  corners_left?: string[];
+  corners_right?: string[];
+  free_kicks_direct?: string[];
+  first_post_roles?: string[];
+}
+
+export interface TacticalPhaseInstructions {
+  attack?: string[];
+  defense?: string[];
+  transition_offensive?: string[];
+  transition_defensive?: string[];
+}
+
 export interface MatchTalkBrief {
   id: string;
   event_id: string;
@@ -45,6 +60,10 @@ export interface MatchTalkBrief {
   shared?: boolean;
   created_by: string;
   updated_at: Date;
+  /** Tireurs désignés coups de pied arrêtés */
+  set_pieces?: SetPieceTakers;
+  /** Consignes spécifiques par phase de jeu */
+  phase_instructions?: TacticalPhaseInstructions;
 }
 
 export function filterApprovedClips(brief: MatchTalkBrief): MatchTalkClipSuggestion[] {

@@ -8,6 +8,7 @@ import {
   JoueurHudCorners,
 } from '../player/joueurPortalUi';
 import { ProDayText } from '../ui/ProDayText';
+import { AmbientGlow } from '../ui/AmbientGlow';
 import { spacing } from '../../theme/designTokens';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
@@ -50,7 +51,11 @@ export function JoueurScreenChrome({
       <View
         style={[
           styles.fallback,
-          { backgroundColor: PLAYER_DARK.bg, paddingTop: spacing.xs },
+          {
+            backgroundColor: PLAYER_DARK.bg,
+            // DESIGN.md §5.1 — intégration stricte des safe areas.
+            paddingTop: Math.max(insets.top, 12),
+          },
           style,
         ]}
       >
@@ -63,13 +68,25 @@ export function JoueurScreenChrome({
 
   return (
     <JoueurIdentityProvider identity={identity}>
-      <View style={[styles.root, { backgroundColor: PLAYER_DARK.bg }, style]}>
+      <View
+        style={[
+          styles.root,
+          {
+            backgroundColor: PLAYER_DARK.bg,
+            // DESIGN.md §5.1 — paddingTop: Math.max(insets.top, 12).
+            paddingTop: Math.max(insets.top, 12),
+          },
+          style,
+        ]}
+      >
         <LinearGradient
           colors={[PLAYER_DARK.bgElevated, PLAYER_DARK.bg, PLAYER_DARK.bg]}
           locations={[0, 0.45, 1]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
+        {/* DESIGN.md §4.3 — Ambient Glow en haut d'écran (halo accent pôle). */}
+        <AmbientGlow color={accent} intensity={0.16} height={240} />
         <View
           style={[styles.accentBar, { backgroundColor: accent }]}
           pointerEvents="none"

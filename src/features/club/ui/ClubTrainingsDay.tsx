@@ -4,15 +4,14 @@
  */
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring, AnimatedEntrance } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import {
   clubEventTone,
+  clubForm,
   clubRadius,
-  clubShadow,
   clubSpace,
 } from '../theme/clubDesignSystem';
 import { ClubText } from './clubUi';
@@ -23,7 +22,7 @@ function StatusPill({
   tone,
 }: {
   label: string;
-  tone: 'live' | 'today' | 'soon' | 'done' | 'warn';
+  tone: 'live' | 'today' | 'soon' | 'done' | 'warn' | 'cancelled';
 }) {
   const { tokens } = useClubTheme();
   const palette =
@@ -33,9 +32,11 @@ function StatusPill({
         ? { bg: tokens.warningSoft, fg: tokens.warning, border: tokens.warning }
         : tone === 'today'
           ? { bg: tokens.pitchSoft, fg: tokens.pitch, border: tokens.pitch }
-          : tone === 'done'
-            ? { bg: tokens.elevated, fg: tokens.muted, border: tokens.border }
-            : { bg: clubEventTone.training.soft, fg: clubEventTone.training.color, border: clubEventTone.training.color };
+          : tone === 'cancelled'
+            ? { bg: tokens.dangerSoft, fg: tokens.danger, border: tokens.danger }
+            : tone === 'done'
+              ? { bg: tokens.elevated, fg: tokens.muted, border: tokens.border }
+              : { bg: clubEventTone.training.soft, fg: clubEventTone.training.color, border: clubEventTone.training.color };
 
   return (
     <View
@@ -55,7 +56,8 @@ function StatusPill({
   );
 }
 
-function statusTone(model: ClubTrainingCardModel): 'live' | 'today' | 'soon' | 'done' | 'warn' {
+function statusTone(model: ClubTrainingCardModel): 'live' | 'today' | 'soon' | 'done' | 'warn' | 'cancelled' {
+  if (model.isCancelled) return 'cancelled';
   if (model.isInProgress) return 'live';
   if (model.presence.pending > 0) return 'warn';
   if (model.status === 'finished') return 'done';
@@ -75,29 +77,22 @@ export function ClubTrainingDayHero({
 }) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => heroStyles(tokens), [tokens]);
-  const tone = clubEventTone.training;
   const metaBits = [model.teamLabel, model.dayLabel, model.locationLabel].filter(Boolean);
 
   return (
     <AnimatedEntrance kind="fadeUp" index={0} delayStep={36}>
-      <View style={[styles.card, { borderColor: tone.color + '55' }]}>
-        <LinearGradient
-          colors={[tokens.pitchSoft, tokens.surface]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <View style={[styles.rail, { backgroundColor: tone.color }]} />
-
+      {/* Référence : carte plate et neutre — la couleur reste dans la pastille d'état. */}
+      <View style={styles.card}>
         <View style={styles.topRow}>
           <StatusPill
             label={
-              model.isInProgress
-                ? 'EN COURS'
-                : model.isToday
-                  ? 'AUJOURD’HUI'
-                  : model.statusLabel.toUpperCase()
+              model.isCancelled
+                ? 'ANNULÉE'
+                : model.isInProgress
+                  ? 'EN COURS'
+                  : model.isToday
+                    ? 'AUJOURD’HUI'
+                    : model.statusLabel.toUpperCase()
             }
             tone={statusTone(model)}
           />
@@ -209,7 +204,13 @@ export function ClubTrainingListRow({
       >
         <View style={styles.head}>
           <StatusPill
-            label={model.isInProgress ? 'EN COURS' : model.dayLabel.toUpperCase()}
+            label={
+              model.isCancelled
+                ? 'ANNULÉE'
+                : model.isInProgress
+                  ? 'EN COURS'
+                  : model.dayLabel.toUpperCase()
+            }
             tone={statusTone(model)}
           />
           <ClubText variant="caption" style={{ fontWeight: '800', color: tokens.foreground }}>
@@ -252,21 +253,9 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       gap: clubSpace.sm,
       paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.lg,
-      borderRadius: clubRadius.xxl,
+      borderRadius: clubForm.groupRadius,
       backgroundColor: tokens.surface,
-      borderWidth: 1,
-      borderColor: tokens.borderStrong,
       overflow: 'hidden',
-      ...clubShadow.lift,
-    },
-    rail: {
-      position: 'absolute',
-      left: 0,
-      top: 16,
-      bottom: 16,
-      width: 4,
-      borderTopRightRadius: 2,
-      borderBottomRightRadius: 2,
     },
     topRow: {
       flexDirection: 'row',
@@ -348,11 +337,8 @@ const rowStyles = (tokens: ClubThemeTokens) =>
       gap: clubSpace.sm,
       paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.md,
-      borderRadius: clubRadius.xl,
+      borderRadius: clubForm.groupRadius,
       backgroundColor: tokens.surface,
-      borderWidth: 1,
-      borderColor: tokens.border,
-      ...clubShadow.soft,
     },
     head: {
       flexDirection: 'row',

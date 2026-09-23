@@ -47,14 +47,14 @@ describe('clubDynamicTheme', () => {
     expect(colors!.secondary).toMatch(/^#[0-9A-F]{6}$/i);
   });
 
-  it('buildClubThemeTokens retombe sur l’émeraude Club par défaut (canvas sombre)', () => {
+  it('buildClubThemeTokens retombe sur l’or de référence par défaut (canvas sombre)', () => {
     const tokens = buildClubThemeTokens(null);
-    expect(tokens.accent).toBe('#10B981');
+    expect(tokens.accent).toBe('#F8D548');
     expect(tokens.onAccent).toBeTruthy();
     expect(tokens.isLight).toBe(false);
     expect(tokens.bg.toLowerCase()).toBe('#000000');
     expect(tokens.headerWash.toLowerCase()).toBe('#000000');
-    expect(['#141418', '#0a0a0a']).toContain(tokens.surface.toLowerCase());
+    expect(tokens.surface.toLowerCase()).toBe('#191e23');
     expect(tokens.surface.toLowerCase()).not.toBe('#ffffff');
     expect(tokens.bgWash).toBe(CLUB_BG_WASH_TOP);
     expect(tokens.bgWashMid).toBe(CLUB_BG_WASH_MID);
@@ -70,13 +70,14 @@ describe('clubDynamicTheme', () => {
     expect(tokens.accent).toBe('#E53935');
     expect(tokens.bg.toLowerCase()).toBe('#000000');
     expect(tokens.headerWash.toLowerCase()).toBe('#000000');
-    expect(tokens.bgWash).toBe('rgba(16, 185, 129, 0.06)');
+    // Le wash du shell suit l'identité de pôle (or mesuré sur la référence).
+    expect(tokens.bgWash).toBe('rgba(248, 213, 72, 0.05)');
     expect(tokens.pitch).toBe('#059669');
   });
 
   it('resolveClubControlColor prend la secondary si la primary est trop sombre', () => {
     expect(resolveClubControlColor('#E53935', '#FFFFFF')).toBe('#E53935');
     expect(resolveClubControlColor('#050505', '#E53935')).toBe('#E53935');
-    expect(resolveClubControlColor('#050505', '#0A0A0A')).toBe('#10B981');
+    expect(resolveClubControlColor('#050505', '#0A0A0A')).toBe('#F8D548');
   });
 });

@@ -196,7 +196,8 @@ export function ClubSidebar({
             </ClubText>
           ) : null}
         </Pressable>
-        <Pressable onPress={onSignOut} style={styles.footerBtn} accessibilityRole="button">
+        <Pressable onPress={onSignOut} style={styles.footerBtn} accessibilityRole="button"
+          accessibilityLabel="Se déconnecter">
           <Icon name="log-out" size={16} color={tokens.muted} />
           {!collapsed ? (
             <ClubText variant="caption" muted>

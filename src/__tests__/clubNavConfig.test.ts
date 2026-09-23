@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import path from 'path';
 import {
   CLUB_CREATE_ACTIONS,
   CLUB_MENU_DEST_IDS,
@@ -29,7 +31,7 @@ describe('clubNavConfig', () => {
       'ops',
       'club',
     ]);
-    expect(CLUB_PRIMARY_NAV_IDS).toEqual(['today', 'teams', 'matches', 'plus', 'club']);
+    expect(CLUB_PRIMARY_NAV_IDS).toEqual(['today', 'calendar', 'teams', 'plus']);
   });
 
   it('mappe les onglets legacy vers la sidebar', () => {
@@ -50,26 +52,32 @@ describe('clubNavConfig', () => {
     expect(tabFromClubNav('matches')).toBe('matchs');
   });
 
-  it('surligne Outils pour les destinations secondaires', () => {
+  it('surligne Menu pour les destinations secondaires', () => {
     expect(primaryTabForClubNav('players')).toBe('plus');
     expect(primaryTabForClubNav('trainings')).toBe('plus');
     expect(primaryTabForClubNav('assistant')).toBe('plus');
     expect(primaryTabForClubNav('today')).toBe('today');
-    expect(primaryTabForClubNav('matches')).toBe('matches');
+    // Matchs et Club ont quitté le dock : ils s'atteignent par le Menu.
+    expect(primaryTabForClubNav('matches')).toBe('plus');
+    expect(primaryTabForClubNav('club')).toBe('plus');
+    expect(primaryTabForClubNav('calendar')).toBe('calendar');
+    expect(primaryTabForClubNav('teams')).toBe('teams');
     expect(CLUB_MENU_DEST_IDS).toContain('coaches');
     expect(CLUB_MENU_DEST_IDS).toContain('notifications');
     expect(CLUB_MENU_DEST_IDS).toContain('permissions');
+    expect(CLUB_MENU_DEST_IDS).toContain('matches');
+    expect(CLUB_MENU_DEST_IDS).toContain('club');
     expect(canonicalizeClubNav('players')).toBe('players');
-    expect(findClubNavItem('plus')?.shortLabel).toBe('Outils');
+    expect(findClubNavItem('plus')?.shortLabel).toBe('Menu');
     expect(findClubNavItem('plus')?.icon).toBe('tune');
   });
 
-  it('expose les labels dock Accueil · Équipes · Matchs · Outils · Club', () => {
+  it('expose les labels dock Accueil · Calendrier · Équipes · Menu', () => {
     const labels = CLUB_PRIMARY_NAV_IDS.map((id) => {
       const item = findClubNavItem(id)!;
       return item.shortLabel ?? item.label;
     });
-    expect(labels).toEqual(['Accueil', 'Équipes', 'Matchs', 'Outils', 'Club']);
+    expect(labels).toEqual(['Accueil', 'Calendrier', 'Équipes', 'Menu']);
   });
 
   it('conserve plus / outils lors de la sync tab', () => {
@@ -163,12 +171,12 @@ describe('resolveClubNavAccess', () => {
     expect(items.find((i) => i.id === 'teams')?.locked).toBe(true);
   });
 
-  it('barre mobile expose 5 onglets primaires', () => {
+  it('barre mobile expose 4 onglets primaires', () => {
     const primary = resolveClubPrimaryNav({
       offerId: 'club_premium',
       isFeatureEnabled: allOn,
     });
-    expect(primary.map((i) => i.id)).toEqual(['today', 'teams', 'matches', 'plus', 'club']);
+    expect(primary.map((i) => i.id)).toEqual(['today', 'calendar', 'teams', 'plus']);
   });
 
   it('groupe les outils Menu par jobs (Fréquents / Aujourd’hui / Effectifs / Compétition / Admin)', () => {
@@ -181,6 +189,13 @@ describe('resolveClubNavAccess', () => {
     ]);
     const allIds = CLUB_TOOL_GROUPS.flatMap((g) => g.ids);
     expect(new Set(allIds).size).toBe(allIds.length);
+    // Aucun raccourci répété : le Menu ne redonne pas les destinations du dock.
+    for (const dockId of CLUB_PRIMARY_NAV_IDS) {
+      expect(allIds).not.toContain(dockId);
+    }
+    // Les modules sortis du dock restent joignables par le Menu.
+    expect(allIds).toContain('matches');
+    expect(allIds).toContain('club');
     const menu = resolveClubMenuItems({
       offerId: 'club_premium',
       isFeatureEnabled: allOn,
@@ -188,6 +203,8 @@ describe('resolveClubNavAccess', () => {
     expect(menu.map((i) => i.id)).toContain('players');
     expect(menu.map((i) => i.id)).toContain('assistant');
     expect(menu.map((i) => i.id)).toContain('notifications');
+    expect(menu.map((i) => i.id)).toContain('matches');
+    expect(menu.map((i) => i.id)).toContain('club');
   });
 });
 
@@ -210,5 +227,25 @@ describe('planClubAiReply', () => {
   it('demande confirmation pour les rappels de convocation', () => {
     const plan = planClubAiReply('Envoie les rappels de convocation', ws);
     expect(plan.sensitive?.id).toBe('nav_trainings');
+  });
+});
+
+describe('Menu Club — une seule entrée par destination', () => {
+  const menuSource = readFileSync(
+    path.join(__dirname, '..', 'features/club/shell/ClubMenuPane.tsx'),
+    'utf8',
+  );
+
+  it('n’expose pas « Rôles & Permissions » deux fois dans le même panneau', () => {
+    // Le pôle Club listait cette destination à la fois comme ligne de menu et comme
+    // lien du groupe Compte, sous deux libellés différents pour la même page.
+    const labels = menuSource.match(/label: 'Rôles & Permissions'/g) ?? [];
+    expect(labels).toHaveLength(1);
+    // Une seule ligne de menu porte cette destination (rendu générique par `id`).
+    const rows = menuSource.match(/id: 'permissions'/g) ?? [];
+    expect(rows).toHaveLength(1);
+    // Les liens du groupe Compte ne la dupliquent plus.
+    expect(menuSource).not.toContain("key: 'permissions'");
+    expect(menuSource).not.toContain("label: 'Profil club'");
   });
 });

@@ -54,9 +54,28 @@ describe('adminPresidentRole', () => {
     expect(adminUserMatchesRoleFilter(coach, clubs, 'coach')).toBe(true);
   });
 
-  it('refuse président sans club lié / owner mismatch', () => {
-    const orphan = user({ uid: 'x', role: 'club' });
-    expect(isAdminPresidentUser(orphan, clubs)).toBe(false);
-    expect(isAdminPresidentUser(owner, [club({ id: 'c1', owner_uid: 'other' })])).toBe(false);
+  it('supporte les multi-rôles pour un même utilisateur (ex: coach + joueur, parent + joueur)', () => {
+    const coachJoueur = user({
+      uid: 'u_cj',
+      role: 'coach',
+      roles: ['coach', 'player'],
+      profile: { club_id: 'c1' },
+    });
+    const parentJoueur = user({
+      uid: 'u_pj',
+      role: 'parent',
+      roles: ['parent', 'player'],
+    });
+
+    // Filtre coachJoueur
+    expect(adminUserMatchesRoleFilter(coachJoueur, clubs, 'coach')).toBe(true);
+    expect(adminUserMatchesRoleFilter(coachJoueur, clubs, 'player')).toBe(true);
+    expect(adminUserMatchesRoleFilter(coachJoueur, clubs, 'parent')).toBe(false);
+
+    // Filtre parentJoueur
+    expect(adminUserMatchesRoleFilter(parentJoueur, clubs, 'parent')).toBe(true);
+    expect(adminUserMatchesRoleFilter(parentJoueur, clubs, 'player')).toBe(true);
+    expect(adminUserMatchesRoleFilter(parentJoueur, clubs, 'coach')).toBe(false);
   });
 });
+

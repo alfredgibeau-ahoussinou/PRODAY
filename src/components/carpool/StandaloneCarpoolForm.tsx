@@ -314,9 +314,12 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
               scaleTo={0.96}
               haptic
             >
-              <ProDayText variant="caption" style={[styles.mapLink, { color: palette.signal }]}>
-                📍 Voir le RDV sur Apple/Google Maps
-              </ProDayText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Icon name="location" size={13} color={palette.signal} />
+                <ProDayText variant="caption" style={[styles.mapLink, { color: palette.signal }]}>
+                  Voir le RDV sur Apple/Google Maps
+                </ProDayText>
+              </View>
             </PressableSpring>
           ) : null}
 
@@ -334,9 +337,12 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
 
           {profile.profile.club_id ? (
             <View style={styles.clubRow}>
-              <ProDayText variant="caption" style={styles.clubRowText}>
-                🔒 Visible uniquement par les membres du club
-              </ProDayText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                <Icon name="lock" size={13} color="#CBD5E1" />
+                <ProDayText variant="caption" style={styles.clubRowText}>
+                  Visible uniquement par les membres du club
+                </ProDayText>
+              </View>
               <Switch
                 value={clubOnly}
                 onValueChange={setClubOnly}
@@ -385,8 +391,8 @@ function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     card: {
       borderWidth: 1,
-      borderColor: '#22222E',
-      backgroundColor: '#14141A',
+      borderColor: CARPOOL_SITE.lane,
+      backgroundColor: CARPOOL_SITE.surface,
       borderRadius: 18,
       marginBottom: 12,
       overflow: 'hidden',
@@ -451,7 +457,7 @@ function createStyles(palette: CarpoolUiPalette) {
       paddingBottom: 16,
       gap: 12,
       borderTopWidth: 1,
-      borderTopColor: '#22222E',
+      borderTopColor: CARPOOL_SITE.lane,
     },
     inputGroup: {
       gap: 5,

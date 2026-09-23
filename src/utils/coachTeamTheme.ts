@@ -27,8 +27,8 @@ export type CoachThemeTokens = {
   teamLabel: string;
 };
 
-/** Surfaces iOS grouped — variante Clair du Pôle Coach. */
-const COACH_CLEAR_SURFACES = {
+/** Surfaces iOS grouped — variante Clair du Pôle Coach (exporté pour les tableaux à double mode). */
+export const COACH_CLEAR_SURFACES = {
   bg: '#FFFFFF',
   surface: '#F2F2F7',
   elevated: '#E5E5EA',
@@ -71,7 +71,8 @@ function parseHex(hex: string): { r: number; g: number; b: number } | null {
   return { r, g, b };
 }
 
-function withAlpha(hex: string, alpha: number): string {
+/** Alpha appliqué à un hex — partagé par les écrans Coach convertis aux jetons. */
+export function withAlpha(hex: string, alpha: number): string {
   const rgb = parseHex(hex);
   if (!rgb) return hex;
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;

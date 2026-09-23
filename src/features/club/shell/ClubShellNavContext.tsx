@@ -7,6 +7,8 @@ type ClubShellNavValue = {
   openHelp?: () => void;
   /** Ouvre le Pôle Président (dirigeants autorisés). */
   openPresident?: () => void;
+  /** Ouvre la recherche club (personnes, équipes, événements, modules). */
+  openSearch?: () => void;
   signOut?: () => void;
   /** Équipe sélectionnée (espace équipe). */
   selectedTeamId?: string | null;
@@ -28,6 +30,7 @@ export function ClubShellNavProvider({
   openCreate,
   openHelp,
   openPresident,
+  openSearch,
   signOut,
   selectedTeamId,
   setSelectedTeamId,
@@ -45,6 +48,7 @@ export function ClubShellNavProvider({
         openCreate,
         openHelp,
         openPresident,
+        openSearch,
         signOut,
         selectedTeamId,
         setSelectedTeamId,

@@ -173,14 +173,14 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       scaleTo={0.97}
       haptic
       accessibilityRole="button"
-      accessibilityLabel="Se connecter avec Google"
+      accessibilityLabel="Continuer avec Google"
     >
       {busy ? (
         <ActivityIndicator color={AUTH_XP.white} />
       ) : (
         <>
           <Ionicons name="logo-google" size={20} color="#4285F4" />
-          <Text style={styles.btnText}>Se connecter avec Google</Text>
+          <Text style={styles.btnText}>Continuer avec Google</Text>
         </>
       )}
     </PressableSpring>
@@ -295,7 +295,7 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
             scaleTo={0.97}
             haptic
             accessibilityRole="button"
-            accessibilityLabel="Se connecter avec Apple"
+            accessibilityLabel="Continuer avec Apple"
           >
             {busy === 'apple' ? (
               <ActivityIndicator color={AUTH_XP.black} />
@@ -303,7 +303,7 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
               <>
                 <Ionicons name="logo-apple" size={22} color={AUTH_XP.black} />
                 <Text style={[styles.btnText, styles.btnAppleText]}>
-                  Se connecter avec Apple
+                  Continuer avec Apple
                 </Text>
               </>
             )}

@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import {
+  PRO_DATA_VIOLET,
+  proSemantic,
+} from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import {
   StyleSheet,
   Text,
   View,
@@ -9,6 +14,8 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { CoachTacticalBoardScreen } from './CoachTacticalBoardScreen';
+import { COACH_SITE } from '../../content/coachPageIdentity';
+import { AppBackButton } from '../../components/ui/AppBackButton';
 
 type Formation = '4-3-3' | '4-2-3-1' | '3-5-2' | '4-4-2';
 
@@ -31,7 +38,10 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#000000' }}>
+    <View style={{ flex: 1, backgroundColor: tokens.bg }}>
+      <View style={styles.topHeaderRow}>
+        <AppBackButton fallbackNavId="plus" />
+      </View>
       {/* Top Switcher Bar */}
       <View style={styles.topSwitcherBar}>
         <TouchableOpacity
@@ -47,7 +57,7 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
           onPress={() => setSubMode('board')}
         >
           <Text style={[styles.switcherBtnText, subMode === 'board' && styles.switcherBtnTextActive]}>
-            Tableau Noir 3D & CPA
+Tableau tactique & CPA
           </Text>
         </TouchableOpacity>
       </View>
@@ -59,7 +69,7 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
           {/* 1. Header: Twin Match Lab Title & AI Engine */}
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <MaterialCommunityIcons name="robot" size={24} color="#0A84FF" />
+              <MaterialCommunityIcons name="robot" size={24} color={proSemantic.info} />
             </View>
         <View style={styles.headerTextWrap}>
           <View style={styles.headerBadge}>
@@ -77,7 +87,7 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
         <View style={styles.matchupRow}>
           {/* Our Team Setup */}
           <View style={styles.teamSetupCol}>
-            <Text style={styles.teamSetupLabel}>FC ProDay (Nous)</Text>
+            <Text style={styles.teamSetupLabel}>Mon équipe (Nous)</Text>
             <View style={styles.formationSelector}>
               {(['4-3-3', '4-2-3-1', '3-5-2'] as Formation[]).map((fmt) => (
                 <TouchableOpacity
@@ -126,10 +136,10 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
           disabled={isSimulating}
         >
           {isSimulating ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <ActivityIndicator color={tokens.foreground} size="small" />
           ) : (
             <>
-              <MaterialCommunityIcons name="play-speed" size={20} color="#FFFFFF" />
+              <MaterialCommunityIcons name="play-speed" size={20} color={tokens.foreground} />
               <Text style={styles.simulateBtnText}>
                 Lancer Simulation IA ({simRunCount} Itérations)
               </Text>
@@ -143,29 +153,29 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
         <>
           <View style={styles.resultsCard}>
             <View style={styles.resultsHeader}>
-              <MaterialCommunityIcons name="chart-pie" size={18} color="#C5A059" />
+              <MaterialCommunityIcons name="chart-pie" size={18} color={tokens.accent} />
               <Text style={styles.resultsTitle}>Matrices Prédictives & Probabilités</Text>
             </View>
 
             {/* Probability Bars */}
             <View style={styles.probContainer}>
               <View style={styles.probBarRow}>
-                <View style={[styles.probBarSegment, { flex: 58, backgroundColor: '#30D158' }]} />
-                <View style={[styles.probBarSegment, { flex: 24, backgroundColor: '#8E8E93' }]} />
-                <View style={[styles.probBarSegment, { flex: 18, backgroundColor: '#FF453A' }]} />
+                <View style={[styles.probBarSegment, { flex: 58, backgroundColor: proSemantic.success }]} />
+                <View style={[styles.probBarSegment, { flex: 24, backgroundColor: tokens.muted }]} />
+                <View style={[styles.probBarSegment, { flex: 18, backgroundColor: proSemantic.danger }]} />
               </View>
 
               <View style={styles.probLabelsRow}>
                 <View style={styles.probItem}>
-                  <View style={[styles.probDot, { backgroundColor: '#30D158' }]} />
+                  <View style={[styles.probDot, { backgroundColor: proSemantic.success }]} />
                   <Text style={styles.probName}>Victoire ProDay (58 %)</Text>
                 </View>
                 <View style={styles.probItem}>
-                  <View style={[styles.probDot, { backgroundColor: '#8E8E93' }]} />
+                  <View style={[styles.probDot, { backgroundColor: tokens.muted }]} />
                   <Text style={styles.probName}>Nul (24 %)</Text>
                 </View>
                 <View style={styles.probItem}>
-                  <View style={[styles.probDot, { backgroundColor: '#FF453A' }]} />
+                  <View style={[styles.probDot, { backgroundColor: proSemantic.danger }]} />
                   <Text style={styles.probName}>Défaite (18 %)</Text>
                 </View>
               </View>
@@ -175,22 +185,22 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
             <View style={styles.kpiGrid}>
               <View style={styles.kpiBox}>
                 <Text style={styles.kpiLabel}>xG Attendu (ProDay)</Text>
-                <Text style={[styles.kpiVal, { color: '#30D158' }]}>2.14</Text>
+                <Text style={[styles.kpiVal, { color: proSemantic.success }]}>2.14</Text>
                 <Text style={styles.kpiSub}>Occasions créées : 4.8</Text>
               </View>
               <View style={styles.kpiBox}>
                 <Text style={styles.kpiLabel}>xG Concédé (RC France)</Text>
-                <Text style={[styles.kpiVal, { color: '#FF9F0A' }]}>1.18</Text>
+                <Text style={[styles.kpiVal, { color: proSemantic.warning }]}>1.18</Text>
                 <Text style={styles.kpiSub}>Occasions concédées : 2.2</Text>
               </View>
               <View style={styles.kpiBox}>
                 <Text style={styles.kpiLabel}>Possession Prévue</Text>
-                <Text style={[styles.kpiVal, { color: '#0A84FF' }]}>54 %</Text>
+                <Text style={[styles.kpiVal, { color: proSemantic.info }]}>54 %</Text>
                 <Text style={styles.kpiSub}>Avantage contrôle territorial</Text>
               </View>
               <View style={styles.kpiBox}>
                 <Text style={styles.kpiLabel}>Taux Récupération Haute</Text>
-                <Text style={[styles.kpiVal, { color: '#C5A059' }]}>76 %</Text>
+                <Text style={[styles.kpiVal, { color: tokens.accent }]}>76 %</Text>
                 <Text style={styles.kpiSub}>Pressing sur relance à 3</Text>
               </View>
             </View>
@@ -199,7 +209,7 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
           {/* 4. AI Tactical Vulnerability Report */}
           <View style={styles.vulnerabilityCard}>
             <View style={styles.vulnHeader}>
-              <MaterialCommunityIcons name="shield-alert-outline" size={18} color="#FF453A" />
+              <MaterialCommunityIcons name="shield-alert-outline" size={18} color={proSemantic.danger} />
               <Text style={styles.vulnTitle}>Rapport de Vulnérabilité & Failles Adversaire</Text>
             </View>
 
@@ -218,8 +228,8 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
 
             {/* Vulnerability 2 */}
             <View style={styles.vulnItem}>
-              <View style={[styles.vulnSeverityBadge, { backgroundColor: 'rgba(255, 159, 10, 0.15)' }]}>
-                <Text style={[styles.vulnSeverityText, { color: '#FF9F0A' }]}>DANGER ADVERSE</Text>
+              <View style={[styles.vulnSeverityBadge, { backgroundColor: withAlpha('F59E0B', 0.15) }]}>
+                <Text style={[styles.vulnSeverityText, { color: proSemantic.warning }]}>DANGER ADVERSE</Text>
               </View>
               <Text style={styles.vulnItemTitle}>Jeu Direct sur leur Numéro 9 (1,88 m)</Text>
               <Text style={styles.vulnItemDesc}>
@@ -232,7 +242,7 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
           {/* 5. In-Game Plan-B & Dynamic Substitution Triggers */}
           <View style={styles.planBCard}>
             <View style={styles.planBHeader}>
-              <MaterialCommunityIcons name="swap-horizontal" size={18} color="#30D158" />
+              <MaterialCommunityIcons name="swap-horizontal" size={18} color={proSemantic.success} />
               <Text style={styles.planBTitle}>Plan B & Déclencheurs de Coaching en Direct</Text>
             </View>
 
@@ -247,8 +257,8 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
             </View>
 
             <View style={[styles.planBTrigger, { borderBottomWidth: 0 }]}>
-              <View style={[styles.planBMinute, { backgroundColor: 'rgba(48, 209, 88, 0.2)' }]}>
-                <Text style={[styles.planBMinuteText, { color: '#30D158' }]}>75’</Text>
+              <View style={[styles.planBMinute, { backgroundColor: withAlpha('10B981', 0.2) }]}>
+                <Text style={[styles.planBMinuteText, { color: proSemantic.success }]}>75’</Text>
               </View>
               <View style={styles.planBBody}>
                 <Text style={styles.planBScenario}>Si avantage au score (&gt;= +1)</Text>
@@ -264,21 +274,28 @@ export const CoachTwinMatchLabScreen: React.FC = () => {
   );
 };
 
+const tokens = COACH_SITE;
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: tokens.bg,
   },
   content: {
     padding: 16,
     paddingBottom: 40,
   },
+  topHeaderRow: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
   topSwitcherBar: {
     flexDirection: 'row',
-    backgroundColor: '#141418',
+    backgroundColor: COACH_SITE.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: tokens.border,
     padding: 3,
     marginBottom: 14,
   },
@@ -289,18 +306,17 @@ const styles = StyleSheet.create({
     borderRadius: 9,
   },
   switcherBtnActive: {
-    backgroundColor: '#1C1C22',
+    backgroundColor: COACH_SITE.elevated,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: withAlpha('FFFFFF', 0.1),
   },
   switcherBtnText: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 11,
     fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
+      },
   switcherBtnTextActive: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontWeight: '700',
   },
   header: {
@@ -308,17 +324,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     marginBottom: 16,
-    backgroundColor: '#141418',
+    backgroundColor: COACH_SITE.surface,
     padding: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(10, 132, 255, 0.2)',
+    borderColor: withAlpha('0A84FF', 0.2),
   },
   headerIcon: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'rgba(10, 132, 255, 0.15)',
+    backgroundColor: withAlpha('0A84FF', 0.15),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -327,44 +343,40 @@ const styles = StyleSheet.create({
   },
   headerBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(10, 132, 255, 0.15)',
+    backgroundColor: withAlpha('0A84FF', 0.15),
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     marginBottom: 3,
   },
   headerBadgeText: {
-    color: '#0A84FF',
+    color: proSemantic.info,
     fontSize: 9,
     fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
+      },
   headerTitle: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 15,
     fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
+      },
   headerDesc: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 11,
-    fontFamily: '-apple-system',
-    marginTop: 2,
+        marginTop: 2,
   },
   setupCard: {
-    backgroundColor: '#141418',
+    backgroundColor: COACH_SITE.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: tokens.border,
     padding: 16,
     marginBottom: 14,
   },
   sectionTitle: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 13,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-    marginBottom: 12,
+        marginBottom: 12,
   },
   matchupRow: {
     flexDirection: 'row',
@@ -376,56 +388,53 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   teamSetupLabel: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 12,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-    marginBottom: 8,
+        marginBottom: 8,
   },
   formationSelector: {
     flexDirection: 'row',
     gap: 4,
   },
   fmtBtn: {
-    backgroundColor: '#1C1C22',
+    backgroundColor: COACH_SITE.elevated,
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: withAlpha('FFFFFF', 0.06),
   },
   fmtBtnActive: {
-    backgroundColor: 'rgba(10, 132, 255, 0.2)',
-    borderColor: '#0A84FF',
+    backgroundColor: 'transparent',
+    borderColor: proSemantic.info,
   },
   fmtBtnActiveOpp: {
-    backgroundColor: 'rgba(255, 69, 58, 0.2)',
-    borderColor: '#FF453A',
+    backgroundColor: 'transparent',
+    borderColor: PRO_DATA_VIOLET,
   },
   fmtBtnText: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 10,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   fmtBtnTextActive: {
-    color: '#0A84FF',
+    color: tokens.foreground,
   },
   fmtBtnTextActiveOpp: {
-    color: '#FF453A',
+    color: tokens.foreground,
   },
   tacticalStyleText: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 10,
-    fontFamily: '-apple-system',
-    marginTop: 6,
+        marginTop: 6,
   },
   vsBadgeCol: {
     paddingHorizontal: 8,
     alignItems: 'center',
   },
   vsText: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -434,7 +443,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#0A84FF',
+    backgroundColor: proSemantic.info,
     borderRadius: 12,
     paddingVertical: 12,
     marginTop: 4,
@@ -443,16 +452,15 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   simulateBtnText: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 13,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   resultsCard: {
-    backgroundColor: '#141418',
+    backgroundColor: COACH_SITE.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: tokens.border,
     padding: 16,
     marginBottom: 14,
   },
@@ -463,11 +471,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   resultsTitle: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 14,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   probContainer: {
     marginBottom: 14,
   },
@@ -496,45 +503,41 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   probName: {
-    color: '#D1D1D6',
+    color: withAlpha('FFFFFF', 0.8),
     fontSize: 11,
-    fontFamily: '-apple-system',
-  },
+      },
   kpiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: withAlpha('FFFFFF', 0.05),
   },
   kpiBox: {
     width: '48%',
-    backgroundColor: '#1C1C22',
+    backgroundColor: COACH_SITE.elevated,
     borderRadius: 10,
     padding: 10,
   },
   kpiLabel: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 10,
-    fontFamily: '-apple-system',
-  },
+      },
   kpiVal: {
     fontSize: 18,
     fontWeight: '800',
-    fontFamily: '-apple-system',
-    marginVertical: 2,
+        marginVertical: 2,
   },
   kpiSub: {
-    color: '#636366',
+    color: tokens.muted,
     fontSize: 10,
-    fontFamily: '-apple-system',
-  },
+      },
   vulnerabilityCard: {
-    backgroundColor: '#141418',
+    backgroundColor: COACH_SITE.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 69, 58, 0.25)',
+    borderColor: withAlpha('EF4444', 0.25),
     padding: 16,
     marginBottom: 14,
   },
@@ -545,53 +548,49 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   vulnTitle: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 14,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   vulnItem: {
-    backgroundColor: '#1C1C22',
+    backgroundColor: COACH_SITE.elevated,
     borderRadius: 10,
     padding: 12,
     marginBottom: 10,
   },
   vulnSeverityBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 69, 58, 0.15)',
+    backgroundColor: withAlpha('EF4444', 0.15),
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     marginBottom: 6,
   },
   vulnSeverityText: {
-    color: '#FF453A',
+    color: proSemantic.danger,
     fontSize: 9,
     fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
+      },
   vulnItemTitle: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 13,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-    marginBottom: 4,
+        marginBottom: 4,
   },
   vulnItemDesc: {
-    color: '#D1D1D6',
+    color: withAlpha('FFFFFF', 0.8),
     fontSize: 11,
     lineHeight: 16,
-    fontFamily: '-apple-system',
-  },
+      },
   vulnItemHighlight: {
-    color: '#C5A059',
+    color: tokens.accent,
     fontWeight: '700',
   },
   planBCard: {
-    backgroundColor: '#141418',
+    backgroundColor: COACH_SITE.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.25)',
+    borderColor: withAlpha('10B981', 0.25),
     padding: 16,
   },
   planBHeader: {
@@ -601,46 +600,42 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   planBTitle: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 14,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   planBTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: withAlpha('FFFFFF', 0.05),
   },
   planBMinute: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(10, 132, 255, 0.2)',
+    backgroundColor: withAlpha('0A84FF', 0.2),
     alignItems: 'center',
     justifyContent: 'center',
   },
   planBMinuteText: {
-    color: '#0A84FF',
+    color: proSemantic.info,
     fontSize: 13,
     fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
+      },
   planBBody: {
     flex: 1,
   },
   planBScenario: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 12,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   planBAction: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 11,
-    fontFamily: '-apple-system',
-    marginTop: 2,
+        marginTop: 2,
   },
 });

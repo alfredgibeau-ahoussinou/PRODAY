@@ -11,6 +11,10 @@ import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { CoachTeamSwitcher } from './CoachTeamSwitcher';
 
+import { AppBackButton } from '../ui/AppBackButton';
+import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
+
 export type CoachHeaderAction = {
   icon: IconName;
   onPress: () => void;
@@ -21,6 +25,12 @@ type Props = {
   title: string;
   actions?: CoachHeaderAction[];
   onBack?: () => void;
+  showBack?: boolean;
+  onBeforeBack?:
+    | ((proceed: () => void) => void)
+    | (() => boolean | Promise<boolean> | void);
+  hasUnsavedChanges?: boolean;
+  fallbackNavId?: CoachNavItemId;
   /** Rangée club + messages / profil — à garder sur les onglets primaires. */
   showTeamRow?: boolean;
   /** Badge messagerie (header Accueil). */
@@ -62,14 +72,22 @@ export function CoachScreenHeader({
   actions,
   showTeamRow = true,
   onBack,
+  showBack,
+  onBeforeBack,
+  hasUnsavedChanges,
+  fallbackNavId,
   unreadMessages = 0,
 }: Props) {
   const { t } = useTranslation();
   const { teamName, coachTeams, profile, openNav, displayName } = useCoachTeamChrome();
   const { tokens } = useCoachTheme();
+  const shellNav = useCoachShellNav();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const [teamSwitcherOpen, setTeamSwitcherOpen] = useState(false);
   const canSwitchTeam = coachTeams.length > 1;
+
+  const shouldShowBack =
+    showBack ?? (onBack ? true : Boolean(shellNav?.canGoBack || fallbackNavId));
 
   return (
     <View style={styles.headerPad}>
@@ -140,14 +158,16 @@ export function CoachScreenHeader({
       ) : null}
 
       <View style={styles.titleRow}>
-        {onBack && (
-          <CoachCircleIconButton
-            icon="arrow-back"
+        {shouldShowBack && (
+          <AppBackButton
             onPress={onBack}
-            accessibilityLabel="Retour"
+            onBeforeBack={onBeforeBack}
+            hasUnsavedChanges={hasUnsavedChanges}
+            fallbackNavId={fallbackNavId}
+            style={styles.headerBackBtn}
           />
         )}
-        <CoachText variant="title" style={[styles.pageTitle, onBack && { marginLeft: -8 }]}>
+        <CoachText variant="title" numberOfLines={1} style={styles.pageTitle}>
           {title}
         </CoachText>
         {actions && actions.length > 0 ? (
@@ -171,11 +191,21 @@ export function CoachPane({
   title,
   actions,
   onBack,
+  showBack,
+  onBeforeBack,
+  hasUnsavedChanges,
+  fallbackNavId,
   children,
 }: {
   title: string;
   actions?: CoachHeaderAction[];
   onBack?: () => void;
+  showBack?: boolean;
+  onBeforeBack?:
+    | ((proceed: () => void) => void)
+    | (() => boolean | Promise<boolean> | void);
+  hasUnsavedChanges?: boolean;
+  fallbackNavId?: CoachNavItemId;
   children: React.ReactNode;
 }) {
   const { tokens } = useCoachTheme();
@@ -183,7 +213,15 @@ export function CoachPane({
 
   return (
     <View style={styles.pane}>
-      <CoachScreenHeader title={title} actions={actions} onBack={onBack} />
+      <CoachScreenHeader
+        title={title}
+        actions={actions}
+        onBack={onBack}
+        showBack={showBack}
+        onBeforeBack={onBeforeBack}
+        hasUnsavedChanges={hasUnsavedChanges}
+        fallbackNavId={fallbackNavId}
+      />
       <View style={styles.paneBody}>{children}</View>
     </View>
   );
@@ -275,6 +313,9 @@ function createStyles(tokens: CoachThemeTokens) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tokens.surface,
+    },
+    headerBackBtn: {
+      marginRight: 6,
     },
   });
 }

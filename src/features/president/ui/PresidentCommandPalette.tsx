@@ -45,8 +45,12 @@ export function PresidentCommandPalette({ visible, items, onClose, onSelect }: P
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.panel} onPress={(e) => e.stopPropagation?.()}>
+      <Pressable style={styles.backdrop} onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Rechercher">
+        <Pressable style={styles.panel} onPress={(e) => e.stopPropagation?.()}
+          accessibilityRole="button"
+          accessibilityLabel="Rechercher">
           <View style={styles.searchRow}>
             <Icon name="search" size={18} color={tokens.accent} />
             <TextInput

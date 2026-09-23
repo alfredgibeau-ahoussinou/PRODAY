@@ -117,6 +117,10 @@ export const clubFinanceService = {
       member_name: input.member_name ?? null,
       team_id: input.team_id ?? null,
       status: 'active',
+      payment_method: input.payment_method ?? null,
+      payment_provenance: 'manual',
+      fee_id: input.fee_id ?? null,
+      receipt: input.receipt ?? null,
       created_at: now,
       updated_at: now,
       deleted_at: null,
@@ -139,6 +143,13 @@ export const clubFinanceService = {
       member_name: local.member_name,
       team_id: local.team_id,
       status: 'active',
+      payment_method: local.payment_method,
+      // Écrit littéralement : aucune valeur « confirmé par un prestataire » n'existe côté client.
+      payment_provenance: 'manual',
+      fee_id: local.fee_id,
+      receipt: local.receipt
+        ? { name: local.receipt.name, url: local.receipt.url, uploaded_at: local.receipt.uploaded_at }
+        : null,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
       deleted_at: null,
@@ -172,6 +183,10 @@ export const clubFinanceService = {
     if (patch.member_name !== undefined) payload.member_name = patch.member_name;
     if (patch.team_id !== undefined) payload.team_id = patch.team_id;
     if (patch.status !== undefined) payload.status = normalizeClubFinanceStatus(patch.status);
+    if (patch.payment_method !== undefined) payload.payment_method = patch.payment_method;
+    if (patch.fee_id !== undefined) payload.fee_id = patch.fee_id;
+    if (patch.receipt !== undefined) payload.receipt = patch.receipt;
+    // `payment_provenance` n'est jamais modifiable: il n'a qu'une valeur possible.
 
     await updateDoc(doc(database, CLUB_FINANCE_COLLECTION, entryId), payload);
   },

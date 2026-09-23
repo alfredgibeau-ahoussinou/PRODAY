@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Modal,
   PanResponder,
@@ -8,16 +8,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { getMotionPreset } from '../presets';
 import { prodayMotion } from '../tokens';
 
 type Variant = 'full' | 'sheet';
@@ -37,7 +28,7 @@ export type ModalSheetProps = {
 };
 
 /**
- * Modal / bottom-sheet générique — enter/exit, gesture dismiss, reduced motion.
+ * Modal / bottom-sheet générique — ouverture directe et robuste sur tous les écrans.
  */
 export function ModalSheet({
   visible,
@@ -53,107 +44,39 @@ export function ModalSheet({
   accessibilityCloseLabel = 'Fermer',
 }: ModalSheetProps) {
   const insets = useSafeAreaInsets();
-  const reduced = useReducedMotion();
-  const preset = getMotionPreset(variant === 'sheet' ? 'sheet' : 'modal');
-  const [mounted, setMounted] = useState(visible);
-  const backdrop = useSharedValue(visible ? 1 : 0);
-  const sheetY = useSharedValue(visible ? 0 : 48);
-  const dragY = useSharedValue(0);
-  const closing = useRef(false);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  const finishUnmount = () => {
-    setMounted(false);
-    closing.current = false;
-  };
-
-  useEffect(() => {
-    if (visible) {
-      setMounted(true);
-      closing.current = false;
-      dragY.value = 0;
-      if (reduced) {
-        backdrop.value = 1;
-        sheetY.value = 0;
-        return;
-      }
-      backdrop.value = withTiming(1, {
-        duration: preset.enterMs,
-        easing: prodayMotion.easing.out,
-      });
-      sheetY.value = withSpring(0, preset.spring);
-      return;
-    }
-    if (!mounted) return;
-    if (reduced) {
-      backdrop.value = 0;
-      sheetY.value = 40;
-      finishUnmount();
-      return;
-    }
-    backdrop.value = withTiming(0, { duration: prodayMotion.duration.fast });
-    sheetY.value = withTiming(
-      64,
-      { duration: preset.exitMs, easing: prodayMotion.easing.in },
-      (finished) => {
-        if (finished) runOnJS(finishUnmount)();
-      },
-    );
-  }, [visible, reduced, mounted, backdrop, sheetY, dragY, preset.enterMs, preset.exitMs, preset.spring]);
-
-  const requestClose = () => {
-    if (closing.current) return;
-    closing.current = true;
-    onCloseRef.current();
-  };
+  const isSheet = variant === 'sheet';
 
   const pan = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, g) =>
-          gestureClose && !reduced && g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
-        onPanResponderMove: (_, g) => {
-          if (g.dy > 0) dragY.value = g.dy;
-        },
+          gestureClose && g.dy > 8 && Math.abs(g.dy) > Math.abs(g.dx),
         onPanResponderRelease: (_, g) => {
-          if (g.dy > prodayMotion.sheetDismissY || g.vy > 1.1) {
-            requestClose();
-            return;
+          if (g.dy > 60 || g.vy > 0.8) {
+            onClose();
           }
-          dragY.value = withSpring(0, prodayMotion.spring.snappy);
         },
       }),
-    [gestureClose, reduced, dragY],
+    [gestureClose, onClose],
   );
 
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: backdrop.value * (1 - Math.min(dragY.value / 280, 0.45)),
-  }));
-
-  const sheetStyle = useAnimatedStyle(() => ({
-    opacity: 0.5 + backdrop.value * 0.5,
-    transform: [{ translateY: sheetY.value + dragY.value }],
-  }));
-
-  if (!mounted) return null;
-
-  const isSheet = variant === 'sheet';
-
   return (
-    <Modal visible transparent animationType="none" onRequestClose={requestClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={isSheet ? 'slide' : 'fade'}
+      onRequestClose={onClose}
+    >
       <View style={styles.root}>
         <Pressable
           style={StyleSheet.absoluteFill}
-          onPress={requestClose}
+          onPress={onClose}
           accessibilityLabel={accessibilityCloseLabel}
         >
-          <Animated.View
-            style={[styles.backdrop, { backgroundColor: backdropColor }, backdropStyle]}
-          />
+          <View style={[styles.backdrop, { backgroundColor: backdropColor }]} />
         </Pressable>
 
-        <Animated.View
+        <View
           style={[
             isSheet ? styles.sheet : styles.full,
             {
@@ -163,18 +86,20 @@ export function ModalSheet({
               borderTopRightRadius: isSheet ? 20 : 0,
               borderColor,
             },
-            sheetStyle,
             contentStyle,
           ]}
-          {...(gestureClose ? pan.panHandlers : null)}
         >
           {gestureClose ? (
-            <View style={styles.handleRow} accessibilityElementsHidden>
+            <View
+              style={styles.handleRow}
+              accessibilityElementsHidden
+              {...pan.panHandlers}
+            >
               <View style={[styles.handle, { backgroundColor: handleColor }]} />
             </View>
           ) : null}
-          <View style={styles.body}>{children}</View>
-        </Animated.View>
+          <View style={[styles.body, !isSheet && styles.bodyFull]}>{children}</View>
+        </View>
       </View>
     </Modal>
   );
@@ -201,5 +126,6 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
-  body: { flex: 1 },
+  body: { flexShrink: 1, width: '100%' },
+  bodyFull: { flex: 1 },
 });

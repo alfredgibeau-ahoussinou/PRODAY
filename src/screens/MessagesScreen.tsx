@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { useMessagesData } from '../hooks/useAppData';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +6,14 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { useFavorites } from '../hooks/useFavorites';
 import { profileService } from '../services/profile.service';
-import { ROLES_REQUIRING_VERIFICATION, type User } from '../models/User';
+import { ROLES_REQUIRING_VERIFICATION, type User, type UserRole } from '../models/User';
+import {
+  categorizeConversations,
+  filterByCategory,
+  matchesConversationQuery,
+  type ConversationCategory,
+  type ConversationKind,
+} from '../features/messaging/conversationCategories';
 import { physioCareThreadLabel } from '../utils/physioMessaging';
 import { ChatScreen } from './ChatScreen';
 import { PlayerProfileScreen } from './PlayerProfileScreen';
@@ -23,6 +30,9 @@ import { evaluateMessagingPermission } from '../utils/parentalMessaging';
 import { isPlayerProfileRole } from '../utils/isPlayerProfileRole';
 import { trackV3Event } from '../core/analytics/v3Events';
 import type { MessagesThreadFilter } from '../content/messagesChapters';
+
+/** Catégories par rôle : seules ces valeurs déclenchent une résolution de rôle réseau. */
+const ROLE_CATEGORY_FILTERS: MessagesThreadFilter[] = ['players', 'parents', 'coaches', 'club_staff'];
 import { MessagesHomeScreen } from '../components/messages/MessagesHomeScreen';
 import { useTranslation } from '../context/LocaleContext';
 import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
@@ -33,6 +43,7 @@ import {
 } from '../components/messages/MessagesNetworkSheet';
 import { PushScreenTransition } from '../components/motion';
 import { sortThreadsForInbox } from '../utils/messagesInboxModel';
+import { CreateGroupSheet } from '../components/messages/CreateGroupSheet';
 
 export const MessagesScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -50,6 +61,7 @@ export const MessagesScreen: React.FC = () => {
   const favorites = useFavorites(profile?.uid);
 
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [groupSheetOpen, setGroupSheetOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [threadFilter, setThreadFilter] = useState<MessagesThreadFilter>('all');
@@ -127,64 +139,91 @@ export const MessagesScreen: React.FC = () => {
     [threads],
   );
 
-  const filteredThreads = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const filtered = threads.filter((t) => {
-      if (threadFilter === 'unread' && !t.unread) return false;
-      if (threadFilter === 'care' && !t.thread_kind?.startsWith('physio')) return false;
-      if (threadFilter === 'coach') {
-        const isCoach =
-          (t.thread_kind as string) === 'coach_chat' ||
-          t.participant_name.toLowerCase().includes('coach') ||
-          (t.thread_title?.toLowerCase().includes('coach') ?? false);
-        if (!isCoach) return false;
-      }
-      if (threadFilter === 'direct') {
-        const isGroup =
-          t.thread_kind === 'team_group' ||
-          (t.thread_kind as string) === 'group' ||
-          t.id.startsWith('team__') ||
-          t.participant_name.toLowerCase().includes('groupe') ||
-          t.participant_name.toLowerCase().includes('équipe') ||
-          t.participant_name.toLowerCase().includes('vestiaire');
-        const isAnnounce =
-          (t.thread_kind as string) === 'announcement' ||
-          (t.thread_kind as string) === 'broadcast' ||
-          t.participant_name.toLowerCase().includes('annonce') ||
-          t.participant_name.toLowerCase().includes('officiel');
-        if (isGroup || isAnnounce) return false;
-      }
-      if (threadFilter === 'groups') {
-        const isGroup =
-          t.thread_kind === 'team_group' ||
-          (t.thread_kind as string) === 'group' ||
-          t.id.startsWith('team__') ||
-          t.participant_name.toLowerCase().includes('groupe') ||
-          t.participant_name.toLowerCase().includes('équipe') ||
-          t.participant_name.toLowerCase().includes('vestiaire') ||
-          (t.thread_title?.toLowerCase().includes('équipe') ?? false) ||
-          (t.thread_title?.toLowerCase().includes('groupe') ?? false);
-        if (!isGroup) return false;
-      }
-      if (threadFilter === 'announcements') {
-        const isAnnounce =
-          (t.thread_kind as string) === 'announcement' ||
-          (t.thread_kind as string) === 'broadcast' ||
-          t.participant_name.toLowerCase().includes('annonce') ||
-          t.participant_name.toLowerCase().includes('officiel') ||
-          t.participant_name.toLowerCase().includes('direction') ||
-          t.participant_name.toLowerCase().includes('club') ||
-          (t.thread_title?.toLowerCase().includes('annonce') ?? false);
-        if (!isAnnounce) return false;
-      }
-      if (!q) return true;
-      return (
-        t.participant_name.toLowerCase().includes(q) ||
-        (t.last_message?.toLowerCase().includes(q) ?? false)
-      );
+  /**
+   * Rôles des participants des conversations **directes**, résolus à la demande.
+   * Les groupes portent déjà leurs rôles (`participant_roles`) : rien à résoudre pour eux.
+   * Un rôle non résolu laisse la conversation dans « Tous » uniquement — on ne devine pas.
+   */
+  const [threadRoles, setThreadRoles] = useState<Record<string, UserRole>>({});
+  const requestedRolesRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!ROLE_CATEGORY_FILTERS.includes(threadFilter)) return;
+    const missing = Array.from(
+      new Set(
+        threads
+          .filter((t) => !t.is_group && t.other_user_id)
+          .map((t) => t.other_user_id),
+      ),
+    )
+      .filter((uid) => uid && !requestedRolesRef.current.has(uid))
+      .slice(0, 20);
+    if (missing.length === 0) return;
+    missing.forEach((uid) => requestedRolesRef.current.add(uid));
+
+    let cancelled = false;
+    void Promise.all(
+      missing.map(async (uid) => {
+        try {
+          const user = await usersService.getById(uid);
+          return user ? ([uid, user.role] as const) : null;
+        } catch {
+          return null;
+        }
+      }),
+    ).then((pairs) => {
+      if (cancelled) return;
+      setThreadRoles((prev) => {
+        const next = { ...prev };
+        for (const pair of pairs) if (pair) next[pair[0]] = pair[1];
+        return next;
+      });
     });
-    return sortThreadsForInbox(filtered);
-  }, [threads, search, threadFilter]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [threadFilter, threads]);
+
+  /**
+   * Catégorisation et filtrage par les données réelles.
+   *
+   * La version précédente déduisait la nature d'un fil en cherchant des mots dans son **nom**
+   * (`includes('club')`, `includes('officiel')`, `includes('groupe')`) : un simple titre
+   * contenant « club » suffisait à le classer en « Annonce ». La classification s'appuie
+   * désormais sur `thread_kind`, `is_group` et `is_announcement`.
+   */
+  const categorizedThreads = useMemo(
+    () =>
+      categorizeConversations(threads, profile?.uid ?? '', (uid) => threadRoles[uid] ?? null),
+    [threads, profile?.uid, threadRoles],
+  );
+
+  const filteredThreads = useMemo(() => {
+    let list = categorizedThreads;
+
+    if (threadFilter === 'unread') {
+      list = list.filter((entry) => entry.thread.unread);
+    } else if (ROLE_CATEGORY_FILTERS.includes(threadFilter)) {
+      list = filterByCategory(list, threadFilter as ConversationCategory);
+    } else if (threadFilter === 'direct' || threadFilter === 'groups' || threadFilter === 'announcements') {
+      const wanted: ConversationKind =
+        threadFilter === 'direct' ? 'direct' : threadFilter === 'groups' ? 'group' : 'announcement';
+      list = list.filter((entry) => entry.kind === wanted);
+    } else if (threadFilter === 'care') {
+      list = list.filter((entry) => entry.thread.thread_kind?.startsWith('physio'));
+    }
+
+    const searched = list.filter((entry) => matchesConversationQuery(entry, search));
+    return sortThreadsForInbox(searched.map((entry) => entry.thread));
+  }, [categorizedThreads, search, threadFilter]);
+
+  /** Nature affichée sur la ligne : distingue direct, groupe et annonce sans filtre dédié. */
+  const threadKindById = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const entry of categorizedThreads) map[entry.thread.id] = entry.kind;
+    return map;
+  }, [categorizedThreads]);
 
 
   const resolveRequest = useCallback(
@@ -411,6 +450,7 @@ export const MessagesScreen: React.FC = () => {
         onLogin={() => openAuth('login')}
         onSignup={() => openAuth('signup')}
         onOpenMercato={() => nav.setActiveTab('recrutement')}
+        onCreateGroup={() => setGroupSheetOpen(true)}
         onResetFilters={() => {
           setSearch('');
           setThreadFilter('all');
@@ -440,6 +480,17 @@ export const MessagesScreen: React.FC = () => {
       <PushScreenTransition active={Boolean(activeThreadId && profile && !mustVerify)}>
         {chatOverlay}
       </PushScreenTransition>
+
+      {/*
+        Création de groupe. `onCreated` n'est déclenché qu'après confirmation du service :
+        le fil ouvert est bien celui qui vient d'être écrit, jamais un fil supposé.
+      */}
+      <CreateGroupSheet
+        visible={groupSheetOpen}
+        onClose={() => setGroupSheetOpen(false)}
+        profile={profile}
+        onCreated={(threadId) => setActiveThreadId(threadId)}
+      />
     </>
   );
 };

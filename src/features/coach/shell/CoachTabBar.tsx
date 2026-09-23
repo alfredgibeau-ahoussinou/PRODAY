@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
+import { withAlpha } from '../../../components/navigation/tabBarShared';
 import {
   primaryTabForCoachNav,
   type CoachNavItemId,
@@ -12,7 +13,7 @@ import type { CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
 import { spacing } from '../../../theme/designTokens';
 import { useCoachTheme } from './CoachThemeContext';
 import type { CoachThemeTokens } from '../../../utils/coachTeamTheme';
-import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../../theme/playerDarkPremium';
+import { proForm } from '../../../theme/professionalDesign';
 
 type Props = {
   items: CoachNavResolvedItem[];
@@ -22,7 +23,19 @@ type Props = {
 
 const TAB_HIT_SLOP = { top: 8, bottom: 6, left: 6, right: 6 } as const;
 
-/** Dock coach dark premium — 5 onglets, accent coach & micro-labels majuscules. */
+/**
+ * Dock Coach — **4 destinations** (Accueil / Calendrier / Équipe / Menu) et la
+ * même forme que le dock Club/Admin :
+ *
+ *  - capsule flottante à extrémités pleinement arrondies et fond flouté ;
+ *  - **aucun encart ni soulignement** sous l’onglet actif : l’état se lit
+ *    uniquement sur la couleur de l’icône et du libellé ;
+ *  - libellés en **bas de casse** (jamais en capitales) à `proForm.dockLabelSize`.
+ *
+ * Les couleurs viennent des jetons Coach (`useCoachTheme`). La palette figée du
+ * pôle Joueur, qui imposait des surfaces fixes et ignorait le thème clair, n’est
+ * plus utilisée ici.
+ */
 export function CoachTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const { tokens } = useCoachTheme();
@@ -37,17 +50,20 @@ export function CoachTabBar({ items, activeId, onSelect }: Props) {
           paddingBottom: Math.max(insets.bottom, 8),
         },
       ]}
+      accessibilityRole="tablist"
+      testID="coach-tab-bar"
     >
       <View style={styles.dock}>
-        <BlurView
-          intensity={Platform.OS === 'ios' ? 45 : 30}
-          tint="dark"
-          style={StyleSheet.absoluteFill}
-        />
+        <View style={[StyleSheet.absoluteFill, styles.blurClip]} pointerEvents="none">
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 45 : 30}
+            tint={tokens.isLight ? 'light' : 'dark'}
+            style={StyleSheet.absoluteFill}
+          />
+        </View>
         <View style={styles.row}>
           {items.map((item) => {
             const on = item.id === highlight;
-            const label = (item.shortLabel ?? item.label).toUpperCase();
             return (
               <PressableSpring
                 key={item.id}
@@ -59,20 +75,14 @@ export function CoachTabBar({ items, activeId, onSelect }: Props) {
                 accessibilityRole="tab"
                 accessibilityState={{ selected: on }}
                 accessibilityLabel={item.label}
+                accessibilityHint={item.hint}
+                testID={`coach-tab-${item.id}`}
               >
-                <View
-                  style={[
-                    styles.iconWrap,
-                    on && {
-                      borderColor: tokens.accent,
-                      backgroundColor: tokens.soft,
-                    },
-                  ]}
-                >
+                <View style={styles.iconWrap}>
                   <Icon
                     name={item.icon}
-                    size={22}
-                    color={on ? tokens.accent : PLAYER_DARK.textMuted}
+                    size={proForm.dockIconSize}
+                    color={on ? tokens.accent : tokens.muted}
                     variant={on ? 'filled' : 'outline'}
                   />
                   {item.aiBadge ? (
@@ -81,20 +91,13 @@ export function CoachTabBar({ items, activeId, onSelect }: Props) {
                 </View>
 
                 <Text
-                  style={[
-                    styles.slotLabel,
-                    { color: on ? tokens.accent : PLAYER_DARK.textMuted },
-                  ]}
+                  style={[styles.slotLabel, { color: on ? tokens.accent : tokens.muted }]}
                   adjustsFontSizeToFit
                   minimumFontScale={0.82}
                   numberOfLines={1}
                 >
-                  {label}
+                  {item.shortLabel ?? item.label}
                 </Text>
-
-                {on ? (
-                  <View style={[styles.activeLine, { backgroundColor: tokens.accent }]} />
-                ) : null}
               </PressableSpring>
             );
           })}
@@ -113,15 +116,20 @@ function createStyles(tokens: CoachThemeTokens) {
       flexShrink: 0,
       zIndex: 20,
     },
+    blurClip: {
+      borderRadius: proForm.dockRadius,
+      overflow: 'hidden',
+    },
     dock: {
       borderWidth: 1,
-      borderRadius: PLAYER_DARK_RADIUS.dock,
-      paddingTop: 8,
-      paddingBottom: 8,
+      borderRadius: proForm.dockRadius,
+      paddingTop: 10,
+      paddingBottom: 10,
       paddingHorizontal: 6,
       overflow: 'hidden',
-      backgroundColor: 'rgba(14, 16, 24, 0.72)',
-      borderColor: 'rgba(255, 255, 255, 0.12)',
+      /** Même recette de translucidité que le dock Club, appliquée au jeton Coach. */
+      backgroundColor: withAlpha(tokens.surface, 0.88),
+      borderColor: tokens.border,
       ...Platform.select({
         ios: {
           shadowColor: '#000',
@@ -135,24 +143,20 @@ function createStyles(tokens: CoachThemeTokens) {
     },
     row: {
       flexDirection: 'row',
-      alignItems: 'flex-end',
+      alignItems: 'center',
       justifyContent: 'space-between',
     },
     slot: {
       flex: 1,
       alignItems: 'center',
-      gap: 3,
+      gap: 4,
       minWidth: 0,
-      paddingBottom: 2,
+      paddingVertical: 2,
     },
+    /** Colonne d’icône nue : pas de fond, pas de bordure (référence). */
     iconWrap: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: 'transparent',
       position: 'relative',
     },
     aiDot: {
@@ -163,20 +167,13 @@ function createStyles(tokens: CoachThemeTokens) {
       height: 7,
       borderRadius: 4,
     },
+    /** Libellés en bas de casse, taille HIG de barre d’onglets. */
     slotLabel: {
-      fontSize: 9,
-      fontWeight: '800',
-      letterSpacing: 0.3,
-      textTransform: 'uppercase',
+      fontSize: proForm.dockLabelSize,
+      fontWeight: '600',
+      letterSpacing: 0.1,
       width: '100%',
       textAlign: 'center',
     },
-    activeLine: {
-      width: 18,
-      height: 2,
-      borderRadius: 1,
-      marginTop: 2,
-    },
   });
 }
-

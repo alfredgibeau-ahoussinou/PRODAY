@@ -97,9 +97,9 @@ describe('joueurPageIdentity', () => {
 
   it('change les labels de dock par âge', () => {
     expect(getJoueurGameTabLabel('home', 'youth')).toBe('JOUER');
-    expect(getJoueurGameTabLabel('home', 'teen')).toBe('PARCOURS');
-    expect(getJoueurGameTabLabel('home', 'adult')).toBe('ACCUEIL');
-    expect(getJoueurGameTabLabel('profil', 'adult')).toBe('PROFIL');
-    expect(getJoueurGameTabLabel('matchs', 'teen')).toBe('MATCHS');
+    expect(getJoueurGameTabLabel('home', 'teen')).toBe('ACCUEIL');
+    expect(getJoueurGameTabLabel('home', 'adult')).toBe('Accueil');
+    expect(getJoueurGameTabLabel('profil', 'adult')).toBe('Ma Carte');
+    expect(getJoueurGameTabLabel('matchs', 'teen')).toBe('Calendrier');
   });
 });

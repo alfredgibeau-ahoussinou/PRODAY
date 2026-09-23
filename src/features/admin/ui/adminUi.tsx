@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Platform,
   Pressable,
   StyleSheet,
   TextInput,
@@ -14,7 +15,7 @@ import { ProDayText } from '../../../components/ui/ProDayText';
 import { Icon } from '../../../components/ui/Icon';
 import type { IconName } from '../../../components/ui/iconNames';
 import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
-import { ADMIN_TOKENS, type AdminThemeTokens } from '../theme/adminTokens';
+import { ADMIN_TOKENS, useAdminTokens, type AdminThemeTokens } from '../theme/adminTokens';
 import {
   adminChrome,
   adminLayout,
@@ -27,44 +28,14 @@ import {
   adminType,
   type AdminTypeVariant,
 } from '../theme/adminDesignSystem';
+import { useAppearance } from '../../../context/AppearanceContext';
 import { AdminPaneSkeleton, AdminPressable, AdminSkeletonBlock, AdminAnimatedNumber } from '../motion';
 
-type TextProps = {
-  children: React.ReactNode;
-  variant?: AdminTypeVariant;
-  color?: string;
-  champagne?: boolean;
-  muted?: boolean;
-  style?: StyleProp<TextStyle>;
-  numberOfLines?: number;
-};
-
-export function AdminText({
-  children,
-  variant = 'body',
-  color,
-  champagne,
-  muted,
-  style,
-  numberOfLines,
-}: TextProps) {
-  const tokens = ADMIN_TOKENS;
-  const resolved =
-    color ??
-    (champagne ? tokens.champagneBright : muted ? tokens.muted : tokens.foreground);
-  return (
-    <ProDayText
-      variant="body"
-      numberOfLines={numberOfLines}
-      style={[adminType[variant], { color: resolved }, style]}
-    >
-      {children}
-    </ProDayText>
-  );
-}
+import { AdminText } from './AdminText';
+export { AdminText };
 
 export function AdminBrandMark({ compact }: { compact?: boolean }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: compact ? 8 : 10 }}>
       <ProDaySymbol size={compact ? 22 : 28} variant="admin" tone="white" />
@@ -99,7 +70,7 @@ export function AdminButton({
   testID?: string;
   compact?: boolean;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const bg =
     variant === 'primary'
       ? t.accentHot
@@ -110,7 +81,7 @@ export function AdminButton({
           : 'transparent';
   const color =
     variant === 'primary'
-      ? t.accentText
+      ? '#FFFFFF'
       : variant === 'danger'
         ? '#FFFFFF'
         : variant === 'soft'
@@ -139,7 +110,7 @@ export function AdminButton({
         },
       ]}
     >
-      <AdminText variant="caption" color={color} style={{ fontWeight: '800' }}>
+      <AdminText variant="caption" color={color} style={{ fontWeight: '700', letterSpacing: 0.2 }}>
         {label}
       </AdminText>
     </AdminPressable>
@@ -147,7 +118,7 @@ export function AdminButton({
 }
 
 /**
- * Header de panneau détail (modal / sheet) — Fermer large, safe area, pas collé au bord.
+ * Header de panneau détail (modal / sheet) — Style Apple HIG épuré avec bouton fermer compact à droite.
  */
 export function AdminSheetHeader({
   title,
@@ -162,50 +133,54 @@ export function AdminSheetHeader({
   closeLabel?: string;
   right?: React.ReactNode;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const insets = useSafeAreaInsets();
+  const topClearance = Math.max(insets.top, Platform.OS === 'ios' ? 52 : 24);
   return (
     <View
       style={[
         styles.sheetHeader,
         {
-          paddingTop: Math.max(insets.top, 12) + adminSpace.sm,
+          paddingTop: topClearance + adminSpace.md,
           borderBottomColor: t.hairline,
           backgroundColor: t.bgElevated,
+          ...(t.glassBackdrop as any),
         },
       ]}
     >
-      <Pressable
-        onPress={onClose}
-        accessibilityRole="button"
-        accessibilityLabel={closeLabel}
-        hitSlop={8}
-        style={({ pressed }) => [
-          styles.sheetClose,
-          {
-            backgroundColor: t.surfaceMuted,
-            borderColor: t.borderStrong,
-            opacity: pressed ? 0.88 : 1,
-          },
-        ]}
-      >
-        <Icon name="close" size={18} color={t.accentHot} />
-        <AdminText variant="h3" champagne style={{ fontWeight: '800' }}>
-          {closeLabel}
-        </AdminText>
-      </Pressable>
       <View style={styles.sheetTitleRow}>
-        <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
-          <AdminText variant="h1" numberOfLines={2}>
+        <View style={{ flex: 1, gap: 2, minWidth: 0 }}>
+          <AdminText variant="h1" numberOfLines={1}>
             {title}
           </AdminText>
           {subtitle ? (
-            <AdminText variant="caption" muted numberOfLines={2}>
+            <AdminText variant="caption" muted numberOfLines={1}>
               {subtitle}
             </AdminText>
           ) : null}
         </View>
-        {right}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {right}
+          <Pressable
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel={closeLabel}
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.sheetClose,
+              {
+                backgroundColor: t.surfaceMuted,
+                borderColor: t.borderStrong,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <Icon name="close" size={14} color={t.foreground} />
+            <AdminText variant="caption" style={{ fontWeight: '700', color: t.foreground }}>
+              {closeLabel}
+            </AdminText>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -218,7 +193,7 @@ export function AdminBadge({
   label: string;
   tone?: 'info' | 'success' | 'warn' | 'danger' | 'accent';
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const map = {
     info: { bg: t.infoSoft, fg: t.info },
     success: { bg: t.successSoft, fg: t.success },
@@ -246,7 +221,7 @@ export function AdminMetric({
   hint?: string;
   tone?: 'default' | 'success' | 'warn' | 'danger';
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const color =
     tone === 'success'
       ? t.success
@@ -285,7 +260,7 @@ export function AdminCard({
   style?: StyleProp<ViewStyle>;
   hero?: boolean;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <View style={[hero ? adminSurfaceHero(t) : adminSurfaceCard(t), styles.cardPad, style]}>
       {children}
@@ -305,7 +280,7 @@ export function AdminPaneHeader({
   right?: React.ReactNode;
   eyebrow?: string;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <View style={styles.paneHeader}>
       <View style={styles.paneHeaderRow}>
@@ -342,7 +317,7 @@ export function AdminEmptyState({
   actionLabel?: string;
   onAction?: () => void;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <View style={[styles.empty, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}>
       <LinearGradient
@@ -370,7 +345,7 @@ export function AdminEmptyState({
 }
 
 export function AdminLoading({ label = 'Chargement du centre…' }: { label?: string }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <View style={[styles.loading, { backgroundColor: t.bg }]} accessibilityLabel={label}>
       <View style={styles.loadingHead}>
@@ -398,7 +373,7 @@ export function AdminSearchField({
   onChangeText: (v: string) => void;
   placeholder?: string;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <View
       style={[
@@ -437,7 +412,7 @@ export function AdminField({
   secureTextEntry?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <TextInput
       value={value}
@@ -473,7 +448,7 @@ export function AdminFilterChip({
   onPress: () => void;
   testID?: string;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <AdminPressable
       testID={testID}
@@ -518,7 +493,7 @@ export function AdminEntityRow({
   selected?: boolean;
   actions?: React.ReactNode;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const body = (
     <View
       style={[
@@ -570,7 +545,7 @@ export function AdminAvatarMark({
   label: string;
   tone?: 'accent' | 'info' | 'success' | 'warn' | 'danger';
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const map = {
     accent: { bg: t.accentSoft, fg: t.accentHot },
     info: { bg: t.infoSoft, fg: t.info },
@@ -600,7 +575,7 @@ export function AdminMetricTile({
   hot?: boolean;
   onPress?: () => void;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <AdminPressable
       onPress={onPress}
@@ -627,6 +602,122 @@ export function AdminMetricTile({
   );
 }
 
+/**
+ * Sélecteur d'apparence Liquid Glass Apple unifié pour l'Espace Admin.
+ * Permet de basculer instantanément de mode (Auto / Glass / Opaque) et d'intensité.
+ */
+export function AdminAppearanceSelector({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
+  const t = useAdminTokens();
+  const {
+    glassMode,
+    intensity,
+    isEffectiveGlass,
+    isReducedTransparency,
+    setGlassMode,
+    setIntensity,
+  } = useAppearance();
+
+  const modes = [
+    { id: 'system', label: 'Auto (Système)' },
+    { id: 'glass', label: 'Liquid Glass' },
+    { id: 'opaque', label: 'Opaque Solide' },
+  ] as const;
+
+  const intensities = [
+    { id: 'subtle', label: 'Subtil' },
+    { id: 'regular', label: 'Standard' },
+    { id: 'intense', label: 'Intense' },
+  ] as const;
+
+  return (
+    <View style={[styles.appearanceWrap, adminSurfaceCard(t)]}>
+      <View style={styles.appearanceHead}>
+        <Icon name="sparkles" size={18} color={t.signal} />
+        <View style={{ flex: 1, gap: 2 }}>
+          <AdminText variant="h3">Apparence & Liquid Glass</AdminText>
+          <AdminText variant="caption" muted>
+            {isEffectiveGlass
+              ? `Liquid Glass Actif · Flou ${intensity === 'subtle' ? '16px' : intensity === 'intense' ? '40px' : '28px'} · Reflets spéculaires`
+              : 'Mode Opaque Solide · Haut contraste · Zéro transparence'}
+          </AdminText>
+        </View>
+        {isReducedTransparency ? (
+          <AdminBadge label="ACCESS. REDUCED" tone="warn" />
+        ) : (
+          <AdminBadge label={isEffectiveGlass ? 'GLASS ON' : 'OPAQUE'} tone={isEffectiveGlass ? 'accent' : 'info'} />
+        )}
+      </View>
+
+      <View style={styles.appearanceSegmentRow}>
+        {modes.map((m) => {
+          const selected = glassMode === m.id;
+          return (
+            <AdminPressable
+              key={m.id}
+              onPress={() => void setGlassMode(m.id)}
+              scaleTo={0.97}
+              style={[
+                styles.appearanceSegment,
+                selected && {
+                  backgroundColor: isEffectiveGlass ? t.accentSoft : 'rgba(255, 255, 255, 0.12)',
+                  borderColor: selected ? t.signal : t.border,
+                },
+              ]}
+            >
+              <AdminText
+                variant="caption"
+                color={selected ? t.signal : t.muted}
+                style={{ fontWeight: selected ? '800' : '600' }}
+              >
+                {m.label}
+              </AdminText>
+            </AdminPressable>
+          );
+        })}
+      </View>
+
+      {isEffectiveGlass && !compact ? (
+        <View style={{ gap: 6, marginTop: 4 }}>
+          <AdminText variant="label" muted>
+            Intensité du flou Apple
+          </AdminText>
+          <View style={styles.appearanceSegmentRow}>
+            {intensities.map((i) => {
+              const selected = intensity === i.id;
+              return (
+                <AdminPressable
+                  key={i.id}
+                  onPress={() => void setIntensity(i.id)}
+                  scaleTo={0.97}
+                  style={[
+                    styles.appearanceSegment,
+                    selected && {
+                      backgroundColor: t.accentSoft,
+                      borderColor: t.signal,
+                    },
+                  ]}
+                >
+                  <AdminText
+                    variant="caption"
+                    color={selected ? t.signal : t.muted}
+                    style={{ fontWeight: selected ? '800' : '600' }}
+                  >
+                    {i.label}
+                  </AdminText>
+                </AdminPressable>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   btn: {
     minHeight: 40,
@@ -644,25 +735,24 @@ const styles = StyleSheet.create({
   },
   sheetHeader: {
     paddingHorizontal: adminLayout.headerPadX,
-    paddingBottom: adminSpace.lg,
-    gap: adminSpace.md,
+    paddingBottom: adminSpace.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   sheetClose: {
-    minHeight: 48,
-    width: '100%',
+    minHeight: 34,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    paddingHorizontal: adminSpace.xl,
-    paddingVertical: 12,
-    borderRadius: adminRadius.md,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: adminRadius.pill,
     borderWidth: 1,
   },
   sheetTitleRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: adminSpace.md,
   },
   badge: {
@@ -797,6 +887,33 @@ const styles = StyleSheet.create({
     borderRadius: adminRadius.md,
     borderWidth: 1,
     gap: 4,
+  },
+  appearanceWrap: {
+    padding: adminLayout.cardPad,
+    gap: adminSpace.md,
+  },
+  appearanceHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  appearanceSegmentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  appearanceSegment: {
+    flex: 1,
+    minWidth: 90,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: adminRadius.md,
+    borderWidth: 1,
+    borderColor: ADMIN_TOKENS.border,
+    backgroundColor: ADMIN_TOKENS.surfaceMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

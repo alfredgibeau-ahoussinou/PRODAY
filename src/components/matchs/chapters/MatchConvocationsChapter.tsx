@@ -13,6 +13,8 @@ import { usePlayerTheme, usePlayerThemeColors } from '../../../context/PlayerThe
 import { MATCH_CHAPTER_PAD } from './matchChapterLayout';
 import { MatchEmptyState } from '../matchCenterUi';
 import { prodayHaptics } from '../../../utils/prodayHaptics';
+import { PLAYER_DARK } from '../../../theme/playerDarkPremium';
+import { playerType } from '../../../theme/playerDesignSystem';
 
 const scrollProps = {
   showsVerticalScrollIndicator: false,
@@ -35,7 +37,7 @@ export interface MatchConvocationsChapterProps {
 }
 
 /**
- * Chapitre Convocations Épuré & Direct (Inspiré de SportEasy)
+ * Chapitre Convocations Épuré & Direct Style Apple
  * Filtres simples en tête, cartes d'action directes sans boîtes superflues.
  */
 export const MatchConvocationsChapter: React.FC<MatchConvocationsChapterProps> = ({
@@ -116,12 +118,13 @@ export const MatchConvocationsChapter: React.FC<MatchConvocationsChapterProps> =
               }}
               style={[
                 styles.filterChip,
-                isSelected && {
-                  backgroundColor: isPendingTab ? `${skin.warn}1E` : `${teamPrimary}1E`,
-                  borderColor: isPendingTab ? `${skin.warn}60` : `${teamPrimary}60`,
+                isSelected ? styles.filterChipSelected : styles.filterChipUnselected,
+                isSelected && isPendingTab && {
+                  backgroundColor: `${skin.warn}1E`,
+                  borderColor: `${skin.warn}50`,
                 },
               ]}
-              activeOpacity={0.75}
+              activeOpacity={0.7}
             >
               <Ionicons
                 name={seg.icon}
@@ -129,16 +132,18 @@ export const MatchConvocationsChapter: React.FC<MatchConvocationsChapterProps> =
                 color={
                   isSelected
                     ? isPendingTab ? skin.warn : teamPrimary
-                    : isPendingTab ? skin.warn : '#9CA3AF'
+                    : isPendingTab ? skin.warn : PLAYER_DARK.textMuted
                 }
               />
               <ProDayText
                 style={[
                   styles.filterChipText,
-                  isSelected && {
-                    color: isPendingTab ? skin.warn : '#FFFFFF',
-                    fontWeight: '800',
+                  {
+                    color: isSelected
+                      ? isPendingTab ? skin.warn : PLAYER_DARK.text
+                      : PLAYER_DARK.textMuted,
                   },
+                  isSelected && styles.filterChipTextActive,
                 ]}
               >
                 {seg.label}
@@ -160,7 +165,7 @@ export const MatchConvocationsChapter: React.FC<MatchConvocationsChapterProps> =
                   <ProDayText
                     style={[
                       styles.countBadgeText,
-                      { color: isPendingTab || isSelected ? '#000000' : '#9CA3AF' },
+                      { color: isPendingTab || isSelected ? '#000000' : PLAYER_DARK.textMuted },
                     ]}
                   >
                     {seg.count}
@@ -222,6 +227,7 @@ const styles = StyleSheet.create({
   stack: {
     gap: 12,
     paddingTop: 4,
+    paddingBottom: 24,
   },
   filterRow: {
     flexDirection: 'row',
@@ -232,28 +238,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#111116',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
     paddingHorizontal: 11,
-    paddingVertical: 7,
+    paddingVertical: 6.5,
     borderRadius: 10,
   },
+  filterChipSelected: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  filterChipUnselected: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
+  },
   filterChipText: {
-    fontSize: 11.5,
-    fontWeight: '600',
-    color: '#9CA3AF',
+    ...playerType.caption,
+    fontWeight: '500',
+  },
+  filterChipTextActive: {
+    fontWeight: '700',
   },
   countBadge: {
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
+    minWidth: 15,
+    height: 15,
+    borderRadius: 7.5,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
   countBadgeText: {
+    ...playerType.micro,
     fontSize: 9.5,
-    fontWeight: '900',
+    fontWeight: '800',
   },
 });

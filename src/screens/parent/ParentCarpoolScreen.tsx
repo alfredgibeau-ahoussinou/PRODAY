@@ -14,9 +14,13 @@ import {
   ParentSectionCard,
 } from '../../components/parent/parentPortalUi';
 import { PARENT_PAGES } from '../../content/parentPageIdentity';
-import { useAuth } from '../../context/AuthContext';
 import { normalizeGuardianEmail } from '../../utils/guardianEmail';
+import { useAuth } from '../../context/AuthContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
+import { transportLogisticsService } from '../../services/transportLogistics.service';
+import { PassengerTransportTicket } from '../../components/transport/PassengerTransportTicket';
+import type { TeamEvent } from '../../models/TeamEvent';
+import { formatCalendarDate } from '../../utils/seasonCalendar';
 
 export const ParentCarpoolScreen: React.FC = () => {
   const { colors: c } = useThemedScreen();
@@ -25,17 +29,24 @@ export const ParentCarpoolScreen: React.FC = () => {
   const { selected, reload } = useParentShell();
   const email = normalizeGuardianEmail(profile?.email);
   const [trips, setTrips] = useState<CarpoolLiveTripDoc[]>([]);
+  const [events, setEvents] = useState<TeamEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [privacyBusy, setPrivacyBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!selected) {
       setTrips([]);
+      setEvents([]);
       return;
     }
     setLoading(true);
     try {
-      setTrips(await parentPortalService.listActiveCarpoolTripsForChild(selected.uid));
+      const [activeTrips, childEvents] = await Promise.all([
+        parentPortalService.listActiveCarpoolTripsForChild(selected.uid),
+        parentPortalService.listChildEvents(selected.uid),
+      ]);
+      setTrips(activeTrips);
+      setEvents(childEvents);
     } finally {
       setLoading(false);
     }
@@ -129,6 +140,42 @@ export const ParentCarpoolScreen: React.FC = () => {
             />
           )}
         </ParentSectionCard>
+
+        {events.length > 0 && (
+          <View style={{ gap: spacing.sm, marginVertical: spacing.sm }}>
+            <ProDayText variant="section">
+              Transports prévus ({selected.display_name})
+            </ProDayText>
+            {events.map((event) => {
+              const parentView = transportLogisticsService.getParentTransportView(
+                event,
+                selected.uid
+              );
+              return (
+                <View key={event.id}>
+                  <PassengerTransportTicket
+                    summary={parentView.summary}
+                    eventTitle={event.title}
+                    eventDate={formatCalendarDate(event.starts_at)}
+                    isParentView
+                    onDeclareIndependent={async () => {
+                      try {
+                        await transportLogisticsService.setIndependentTravel(
+                          event.id,
+                          selected.uid,
+                          !parentView.summary.is_independent
+                        );
+                        void load();
+                      } catch (err: any) {
+                        Alert.alert('Erreur', err?.message || 'Erreur');
+                      }
+                    }}
+                  />
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         {loading ? (
           <ActivityIndicator color={c.brand} />

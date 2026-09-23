@@ -18,6 +18,12 @@ jest.mock('firebase/auth', () => ({
   getAuth: jest.fn(),
 }));
 
+jest.mock('firebase/storage', () => ({
+  ref: jest.fn((_storage: unknown, path: string) => ({ fullPath: path })),
+  uploadBytesResumable: jest.fn(),
+  getDownloadURL: jest.fn(),
+}));
+
 jest.mock('firebase/firestore', () => ({
   getFirestore: jest.fn(),
   collection: jest.fn(),

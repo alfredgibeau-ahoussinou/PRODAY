@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import {
   AdminAvatarMark,
   AdminBadge,
@@ -11,7 +12,7 @@ import {
   AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminSpace } from '../theme/adminDesignSystem';
 import { adminService } from '../../../services/admin.service';
 import { membershipsService } from '../../../services/memberships.service';
@@ -26,7 +27,7 @@ import type { User } from '../../../models/User';
 type PendingClaim = Awaited<ReturnType<typeof adminService.listPendingPublicClubClaims>>[number];
 
 export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const data = useAdminData();
   const { firebaseUser, profile } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -84,7 +85,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
           });
           await load();
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         } finally {
           setBusy(null);
         }
@@ -105,7 +106,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
           else await membershipsService.reject(id, uid);
           await data.refresh();
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         } finally {
           setBusy(null);
         }
@@ -120,7 +121,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
       const list = await adminService.listUserDocuments(user.uid);
       setDocs(list);
     } catch (e) {
-      Alert.alert('Erreur docs', e instanceof Error ? e.message : 'Échec');
+      prodayAlert.alert('Erreur docs', e instanceof Error ? e.message : 'Échec');
       setDocs([]);
     }
   };
@@ -140,7 +141,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
           await data.refresh();
           setDocUser(null);
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         } finally {
           setBusy(null);
         }
@@ -189,21 +190,21 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
                 badgeTone="warn"
                 leading={<AdminAvatarMark label={c.club_name || 'C'} tone="warn" />}
                 actions={
-                  <>
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
                     <AdminButton
-                      label="OK"
+                      label="Valider"
                       compact
                       disabled={!!busy}
                       onPress={() => resolveClaim(c, 'approve')}
                     />
                     <AdminButton
-                      label="Refus"
+                      label="Refuser"
                       variant="danger"
                       compact
                       disabled={!!busy}
                       onPress={() => resolveClaim(c, 'reject')}
                     />
-                  </>
+                  </View>
                 }
               />
             ))
@@ -234,21 +235,21 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
                 badgeTone="warn"
                 leading={<AdminAvatarMark label={m.player_name} tone="warn" />}
                 actions={
-                  <>
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
                     <AdminButton
-                      label="OK"
+                      label="Valider"
                       compact
                       disabled={!!busy}
                       onPress={() => resolveMembership(m.id, true)}
                     />
                     <AdminButton
-                      label="Refus"
+                      label="Refuser"
                       variant="danger"
                       compact
                       disabled={!!busy}
                       onPress={() => resolveMembership(m.id, false)}
                     />
-                  </>
+                  </View>
                 }
               />
             ))
@@ -257,7 +258,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
 
         <AdminCard>
           <View style={styles.headRow}>
-            <AdminText variant="h2">Vérifs identité</AdminText>
+            <AdminText variant="h2">Vérifications d'identité</AdminText>
             <AdminBadge
               label={String(pendingUsers.length)}
               tone={pendingUsers.length ? 'warn' : 'success'}
@@ -265,8 +266,8 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
           </View>
           {pendingUsers.length === 0 ? (
             <AdminEmptyState
-              title="Aucune vérif en attente"
-              body="Les profils à valider (documents ID) s’afficheront ici."
+              title="Aucune vérification en attente"
+              body="Tous les profils et pièces d’identité ont été vérifiés."
               icon="checkmark-circle"
             />
           ) : (
@@ -275,7 +276,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
                 <AdminEntityRow
                   title={u.display_name || u.email || u.uid}
                   subtitle={`${u.role} · ${u.verification_status ?? '—'}`}
-                  badge="DOCS"
+                  badge="DOCS ID"
                   badgeTone="info"
                   leading={<AdminAvatarMark label={u.display_name || u.email || '?'} tone="info" />}
                   onPress={() => void openDocs(u)}
@@ -288,42 +289,48 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
 
       <AdminModalSheet visible={!!docUser} onClose={() => setDocUser(null)} variant="full">
         {docUser ? (
-          <ScrollView contentContainerStyle={{ padding: adminSpace.lg, gap: 12 }}>
-            <AdminText variant="h1">{docUser.display_name || 'Identité'}</AdminText>
-            <AdminText variant="caption" color={t.muted}>
-              {docUser.email} · {docUser.uid}
-            </AdminText>
-            {docs.length === 0 ? (
-              <AdminEmptyState title="Aucun document" body="Pas de pièce ID uploadée." />
-            ) : (
-              docs.map((d) => (
-                <AdminCard key={d.id}>
-                  <AdminText variant="h3">{d.name}</AdminText>
-                  <AdminText variant="caption" color={t.muted}>
-                    {d.type ?? '—'} · {d.verification_check ?? '—'}
-                  </AdminText>
-                  {d.ai_summary ? (
-                    <AdminText variant="body" color={t.faint}>
-                      IA · {d.ai_summary}
+          <View style={{ flex: 1, backgroundColor: t.bg }}>
+            <AdminPaneHeader
+              title={docUser.display_name || 'Vérification identité'}
+              subtitle={`${docUser.email} · ${docUser.role.toUpperCase()} · ${docUser.uid}`}
+              right={
+                <AdminButton label="Fermer" variant="ghost" compact onPress={() => setDocUser(null)} />
+              }
+            />
+            <ScrollView contentContainerStyle={{ padding: adminSpace.lg, gap: 14 }}>
+              {docs.length === 0 ? (
+                <AdminEmptyState title="Aucun document uploadé" body="Aucune pièce d'identité n'a été transmise." />
+              ) : (
+                docs.map((d) => (
+                  <AdminCard key={d.id}>
+                    <AdminText variant="h3">{d.name}</AdminText>
+                    <AdminText variant="caption" color={t.muted}>
+                      Type : {d.type ?? 'Non spécifié'} · Statut : {d.verification_check ?? 'En cours'}
                     </AdminText>
-                  ) : null}
-                </AdminCard>
-              ))
-            )}
-            <View style={styles.actions}>
-              <AdminButton
-                label="Approuver"
-                disabled={!!busy}
-                onPress={() => decideUser(docUser, 'VERIFIED')}
-              />
-              <AdminButton
-                label="Rejeter"
-                variant="danger"
-                disabled={!!busy}
-                onPress={() => decideUser(docUser, 'REJECTED')}
-              />
-            </View>
-          </ScrollView>
+                    {d.ai_summary ? (
+                      <AdminText variant="body" color={t.faint}>
+                        Analyse IA : {d.ai_summary}
+                      </AdminText>
+                    ) : null}
+                  </AdminCard>
+                ))
+              )}
+              <View style={[styles.actions, { marginTop: 8 }]}>
+                <AdminButton
+                  label="Approuver le profil"
+                  variant="primary"
+                  disabled={!!busy}
+                  onPress={() => decideUser(docUser, 'VERIFIED')}
+                />
+                <AdminButton
+                  label="Rejeter le document"
+                  variant="danger"
+                  disabled={!!busy}
+                  onPress={() => decideUser(docUser, 'REJECTED')}
+                />
+              </View>
+            </ScrollView>
+          </View>
         ) : null}
       </AdminModalSheet>
     </>

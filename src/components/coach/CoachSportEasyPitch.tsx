@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { PRO_DATA_VIOLET, proSemantic } from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import {
   CoachSportEasyPitchSurface,
@@ -349,7 +351,7 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
       {/* Toast Feedback */}
       {feedbackToast ? (
         <View style={styles.toastCard}>
-          <Icon name="checkmark-circle" size={16} color="#10B981" />
+          <Icon name="checkmark-circle" size={16} color={proSemantic.success} />
           <CoachText style={styles.toastText}>{feedbackToast}</CoachText>
         </View>
       ) : null}
@@ -359,7 +361,7 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
         <View style={styles.aiHeroHeader}>
           <View style={styles.aiHeroLeft}>
             <View style={styles.aiHeroBadge}>
-              <Icon name="stats-chart" size={13} color="#10B981" />
+              <Icon name="stats-chart" size={13} color={proSemantic.success} />
               <CoachText style={styles.aiHeroBadgeText}>TACTIQUE & XI</CoachText>
             </View>
             <CoachText style={styles.aiHeroTitle}>
@@ -380,7 +382,7 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
             </PressableSpring>
 
             <PressableSpring
-              style={[styles.aiAutoAlignBtn, { backgroundColor: '#8B5CF6' }]}
+              style={[styles.aiAutoAlignBtn, { backgroundColor: PRO_DATA_VIOLET }]}
               onPress={() => setAiSheetVisible(true)}
               scaleTo={0.96}
               haptic
@@ -396,7 +398,7 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
                 scaleTo={0.96}
                 haptic
               >
-                <Icon name="chatbubbles" size={14} color="#A78BFA" />
+                <Icon name="chatbubbles" size={14} color={PRO_DATA_VIOLET} />
               </PressableSpring>
             ) : null}
           </View>
@@ -404,7 +406,7 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
 
         {/* AI Insight Rationale */}
         <View style={styles.aiInsightRow}>
-          <Icon name="star-four-points" size={13} color="#10B981" />
+          <Icon name="star-four-points" size={13} color={proSemantic.success} />
           <CoachText numberOfLines={2} style={styles.aiInsightText}>
             {activePreset?.aiRationale ||
               "L'IA a ajusté le schéma tactique, placé les meilleurs joueurs et activé les flèches d'animation."}
@@ -437,7 +439,7 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
       <View style={styles.intelCard}>
         <View style={styles.intelHeader}>
           <View style={styles.intelTitleRow}>
-            <Icon name="stats-chart" size={15} color="#10B981" />
+            <Icon name="stats-chart" size={15} color={proSemantic.success} />
             <CoachText style={styles.intelTitle}>Analyse du XI IA</CoachText>
           </View>
           <View style={styles.intelOverallPill}>
@@ -498,28 +500,28 @@ function createStyles(tokens: CoachThemeTokens) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      backgroundColor: '#064E3B',
+      backgroundColor: tokens.accent,
       borderWidth: 1,
-      borderColor: '#10B981',
+      borderColor: proSemantic.success,
       paddingHorizontal: spacing.md,
       paddingVertical: 9,
       borderRadius: radius.pill,
       alignSelf: 'center',
     },
     toastText: {
-      color: '#ECFDF5',
+      color: proSemantic.successSoft,
       fontSize: 12,
       fontWeight: '800',
     },
 
     aiStudioHero: {
-      backgroundColor: '#100D1C',
+      backgroundColor: tokens.elevated,
       borderRadius: radius.xl,
       borderWidth: 1,
-      borderColor: 'rgba(139, 92, 246, 0.35)',
+      borderColor: withAlpha(PRO_DATA_VIOLET, 0.35),
       padding: spacing.md,
       gap: spacing.sm,
-      shadowColor: '#8B5CF6',
+      shadowColor: PRO_DATA_VIOLET,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.18,
       shadowRadius: 10,
@@ -540,12 +542,12 @@ function createStyles(tokens: CoachThemeTokens) {
       fontSize: 10,
       fontWeight: '900',
       letterSpacing: 0.8,
-      color: '#10B981',
+      color: proSemantic.success,
     },
     aiHeroTitle: {
       fontSize: 15,
       fontWeight: '900',
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     aiBtnGroup: {
       flexDirection: 'row',
@@ -556,11 +558,11 @@ function createStyles(tokens: CoachThemeTokens) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      backgroundColor: '#10B981',
+      backgroundColor: proSemantic.success,
       paddingHorizontal: 12,
       paddingVertical: 7,
       borderRadius: radius.pill,
-      shadowColor: '#10B981',
+      shadowColor: proSemantic.success,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.35,
       shadowRadius: 6,
@@ -569,12 +571,12 @@ function createStyles(tokens: CoachThemeTokens) {
     aiAutoAlignBtnText: {
       fontSize: 11.5,
       fontWeight: '900',
-      color: '#000000',
+      color: tokens.bg,
     },
     aiCustomBtn: {
-      backgroundColor: 'rgba(139, 92, 246, 0.2)',
+      backgroundColor: withAlpha(PRO_DATA_VIOLET, 0.2),
       borderWidth: 1,
-      borderColor: 'rgba(139, 92, 246, 0.45)',
+      borderColor: withAlpha(PRO_DATA_VIOLET, 0.45),
       paddingHorizontal: 10,
       paddingVertical: 7,
       borderRadius: radius.pill,
@@ -586,27 +588,27 @@ function createStyles(tokens: CoachThemeTokens) {
     aiInsightRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: 'rgba(0,0,0,0.4)',
+      backgroundColor: 'withAlpha(tokens.bg, 0.4)',
       borderRadius: radius.md,
       paddingHorizontal: 10,
       paddingVertical: 7,
       gap: 8,
       borderWidth: 0.5,
-      borderColor: 'rgba(255,255,255,0.08)',
+      borderColor: tokens.border,
     },
     aiInsightText: {
       fontSize: 11,
-      color: '#9CA3AF',
+      color: tokens.muted,
       lineHeight: 15,
       flex: 1,
     },
 
     // Intelligence Card (Roles & Summary)
     intelCard: {
-      backgroundColor: '#0F1210',
+      backgroundColor: withAlpha(tokens.bg, 0.9),
       borderRadius: radius.xl,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.08)',
+      borderColor: tokens.border,
       padding: spacing.md,
       gap: spacing.sm,
     },
@@ -623,12 +625,12 @@ function createStyles(tokens: CoachThemeTokens) {
     intelTitle: {
       fontSize: 13,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: tokens.foreground,
     },
     intelOverallPill: {
-      backgroundColor: 'rgba(16, 185, 129, 0.18)',
+      backgroundColor: withAlpha('10B981', 0.18),
       borderWidth: 1,
-      borderColor: '#10B981',
+      borderColor: proSemantic.success,
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: radius.pill,
@@ -636,7 +638,7 @@ function createStyles(tokens: CoachThemeTokens) {
     intelOverallValue: {
       fontSize: 11,
       fontWeight: '800',
-      color: '#10B981',
+      color: proSemantic.success,
     },
 
     // Roles Grid
@@ -646,7 +648,7 @@ function createStyles(tokens: CoachThemeTokens) {
     },
     roleCard: {
       flex: 1,
-      backgroundColor: 'rgba(255,255,255,0.03)',
+      backgroundColor: withAlpha('FFFFFF', 0.03),
       borderRadius: radius.md,
       padding: 8,
       gap: 3,
@@ -655,13 +657,13 @@ function createStyles(tokens: CoachThemeTokens) {
     roleBadgeLabel: {
       fontSize: 10,
       fontWeight: '800',
-      color: '#9CA3AF',
+      color: tokens.muted,
       textTransform: 'uppercase',
     },
     rolePlayerName: {
       fontSize: 11.5,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: tokens.foreground,
       textAlign: 'center',
     },
   });

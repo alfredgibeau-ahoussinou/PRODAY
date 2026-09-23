@@ -6,6 +6,7 @@ import { Icon, type IconName } from '../ui/Icon';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { CLUB_TOKENS } from '../../features/club/theme/clubTokens';
 import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import {
@@ -57,7 +58,7 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
         style={styles.hero}
       >
         <LinearGradient
-          colors={['rgba(255,255,255,0.14)', 'transparent']}
+          colors={[PLAYER_DARK.borderStrong, 'transparent']}
           style={styles.heroShine}
           pointerEvents="none"
         />
@@ -86,7 +87,7 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
               >
                 {player.display_name}
               </Text>
-              {verified ? <Icon name="checkmark-circle" size={20} color="#A7F3D0" /> : null}
+              {verified ? <Icon name="checkmark-circle" size={20} color={PLAYER_DARK.statGreen} /> : null}
             </View>
             <Text style={styles.heroSub}>
               {metaParts.length > 0 ? metaParts.join(' · ') : player.city ?? 'France'}
@@ -118,7 +119,7 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
                 availTone === 'neutral' && styles.availNeutral,
               ]}
             >
-              <Icon name="calendar" size={12} color="#FFFFFF" />
+              <Icon name="calendar" size={12} color={PLAYER_DARK.text} />
               <Text style={styles.availText}>{availability}</Text>
             </View>
           ) : null}
@@ -292,23 +293,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: PLAYER_DARK.borderStrong,
   },
-  ownPillText: { color: '#FFFFFF', fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
+  ownPillText: { color: PLAYER_DARK.text, fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
     width: 84,
     height: 84,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.45)',
+    borderColor: PLAYER_DARK.text,
   },
   avatarPh: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: PLAYER_DARK.borderStrong,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarLetter: { fontSize: 32, fontWeight: '800', color: '#FFFFFF' },
+  avatarLetter: { fontSize: 32, fontWeight: '800', color: PLAYER_DARK.text },
   heroInfo: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   heroName: {
@@ -318,12 +319,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 24,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
     letterSpacing: -0.4,
   },
-  heroSub: { color: 'rgba(255,255,255,0.9)', fontSize: 13, marginTop: 4, lineHeight: 18 },
+  heroSub: { color: PLAYER_DARK.text, fontSize: 13, marginTop: 4, lineHeight: 18 },
   headline: {
-    color: 'rgba(255,255,255,0.82)',
+    color: PLAYER_DARK.text,
     fontSize: 13,
     marginTop: 6,
     fontStyle: 'italic',
@@ -331,12 +332,12 @@ const styles = StyleSheet.create({
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   chip: {
-    backgroundColor: 'rgba(255,255,255,0.16)',
+    backgroundColor: PLAYER_DARK.borderStrong,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  chipText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  chipText: { color: PLAYER_DARK.text, fontSize: 11, fontWeight: '700' },
   badgesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   availBadge: {
     flexDirection: 'row',
@@ -345,18 +346,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: PLAYER_DARK.borderStrong,
   },
-  availPositive: { backgroundColor: 'rgba(52,211,153,0.35)' },
-  availNeutral: { backgroundColor: 'rgba(251,191,36,0.35)' },
-  availText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  availPositive: { backgroundColor: CLUB_TOKENS.successSoft },
+  availNeutral: { backgroundColor: CLUB_TOKENS.warningSoft },
+  availText: { color: PLAYER_DARK.text, fontSize: 11, fontWeight: '700' },
   verifiedBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: PLAYER_DARK.borderStrong,
   },
-  verifiedText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  verifiedText: { color: PLAYER_DARK.text, fontSize: 11, fontWeight: '700' },
   completionRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -255,7 +255,9 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
           <ProDayText variant="caption" style={styles.composeTitle}>
             {t('reels.upload.title').toUpperCase()}
           </ProDayText>
-          <Pressable onPress={handleClose} style={styles.glassBtn} hitSlop={12}>
+          <Pressable onPress={handleClose} style={styles.glassBtn} hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Fermer">
             <Icon name="close" size={22} color="#fff" />
           </Pressable>
         </View>

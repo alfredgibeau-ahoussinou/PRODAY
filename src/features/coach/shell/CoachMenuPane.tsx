@@ -18,6 +18,7 @@ import { TAB_BAR_CONTENT_INSET } from '../../../navigation/tabBarLayout';
 import { spacing } from '../../../theme/designTokens';
 import { coachChrome } from '../theme/coachDesignSystem';
 import type { CoachNavItemId } from '../navigation/coachNavConfig';
+import { COACH_SITE } from '../../../content/coachPageIdentity';
 
 type Props = {
   /** Liste d’outils résolus (deep link Menu / plus). */
@@ -32,7 +33,7 @@ type CoachMenuItemDef = {
   aiBadge?: boolean;
 };
 
-const COACH_MENU_ITEMS: CoachMenuItemDef[] = [
+export const COACH_MENU_ITEMS: CoachMenuItemDef[] = [
   {
     id: 'match_center',
     label: 'Matchs & Live',
@@ -59,6 +60,13 @@ const COACH_MENU_ITEMS: CoachMenuItemDef[] = [
     aiBadge: true,
   },
   {
+    id: 'copilot_chat',
+    label: 'Chat Copilote IA',
+    subtitle: 'Conversation, historique & reprise',
+    icon: 'chat',
+    aiBadge: true,
+  },
+  {
     id: 'mes_videos',
     label: 'Mes Vidéos',
     subtitle: 'Captations, clips & IA',
@@ -79,9 +87,15 @@ const COACH_MENU_ITEMS: CoachMenuItemDef[] = [
   },
   {
     id: 'com_staff',
-    label: 'Staff & Salon',
-    subtitle: 'Salons, annonces & docs',
+    label: 'Messagerie',
+    subtitle: 'DM · groupes staff · parents',
     icon: 'chat',
+  },
+  {
+    id: 'rsvp_log',
+    label: 'Historique des relances',
+    subtitle: 'Relances envoyées aux joueurs',
+    icon: 'notifications',
   },
   {
     id: 'carpool',
@@ -94,12 +108,6 @@ const COACH_MENU_ITEMS: CoachMenuItemDef[] = [
     label: 'Coaching Perso',
     subtitle: 'Créneaux & tarifs à l’heure',
     icon: 'time',
-  },
-  {
-    id: 'messages',
-    label: 'Messagerie',
-    subtitle: 'Discussion staff & parents',
-    icon: 'chat',
   },
 ];
 
@@ -248,8 +256,8 @@ export function CoachMenuPane({ items = [] }: Props) {
             foreground: tokens.foreground,
             muted: tokens.muted,
             faint: tokens.muted,
-            surface: '#14141A',
-            border: '#22222E',
+            surface: COACH_SITE.surface,
+            border: COACH_SITE.elevated,
             destructive: '#DC2626',
             iconBg: `${teamAccent}15`,
           }}
@@ -376,10 +384,10 @@ const styles = StyleSheet.create({
     minHeight: 136,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#22222E',
+    borderColor: COACH_SITE.elevated,
     padding: 15,
     justifyContent: 'space-between',
-    backgroundColor: '#14141A',
+    backgroundColor: COACH_SITE.surface,
   },
   tileLocked: {
     opacity: 0.5,

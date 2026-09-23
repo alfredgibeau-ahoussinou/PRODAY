@@ -43,6 +43,8 @@ interface MatchHubOverviewTabProps {
   rsvpBusy?: boolean;
   onOpenLineup: () => void;
   onOpenLive: () => void;
+  /** Staff : ouvre l'association d'une captation VEO rattachée à ce match. */
+  onAssociateVeo?: () => void;
 }
 
 export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
@@ -55,6 +57,7 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
   rsvpBusy,
   onOpenLineup,
   onOpenLive,
+  onAssociateVeo,
 }) => {
   const { colors } = useAppTheme();
   const live = resolveLiveState(event);
@@ -167,6 +170,19 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
                 Feuille de match (PDF / Print)
               </ProDayText>
             </PressableSpring>
+            {onAssociateVeo ? (
+              <PressableSpring
+                onPress={onAssociateVeo}
+                scaleTo={0.96}
+                haptic
+                style={styles.staffBtn}
+              >
+                <Icon name="videocam" size={14} color={colors.accent} />
+                <ProDayText variant="caption" accent style={styles.link}>
+                  Associer une captation VEO
+                </ProDayText>
+              </PressableSpring>
+            ) : null}
           </View>
         </ProDaySurface>
       ) : null}

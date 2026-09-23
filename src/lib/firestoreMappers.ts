@@ -107,6 +107,11 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     other_contact: data.other_contact as string | undefined,
     avatar_url: (data.avatar_url ?? data.avatarUrl) as string | undefined,
     role: (data.role as UserRole) ?? 'player',
+    roles: Array.isArray(data.roles)
+      ? (data.roles as UserRole[]).filter(Boolean)
+      : Array.isArray(data.secondary_roles)
+      ? [((data.role as UserRole) ?? 'player'), ...(data.secondary_roles as UserRole[])].filter(Boolean)
+      : undefined,
     is_admin: data.is_admin === true || data.isAdmin === true,
     email_verified: Boolean(data.email_verified ?? data.emailVerified ?? false),
     onboarding_documents_submitted: Boolean(
@@ -264,11 +269,16 @@ export function membershipFromFirestore(
   return {
     id,
     club_id: String(data.club_id ?? ''),
+    club_name: data.club_name as string | undefined,
     team_id: String(data.team_id ?? ''),
+    requested_team_name: data.requested_team_name as string | undefined,
     player_uid: String(data.player_uid ?? ''),
     player_name: String(data.player_name ?? ''),
     role: data.role as Membership['role'],
+    requested_role: data.requested_role as Membership['requested_role'],
     category: data.category as string | undefined,
+    applicant_message: data.applicant_message as string | undefined,
+    rejection_reason: data.rejection_reason as string | undefined,
     identity_document_name: data.identity_document_name as string | undefined,
     identity_document_url: data.identity_document_url as string | undefined,
     identity_document_type: data.identity_document_type as Membership['identity_document_type'],
@@ -575,7 +585,7 @@ function mapMatchLiveState(raw: unknown): import('../models/TeamEvent').MatchLiv
   if (!raw || typeof raw !== 'object') return undefined;
   const s = raw as Record<string, unknown>;
   const status = String(s.status ?? 'scheduled');
-  if (!['scheduled', 'live', 'halftime', 'finished'].includes(status)) return undefined;
+  if (!['scheduled', 'live', 'halftime', 'finished', 'cancelled'].includes(status)) return undefined;
   return {
     status: status as import('../models/TeamEvent').MatchLiveStatus,
     minute: typeof s.minute === 'number' ? s.minute : undefined,
@@ -583,6 +593,7 @@ function mapMatchLiveState(raw: unknown): import('../models/TeamEvent').MatchLiv
     away_score: Number(s.away_score ?? 0),
     opponent_name: s.opponent_name ? String(s.opponent_name) : undefined,
     home_label: s.home_label ? String(s.home_label) : undefined,
+    cancel_reason: s.cancel_reason ? String(s.cancel_reason) : undefined,
   };
 }
 
@@ -646,11 +657,15 @@ export function friendlyMatchFromFirestore(
     city: String(data.city ?? ''),
     date: toDate(data.date),
     time_label: data.time_label as string | undefined,
+    meeting_time_label: data.meeting_time_label as string | undefined,
+    timezone: data.timezone as string | undefined,
     category: String(data.category ?? ''),
+    game_format: data.game_format as FriendlyMatch['game_format'],
     level: String(data.level ?? ''),
     level_type: (data.level_type as FriendlyMatch['level_type']) ?? 'loisir',
     match_kind: (data.match_kind as FriendlyMatch['match_kind']) ?? 'amical',
     venue_side: (data.venue_side as FriendlyMatch['venue_side']) ?? undefined,
+    venue_address: data.venue_address as string | undefined,
     has_pitch: Boolean(data.has_pitch),
     message: data.message as string | undefined,
     status: (data.status as FriendlyMatch['status']) ?? 'OPEN',
@@ -669,6 +684,17 @@ export function friendlyMatchFromFirestore(
           created_at: toDate(rawCounter.created_at),
         }
       : undefined,
+    rules_half_duration_min: data.rules_half_duration_min as number | undefined,
+    rules_jerseys: data.rules_jerseys as string | undefined,
+    rules_refereeing: data.rules_refereeing as string | undefined,
+    rules_hosting_notes: data.rules_hosting_notes as string | undefined,
+    is_external_opponent: Boolean(data.is_external_opponent),
+    external_opponent_club_name: data.external_opponent_club_name as string | undefined,
+    external_opponent_city: data.external_opponent_city as string | undefined,
+    external_opponent_contact_name: data.external_opponent_contact_name as string | undefined,
+    external_opponent_contact_phone: data.external_opponent_contact_phone as string | undefined,
+    external_opponent_contact_email: data.external_opponent_contact_email as string | undefined,
+    linked_event_id: data.linked_event_id as string | undefined,
     created_at: toDate(data.created_at),
     updated_at: data.updated_at ? toDate(data.updated_at) : undefined,
   };
@@ -959,8 +985,23 @@ export interface MessageThread {
   last_message: string;
   updated_at: Date;
   unread: boolean;
-  thread_kind?: 'standard' | 'physio_care' | 'team_group' | 'message_request';
+  thread_kind?: 'standard' | 'physio_care' | 'team_group' | 'message_request' | 'group';
   thread_title?: string;
+  /**
+   * Groupe créé depuis la messagerie (participants multiples, gestion des membres).
+   * Optionnel : les fils antérieurs à cette fonctionnalité n'ont pas ces champs, et leur
+   * absence signifie « conversation directe », pas « données manquantes ».
+   */
+  is_group?: boolean;
+  participant_ids?: string[];
+  /** Rôles réellement enregistrés à la création : évite de deviner les catégories. */
+  participant_roles?: Record<string, string>;
+  participant_names?: Record<string, string>;
+  admin_uids?: string[];
+  created_by?: string;
+  group_avatar_url?: string;
+  /** Un groupe contenant un mineur est signalé tel quel à l'écran. */
+  contains_minor?: boolean;
   /** Demande joueur↔agent : pending jusqu'à acceptation. */
   request_status?: 'pending' | 'accepted' | 'refused' | 'cancelled';
   request_id?: string;
@@ -983,14 +1024,16 @@ export function messageThreadFromFirestore(
 
   const threadKind = data.thread_kind as MessageThread['thread_kind'] | undefined;
   const threadTitle = data.thread_title ? String(data.thread_title) : undefined;
-  const isTeam = threadKind === 'team_group';
+  const isGroup = threadKind === 'team_group' || threadKind === 'group' || data.is_group === true;
   const requestStatus = data.request_status as MessageThread['request_status'] | undefined;
+  const participantRoles = (data.participant_roles as Record<string, string> | undefined) ?? {};
+  const adminUids = (data.admin_uids as string[] | undefined) ?? [];
 
   return {
     id,
-    other_user_id: isTeam ? '' : otherId,
-    participant_name: isTeam
-      ? (threadTitle ?? 'Groupe équipe')
+    other_user_id: isGroup ? '' : otherId,
+    participant_name: isGroup
+      ? (threadTitle ?? (threadKind === 'team_group' ? 'Groupe équipe' : 'Groupe'))
       : (names[otherId] ?? String(data.participant_name ?? 'Utilisateur')),
     last_message: String(data.last_message ?? ''),
     updated_at: toDate(data.updated_at),
@@ -1000,10 +1043,20 @@ export function messageThreadFromFirestore(
         ? 'physio_care'
         : threadKind === 'team_group'
           ? 'team_group'
-          : threadKind === 'message_request'
-            ? 'message_request'
-            : 'standard',
+          : threadKind === 'group'
+            ? 'group'
+            : threadKind === 'message_request'
+              ? 'message_request'
+              : 'standard',
     thread_title: threadTitle,
+    is_group: isGroup,
+    participant_ids: participantIds,
+    participant_roles: participantRoles,
+    participant_names: names,
+    admin_uids: adminUids,
+    created_by: data.created_by ? String(data.created_by) : undefined,
+    group_avatar_url: data.group_avatar_url ? String(data.group_avatar_url) : undefined,
+    contains_minor: data.contains_minor === true,
     request_status: requestStatus,
     request_id: data.request_id ? String(data.request_id) : undefined,
     request_requester_uid: data.request_requester_uid

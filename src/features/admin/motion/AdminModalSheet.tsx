@@ -1,6 +1,6 @@
 import React from 'react';
 import { ModalSheet, type ModalSheetProps } from '../../../motion';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens } from '../theme/adminTokens';
 
 type Props = Omit<
   ModalSheetProps,
@@ -11,16 +11,20 @@ type Props = Omit<
 };
 
 /**
- * Modal / bottom-sheet admin — chrome ADMIN_TOKENS + motion global.
+ * Modal / bottom-sheet admin — chrome Liquid Glass Apple + motion global.
  */
 export function AdminModalSheet(props: Props) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <ModalSheet
       {...props}
-      backgroundColor={t.bg}
-      borderColor={t.border}
-      handleColor={t.borderStrong}
+      backgroundColor={t.surfaceRaised}
+      borderColor={t.borderStrong}
+      handleColor={t.borderLuxury}
+      contentStyle={[
+        props.contentStyle,
+        (t.glassBackdrop as any),
+      ]}
     />
   );
 }

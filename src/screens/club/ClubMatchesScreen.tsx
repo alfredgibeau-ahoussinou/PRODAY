@@ -13,6 +13,7 @@ import {
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubMatchesCenter, type FixtureItem } from '../../features/club/ui/ClubMatchesCenter';
+import { buildTopScorers } from '../../utils/clubHubRealData';
 import { PushScreenTransition } from '../../components/motion';
 import { MatchEventHubScreen } from '../MatchEventHubScreen';
 import type { MatchHubChapterId } from '../../content/matchHubChapters';
@@ -27,7 +28,7 @@ export function ClubMatchesScreen() {
 
   const fixtures = useMemo<FixtureItem[] | undefined>(() => {
     const matchEvents = ws.events.filter((e) => e.event_type === 'competition');
-    if (matchEvents.length === 0) return undefined; // utilise DEMO_FIXTURES comme template haute fidélité
+    if (matchEvents.length === 0) return []; // état vide honnête (aucune donnée de démonstration)
 
     return matchEvents.map((e) => {
       const d = e.starts_at ? new Date(e.starts_at) : new Date();
@@ -82,6 +83,17 @@ export function ClubMatchesScreen() {
     });
   }, [ws.events, ws.teamRows]);
 
+  // Buteurs réels : agrégation des player_match_stats persistés (aucune stat inventée).
+  const topScorers = useMemo(
+    () =>
+      buildTopScorers(
+        ws.events,
+        new Map(ws.members.map((m) => [m.uid, m.display_name])),
+        new Map(ws.teamRows.map((t) => [t.teamId, t.name])),
+      ),
+    [ws.events, ws.members, ws.teamRows],
+  );
+
   const openHub = (fixtureId: string) => {
     setHubChapter('apercu');
     setHubEventId(fixtureId);
@@ -99,6 +111,7 @@ export function ClubMatchesScreen() {
 
         <ClubMatchesCenter
           fixtures={fixtures}
+          topScorers={topScorers}
           onSelectFixture={openHub}
         />
       </ClubChapterScroll>

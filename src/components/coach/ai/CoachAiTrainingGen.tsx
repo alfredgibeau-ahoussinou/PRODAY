@@ -152,7 +152,7 @@ export function CoachAiTrainingGen({
   return (
     <CoachPane
       title="Préparer une séance"
-      actions={[{ icon: 'chevron-down', onPress: onBack, accessibilityLabel: 'Retour' }]}
+      onBack={onBack}
     >
       <KeyboardAvoidingView
         style={{ flex: 1 }}

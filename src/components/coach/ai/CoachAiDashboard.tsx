@@ -46,7 +46,7 @@ export function CoachAiDashboard({ onSelectPage }: CoachAiDashboardProps) {
   ];
 
   return (
-    <CoachPane title={getCoachPageIdentity('coach_ia').title}>
+    <CoachPane title={getCoachPageIdentity('coach_ia').title} fallbackNavId="plus">
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <Icon name="star-four-points" size={32} color={tokens.accent} />

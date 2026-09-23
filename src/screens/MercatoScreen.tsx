@@ -239,11 +239,13 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
   };
 
   const headerRight = config.showFavoritesHeader ? (
-    <TouchableOpacity hitSlop={12} onPress={openFavorites}>
+    <TouchableOpacity hitSlop={12} onPress={openFavorites}
+      accessibilityRole="button"
+      accessibilityLabel="Enregistrer">
       <Icon name="bookmark" size={22} color={themeColors.text} />
     </TouchableOpacity>
   ) : config.showDetectionsHeader ? (
-    <TouchableOpacity hitSlop={12} onPress={() => setView('detections')}>
+    <TouchableOpacity hitSlop={12} onPress={() => setView('detections')} accessibilityRole="button" accessibilityLabel="Détections">
       <Icon name="football" size={22} color={themeColors.text} />
     </TouchableOpacity>
   ) : null;

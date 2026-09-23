@@ -5,6 +5,8 @@ import type { MatchChapterId } from '../../content/matchChapters';
 import { ProDayText } from '../ui/ProDayText';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { usePlayerTheme } from '../../context/PlayerThemeContext';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { playerType } from '../../theme/playerDesignSystem';
 
 interface TabItem {
   id: MatchChapterId;
@@ -39,11 +41,11 @@ export const MatchBigTileRail: React.FC<MatchBigTileRailProps> = ({
     accentColor ||
     playerTheme.clubColors?.primary ||
     playerTheme.colors.accent ||
-    '#00E676';
+    PLAYER_DARK.accent;
 
   return (
     <View style={styles.container}>
-      <View style={styles.tabRow}>
+      <View style={styles.segmentControl}>
         {TABS.map((tab) => {
           const isSelected = active === tab.id;
           const badge =
@@ -60,21 +62,22 @@ export const MatchBigTileRail: React.FC<MatchBigTileRailProps> = ({
                   onSelect(tab.id);
                 }
               }}
-              style={styles.tabBtn}
-              activeOpacity={0.75}
+              style={[
+                styles.tabBtn,
+                isSelected && styles.tabBtnActive,
+              ]}
+              activeOpacity={0.7}
             >
               <View style={styles.tabContentRow}>
                 <Ionicons
                   name={isSelected ? tab.activeIcon : tab.icon}
-                  size={17}
-                  color={isSelected ? teamColor : '#8B8B9A'}
+                  size={14}
+                  color={isSelected ? teamColor : PLAYER_DARK.textMuted}
                 />
                 <ProDayText
                   style={[
                     styles.tabLabel,
-                    isSelected
-                      ? [styles.tabLabelActive, { color: '#FFFFFF' }]
-                      : styles.tabLabelInactive,
+                    isSelected ? styles.tabLabelActive : styles.tabLabelInactive,
                   ]}
                   numberOfLines={1}
                 >
@@ -88,11 +91,6 @@ export const MatchBigTileRail: React.FC<MatchBigTileRailProps> = ({
                   </View>
                 ) : null}
               </View>
-              {isSelected ? (
-                <View style={[styles.activeUnderline, { backgroundColor: teamColor }]} />
-              ) : (
-                <View style={styles.inactiveUnderline} />
-              )}
             </TouchableOpacity>
           );
         })}
@@ -104,70 +102,63 @@ export const MatchBigTileRail: React.FC<MatchBigTileRailProps> = ({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 2,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    paddingTop: 8,
+    paddingBottom: 8,
   },
-  tabRow: {
+  segmentControl: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 12,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
   },
   tabBtn: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    position: 'relative',
+    paddingVertical: 7,
+    borderRadius: 9,
+  },
+  tabBtnActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 1,
   },
   tabContentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 2,
-    paddingBottom: 6,
+    gap: 5,
   },
   tabLabel: {
-    fontSize: 13,
-    letterSpacing: -0.2,
+    ...playerType.subheadline,
+    fontSize: 12.5,
   },
   tabLabelInactive: {
-    color: '#8B8B9A',
-    fontWeight: '600',
+    color: PLAYER_DARK.textMuted,
+    fontWeight: '500',
   },
   tabLabelActive: {
-    fontWeight: '800',
-  },
-  activeUnderline: {
-    position: 'absolute',
-    bottom: 0,
-    left: 12,
-    right: 12,
-    height: 3,
-    borderRadius: 1.5,
-  },
-  inactiveUnderline: {
-    position: 'absolute',
-    bottom: 0,
-    left: 12,
-    right: 12,
-    height: 3,
-    backgroundColor: 'transparent',
+    color: PLAYER_DARK.text,
+    fontWeight: '700',
   },
   badge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 999,
     minWidth: 15,
-    height: 15,
-    borderRadius: 7.5,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 3,
-    marginLeft: 1,
   },
   badgeText: {
-    fontSize: 9,
-    fontWeight: '900',
+    ...playerType.micro,
+    fontSize: 9.5,
+    fontWeight: '800',
     color: '#FFFFFF',
   },
 });

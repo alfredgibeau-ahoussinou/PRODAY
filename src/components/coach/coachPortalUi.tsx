@@ -22,9 +22,18 @@ import {
   type CoachThemeTokens,
 } from '../../utils/coachTeamTheme';
 import { CoachAccentColorPickerModal } from './CoachAccentColorPickerModal';
+import { CoachText } from './CoachText';
+export { CoachText };
 import { MATCH_CHAPTER_PAD } from '../matchs/chapters/matchChapterLayout';
 import { tabBarScrollInset } from '../../navigation/tabBarLayout';
-import { radius, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import {
+  proForm,
+  proRadius,
+  proSemantic,
+  proSpace,
+  proType,
+} from '../../theme/professionalDesign';
 import {
   coachChrome,
   coachLayout,
@@ -62,8 +71,12 @@ export function CoachChapterRail({
             style={[
               styles.pill,
               {
+                /**
+                 * Sélection = **contour d'accent** sur fond transparent, comme les
+                 * puces des deux pôles ; la pastille ne se remplit plus.
+                 */
                 borderColor: on ? tokens.accent : tokens.border,
-                backgroundColor: on ? tokens.soft : tokens.surface,
+                backgroundColor: on ? 'transparent' : tokens.surface,
               },
             ]}
           >
@@ -107,37 +120,24 @@ export function CoachChapterScroll({ children }: { children: React.ReactNode }) 
   );
 }
 
-/** Texte coach — couleurs thème Pôle Coach (fallback COACH_SITE hors shell). */
-export function CoachText({
-  muted,
-  accent,
-  inverse,
-  style,
-  ...rest
-}: React.ComponentProps<typeof ProDayText>) {
-  const { tokens } = useCoachTheme();
-  const color = inverse
-    ? tokens.onAccent
-    : accent
-      ? tokens.accent
-      : muted
-        ? tokens.muted
-        : tokens.foreground;
-  return <ProDayText {...rest} style={[{ color }, style]} />;
-}
-
 function useCoachCardStyles() {
   const { tokens } = useCoachTheme();
   return useMemo(
     () =>
       StyleSheet.create({
+        /**
+         * Carte **plate et neutre** du registre partagé : même rayon, même marge
+         * intérieure et même bordure que le pôle Club/Admin. Le rail d'accent à
+         * gauche a été retiré : la couleur ne circule plus par une décoration de
+         * surface, mais par les pastilles d'état et les icônes.
+         */
         card: {
-          borderRadius: 18,
-          padding: spacing.md,
-          gap: spacing.xs,
+          borderRadius: proRadius.lg,
+          padding: proSpace.lg,
+          gap: proSpace.sm,
           backgroundColor: tokens.surface,
-          borderLeftWidth: 3,
-          borderLeftColor: tokens.accent,
+          borderWidth: 1,
+          borderColor: tokens.border,
         },
         kicker: {
           color: tokens.accent,
@@ -204,8 +204,10 @@ export function CoachKpiRow({
       StyleSheet.create({
         row: {
           flexDirection: 'row',
-          borderRadius: 18,
+          borderRadius: proRadius.lg,
           backgroundColor: tokens.surface,
+          borderWidth: 1,
+          borderColor: tokens.border,
           overflow: 'hidden',
         },
         cell: {
@@ -483,17 +485,18 @@ function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
     },
     segment: {
       flex: 1,
-      minHeight: 40,
-      borderRadius: radius.pill,
+      minHeight: proForm.chipHeight,
+      borderRadius: proForm.chipRadius,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: tokens.border,
       backgroundColor: tokens.elevated,
     },
+    /** Sélection = contour d'accent, jamais un remplissage (règle partagée). */
     segmentOn: {
       borderColor: tokens.accent,
-      backgroundColor: tokens.soft,
+      backgroundColor: 'transparent',
     },
     segmentTextOn: { color: tokens.accent, fontWeight: '800' },
     segmentTextOff: { color: tokens.muted, fontWeight: '600' },
@@ -531,9 +534,9 @@ function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
       flexShrink: 0,
     },
     accentModeChip: {
-      minHeight: 32,
-      paddingHorizontal: spacing.sm,
-      borderRadius: radius.pill,
+      minHeight: proForm.chipHeight,
+      paddingHorizontal: proSpace.md,
+      borderRadius: proForm.chipRadius,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
@@ -542,7 +545,7 @@ function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
     },
     accentModeChipOn: {
       borderColor: tokens.accent,
-      backgroundColor: tokens.soft,
+      backgroundColor: 'transparent',
     },
     accentModeChipTextOn: { color: tokens.accent, fontWeight: '800' },
     accentModeChipTextOff: { color: tokens.muted, fontWeight: '600' },
@@ -568,9 +571,9 @@ function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
     },
     chooseBtn: {
       alignSelf: 'stretch',
-      minHeight: 40,
+      minHeight: proForm.actionMinHeight,
       marginTop: spacing.sm,
-      borderRadius: radius.pill,
+      borderRadius: proForm.actionRadius,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
@@ -615,7 +618,7 @@ export function CoachSettingsRow({
     () => createCoachSettingsStyles(tokens),
     [tokens],
   );
-  const iconColor = destructive ? '#FF3B30' : tokens.foreground;
+  const iconColor = destructive ? proSemantic.danger : tokens.foreground;
   return (
     <PressableSpring
       onPress={onPress}
@@ -660,10 +663,10 @@ function createCoachActionStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
     primary: {
-      borderRadius: radius.pill,
+      borderRadius: proForm.actionRadius,
       paddingHorizontal: spacing.xl,
       paddingVertical: 14,
-      minHeight: 52,
+      minHeight: proForm.actionMinHeight,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tokens.accent,
@@ -671,10 +674,10 @@ function createCoachActionStyles(tokens: CoachThemeTokens) {
     primaryDisabled: { opacity: 0.45 },
     primaryText: { fontWeight: '700' },
     secondary: {
-      borderRadius: radius.pill,
+      borderRadius: proForm.actionRadius,
       paddingHorizontal: spacing.lg,
       paddingVertical: 14,
-      minHeight: 52,
+      minHeight: proForm.actionMinHeight,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tokens.isLight ? tokens.surface : tokens.elevated,
@@ -688,13 +691,13 @@ function createCoachActionStyles(tokens: CoachThemeTokens) {
 function createCoachEmptyStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     block: { gap: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.xl },
-    title: { color: tokens.foreground, fontWeight: '800', fontSize: 22 },
+    title: { color: tokens.foreground, fontWeight: '800', fontSize: proType.h2.fontSize },
     body: { fontSize: 16 },
     cta: {
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: 52,
-      borderRadius: radius.pill,
+      minHeight: proForm.actionMinHeight,
+      borderRadius: proForm.actionRadius,
       backgroundColor: tokens.accent,
       paddingHorizontal: spacing.xl,
     },
@@ -706,14 +709,17 @@ function createCoachSettingsStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     group: {
       backgroundColor: tokens.surface,
-      borderRadius: 18,
+      borderRadius: proRadius.lg,
+      borderWidth: 1,
+      borderColor: tokens.border,
       overflow: 'hidden',
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-      minHeight: 56,
+      /** Hauteur de ligne du registre partagé (même valeur que le pôle Club). */
+      minHeight: proForm.rowMinHeight,
       paddingHorizontal: spacing.md,
       paddingVertical: 10,
     },
@@ -730,11 +736,11 @@ function createCoachSettingsStyles(tokens: CoachThemeTokens) {
       backgroundColor: tokens.elevated,
     },
     label: { flex: 1, minWidth: 0, fontWeight: '600', fontSize: 17 },
-    labelDestructive: { color: '#FF3B30' },
+    labelDestructive: { color: proSemantic.danger },
     badge: {
       paddingHorizontal: 6,
       paddingVertical: 2,
-      borderRadius: radius.pill,
+      borderRadius: proRadius.pill,
       backgroundColor: tokens.soft,
     },
     badgeText: { fontSize: 10, fontWeight: '800' },
@@ -747,21 +753,24 @@ function createStyles() {
     railScroll: {
       flexGrow: 0,
       flexShrink: 0,
-      maxHeight: 40,
+      /** Réserve la hauteur cible de puce du registre partagé (44) + respirations. */
+      maxHeight: proForm.chipHeight + 8,
     },
     rail: {
       paddingHorizontal: spacing.lg,
       paddingTop: 2,
       paddingBottom: 6,
-      gap: spacing.xs,
+      gap: proForm.chipGap,
       flexDirection: 'row',
       alignItems: 'center',
     },
     pill: {
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: 5,
-      borderRadius: radius.pill,
+      paddingHorizontal: proSpace.md,
+      minHeight: proForm.chipHeight,
+      borderRadius: proForm.chipRadius,
       borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     pillText: { fontWeight: '800', fontSize: 12 },
   });

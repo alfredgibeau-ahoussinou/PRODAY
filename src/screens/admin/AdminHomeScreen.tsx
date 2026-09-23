@@ -11,6 +11,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { activeFffSeason } from '../../services/frenchFootballStandings.service';
+import { ADMIN_TOKENS } from '../../features/admin/theme/adminTokens';
 
 interface CotisationData {
   collectedEur: number;
@@ -37,72 +39,35 @@ interface Announcement {
 }
 
 export const AdminHomeScreen: React.FC = () => {
-  const [cotisations] = useState<CotisationData>({
-    collectedEur: 48650,
-    totalBudgetEur: 58000,
-    paidMembers: 312,
-    pendingMembers: 48,
-    unpaidAmountEur: 9350,
-  });
+  /** Aucun montant inventé : les cotisations réelles seront branchées sur la
+   * comptabilité club. En attendant, les compteurs restent à zéro et l'écran
+   * l'indique explicitement. */
+  const cotisations: CotisationData = {
+    collectedEur: 0,
+    totalBudgetEur: 0,
+    paidMembers: 0,
+    pendingMembers: 0,
+    unpaidAmountEur: 0,
+  };
+  const cotisationsConnected = false;  /** Aucun créneau fictif : le planning réel des installations sera branché
+   * sur les événements d'équipe géolocalisés. */
+  const reservations: PitchReservation[] = [];
 
-  const [reminded, setReminded] = useState(false);
+  /** Aucune annonce fictive : les communications du bureau passent par le
+   * service d'annonces du club (clubAnnouncements). */
+  const announcements: Announcement[] = [];
 
-  const [reservations] = useState<PitchReservation[]>([
-    {
-      id: 'r1',
-      facility: 'Terrain Honneur (Pelouse)',
-      timeSlot: '18h30 - 20h30',
-      team: 'Seniors R1 (Séance Tactique)',
-      status: 'occupied',
-    },
-    {
-      id: 'r2',
-      facility: 'Terrain Synthétique A',
-      timeSlot: '17h00 - 18h30',
-      team: 'U17 & U19 Nationaux',
-      status: 'upcoming',
-    },
-    {
-      id: 'r3',
-      facility: 'Gymnase / Futsal',
-      timeSlot: '18h00 - 19h30',
-      team: 'École de Foot U11',
-      status: 'upcoming',
-    },
-    {
-      id: 'r4',
-      facility: 'Vestiaires 1 & 2',
-      timeSlot: '21h00 - 22h00',
-      team: 'Désinfection & Entretien',
-      status: 'maintenance',
-    },
-  ]);
-
-  const [announcements] = useState<Announcement[]>([
-    {
-      id: 'a1',
-      title: 'Assemblée Générale Ordinaire 2026',
-      category: 'ag',
-      date: '28 Oct 2026',
-      content: 'Présentation des bilans financiers et approbation du projet éducatif au Club House.',
-    },
-    {
-      id: 'a2',
-      title: 'Directives Arbitrage & Éthique FFF',
-      category: 'officiel',
-      date: '10 Sept 2026',
-      content: 'Rappel des protocoles officiels de contestation et sanctions disciplinaires de poule.',
-    },
-  ]);
-
-  const percentCollected = Math.round((cotisations.collectedEur / cotisations.totalBudgetEur) * 100);
+  const seasonLabel = activeFffSeason().replace('-', '/');
+  const percentCollected =
+    cotisations.totalBudgetEur > 0
+      ? Math.round((cotisations.collectedEur / cotisations.totalBudgetEur) * 100)
+      : 0;
 
   const handleSendReminder = () => {
-    prodayHaptics.confirm();
-    setReminded(true);
+    prodayHaptics.press();
     Alert.alert(
-      'Relance Envoyée',
-      `Un SMS et une notification Push de rappel ont été envoyés aux ${cotisations.pendingMembers} adhérents en attente de cotisation.`,
+      'Relance indisponible',
+      'Aucun SMS ni push n’est envoyé depuis cet écran : la relance des cotisations n’est pas encore connectée au service d’envoi.',
     );
   };
 
@@ -116,12 +81,8 @@ export const AdminHomeScreen: React.FC = () => {
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <View>
-            <View style={styles.clubBadge}>
-              <Ionicons name="shield-checkmark" size={13} color="#30D158" />
-              <Text style={styles.clubBadgeText}>FFF N°500123 · DISTRIC PRODAY</Text>
-            </View>
             <Text style={styles.title}>Direction du Club</Text>
-            <Text style={styles.subtitle}>Cockpit Administratif · Saison 2025/2026</Text>
+            <Text style={styles.subtitle}>Cockpit Administratif · Saison {seasonLabel}</Text>
           </View>
           <View style={styles.avatarPill}>
             <Ionicons name="business" size={22} color="#0A84FF" />
@@ -141,6 +102,12 @@ export const AdminHomeScreen: React.FC = () => {
           </View>
           <Text style={styles.highlightPercent}>{percentCollected}%</Text>
         </View>
+
+        {!cotisationsConnected ? (
+          <Text style={styles.honestNote}>
+            Montants réels à connecter — aucun indicateur financier n’est inventé sur cet écran.
+          </Text>
+        ) : null}
 
         {/* Barre de progression élégante */}
         <View style={styles.progressBarBg}>
@@ -167,18 +134,12 @@ export const AdminHomeScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity
-          style={[styles.actionBtn, reminded && styles.actionBtnDone]}
+          style={styles.actionBtn}
           onPress={handleSendReminder}
           activeOpacity={0.8}
         >
-          <Ionicons
-            name={reminded ? 'checkmark-circle' : 'paper-plane'}
-            size={16}
-            color={reminded ? '#30D158' : '#000000'}
-          />
-          <Text style={[styles.actionBtnText, reminded && { color: '#30D158' }]}>
-            {reminded ? 'Relance effectuée aujourd’hui' : 'Relancer les 48 impayés en 1 tap'}
-          </Text>
+          <Ionicons name="paper-plane" size={16} color="#000000" />
+          <Text style={styles.actionBtnText}>Relance des impayés (envoi non connecté)</Text>
         </TouchableOpacity>
       </View>
 
@@ -192,31 +153,12 @@ export const AdminHomeScreen: React.FC = () => {
             <Text style={styles.cardTitle}>Homologation & Conformité FFF</Text>
             <Text style={styles.cardSub}>Validité licences, certificats & assurances</Text>
           </View>
-          <View style={styles.statusBadgeGreen}>
-            <Text style={styles.statusBadgeGreenText}>Conforme</Text>
-          </View>
         </View>
 
-        <View style={styles.complianceList}>
-          <View style={styles.complianceItem}>
-            <Ionicons name="checkmark-circle" size={18} color="#30D158" />
-            <Text style={styles.complianceText}>
-              <Text style={{ fontWeight: '700', color: '#FFF' }}>348 / 360 </Text>
-              Licences validées par la Ligue FFF
-            </Text>
-          </View>
-          <View style={styles.complianceItem}>
-            <Ionicons name="alert-circle" size={18} color="#FFD60A" />
-            <Text style={styles.complianceText}>
-              <Text style={{ fontWeight: '700', color: '#FFF' }}>7 </Text>
-              Certificats médicaux en attente de visa médecin
-            </Text>
-          </View>
-          <View style={styles.complianceItem}>
-            <Ionicons name="shield-checkmark" size={18} color="#30D158" />
-            <Text style={styles.complianceText}>Assurance Responsabilité Civile Club à jour (2026)</Text>
-          </View>
-        </View>
+        <Text style={styles.honestNote}>
+          Le suivi des licences, certificats médicaux et assurances s’affichera ici une fois
+          connecté aux données de la Ligue — aucun indicateur de conformité fictif n’est affiché.
+        </Text>
       </View>
 
       {/* 4. Gestion des Installations & Terrains */}
@@ -232,7 +174,11 @@ export const AdminHomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.reservationList}>
-          {reservations.map((item) => (
+          {reservations.length === 0 ? (
+            <Text style={styles.honestNote}>
+              Aucun créneau d’installation enregistré pour aujourd’hui.
+            </Text>
+          ) : reservations.map((item) => (
             <View key={item.id} style={styles.reservationRow}>
               <View style={styles.resIconCol}>
                 <View
@@ -268,7 +214,12 @@ export const AdminHomeScreen: React.FC = () => {
           </View>
         </View>
 
-        {announcements.map((ann) => (
+        {announcements.length === 0 ? (
+          <Text style={styles.honestNote}>
+            Aucune annonce institutionnelle publiée. Les communications officielles du bureau
+            apparaîtront ici dès leur publication.
+          </Text>
+        ) : announcements.map((ann) => (
           <View key={ann.id} style={styles.annItem}>
             <View style={styles.annTop}>
               <View style={styles.annTag}>
@@ -342,7 +293,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   card: {
-    backgroundColor: '#141418',
+    backgroundColor: ADMIN_TOKENS.surface,
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
@@ -370,6 +321,12 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 12,
     marginTop: 1,
+  },
+  honestNote: {
+    color: '#94A3B8',
+    fontSize: 12,
+    lineHeight: 17,
+    fontStyle: 'italic',
   },
   highlightPercent: {
     color: '#30D158',

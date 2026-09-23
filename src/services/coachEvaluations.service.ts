@@ -45,6 +45,13 @@ function mapEval(id: string, data: Record<string, unknown>): CoachPlayerEvaluati
     context: (data.context as CoachPlayerEvaluation['context']) ?? 'season',
     ratings,
     notes: data.notes ? String(data.notes) : undefined,
+    rating_explanation: data.rating_explanation ? String(data.rating_explanation) : undefined,
+    source: (data.source as CoachPlayerEvaluation['source']) ?? 'manual',
+    status: (data.status as CoachPlayerEvaluation['status']) ?? 'published',
+    ai_confidence: typeof data.ai_confidence === 'number' ? data.ai_confidence : undefined,
+    ai_uncertainty_reason: data.ai_uncertainty_reason ? String(data.ai_uncertainty_reason) : undefined,
+    ai_clips: Array.isArray(data.ai_clips) ? (data.ai_clips as CoachPlayerEvaluation['ai_clips']) : undefined,
+    history: Array.isArray(data.history) ? (data.history as CoachPlayerEvaluation['history']) : undefined,
     visible_to_player: data.visible_to_player === true,
     visible_to_parent: data.visible_to_parent === true,
     created_at: toDate(data.created_at),
@@ -122,12 +129,24 @@ export const coachEvaluationsService = {
       context: input.context,
       ratings: ratingsPayload,
       notes: input.notes?.trim() || null,
+      rating_explanation: input.rating_explanation?.trim() || null,
+      source: input.source ?? 'manual',
+      status: input.status ?? 'published',
+      ai_confidence: input.ai_confidence ?? null,
+      ai_uncertainty_reason: input.ai_uncertainty_reason ?? null,
+      ai_clips: input.ai_clips ?? null,
+      history: input.history ?? null,
       visible_to_player: input.visible_to_player === true,
       visible_to_parent: input.visible_to_parent === true,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     });
     return ref.id;
+  },
+
+  async getLatestForPlayer(playerUid: string): Promise<CoachPlayerEvaluation | null> {
+    const list = await this.listForPlayer(playerUid, 1);
+    return list[0] ?? null;
   },
 
   async updateProgressNotes(id: string, notes: string): Promise<void> {
@@ -139,3 +158,27 @@ export const coachEvaluationsService = {
     });
   },
 };
+
+export function isEvaluationVisibleToUser(
+  evaluation: CoachPlayerEvaluation,
+  viewer: { uid?: string; role?: string },
+): boolean {
+  if (!viewer.role) return false;
+  if (viewer.role === 'coach' || viewer.role === 'club' || viewer.role === 'admin') {
+    return true;
+  }
+  if (viewer.role === 'player') {
+    return evaluation.player_uid === viewer.uid && evaluation.visible_to_player === true;
+  }
+  if (viewer.role === 'parent') {
+    return evaluation.visible_to_parent === true;
+  }
+  return false;
+}
+
+export function filterEvaluationsForViewer(
+  evaluations: CoachPlayerEvaluation[],
+  viewer: { uid?: string; role?: string },
+): CoachPlayerEvaluation[] {
+  return evaluations.filter((item) => isEvaluationVisibleToUser(item, viewer));
+}

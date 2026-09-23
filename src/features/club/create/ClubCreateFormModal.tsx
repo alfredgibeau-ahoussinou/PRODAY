@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -263,8 +265,12 @@ export function ClubCreateFormModal({ visible, action, onClose, onCreated }: Pro
       handleOnly
       sheetBackgroundColor={tokens.raised}
     >
-      <View style={[styles.sheetBody, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-        <ClubText variant="section">{ACTION_TITLES[action]}</ClubText>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <View style={[styles.sheetBody, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+          <ClubText variant="section">{ACTION_TITLES[action]}</ClubText>
           <ClubText variant="caption" muted style={{ marginBottom: spacing.sm }}>
             Enregistrement réel dans le club
           </ClubText>
@@ -272,8 +278,8 @@ export function ClubCreateFormModal({ visible, action, onClose, onCreated }: Pro
           <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            style={{ maxHeight: 420 }}
-            contentContainerStyle={{ gap: spacing.sm }}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.lg }}
           >
             {needsSchedule ? (
               <>
@@ -453,7 +459,8 @@ export function ClubCreateFormModal({ visible, action, onClose, onCreated }: Pro
               </PressableSpring>
             ) : null}
           </View>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </AnimatedModalShell>
   );
 }

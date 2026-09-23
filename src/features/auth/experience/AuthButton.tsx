@@ -85,10 +85,10 @@ function createStyles(
   const ghost = variant === 'ghost';
   return StyleSheet.create({
     btn: {
-      minHeight: 52,
+      minHeight: 54,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 12,
+      borderRadius: 999,
       paddingHorizontal: 24,
       backgroundColor: primary
         ? accent
@@ -97,11 +97,16 @@ function createStyles(
           : 'rgba(255, 255, 255, 0.08)',
       borderWidth: primary ? 0 : 1,
       borderColor: primary ? 'transparent' : accent,
-      marginTop: 10,
+      marginTop: 8,
+      shadowColor: primary ? accent : '#000000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: primary ? 0.35 : 0.1,
+      shadowRadius: 12,
+      elevation: 4,
     },
     label: {
       color: primary ? onAccent : '#FFFFFF',
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: '700',
       letterSpacing: 0.2,
     },

@@ -1,31 +1,188 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
+  ActivityIndicator,
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Platform,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { CoachStandingsTable } from '../../components/coach/CoachStandingsTable';
-import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
+import { CoachLoadAlertsPanel } from '../../components/coach/CoachLoadAlertsPanel';
+import { CoachPendingRsvpSheet } from '../../components/coach/CoachPendingRsvpSheet';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useCoachTeamChrome } from '../../hooks/useCoachTeamChrome';
+import { useCoachLoadAlerts } from '../../hooks/useCoachLoadAlerts';
+import { teamEventsService } from '../../services/teamEvents.service';
+import { useCoachRsvpRemind } from '../../hooks/useCoachRsvpRemind';
+import {
+  EVENT_TYPE_LABELS,
+  getPendingInviteeUids,
+  type TeamEvent,
+} from '../../models/TeamEvent';
+import { clubSeasonLabelForDate, formatClubSeasonLabel } from '../../utils/clubSeason';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { proForm, proRadius, proSemantic, proSpace } from '../../theme/professionalDesign';
+import { withAlpha } from '../../components/navigation/tabBarShared';
+import { tabBarScrollInset } from '../../navigation/tabBarLayout';
 
 interface Props {
   onNavigate?: (navId: string) => void;
   onOpenMatch?: (matchId: string) => void;
 }
 
+/**
+ * Accueil Coach — **une information par carte, une seule action par intention**.
+ *
+ * La page empilait auparavant deux blocs de vigilance qui répétaient le même
+ * état, des essais d'honnêteté de six lignes, une carte d'emplacement (« le
+ * classement s'affichera ici ») et trois boutons menant au même écran. La
+ * version resserrée garde le même contrat de données (signaux réels, aucun
+ * chiffre inventé) mais n'affiche que :
+ *
+ *  1. l'en-tête équipe ;
+ *  2. **une** carte Vigilance (résumé + action), la liste détaillée seulement
+ *     s'il existe des alertes exploitables ;
+ *  3. le prochain événement et son action principale (composer l'équipe) ;
+ *  4. trois accès rapides, l'entrée Copilote, le classement replié.
+ */
 export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
+  const profile = useSessionProfile();
+  const { teamName, displayName } = useCoachTeamChrome();
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
+  /** Saison unique du produit (`clubSeason`) — même définitions que le pôle Club. */
+  const season = formatClubSeasonLabel(clubSeasonLabelForDate(new Date()));
   const [refreshing, setRefreshing] = useState(false);
-  const [showAiInsight, setShowAiInsight] = useState(false);
   const [showStandings, setShowStandings] = useState(false);
+  /** Détail des réponses en attente — déroulé du badge du prochain événement. */
+  const [pendingSheetOpen, setPendingSheetOpen] = useState(false);
 
+  /** Prochain événement réel du coach — aucune rencontre fictive. */
+  const [nextEvent, setNextEvent] = useState<TeamEvent | null>(null);
+  /** Signaux de charge réels — la carte Vigilance en est la seule vitrine. */
+  const {
+    state: loadState,
+    report: loadReport,
+    reload: reloadLoadAlerts,
+  } = useCoachLoadAlerts();
+  /** Relance groupée du badge — logique partagée avec la page Effectif. */
+  const {
+    reminding: remindingAll,
+    remindAll: remindPendingRsvps,
+    feedbackKind: remindFeedbackKind,
+  } = useCoachRsvpRemind(nextEvent);
+
+  const loadNextEvent = useCallback(() => {
+    if (!profile?.uid) return Promise.resolve();
+    return teamEventsService
+      .listForUser(profile.uid, profile.profile.club_id || undefined)
+      .then((rows) => {
+        const next = rows
+          .slice()
+          .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())
+          .find((e) => e.starts_at.getTime() >= Date.now() - 2 * 3600 * 1000);
+        setNextEvent(next ?? null);
+      })
+      .catch(() => undefined);
+  }, [profile?.uid, profile?.profile.club_id]);
+
+  useEffect(() => {
+    void loadNextEvent();
+  }, [loadNextEvent]);
+
+  /** Pull-to-refresh réel : relit les événements et les signaux de charge. */
   const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
+    reloadLoadAlerts();
+    void loadNextEvent().finally(() => setRefreshing(false));
   };
+
+  /**
+   * Vigilance — **une ligne de titre, une ligne d'explication**, dérivées des
+   * données réelles du hook. Le détail des sources manquantes reste dans le
+   * rapport ; l'écran ne le déverse plus sur le coach.
+   */
+  const alertBanner = useMemo(() => {
+    if (loadState === 'loading') {
+      return {
+        headline: 'Lecture des données de charge…',
+        detail: 'Effectif, pointages et check-ins de forme de l’équipe active.',
+        showSpinner: true,
+      };
+    }
+    if (loadState === 'guest') {
+      return {
+        headline: 'Suivi charge & blessures',
+        detail: 'Aucun club rattaché à ce compte : les alertes ne peuvent pas être calculées.',
+        showSpinner: false,
+      };
+    }
+    if (loadState === 'error' || !loadReport) {
+      return {
+        headline: 'Charge indisponible',
+        detail: 'La lecture des données d’équipe a échoué.',
+        showSpinner: false,
+      };
+    }
+
+    const { counts, trackedPlayers, signals } = loadReport;
+    const watched = counts.high + counts.caution;
+    const coverage = `${trackedPlayers}/${signals.length} joueur(s) avec données`;
+    const windowLabel = `7 jours : ${loadReport.matchesInWindow} match(s), ${loadReport.trainingsInWindow} entraînement(s)`;
+
+    if (!loadReport.hasData) {
+      const last = loadReport.lastEvent;
+      const lastLabel = last
+        ? `Dernier événement : ${last.startsAt.toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+          })} (${(EVENT_TYPE_LABELS[last.eventType] ?? 'événement').toLowerCase()}). `
+        : '';
+      return {
+        headline: 'Aucune donnée de charge sur 7 jours',
+        detail: loadReport.sources.events
+          ? `${lastLabel}Pointez les présences pour alimenter le suivi.`
+          : 'Aucun événement de l’équipe n’a pu être lu (accès ou données absentes).',
+        showSpinner: false,
+      };
+    }
+    if (watched > 0) {
+      return {
+        headline: `${counts.high} prioritaire(s) · ${counts.caution} à surveiller`,
+        detail: `${coverage} · ${windowLabel}`,
+        showSpinner: false,
+      };
+    }
+    if (loadReport.unavailablePlayers > 0) {
+      return {
+        headline: `${loadReport.unavailablePlayers} indisponible(s) déclaré(s)`,
+        detail: windowLabel,
+        showSpinner: false,
+      };
+    }
+    return {
+      headline: 'Aucun signal de charge préoccupant',
+      detail: `${coverage} · ${windowLabel}`,
+      showSpinner: false,
+    };
+  }, [loadState, loadReport]);
+
+  /** La liste détaillée n'a de sens que s'il y a une alerte exploitable. */
+  const showAlertsList = loadState === 'ready' && loadReport && loadReport.actionable.length > 0;
+
+  /**
+   * Réponses en attente sur la convocation du prochain événement — **définition
+   * partagée** (`getPendingInviteeUids`, celle du Match Center et des rappels) :
+   * un invité qui n'a ni répondu ni décliné. Zéro si aucun événement à venir.
+   */
+  const pendingRsvpCount = useMemo(
+    () => (nextEvent ? getPendingInviteeUids(nextEvent).length : 0),
+    [nextEvent],
+  );
 
   return (
     <ScrollView
@@ -33,22 +190,26 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0284C7" />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.accent} />
       }
     >
-      {/* 1. Header: Apple SF Pro Identity */}
+      {/* En-tête équipe */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.clubBadge}>
-            <MaterialCommunityIcons name="shield-crown" size={22} color="#C5A059" />
+            <MaterialCommunityIcons name="shield-crown" size={22} color={tokens.accent} />
           </View>
           <View>
             <View style={styles.categoryRow}>
-              <Text style={styles.categoryTag}>FFF R1 · POULE B</Text>
-              <Text style={styles.seasonTag}>SAISON 2026/2027</Text>
+              <Text style={styles.categoryTag}>
+                {profile?.profile.club_id ? 'Club affilié' : 'Club non relié'}
+              </Text>
+              <Text style={styles.seasonTag}>SAISON {season}</Text>
             </View>
-            <Text style={styles.teamTitle}>FC ProDay Seniors 1</Text>
-            <Text style={styles.coachSubtitle}>Entraîneur Principal · Staff Technique</Text>
+            <Text numberOfLines={1} style={styles.teamTitle}>
+              {teamName}
+            </Text>
+            <Text style={styles.coachSubtitle}>{displayName} · Entraîneur</Text>
           </View>
         </View>
 
@@ -56,337 +217,244 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
           style={styles.headerActionBtn}
           onPress={() => onNavigate?.('com_staff')}
           activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons name="account-group-outline" size={18} color="#0F172A" />
+
+          accessibilityRole="button"
+          accessibilityLabel="Messagerie">
+          <MaterialCommunityIcons name="account-group-outline" size={18} color={tokens.foreground} />
         </TouchableOpacity>
       </View>
 
-      {/* Section 0.8 bis: Barre de recherche pôle Coach */}
-      <GlobalSearchBar
-        placeholder="Rechercher un joueur, une séance, un match…"
-        accent="#0284C7"
-        style={{ marginBottom: 16 }}
-      />
-
-      {/* 2. Page 6 Specification: Bandeau d'alertes en tête (1 tap pour agir sur blessure/fatigue) */}
+      {/* Vigilance — une seule carte : résumé, action, et la liste seulement si utile */}
       <View style={styles.alertBannerCard}>
         <View style={styles.alertBannerTop}>
           <View style={styles.alertBannerBadge}>
-            <MaterialCommunityIcons name="alert-decagram" size={15} color="#EF4444" />
-            <Text style={styles.alertBannerBadgeText}>VIGILANCE CHARGE & BLESSURES</Text>
+            <MaterialCommunityIcons name="alert-decagram" size={15} color={proSemantic.danger} />
+            <Text style={styles.alertBannerBadgeText}>VIGILANCE</Text>
           </View>
           <TouchableOpacity
             style={styles.alertBannerActBtn}
             activeOpacity={0.85}
             onPress={() => onNavigate?.('forme')}
           >
-            <Text style={styles.alertBannerActBtnText}>Agir sur l’effectif (1 tap)</Text>
-            <Feather name="arrow-right" size={12} color="#FFFFFF" />
+            <Text style={styles.alertBannerActBtnText}>Agir sur l’effectif</Text>
+            <Feather name="arrow-right" size={12} color={proSemantic.onDanger} />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.alertBannerHeadline}>
-          2 alertes actives nécessitant un ajustement immédiat :
-        </Text>
+        <Text style={styles.alertBannerHeadline}>{alertBanner.headline}</Text>
+        <Text style={styles.alertBannerDetail}>{alertBanner.detail}</Text>
 
-        <View style={styles.alertItemsList}>
-          <TouchableOpacity
-            style={styles.alertItemRow}
-            activeOpacity={0.85}
-            onPress={() => onNavigate?.('forme')}
-          >
-            <View style={[styles.alertSeverityDot, { backgroundColor: '#EF4444' }]} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.alertPlayerName}>M. Ruiz (#8 · Milieu)</Text>
-              <Text style={styles.alertPlayerDetail}>
-                Alerte ischios · Repos recommandé & décharge préventive
-              </Text>
-            </View>
-            <View style={[styles.alertPillAction, { backgroundColor: '#FEE2E2' }]}>
-              <Text style={[styles.alertPillActionText, { color: '#EF4444' }]}>Adapter</Text>
-            </View>
-          </TouchableOpacity>
+        {alertBanner.showSpinner ? (
+          <ActivityIndicator size="small" color={proSemantic.danger} style={styles.alertSpinner} />
+        ) : null}
 
+        {loadState === 'error' ? (
           <TouchableOpacity
-            style={styles.alertItemRow}
+            style={styles.alertRetryBtn}
             activeOpacity={0.85}
-            onPress={() => onNavigate?.('forme')}
+            onPress={reloadLoadAlerts}
           >
-            <View style={[styles.alertSeverityDot, { backgroundColor: '#F59E0B' }]} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.alertPlayerName}>T. Doué (#6 · Milieu Défensif)</Text>
-              <Text style={styles.alertPlayerDetail}>
-                Indice de fatigue 85% · Adapter la séance à RPE 5 max
-              </Text>
-            </View>
-            <View style={[styles.alertPillAction, { backgroundColor: '#FEF3C7' }]}>
-              <Text style={[styles.alertPillActionText, { color: '#D97706' }]}>Adapter</Text>
-            </View>
+            <Feather name="refresh-cw" size={12} color={proSemantic.danger} />
+            <Text style={styles.alertRetryBtnText}>Réessayer</Text>
           </TouchableOpacity>
-        </View>
+        ) : null}
       </View>
 
-      {/* 3. Page 6 Specification: Prochain Événement */}
+      {/* Liste détaillée — uniquement quand une alerte réelle existe */}
+      {showAlertsList ? <CoachLoadAlertsPanel alerts={loadReport.alerts} /> : null}
+
+      {/* Prochain événement + action principale */}
       <View style={styles.heroCard}>
-        {/* Top Tag & Countdown */}
         <View style={styles.heroTopRow}>
           <View style={styles.matchBadge}>
-            <MaterialCommunityIcons name="trophy-variant" size={12} color="#0284C7" />
-            <Text style={styles.matchBadgeText}>CHAMPIONNAT R1 · J17</Text>
+            <MaterialCommunityIcons name="trophy-variant" size={12} color={tokens.accent} />
+            <Text style={styles.matchBadgeText}>PROCHAIN ÉVÉNEMENT</Text>
           </View>
-          <View style={styles.officialFeedTag}>
-            <View style={styles.officialFeedDot} />
-            <Text style={styles.officialFeedTagText}>FLUX FFF DIRECT</Text>
-          </View>
-          <View style={styles.countdownBadge}>
-            <Feather name="clock" size={12} color="#475569" />
-            <Text style={styles.countdownText}>Dimanche 15:00</Text>
-          </View>
-        </View>
-
-        {/* Fixture Teams Presentation */}
-        <View style={styles.fixtureRow}>
-          <View style={styles.fixtureTeam}>
-            <View style={[styles.teamAvatar, styles.homeAvatar]}>
-              <Text style={styles.teamAvatarText}>FCP</Text>
+          {nextEvent ? (
+            <View style={styles.heroTopRight}>
+              <View style={styles.countdownBadge}>
+                <Feather name="clock" size={12} color={tokens.muted} />
+                <Text style={styles.countdownText}>
+                  {nextEvent.starts_at.toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                </Text>
+              </View>
+              {pendingRsvpCount > 0 ? (
+                <View style={styles.rsvpPendingBadge}>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => setPendingSheetOpen(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Voir les ${pendingRsvpCount} réponses en attente`}
+                  >
+                    <View style={styles.rsvpBadgeInfo}>
+                      <Ionicons name="notifications-outline" size={12} color={proSemantic.warning} />
+                      <Text style={styles.rsvpPendingBadgeText}>
+                        {pendingRsvpCount} réponse{pendingRsvpCount > 1 ? 's' : ''} en attente
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                  {remindingAll ? (
+                    <ActivityIndicator size="small" color={proSemantic.warning} />
+                  ) : remindFeedbackKind ? (
+                    <Ionicons
+                      name={
+                        remindFeedbackKind === 'sent'
+                          ? 'checkmark-circle'
+                          : remindFeedbackKind === 'cooldown'
+                            ? 'time-outline'
+                            : 'alert-circle'
+                      }
+                      size={14}
+                      color={
+                        remindFeedbackKind === 'sent'
+                          ? proSemantic.success
+                          : remindFeedbackKind === 'cooldown'
+                            ? proSemantic.warning
+                            : proSemantic.danger
+                      }
+                    />
+                  ) : (
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={() => void remindPendingRsvps()}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Relancer les ${pendingRsvpCount} joueurs qui n’ont pas répondu`}
+                      style={styles.rsvpRemindBtn}
+                    >
+                      <Ionicons name="paper-plane" size={11} color={proSemantic.onDanger} />
+                      <Text style={styles.rsvpRemindBtnText}>Relancer</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ) : null}
             </View>
-            <Text numberOfLines={1} style={styles.fixtureTeamName}>FC ProDay</Text>
-            <Text style={styles.fixtureTeamRank}>1er · 38 pts</Text>
-          </View>
+          ) : null}
+        </View>
 
-          <View style={styles.fixtureCenter}>
-            <Text style={styles.fixtureVs}>VS</Text>
-            <View style={styles.homeStatusPill}>
-              <Text style={styles.homeStatusText}>À domicile</Text>
+        {nextEvent ? (
+          <>
+            <Text numberOfLines={2} style={styles.eventTitle}>
+              {nextEvent.title || 'Événement'}
+            </Text>
+            <View style={styles.eventMetaRow}>
+              <View style={styles.eventMetaItem}>
+                <Feather name="clock" size={14} color={tokens.muted} />
+                <Text style={styles.eventMetaText}>
+                  {nextEvent.starts_at.toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+              </View>
+              <View style={styles.metaDivider} />
+              <View style={styles.eventMetaItem}>
+                <Ionicons name="location" size={14} color={tokens.muted} />
+                <Text numberOfLines={1} style={styles.eventMetaText}>
+                  {nextEvent.location_label || nextEvent.location || nextEvent.city || 'Lieu à confirmer'}
+                </Text>
+              </View>
             </View>
-          </View>
+          </>
+        ) : (
+          <Text style={styles.honestNote}>
+            Aucun événement programmé. Les entraînements et matchs créés depuis le planning
+            apparaîtront ici.
+          </Text>
+        )}
 
-          <View style={styles.fixtureTeam}>
-            <View style={[styles.teamAvatar, styles.awayAvatar]}>
-              <Text style={styles.teamAvatarText}>RCF</Text>
-            </View>
-            <Text numberOfLines={1} style={styles.fixtureTeamName}>RC France</Text>
-            <Text style={styles.fixtureTeamRank}>2e · 35 pts</Text>
-          </View>
-        </View>
-
-        {/* Weather & Pitch Condition Bar */}
-        <View style={styles.weatherPitchRow}>
-          <View style={styles.weatherItem}>
-            <MaterialCommunityIcons name="weather-sunny" size={14} color="#D97706" />
-            <Text style={styles.weatherText}>18°C · Ensoleillé</Text>
-          </View>
-          <View style={styles.barDivider} />
-          <View style={styles.weatherItem}>
-            <MaterialCommunityIcons name="grass" size={14} color="#16A34A" />
-            <Text style={styles.weatherText}>Pelouse Synthétique Impeccable</Text>
-          </View>
-        </View>
-
-        {/* Location & Attendance Summary */}
-        <View style={styles.attendanceBar}>
-          <View style={styles.attendanceItem}>
-            <Ionicons name="location-outline" size={13} color="#64748B" />
-            <Text style={styles.attendanceText}>Stade d’Honneur</Text>
-          </View>
-          <View style={styles.barDivider} />
-          <View style={styles.attendanceItem}>
-            <Ionicons name="checkmark-circle" size={13} color="#16A34A" />
-            <Text style={[styles.attendanceText, { color: '#16A34A' }]}>16 Confirmés</Text>
-          </View>
-          <View style={styles.barDivider} />
-          <View style={styles.attendanceItem}>
-            <Ionicons name="time-outline" size={13} color="#D97706" />
-            <Text style={[styles.attendanceText, { color: '#D97706' }]}>2 En attente</Text>
-          </View>
-        </View>
-
-        {/* Official League Ranking Matchup Snippet */}
-        <View style={styles.rankingSnippetCard}>
-          <View style={styles.rankingSnippetLeft}>
-            <MaterialCommunityIcons name="shield-star-outline" size={16} color="#C5A059" />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rankingSnippetTitle}>Choc au Sommet · Régional 1</Text>
-              <Text style={styles.rankingSnippetDesc}>
-                1er FC ProDay (38 pts) vs 2e RC France (35 pts) · Écart : +3 pts
-              </Text>
-            </View>
-          </View>
-          <View style={styles.rankingBadgeProDay}>
-            <Text style={styles.rankingBadgeProDayText}>LEADER</Text>
-          </View>
-        </View>
-
-        {/* Single Primary Action Button */}
         <TouchableOpacity
           style={styles.primaryCtaBtn}
           activeOpacity={0.88}
           onPress={() => onNavigate?.('equipe')}
         >
-          <MaterialCommunityIcons name="soccer-field" size={18} color="#FFFFFF" />
-          <Text style={styles.primaryCtaText}>Ajuster la Composition & Tactique</Text>
-          <Feather name="arrow-right" size={16} color="#FFFFFF" />
+          <MaterialCommunityIcons name="soccer-field" size={18} color={tokens.onAccent} />
+          <Text style={styles.primaryCtaText}>Composer l’équipe & la tactique</Text>
+          <Feather name="arrow-right" size={16} color={tokens.onAccent} />
         </TouchableOpacity>
       </View>
 
-      {/* 4. Page 6 Specification: Effectif Résumé */}
-      <View style={styles.squadSummaryCard}>
-        <View style={styles.squadSummaryHeader}>
-          <View style={styles.squadSummaryTitleRow}>
-            <MaterialCommunityIcons name="account-group" size={18} color="#0F172A" />
-            <Text style={styles.squadSummaryTitle}>Effectif Résumé & Disponibilité</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.squadManageBtn}
-            activeOpacity={0.8}
-            onPress={() => onNavigate?.('equipe')}
-          >
-            <Text style={styles.squadManageBtnText}>Gérer groupe</Text>
-            <Feather name="chevron-right" size={14} color="#0284C7" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Availability Ratio Progress */}
-        <View style={styles.availabilityRow}>
-          <View style={styles.availabilityTrack}>
-            <View style={[styles.availabilityFill, { width: '82%' }]} />
-          </View>
-          <Text style={styles.availabilityPercent}>82% disponible</Text>
-        </View>
-
-        {/* Metric Counters Grid */}
-        <View style={styles.squadMetricsGrid}>
-          <View style={styles.squadMetricItem}>
-            <Text style={styles.squadMetricVal}>22</Text>
-            <Text style={styles.squadMetricLabel}>Total</Text>
-          </View>
-          <View style={styles.squadMetricDivider} />
-          <View style={styles.squadMetricItem}>
-            <Text style={[styles.squadMetricVal, { color: '#16A34A' }]}>18</Text>
-            <Text style={styles.squadMetricLabel}>Opérationnels</Text>
-          </View>
-          <View style={styles.squadMetricDivider} />
-          <View style={styles.squadMetricItem}>
-            <Text style={[styles.squadMetricVal, { color: '#F59E0B' }]}>2</Text>
-            <Text style={styles.squadMetricLabel}>En attente</Text>
-          </View>
-          <View style={styles.squadMetricDivider} />
-          <View style={styles.squadMetricItem}>
-            <Text style={[styles.squadMetricVal, { color: '#EF4444' }]}>2</Text>
-            <Text style={styles.squadMetricLabel}>Blessés / Repos</Text>
-          </View>
-        </View>
-
-        {/* Direct Action Chips */}
-        <View style={styles.squadActionChipsRow}>
-          <TouchableOpacity
-            style={styles.squadActionChip}
-            activeOpacity={0.8}
-            onPress={() => onNavigate?.('equipe')}
-          >
-            <MaterialCommunityIcons name="clipboard-check-outline" size={14} color="#0284C7" />
-            <Text style={styles.squadActionChipText}>Convocations (1 tap)</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.squadActionChip}
-            activeOpacity={0.8}
-            onPress={() => onNavigate?.('forme')}
-          >
-            <MaterialCommunityIcons name="heart-pulse" size={14} color="#EF4444" />
-            <Text style={styles.squadActionChipText}>Suivi Charge & Forme</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* 5. Discreet & Optional AI Tactical Assistant */}
-      <View style={styles.aiDiscreetCard}>
-        <TouchableOpacity
-          style={styles.aiDiscreetHeader}
-          activeOpacity={0.8}
-          onPress={() => setShowAiInsight((prev) => !prev)}
-        >
-          <View style={styles.aiIconBadge}>
-            <MaterialCommunityIcons name="star-four-points" size={14} color="#D97706" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.aiPromptTitle}>Conseil Tactique IA (Optionnel)</Text>
-            <Text style={styles.aiPromptPreview}>
-              Système 4-3-3 étiré recommandé face au 3-5-2 de RC France
-            </Text>
-          </View>
-          <Feather
-            name={showAiInsight ? 'chevron-up' : 'chevron-down'}
-            size={16}
-            color="#64748B"
-          />
-        </TouchableOpacity>
-
-        {showAiInsight && (
-          <View style={styles.aiExpandedTray}>
-            <Text style={styles.aiExpandedBody}>
-              L’analyse prédictive identifie une vulnérabilité adverse dans le dos des pistons lors des transitions défensives. Recommandation : attaques verticales directes sur les couloirs.
-            </Text>
-            <View style={styles.aiStatsRow}>
-              <View style={styles.aiStatPill}>
-                <Text style={styles.aiStatLabel}>Probabilité Victoire</Text>
-                <Text style={[styles.aiStatVal, { color: '#16A34A' }]}>58%</Text>
-              </View>
-              <View style={styles.aiStatPill}>
-                <Text style={styles.aiStatLabel}>xG Prédit</Text>
-                <Text style={styles.aiStatVal}>2.1 vs 1.2</Text>
-              </View>
-              <View style={styles.aiStatPill}>
-                <Text style={styles.aiStatLabel}>Contrôle Manuel</Text>
-                <Text style={[styles.aiStatVal, { color: '#0284C7' }]}>100% Libre</Text>
-              </View>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* 6. Minimalist Quick Access Tiles (Design v4) */}
+      {/* Accès rapides */}
       <View style={styles.tilesGrid}>
-        {/* Tile 1: Tableau Noir Multi-Format */}
         <TouchableOpacity
           style={styles.tileCard}
           activeOpacity={0.85}
           onPress={() => onNavigate?.('smart_tactics')}
         >
-          <View style={[styles.tileIconWrap, { backgroundColor: '#E0F2FE' }]}>
-            <MaterialCommunityIcons name="draw-pen" size={20} color="#0284C7" />
+          <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(tokens.accent, 0.12) }]}>
+            <MaterialCommunityIcons name="draw-pen" size={20} color={tokens.accent} />
           </View>
-          <Text style={styles.tileTitle}>Tableau Noir</Text>
-          <Text style={styles.tileDesc}>Foot à 11, à 8, Futsal 5v5 & Animation</Text>
+          <Text style={styles.tileTitle}>Tableau tactique</Text>
+          <Text style={styles.tileDesc}>Foot à 11, à 8, futsal & animation</Text>
         </TouchableOpacity>
 
-        {/* Tile 2: Séances & Schémas */}
         <TouchableOpacity
           style={styles.tileCard}
           activeOpacity={0.85}
           onPress={() => onNavigate?.('entrainements')}
         >
-          <View style={[styles.tileIconWrap, { backgroundColor: '#DCFCE7' }]}>
-            <MaterialCommunityIcons name="whistle-outline" size={20} color="#16A34A" />
+          <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(proSemantic.success, 0.14) }]}>
+            <MaterialCommunityIcons name="whistle-outline" size={20} color={proSemantic.success} />
           </View>
           <Text style={styles.tileTitle}>Entraînements</Text>
-          <Text style={styles.tileDesc}>Thématiques & Ateliers interactifs</Text>
+          <Text style={styles.tileDesc}>Séances & ateliers</Text>
         </TouchableOpacity>
 
-        {/* Tile 3: Direct Match Center & Scouting */}
         <TouchableOpacity
           style={styles.tileCard}
           activeOpacity={0.85}
           onPress={() => onNavigate?.('match_center')}
         >
-          <View style={[styles.tileIconWrap, { backgroundColor: '#FEF3C7' }]}>
-            <MaterialCommunityIcons name="microphone" size={20} color="#D97706" />
+          <View style={[styles.tileIconWrap, { backgroundColor: withAlpha(proSemantic.warning, 0.14) }]}>
+            <MaterialCommunityIcons name="microphone" size={20} color={proSemantic.warning} />
           </View>
-          <Text style={styles.tileTitle}>Scouting Vocal</Text>
-          <Text style={styles.tileDesc}>Notes terrain, transcription & dictée</Text>
+          <Text style={styles.tileTitle}>Scouting vocal</Text>
+          <Text style={styles.tileDesc}>Notes terrain & dictée</Text>
         </TouchableOpacity>
       </View>
 
-      {/* 7. Live Standings Collapsible Section (Design v4) */}
+      {/* Historique des relances — déroulé de la fonctionnalité du badge */}
+      <TouchableOpacity
+        style={styles.aiRow}
+        activeOpacity={0.8}
+        onPress={() => onNavigate?.('rsvp_log')}
+        accessibilityRole="button"
+        accessibilityLabel="Voir l'historique des relances"
+      >
+        <View style={[styles.aiIconBadge, { backgroundColor: withAlpha(proSemantic.warning, 0.12) }]}>
+          <Ionicons name="time-outline" size={16} color={proSemantic.warning} />
+        </View>
+        <View style={styles.aiRowText}>
+          <Text style={styles.aiRowTitle}>Historique des relances</Text>
+          <Text numberOfLines={1} style={styles.aiRowSubtitle}>
+            Qui a été relancé, quand, et combien de destinataires
+          </Text>
+        </View>
+        <Feather name="chevron-right" size={16} color={tokens.muted} />
+      </TouchableOpacity>
+
+      {/* Copilote — une ligne, pas un paragraphe de précautions */}
+      <TouchableOpacity
+        style={styles.aiRow}
+        activeOpacity={0.8}
+        onPress={() => onNavigate?.('copilot_chat')}
+      >
+        <View style={styles.aiIconBadge}>
+          <MaterialCommunityIcons name="star-four-points" size={14} color={proSemantic.warning} />
+        </View>
+        <View style={styles.aiRowText}>
+          <Text style={styles.aiRowTitle}>Copilote Coach</Text>
+          <Text numberOfLines={1} style={styles.aiRowSubtitle}>
+            Séance, causerie, préparation de match
+          </Text>
+        </View>
+        <Feather name="chevron-right" size={16} color={tokens.muted} />
+      </TouchableOpacity>
+
+      {/* Classement — replié par défaut */}
       <View style={styles.standingsSection}>
         <TouchableOpacity
           style={styles.standingsHeader}
@@ -394,695 +462,429 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
           onPress={() => setShowStandings((prev) => !prev)}
         >
           <View style={styles.standingsHeaderLeft}>
-            <MaterialCommunityIcons name="format-list-numbered" size={16} color="#C5A059" />
-            <Text style={styles.standingsTitle}>Classement Officiel FFF R1</Text>
+            <MaterialCommunityIcons name="format-list-numbered" size={16} color={tokens.accent} />
+            <Text style={styles.standingsTitle}>Classement officiel</Text>
           </View>
           <Feather
             name={showStandings ? 'chevron-up' : 'chevron-down'}
             size={16}
-            color="#64748B"
+            color={tokens.muted}
           />
         </TouchableOpacity>
 
-        {showStandings && (
+        {showStandings ? (
           <View style={styles.standingsContainer}>
-            <CoachStandingsTable compact={false} lightMode={true} />
+            <CoachStandingsTable compact={false} />
           </View>
-        )}
+        ) : null}
       </View>
+
+      {/* Détail des réponses en attente — déroulé du badge du prochain événement */}
+      <CoachPendingRsvpSheet
+        visible={pendingSheetOpen}
+        onClose={() => setPendingSheetOpen(false)}
+        event={nextEvent}
+        tokens={tokens}
+      />
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 48,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-    marginTop: 2,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  clubBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: '#FFFBEB',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
-  categoryTag: {
-    color: '#B45309',
-    fontSize: 9.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.5,
-  },
-  seasonTag: {
-    color: '#64748B',
-    fontSize: 9.5,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  teamTitle: {
-    color: '#0F172A',
-    fontSize: 18,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: -0.3,
-  },
-  coachSubtitle: {
-    color: '#64748B',
-    fontSize: 11,
-    fontFamily: '-apple-system',
-    marginTop: 1,
-  },
-  headerActionBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+const createStyles = (tokens: CoachThemeTokens) =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: tokens.bg,
+    },
+    content: {
+      padding: 16,
+      paddingBottom: tabBarScrollInset({ extra: proSpace.xl }),
+    },
 
-  /* Page 6 : Bandeau d'alertes en tête */
-  alertBannerCard: {
-    backgroundColor: '#FFF1F2',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#FECDD3',
-    padding: 14,
-    marginBottom: 14,
-  },
-  alertBannerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  alertBannerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  alertBannerBadgeText: {
-    color: '#E11D48',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.5,
-  },
-  alertBannerActBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#E11D48',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  alertBannerActBtnText: {
-    color: '#FFFFFF',
-    fontSize: 10.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  alertBannerHeadline: {
-    color: '#881337',
-    fontSize: 12,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-    marginBottom: 8,
-  },
-  alertItemsList: {
-    gap: 6,
-  },
-  alertItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#FFE4E6',
-    gap: 8,
-  },
-  alertSeverityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  alertPlayerName: {
-    color: '#0F172A',
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  alertPlayerDetail: {
-    color: '#64748B',
-    fontSize: 10.5,
-    fontFamily: '-apple-system',
-    marginTop: 1,
-  },
-  alertPillAction: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  alertPillActionText: {
-    fontSize: 10.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+    /* En-tête */
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 14,
+      marginTop: 2,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 1,
+      minWidth: 0,
+    },
+    clubBadge: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: withAlpha(proSemantic.warning, 0.1),
+      borderWidth: 1,
+      borderColor: withAlpha(proSemantic.warning, 0.3),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    categoryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 2,
+    },
+    categoryTag: {
+      color: proSemantic.warning,
+      fontSize: 9.5,
+      fontWeight: '800',
+            letterSpacing: 0.5,
+    },
+    seasonTag: {
+      color: tokens.muted,
+      fontSize: 9.5,
+      fontWeight: '600',
+          },
+    teamTitle: {
+      color: tokens.foreground,
+      fontSize: 18,
+      fontWeight: '800',
+            letterSpacing: -0.3,
+    },
+    coachSubtitle: {
+      color: tokens.muted,
+      fontSize: 11,
+            marginTop: 1,
+    },
+    headerActionBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  /* Hero Card: Prochain Événement */
-  heroCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 16,
-    marginBottom: 14,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  heroTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  matchBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#E0F2FE',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  matchBadgeText: {
-    color: '#0284C7',
-    fontSize: 9.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.5,
-  },
-  officialFeedTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-  },
-  officialFeedDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#16A34A',
-  },
-  officialFeedTagText: {
-    color: '#16A34A',
-    fontSize: 8.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.4,
-  },
-  countdownBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  countdownText: {
-    color: '#334155',
-    fontSize: 10.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  fixtureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    marginBottom: 12,
-  },
-  fixtureTeam: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  teamAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-  },
-  homeAvatar: {
-    backgroundColor: '#FEF3C7',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  awayAvatar: {
-    backgroundColor: '#E2E8F0',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-  },
-  teamAvatarText: {
-    color: '#0F172A',
-    fontSize: 13,
-    fontWeight: '900',
-    fontFamily: '-apple-system',
-  },
-  fixtureTeamName: {
-    color: '#0F172A',
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  fixtureTeamRank: {
-    color: '#64748B',
-    fontSize: 10.5,
-    fontFamily: '-apple-system',
-    marginTop: 2,
-  },
-  fixtureCenter: {
-    alignItems: 'center',
-    paddingHorizontal: 12,
-  },
-  fixtureVs: {
-    color: '#94A3B8',
-    fontSize: 12,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    marginBottom: 4,
-  },
-  homeStatusPill: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  homeStatusText: {
-    color: '#475569',
-    fontSize: 9,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  weatherPitchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    gap: 8,
-  },
-  weatherItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  weatherText: {
-    color: '#475569',
-    fontSize: 10.5,
-    fontWeight: '500',
-    fontFamily: '-apple-system',
-  },
-  barDivider: {
-    width: 1,
-    height: 12,
-    backgroundColor: '#CBD5E1',
-  },
-  attendanceBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    gap: 8,
-  },
-  attendanceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  attendanceText: {
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-    color: '#64748B',
-  },
-  rankingSnippetCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFBEB',
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  rankingSnippetLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
-  rankingSnippetTitle: {
-    color: '#92400E',
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  rankingSnippetDesc: {
-    color: '#B45309',
-    fontSize: 9.5,
-    fontFamily: '-apple-system',
-    marginTop: 1,
-  },
-  rankingBadgeProDay: {
-    backgroundColor: '#F59E0B',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  rankingBadgeProDayText: {
-    color: '#FFFFFF',
-    fontSize: 8.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  primaryCtaBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0F172A',
-    borderRadius: 12,
-    paddingVertical: 13,
-    gap: 8,
-  },
-  primaryCtaText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+    /* Vigilance — carte unique */
+    alertBannerCard: {
+      backgroundColor: withAlpha(proSemantic.danger, 0.12),
+      borderRadius: proRadius.lg,
+      borderWidth: 1,
+      borderColor: withAlpha(proSemantic.danger, 0.3),
+      padding: 14,
+      marginBottom: 14,
+    },
+    alertBannerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      marginBottom: 8,
+    },
+    alertBannerBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    alertBannerBadgeText: {
+      color: proSemantic.danger,
+      fontSize: 10,
+      fontWeight: '800',
+            letterSpacing: 0.5,
+    },
+    alertBannerActBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      backgroundColor: proSemantic.danger,
+      paddingHorizontal: proSpace.md,
+      /** Cible tactile conforme au socle partagé (≥ 44 px). */
+      minHeight: proForm.chipHeight,
+      borderRadius: proForm.chipRadius,
+    },
+    alertBannerActBtnText: {
+      /** Texte sur aplat de statut : blanc, identique dans les deux pôles. */
+      color: proSemantic.onDanger,
+      fontSize: 10.5,
+      fontWeight: '700',
+          },
+    alertBannerHeadline: {
+      color: proSemantic.danger,
+      fontSize: 12,
+      fontWeight: '600',
+            marginBottom: 4,
+    },
+    alertBannerDetail: {
+      color: tokens.muted,
+      fontSize: 11,
+      lineHeight: 16,
+          },
+    alertSpinner: {
+      alignSelf: 'flex-start',
+      marginTop: 8,
+    },
+    alertRetryBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      alignSelf: 'flex-start',
+      marginTop: 10,
+      paddingHorizontal: proSpace.md,
+      minHeight: proForm.chipHeight,
+      borderRadius: proForm.chipRadius,
+      borderWidth: 1,
+      borderColor: withAlpha(proSemantic.danger, 0.4),
+    },
+    alertRetryBtnText: {
+      color: proSemantic.danger,
+      fontSize: 10.5,
+      fontWeight: '700',
+          },
 
-  /* Page 6 : Effectif Résumé */
-  squadSummaryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 16,
-    marginBottom: 14,
-  },
-  squadSummaryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  squadSummaryTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  squadSummaryTitle: {
-    color: '#0F172A',
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  squadManageBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  squadManageBtnText: {
-    color: '#0284C7',
-    fontSize: 11.5,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  availabilityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
-  },
-  availabilityTrack: {
-    flex: 1,
-    height: 6,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  availabilityFill: {
-    height: '100%',
-    backgroundColor: '#16A34A',
-    borderRadius: 3,
-  },
-  availabilityPercent: {
-    color: '#16A34A',
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  squadMetricsGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    paddingVertical: 10,
-    marginBottom: 12,
-  },
-  squadMetricItem: {
-    alignItems: 'center',
-  },
-  squadMetricVal: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#0F172A',
-    fontFamily: '-apple-system',
-  },
-  squadMetricLabel: {
-    fontSize: 10,
-    color: '#64748B',
-    fontFamily: '-apple-system',
-    marginTop: 2,
-  },
-  squadMetricDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: '#E2E8F0',
-  },
-  squadActionChipsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  squadActionChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    paddingVertical: 8,
-  },
-  squadActionChipText: {
-    color: '#0F172A',
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
+    /* Prochain événement */
+    heroCard: {
+      backgroundColor: tokens.surface,
+      borderRadius: proRadius.xl,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      padding: 16,
+      marginBottom: 14,
+    },
+    heroTopRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 14,
+    },
+    matchBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: withAlpha(tokens.accent, 0.12),
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+    },
+    matchBadgeText: {
+      color: tokens.accent,
+      fontSize: 9.5,
+      fontWeight: '800',
+            letterSpacing: 0.5,
+    },
+    heroTopRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      flexShrink: 1,
+    },
+    countdownBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: tokens.elevated,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+    },
+    countdownText: {
+      color: tokens.foreground,
+      fontSize: 10.5,
+      fontWeight: '700',
+          },
+    rsvpPendingBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: withAlpha(proSemantic.warning, 0.14),
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+    },
+    rsvpBadgeInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    rsvpRemindBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      backgroundColor: proSemantic.warning,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 5,
+    },
+    rsvpRemindBtnText: {
+      /** Texte posé sur un aplat de statut — même règle que `onDanger`. */
+      color: proSemantic.onDanger,
+      fontSize: 10.5,
+      fontWeight: '700',
+          },
+    rsvpPendingBadgeText: {
+      color: proSemantic.warning,
+      fontSize: 10.5,
+      fontWeight: '700',
+          },
+    eventTitle: {
+      color: tokens.foreground,
+      fontSize: 16,
+      fontWeight: '800',
+      letterSpacing: -0.3,
+      marginBottom: 8,
+    },
+    eventMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.elevated,
+      borderRadius: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      marginBottom: 12,
+      gap: 8,
+    },
+    eventMetaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      flex: 1,
+      minWidth: 0,
+    },
+    eventMetaText: {
+      color: tokens.muted,
+      fontSize: 10.5,
+      fontWeight: '500',
+            flexShrink: 1,
+    },
+    metaDivider: {
+      width: 1,
+      height: 12,
+      backgroundColor: tokens.border,
+    },
+    primaryCtaBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.accent,
+      /** Action principale : pilule à hauteur cible du socle partagé. */
+      borderRadius: proForm.actionRadius,
+      minHeight: proForm.actionMinHeight,
+      paddingVertical: 13,
+      gap: 8,
+    },
+    primaryCtaText: {
+      color: tokens.onAccent,
+      fontSize: 13,
+      fontWeight: '700',
+          },
 
-  /* AI Assistant Card */
-  aiDiscreetCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
-    marginBottom: 14,
-  },
-  aiDiscreetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  aiIconBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: '#FEF3C7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  aiPromptTitle: {
-    color: '#0F172A',
-    fontSize: 12.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  aiPromptPreview: {
-    color: '#64748B',
-    fontSize: 10.5,
-    fontFamily: '-apple-system',
-    marginTop: 1,
-  },
-  aiExpandedTray: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  aiExpandedBody: {
-    color: '#334155',
-    fontSize: 11.5,
-    lineHeight: 17,
-    fontFamily: '-apple-system',
-    marginBottom: 10,
-  },
-  aiStatsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  aiStatPill: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    padding: 8,
-    alignItems: 'center',
-  },
-  aiStatLabel: {
-    color: '#64748B',
-    fontSize: 9.5,
-    fontFamily: '-apple-system',
-    marginBottom: 2,
-  },
-  aiStatVal: {
-    color: '#0F172A',
-    fontSize: 11.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+    /* Accès rapides */
+    tilesGrid: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 14,
+    },
+    tileCard: {
+      flex: 1,
+      backgroundColor: tokens.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      padding: 12,
+    },
+    tileIconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    tileTitle: {
+      color: tokens.foreground,
+      fontSize: 12,
+      fontWeight: '700',
+            marginBottom: 2,
+    },
+    tileDesc: {
+      color: tokens.muted,
+      fontSize: 9.5,
+      lineHeight: 13,
+          },
 
-  /* Tiles Grid */
-  tilesGrid: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 14,
-  },
-  tileCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 12,
-  },
-  tileIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  tileTitle: {
-    color: '#0F172A',
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-    marginBottom: 2,
-  },
-  tileDesc: {
-    color: '#64748B',
-    fontSize: 9.5,
-    lineHeight: 13,
-    fontFamily: '-apple-system',
-  },
+    /* Copilote */
+    aiRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: tokens.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      padding: 14,
+      marginBottom: 14,
+    },
+    aiIconBadge: {
+      width: 30,
+      height: 30,
+      borderRadius: 8,
+      backgroundColor: withAlpha(proSemantic.warning, 0.14),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    aiRowText: {
+      flex: 1,
+      minWidth: 0,
+    },
+    aiRowTitle: {
+      color: tokens.foreground,
+      fontSize: 12.5,
+      fontWeight: '700',
+          },
+    aiRowSubtitle: {
+      color: tokens.muted,
+      fontSize: 10.5,
+            marginTop: 1,
+    },
 
-  /* Standings Section */
-  standingsSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    overflow: 'hidden',
-    marginBottom: 14,
-  },
-  standingsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 14,
-  },
-  standingsHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  standingsTitle: {
-    color: '#0F172A',
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  standingsContainer: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
-  },
-});
+    /* Classement */
+    standingsSection: {
+      backgroundColor: tokens.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      overflow: 'hidden',
+      marginBottom: 14,
+    },
+    standingsHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 14,
+    },
+    standingsHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    standingsTitle: {
+      color: tokens.foreground,
+      fontSize: 13,
+      fontWeight: '700',
+          },
+    standingsContainer: {
+      paddingHorizontal: 12,
+      paddingBottom: 12,
+    },
+
+    /* Note discrète partagée */
+    honestNote: {
+      color: tokens.muted,
+      fontSize: 12,
+      lineHeight: 18,
+      fontStyle: 'italic',
+      marginTop: 6,
+    },
+  });

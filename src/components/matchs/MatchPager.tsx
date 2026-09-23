@@ -216,24 +216,26 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         ))}
       </Animated.ScrollView>
 
-      <View style={styles.footer}>
-        <View style={styles.dots}>
-          {pages.map((p, i) => (
-            <CarouselDot
-              key={p.id}
-              index={i}
-              scrollX={scrollX}
-              snap={pageWidth}
-              onPress={() => goToIndex(i)}
-              activeColor={skin.joueurSkin ? skin.accent : undefined}
-              inactiveColor={skin.joueurSkin ? skin.border : undefined}
-            />
-          ))}
+      {!hideRail && !gameMode ? (
+        <View style={styles.footer}>
+          <View style={styles.dots}>
+            {pages.map((p, i) => (
+              <CarouselDot
+                key={p.id}
+                index={i}
+                scrollX={scrollX}
+                snap={pageWidth}
+                onPress={() => goToIndex(i)}
+                activeColor={skin.joueurSkin ? skin.accent : undefined}
+                inactiveColor={skin.joueurSkin ? skin.border : undefined}
+              />
+            ))}
+          </View>
+          <ProDayText variant="caption" style={styles.hint}>
+            Glissez · {pageNum}/{pages.length}
+          </ProDayText>
         </View>
-        <ProDayText variant="caption" style={styles.hint}>
-          Glissez · {pageNum}/{pages.length}
-        </ProDayText>
-      </View>
+      ) : null}
     </View>
   );
 };

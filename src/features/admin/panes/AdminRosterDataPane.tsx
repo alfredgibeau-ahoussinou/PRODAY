@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -8,6 +7,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import {
   AdminAvatarMark,
   AdminBadge,
@@ -21,7 +21,7 @@ import {
   AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { adminService } from '../../../services/admin.service';
 import { useAdminData } from '../data/AdminDataContext';
@@ -34,7 +34,7 @@ type RosterMeta = Awaited<ReturnType<typeof adminService.listClubRosterMeta>>[nu
 type RosterDetail = NonNullable<Awaited<ReturnType<typeof adminService.getClubRosterDetail>>>;
 
 export function AdminRosterDataPane() {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const data = useAdminData();
   const { firebaseUser, profile } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -92,9 +92,9 @@ export function AdminRosterDataPane() {
           });
           setLastMsg(typeof result === 'object' ? JSON.stringify(result).slice(0, 160) : 'OK');
           await load();
-          Alert.alert('Sync OK', 'Caches effectifs mis à jour.');
+          prodayAlert.alert('Sync OK', 'Caches effectifs mis à jour.');
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         } finally {
           setBusy(null);
         }
@@ -120,7 +120,7 @@ export function AdminRosterDataPane() {
             setSelected(detail);
           }
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         } finally {
           setBusy(null);
         }
@@ -134,7 +134,7 @@ export function AdminRosterDataPane() {
       const detail = await adminService.getClubRosterDetail(meta.id);
       setSelected(detail);
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
     } finally {
       setBusy(null);
     }
@@ -146,18 +146,19 @@ export function AdminRosterDataPane() {
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader
-          title="Effectifs live"
-          subtitle="Inspect · manage · force-trigger imports effectifs"
+          title="Effectifs FFF"
+          subtitle={`${rosters.length} clubs synchronisés · Caches FootClubs & licences joueurs`}
+          right={
+            <AdminButton
+              label={busy === 'global' ? 'Sync en cours…' : '⚡ Sync globale'}
+              variant="primary"
+              compact
+              disabled={!!busy}
+              onPress={runGlobalSync}
+            />
+          }
         />
-        <AdminSearchField value={q} onChangeText={setQ} placeholder="FFF, club, ville…" />
-        <View style={styles.actions}>
-          <AdminButton
-            label={busy === 'global' ? '…' : 'Sync global'}
-            disabled={!!busy}
-            onPress={runGlobalSync}
-          />
-          <AdminBadge label={`${filtered.length} caches`} tone="info" />
-        </View>
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="Rechercher par nom de club, ville, ID…" />
         {lastMsg ? (
           <AdminText variant="caption" color={t.faint}>
             {lastMsg}

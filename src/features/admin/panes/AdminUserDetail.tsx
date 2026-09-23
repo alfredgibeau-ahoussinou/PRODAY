@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import { useAdminData } from '../data/AdminDataContext';
 import {
   AdminBadge,
@@ -16,22 +16,24 @@ import {
   AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import {
   ADMIN_EDITABLE_ROLE_OPTIONS,
   adminRoleOptionFromUser,
+  adminRoleOptionsFromUser,
   adminRoleOptionLabel,
   findClubForAdminUser,
   isAdminPresidentUser,
   persistedUserRoleFromAdminOption,
   type AdminRoleOption,
 } from '../../../utils/adminPresidentRole';
+import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
 import { confirmAdminAction } from '../utils/confirmAdminAction';
 import { adminService } from '../../../services/admin.service';
 import { adminAuditService } from '../../../services/adminAudit.service';
 import { useProductLine } from '../../../context/ProductLineContext';
-import type { User, VerificationStatus } from '../../../models/User';
+import type { User, UserRole, VerificationStatus } from '../../../models/User';
 import type { AdminAuditEntry } from '../../../services/adminAudit.service';
 import {
   ADMIN_USER_SUBPAGE_LABELS,
@@ -64,7 +66,7 @@ export function AdminUserDetail({
   onPreviewPresidentPole,
   initialSubPage = 'profil',
 }: Props) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const data = useAdminData();
   const { setClubShellMode } = useProductLine();
   const [page, setPage] = useState<AdminUserSubPage>(initialSubPage);
@@ -72,7 +74,10 @@ export function AdminUserDetail({
   const [city, setCity] = useState(user.city ?? '');
   const [note, setNote] = useState(user.admin_note ?? '');
   const [tags, setTags] = useState((user.admin_tags ?? []).join(', '));
-  const [roleOption, setRoleOption] = useState<AdminRoleOption>(() =>
+  const [selectedRoleOptions, setSelectedRoleOptions] = useState<AdminRoleOption[]>(() =>
+    adminRoleOptionsFromUser(user, data.clubs),
+  );
+  const [primaryRoleOption, setPrimaryRoleOption] = useState<AdminRoleOption>(() =>
     adminRoleOptionFromUser(user, data.clubs),
   );
   const [docs, setDocs] = useState<Awaited<ReturnType<typeof adminService.listUserDocuments>>>([]);
@@ -84,7 +89,9 @@ export function AdminUserDetail({
     setCity(user.city ?? '');
     setNote(user.admin_note ?? '');
     setTags((user.admin_tags ?? []).join(', '));
-    setRoleOption(adminRoleOptionFromUser(user, data.clubs));
+    const opts = adminRoleOptionsFromUser(user, data.clubs);
+    setSelectedRoleOptions(opts);
+    setPrimaryRoleOption(adminRoleOptionFromUser(user, data.clubs));
   }, [user, data.clubs]);
 
   useEffect(() => {
@@ -131,7 +138,7 @@ export function AdminUserDetail({
       await fn();
       await onRefresh();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
     } finally {
       setBusy(false);
     }
@@ -164,38 +171,64 @@ export function AdminUserDetail({
     );
   };
 
+  const toggleRoleOption = (opt: AdminRoleOption) => {
+    setSelectedRoleOptions((prev) => {
+      const exists = prev.includes(opt);
+      if (exists) {
+        if (prev.length <= 1) {
+          prodayAlert.alert('Rôle requis', 'Un utilisateur doit conserver au moins un rôle actif.');
+          return prev;
+        }
+        const next = prev.filter((r) => r !== opt);
+        if (primaryRoleOption === opt) {
+          setPrimaryRoleOption(next[0]!);
+        }
+        return next;
+      }
+      return [...prev, opt];
+    });
+  };
+
   const saveRole = () => {
-    if (roleOption === 'president' && !linkedClub) {
-      Alert.alert(
+    const hasPresident = selectedRoleOptions.includes('president');
+    if (hasPresident && !linkedClub) {
+      prodayAlert.alert(
         'Club requis',
-        'Rattachez ce compte à un club avant de le désigner Président (owner).',
+        'Rattachez ce compte à un club avant de lui assigner le rôle Président (owner).',
       );
       return;
     }
-    const persistedRole = persistedUserRoleFromAdminOption(roleOption);
-    confirmAdminAction('Enregistrer le rôle ?', adminRoleOptionLabel(roleOption), () =>
-      run(async () => {
-        await adminService.updateUser(user.uid, {
-          role: persistedRole,
-          ...(roleOption === 'president'
-            ? { product_line: 'pro_club', club_id: linkedClub!.id }
-            : {}),
-        });
-        if (roleOption === 'president' && linkedClub) {
-          await adminService.setClubOwner(linkedClub.id, user.uid, actorUid);
-        }
-        await adminAuditService.log({
-          action: 'user_updated',
-          actor_uid: actorUid,
-          actor_email: actorEmail,
-          target_type: 'user',
-          target_id: user.uid,
-          summary:
-            roleOption === 'president'
-              ? `Rôle → Président (owner ${linkedClub!.id})`
-              : `Rôle → ${persistedRole}`,
-        });
-      }),
+    const persistedRoles = Array.from(
+      new Set(selectedRoleOptions.map(persistedUserRoleFromAdminOption)),
+    );
+    const effectivePrimary = selectedRoleOptions.includes(primaryRoleOption)
+      ? primaryRoleOption
+      : selectedRoleOptions[0]!;
+    const persistedPrimary = persistedUserRoleFromAdminOption(effectivePrimary);
+    const roleLabels = selectedRoleOptions.map(adminRoleOptionLabel).join(', ');
+
+    confirmAdminAction(
+      'Enregistrer les rôles ?',
+      `Multi-rôles : ${roleLabels}\nRôle principal : ${adminRoleOptionLabel(effectivePrimary)}`,
+      () =>
+        run(async () => {
+          await adminService.updateUser(user.uid, {
+            role: persistedPrimary,
+            roles: persistedRoles,
+            ...(hasPresident ? { product_line: 'pro_club', club_id: linkedClub!.id } : {}),
+          });
+          if (hasPresident && linkedClub) {
+            await adminService.setClubOwner(linkedClub.id, user.uid, actorUid);
+          }
+          await adminAuditService.log({
+            action: 'user_updated',
+            actor_uid: actorUid,
+            actor_email: actorEmail,
+            target_type: 'user',
+            target_id: user.uid,
+            summary: `Multi-rôles → ${roleLabels} (Principal: ${adminRoleOptionLabel(effectivePrimary)})`,
+          });
+        }),
     );
   };
 
@@ -352,21 +385,52 @@ export function AdminUserDetail({
 
         {page === 'roles' ? (
           <AdminCard>
-            <AdminText variant="h2">Rôles & permissions</AdminText>
-            <AdminText variant="caption" color={t.muted}>
-              Président = rôle Club + owner du club lié (ACL pôle Président).
-            </AdminText>
-            <View style={styles.chips}>
-              {ADMIN_EDITABLE_ROLE_OPTIONS.map((r) => (
-                <Chip
-                  key={r}
-                  label={adminRoleOptionLabel(r)}
-                  active={roleOption === r}
-                  onPress={() => setRoleOption(r)}
-                />
-              ))}
+            <View style={{ gap: 4 }}>
+              <AdminText variant="h2">Multi-rôles & permissions</AdminText>
+              <AdminText variant="caption" color={t.muted}>
+                Sélectionnez un ou plusieurs rôles pour ce compte (ex. Coach et Joueur, Parent et Joueur).
+              </AdminText>
             </View>
-            <AdminButton label={busy ? '…' : 'Enregistrer le rôle'} onPress={saveRole} disabled={busy} />
+
+            <View style={{ marginTop: 8, gap: 6 }}>
+              <AdminText variant="label" muted>Rôles attribués (Sélectionnez plusieurs)</AdminText>
+              <View style={styles.chips}>
+                {ADMIN_EDITABLE_ROLE_OPTIONS.map((r) => {
+                  const active = selectedRoleOptions.includes(r);
+                  return (
+                    <Chip
+                      key={r}
+                      label={`${active ? '✓ ' : '+ '}${adminRoleOptionLabel(r)}`}
+                      active={active}
+                      onPress={() => toggleRoleOption(r)}
+                    />
+                  );
+                })}
+              </View>
+            </View>
+
+            {selectedRoleOptions.length > 1 ? (
+              <View style={{ marginTop: 12, padding: 12, borderRadius: adminRadius.md, backgroundColor: t.surfaceMuted, borderWidth: 1, borderColor: t.border, gap: 8 }}>
+                <AdminText variant="h3">Rôle principal par défaut</AdminText>
+                <AdminText variant="caption" color={t.muted}>
+                  Définit l’espace applicatif principal affiché lors de la connexion initiale.
+                </AdminText>
+                <View style={styles.chips}>
+                  {selectedRoleOptions.map((r) => (
+                    <Chip
+                      key={r}
+                      label={`★ ${adminRoleOptionLabel(r)}`}
+                      active={primaryRoleOption === r}
+                      onPress={() => setPrimaryRoleOption(r)}
+                    />
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            <View style={{ marginTop: 8 }}>
+              <AdminButton label={busy ? '…' : 'Enregistrer les rôles'} onPress={saveRole} disabled={busy} />
+            </View>
             
             <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.hairline, gap: 8 }}>
               <AdminText variant="h3">Pôle Administrateur (Super Admin)</AdminText>
@@ -394,7 +458,7 @@ export function AdminUserDetail({
               />
             </View>
 
-            {(roleOption === 'president' || isPresident || user.role === 'club') &&
+            {(selectedRoleOptions.includes('president') || isPresident || user.role === 'club') &&
             onPreviewPresidentPole ? (
               <View style={{ gap: 8, marginTop: 8 }}>
                 <AdminText variant="body" color={t.muted}>
@@ -405,7 +469,7 @@ export function AdminUserDetail({
                 <AdminButton
                   label="Ouvrir pôle Président"
                   variant="soft"
-                  disabled={busy || (!isPresident && roleOption !== 'president')}
+                  disabled={busy || (!isPresident && !selectedRoleOptions.includes('president'))}
                   onPress={() => {
                     confirmAdminAction('Ouvrir le pôle Président ?', 'Aperçu admin.', () => {
                       void setClubShellMode('president');
@@ -618,7 +682,7 @@ function Chip({
   active: boolean;
   onPress: () => void;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <Pressable
       onPress={onPress}
@@ -648,7 +712,7 @@ function Field({
   onChange: (v: string) => void;
   multiline?: boolean;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <View style={{ gap: 4 }}>
       <AdminText variant="label" color={t.faint}>

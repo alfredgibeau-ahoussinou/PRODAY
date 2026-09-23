@@ -15,10 +15,11 @@ import type { User, UserRole } from '../models/User';
 import { sanitizePublicUser } from '../utils/sanitizePublicUser';
 import { resolveContactViewerRelation } from '../utils/contactPrivacyVisibility';
 import { filterRealUsers } from '../utils/realUserFilter';
-import { membershipsService } from './memberships.service';
 
 const LIST_LIMIT = 50;
 const POPULAR_LIMIT = 5;
+/** Plafond de la lecture bornée à un club (aligné sur la limite de requête des règles). */
+const CLUB_MEMBERS_LIMIT = 50;
 
 export type StaffType = 'coach' | 'agent';
 
@@ -151,29 +152,75 @@ export const usersService = {
     return players.slice(0, POPULAR_LIMIT);
   },
 
+  /**
+   * Personnes d'un club — requête **bornée au club** (`profile.club_id`).
+   *
+   * CA-12 : la recherche de personnes ne doit jamais lire l'annuaire global
+   * puis filtrer côté client. Ici la requête elle-même porte la contrainte de
+   * club ; en cas d'index ou de règles indisponibles, on renvoie une liste vide
+   * plutôt que d'élargir la lecture.
+   */
+  async listPlayersInClub(clubId: string, search = ''): Promise<User[]> {
+    if (!clubId) return [];
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const q = query(
+        collection(database, 'users'),
+        where('profile.club_id', '==', clubId),
+        limit(CLUB_MEMBERS_LIMIT),
+      );
+      const users = (await getDocs(q)).docs
+        .map((d) =>
+          sanitizePublicUser(userFromFirestore(d.id, d.data() as Record<string, unknown>)),
+        )
+        // Double vérification : seuls les profils rattachés à ce club remontent.
+        .filter((u) => u.profile.club_id === clubId)
+        // Un compte désactivé n'est pas un membre du club (parité avec listByRole).
+        .filter((u) => u.is_active !== false);
+      return filterRealUsers(users).filter((u) => matchesSearch(u, search.trim()));
+    } catch (error) {
+      console.warn('[usersService] listPlayersInClub:', error);
+      return [];
+    }
+  },
+
   /** Membres liés à un club (convocations) — memberships actifs en priorité. */
   async listMembersByClubId(clubId: string): Promise<User[]> {
     if (!clubId) return [];
     try {
-      const activeMemberships = await membershipsService.listByClub(clubId, 'active');
-      if (activeMemberships.length > 0) {
-        const uniqueUids = Array.from(
-          new Set(activeMemberships.map((m) => m.player_uid).filter(Boolean)),
+      const database = getDb();
+      if (database && isFirebaseConfigured()) {
+        const snap = await getDocs(
+          query(
+            collection(database, 'memberships'),
+            where('club_id', '==', clubId),
+            where('status', '==', 'active'),
+            limit(200),
+          ),
         );
-        const members = (
-          await Promise.all(uniqueUids.map((uid) => this.getPublicById(uid)))
-        ).filter((u): u is User => Boolean(u));
-        return members;
+        const uniqueUids = Array.from(
+          new Set(
+            snap.docs
+              .map((d) => (d.data() as { player_uid?: string }).player_uid)
+              .filter((uid): uid is string => Boolean(uid)),
+          ),
+        );
+        if (uniqueUids.length > 0) {
+          const members = (
+            await Promise.all(uniqueUids.map((uid) => this.getPublicById(uid)))
+          ).filter((u): u is User => Boolean(u));
+          return members;
+        }
       }
     } catch (error) {
       console.warn('[usersService] listMembersByClubId fallback club_id:', error);
     }
 
-    // Fallback legacy: profils directement liés au club (zéro membership actif).
-    const players = await this.listPlayers();
-    const coaches = await this.listStaff('coach');
-    const agents = await this.listStaff('agent');
-    return [...players, ...coaches, ...agents].filter((u) => u.profile.club_id === clubId);
+    // Fallback legacy: profils directement rattachés au club (zéro membership actif).
+    // CA-12 : requête bornée au club, jamais une lecture globale filtrée après coup.
+    return this.listPlayersInClub(clubId);
   },
 
   isNewProfile,

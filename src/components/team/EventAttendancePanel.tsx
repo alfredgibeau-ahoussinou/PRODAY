@@ -10,18 +10,18 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 import { spacing, radius } from '../../theme/designTokens';
 
-function presenceDot(rsvp: RsvpStatus, mark?: AttendanceMark): string {
-  if (mark === 'present') return '🟢 Présent';
-  if (mark === 'absent') return '🔴 Absent';
-  if (mark === 'excused') return '⚪ Excusé';
-  if (mark === 'late') return '🟠 Retard (pointé)';
-  if (rsvp === 'late_under_10') return '🟡 Retard < 10 min';
-  if (rsvp === 'late_over_10') return '🟠 Retard ≥ 10 min';
-  if (rsvp === 'late_unknown') return '🟠 Retard';
-  if (rsvp === 'yes') return '🟢 Présent (annoncé)';
-  if (rsvp === 'no') return '🔴 Absent';
-  if (rsvp === 'maybe') return '⚪ Peut-être';
-  return '⚪ En attente';
+function presenceDot(rsvp: RsvpStatus, mark?: AttendanceMark): { color: string; label: string } {
+  if (mark === 'present') return { color: '#10B981', label: 'Présent' };
+  if (mark === 'absent') return { color: '#EF4444', label: 'Absent' };
+  if (mark === 'excused') return { color: '#94A3B8', label: 'Excusé' };
+  if (mark === 'late') return { color: '#F59E0B', label: 'Retard (pointé)' };
+  if (rsvp === 'late_under_10') return { color: '#EAB308', label: 'Retard < 10 min' };
+  if (rsvp === 'late_over_10') return { color: '#F59E0B', label: 'Retard ≥ 10 min' };
+  if (rsvp === 'late_unknown') return { color: '#F59E0B', label: 'Retard' };
+  if (rsvp === 'yes') return { color: '#10B981', label: 'Présent (annoncé)' };
+  if (rsvp === 'no') return { color: '#EF4444', label: 'Absent' };
+  if (rsvp === 'maybe') return { color: '#94A3B8', label: 'Peut-être' };
+  return { color: '#64748B', label: 'En attente' };
 }
 
 const MARKS: { mark: AttendanceMark; label: string }[] = [
@@ -85,10 +85,18 @@ export const EventAttendancePanel: React.FC<EventAttendancePanelProps> = ({
           <View style={styles.row}>
             <View style={styles.rowHead}>
               <Text style={styles.name}>{names[uid] ?? '…'}</Text>
-              <Text style={styles.rsvp}>
-                {presenceDot(rsvp, mark)}
-                {isLateRsvp(rsvp) || note ? ` · ${note ?? RSVP_STATUS_LABELS[rsvp]}` : ''}
-              </Text>
+              {(() => {
+                const info = presenceDot(rsvp, mark);
+                return (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: info.color }} />
+                    <Text style={styles.rsvp}>
+                      {info.label}
+                      {isLateRsvp(rsvp) || note ? ` · ${note ?? RSVP_STATUS_LABELS[rsvp]}` : ''}
+                    </Text>
+                  </View>
+                );
+              })()}
               {mark ? <Text style={styles.mark}>Pointage : {mark}</Text> : null}
             </View>
             {isStaff ? (

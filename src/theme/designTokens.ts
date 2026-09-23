@@ -4,6 +4,7 @@
  */
 
 import { PRODAY_MASTER, PRODAY_TAGLINE, poleAccentSoft } from './prodayBrand';
+import { APPLE_FONT_STACK } from './appleTypography';
 
 export const BRAND = {
   name: 'ProDay',
@@ -43,27 +44,29 @@ export const colors = {
   brandSoft: poleAccentSoft('master', 0.1),
   brandInverse: '#FFFFFF',
 
-  ink: '#FAFAFA',
+  ink: '#FFFFFF',
   inkSecondary: '#D4D4D4',
-  inkMuted: '#A3A3A3',
+  inkMuted: '#8B8B9A',
   inkFaint: '#737373',
 
-  /** Fonds FLASH */
+  /** Fonds FLASH — DESIGN.md §2.1 (Dark base) */
   background: '#000000',
-  backgroundAlt: '#0A0A0A',
-  surface: '#141414',
-  surfaceMuted: '#1A1A1A',
+  backgroundAlt: '#0A0A0F',
+  surface: '#121218',
+  surfaceMuted: '#1A1A24',
   surfaceInverse: '#FAFAFA',
   heroMuted: 'rgba(255, 255, 255, 0.72)',
 
-  /** Bordures */
-  border: 'rgba(255, 255, 255, 0.1)',
-  borderStrong: 'rgba(255, 255, 255, 0.22)',
+  /** Bordures — DESIGN.md §2.2 */
+  border: 'rgba(255, 255, 255, 0.08)',
+  borderStrong: 'rgba(255, 255, 255, 0.14)',
   borderMedium: 'rgba(255, 255, 255, 0.14)',
+  borderActive: 'rgba(197, 160, 89, 0.45)',
 
-  text: '#FAFAFA',
+  text: '#FFFFFF',
   textSecondary: '#D4D4D4',
-  textMuted: '#A3A3A3',
+  textMuted: '#8B8B9A',
+  textDim: 'rgba(139, 139, 154, 0.72)',
 
   /** États */
   success: '#16A34A',
@@ -87,9 +90,9 @@ export const colors = {
   tone3: MASTER_BLUE_BRIGHT,
   tone4: '#93C5FD',
 
-  /** Compat héritage */
-  navy: '#0A0A0A',
-  navySoft: '#171717',
+  /** Compat héritage — alignés §2.1 */
+  navy: '#0A0A0F',
+  navySoft: '#121218',
   blueBright: MASTER_BLUE_BRIGHT,
   bluePrimary: MASTER_BLUE,
   blueCyan: MASTER_BLUE_BRIGHT,
@@ -98,16 +101,17 @@ export const colors = {
 } as const;
 
 export const gradients = {
-  hero: ['#000000', '#0A0A0A'] as const,
+  hero: ['#000000', '#0A0A0F'] as const,
   heroDark: ['#000000', '#000000'] as const,
-  card: ['#1A1A1A', '#0A0A0A'] as const,
+  card: ['#1A1A24', '#0A0A0F'] as const,
   cta: [MASTER_BLUE, MASTER_BLUE_DEEP] as const,
 } as const;
 
 export const typography = {
-  fontFamily: 'Inter_400Regular',
-  displayFamily: 'Syne_700Bold',
-  brandFamily: 'Sora_700Bold',
+  /** Stack Apple canonique (voir appleTypography.ts) — plus aucune police téléchargée n'est rendue. */
+  fontFamily: APPLE_FONT_STACK.system,
+  displayFamily: APPLE_FONT_STACK.display,
+  brandFamily: APPLE_FONT_STACK.display,
   brandSlant: '0deg',
   sizes: {
     hero: 30,
@@ -148,7 +152,7 @@ export const shadows = {
   card: {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.25,
     shadowRadius: 12,
     elevation: 3,
   },

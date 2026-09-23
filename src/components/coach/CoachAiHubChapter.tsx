@@ -14,10 +14,13 @@ import {
   type CoachTacticalPreset,
 } from '../../utils/coachPitchLineup';
 
-type Props = CoachChapterCommonProps;
+type Props = CoachChapterCommonProps & {
+  /** Page ouverte à l’arrivée — `'chat'` ouvre la conversation du Copilote directement. */
+  initialPage?: AiPageId | 'dashboard';
+};
 
-export const CoachAiHubChapter: React.FC<Props> = (props) => {
-  const [currentPage, setCurrentPage] = useState<AiPageId | 'dashboard'>('dashboard');
+export const CoachAiHubChapter: React.FC<Props> = ({ initialPage = 'dashboard', ...props }) => {
+  const [currentPage, setCurrentPage] = useState<AiPageId | 'dashboard'>(initialPage);
   const shellNav = useCoachShellNav();
   const { teamId } = useCoachTheme();
   const storageKey = teamId ?? (props.profile.profile.club_id ? `club:${props.profile.profile.club_id}` : 'coach_default');
@@ -63,7 +66,21 @@ export const CoachAiHubChapter: React.FC<Props> = (props) => {
   }
 
   if (currentPage === 'chat') {
-    return <CoachAiFreeChat onBack={() => setCurrentPage('dashboard')} />;
+    return (
+      <CoachAiFreeChat
+        onBack={() => {
+          if (initialPage === 'chat') {
+            if (shellNav?.canGoBack) {
+              shellNav.goBack();
+            } else {
+              shellNav?.requestNav('plus');
+            }
+          } else {
+            setCurrentPage('dashboard');
+          }
+        }}
+      />
+    );
   }
 
   return <CoachAiDashboard onSelectPage={setCurrentPage} />;

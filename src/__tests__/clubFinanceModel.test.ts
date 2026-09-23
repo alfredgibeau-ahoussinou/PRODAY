@@ -1,8 +1,13 @@
 import {
+  buildClubFinanceCategoryBreakdown,
+  clubFinanceOutstandingPrerequisites,
+  clubFinancePaymentProvenanceNote,
+  clubFinancePeriodRange,
+  clubFinanceSeasonBounds,
+  filterClubFinanceByPeriod,
   buildClubFinanceLedgerRow,
   buildCotisationCoverage,
   clubFinanceHonestyNote,
-  exportClubLedgerToCsv,
   filterClubFinanceEntries,
   formatClubFinanceEur,
   matchMemberFromName,
@@ -97,35 +102,111 @@ describe('clubFinanceModel', () => {
     expect(coverage.paid.some((r) => r.name === 'Alice' && r.status === 'paid')).toBe(true);
     expect(coverage.unrecorded.some((r) => r.name === 'Bob' && r.status === 'none')).toBe(true);
     expect(coverage.unrecorded[0].statusLabel).toBe('Non enregistré');
+    expect(clubFinanceHonestyNote()).toMatch(/SEPA/i);
     expect(filterClubFinanceEntries(entries, 'cotisation')).toHaveLength(1);
     expect(matchMemberFromName('bob', [{ uid: 'p2', display_name: 'Bob' }])?.uid).toBe('p2');
   });
+});
 
-  it('génère un export CSV structuré du grand livre pour la comptabilité', () => {
-    const entries = [
-      entry({
-        id: 'c1',
-        type: 'cotisation',
-        amount_eur: 120,
-        label: 'Cotisation 2026 [Espèces]',
-        category: 'Licence',
-        member_name: 'Alice Martin',
-      }),
-      entry({
-        id: 'd1',
-        type: 'depense',
-        amount_eur: 45.5,
-        label: 'Achat chasubles [Chèque]',
-        category: 'Matériel',
-      }),
-    ];
+describe('finances club — périodes', () => {
+  const now = new Date('2026-09-15T12:00:00');
 
-    const csv = exportClubLedgerToCsv(entries);
-    expect(csv).toContain('Date;Type;Libellé;Catégorie;Adhérent;Montant (€);Statut');
-    expect(csv).toContain('Alice Martin');
-    expect(csv).toContain('120.00');
-    expect(csv).toContain('-45.50');
-    expect(csv).toContain('Cotisation');
-    expect(csv).toContain('Dépense');
+  it('la saison court du 1er août au 31 juillet', () => {
+    const b = clubFinanceSeasonBounds(now);
+    expect(b.start.getMonth()).toBe(7); // août
+    expect(b.start.getDate()).toBe(1);
+    expect(b.end.getFullYear()).toBe(b.start.getFullYear() + 1);
+    expect(b.end.getMonth()).toBe(7);
+  });
+
+  it('bascule la saison avant le mois d’août', () => {
+    // En juin 2026, la saison en cours a commencé en août 2025.
+    const b = clubFinanceSeasonBounds(new Date('2026-06-10T12:00:00'));
+    expect(b.start.getFullYear()).toBe(2025);
+    expect(b.end.getFullYear()).toBe(2026);
+  });
+
+  it('« Tout » ne borne rien', () => {
+    expect(clubFinancePeriodRange('all', now)).toBeNull();
+  });
+
+  it('« Ce mois » couvre le mois calendaire en cours', () => {
+    const r = clubFinancePeriodRange('month', now)!;
+    expect(r.start.getMonth()).toBe(8);
+    expect(r.end.getMonth()).toBe(9);
+  });
+
+  it('« Mois dernier » couvre le mois précédent', () => {
+    const r = clubFinancePeriodRange('lastMonth', now)!;
+    expect(r.start.getMonth()).toBe(7);
+    expect(r.end.getMonth()).toBe(8);
+  });
+
+  it('exclut de la période les écritures hors bornes', () => {
+    const inMonth = entry({ id: 'a', type: 'recette', amount_eur: 100, label: 'X', entry_date: new Date('2026-09-02T10:00:00') });
+    const prevMonth = entry({ id: 'b', type: 'recette', amount_eur: 200, label: 'Y', entry_date: new Date('2026-08-02T10:00:00') });
+    const filtered = filterClubFinanceByPeriod([inMonth, prevMonth], 'month', now);
+    expect(filtered.map((e) => e.id)).toEqual(['a']);
+  });
+
+  it('n’inclut jamais une écriture annulée ou supprimée', () => {
+    const cancelled = entry({ id: 'c', type: 'recette', amount_eur: 500, label: 'Z', status: 'cancelled', entry_date: new Date('2026-09-03T10:00:00') });
+    const deleted = entry({ id: 'd', type: 'recette', amount_eur: 900, label: 'W', deleted_at: new Date('2026-09-04T10:00:00'), entry_date: new Date('2026-09-04T10:00:00') });
+    expect(filterClubFinanceByPeriod([cancelled, deleted], 'all', now)).toEqual([]);
+  });
+});
+
+describe('finances club — ventilation par catégorie', () => {
+  it('sépare recettes et dépenses et calcule le net', () => {
+    const rows = buildClubFinanceCategoryBreakdown([
+      entry({ id: 'a', type: 'cotisation', amount_eur: 300, label: 'C', category: 'Licence' }),
+      entry({ id: 'b', type: 'depense', amount_eur: 120, label: 'D', category: 'Licence' }),
+      entry({ id: 'c', type: 'depense', amount_eur: 400, label: 'E', category: 'Déplacement' }),
+    ]);
+    const licence = rows.find((r) => r.category === 'Licence')!;
+    expect(licence.incomeEur).toBe(300);
+    expect(licence.expenseEur).toBe(120);
+    expect(licence.netEur).toBe(180);
+    expect(licence.count).toBe(2);
+  });
+
+  it('trie par poids, pas par signe', () => {
+    const rows = buildClubFinanceCategoryBreakdown([
+      entry({ id: 'a', type: 'depense', amount_eur: 900, label: 'D', category: 'Gros' }),
+      entry({ id: 'b', type: 'recette', amount_eur: 100, label: 'R', category: 'Petit' }),
+    ]);
+    expect(rows.map((r) => r.category)).toEqual(['Gros', 'Petit']);
+  });
+
+  it('nomme explicitement l’absence de catégorie', () => {
+    const rows = buildClubFinanceCategoryBreakdown([
+      entry({ id: 'a', type: 'recette', amount_eur: 10, label: 'R', category: '   ' }),
+    ]);
+    expect(rows[0]!.category).toBe('Sans catégorie');
+  });
+
+  it('ne fabrique aucune ligne sans écriture', () => {
+    expect(buildClubFinanceCategoryBreakdown([])).toEqual([]);
+  });
+});
+
+describe('finances club — ce qui manque est dit, pas inventé', () => {
+  it('renvoie les impayés vers les échéances saisies, et nomme l’état du club', () => {
+    const note = clubFinanceOutstandingPrerequisites();
+    // Le modèle enregistre désormais montant dû et échéance : la note ne doit plus dire
+    // l'inverse, mais elle doit toujours refuser de calculer un impayé sans échéance.
+    expect(note).not.toMatch(/Le modèle enregistre des encaissements, pas des montants dus/);
+    expect(note).toMatch(/montants dus/i);
+    expect(note).toMatch(/échéances/i);
+    expect(note).toMatch(/aucun impayé n’est calculable/i);
+    expect(note).toMatch(/état du club/i);
+  });
+
+  it('qualifie toute écriture de saisie manuelle, sans prétendre au rapprochement bancaire', () => {
+    const note = clubFinancePaymentProvenanceNote();
+    expect(note).toMatch(/Saisie manuelle/);
+    expect(note).toMatch(/déclaré par le club/);
+    expect(note).toMatch(/Aucun encaissement n’est confirmé par un prestataire/);
+    expect(note).toMatch(/relevé bancaire/);
   });
 });

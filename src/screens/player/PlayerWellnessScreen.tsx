@@ -5,9 +5,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
@@ -18,7 +16,25 @@ import {
 } from '../../services/playerWellness.service';
 import { PlayerPageGuideModal, type GuideSection } from '../../components/player/PlayerPageGuideModal';
 import { PlayerPageGuideBanner } from '../../components/player/PlayerPageGuideBanner';
+import {
+  playerColors,
+  playerType,
+  playerForm,
+  playerCard,
+  playerChip,
+  PLAYER_SURFACE_TOKENS,
+} from '../../theme/playerDesignSystem';
+import { CLUB_TOKENS } from '../../features/club/theme/clubTokens';
 
+/**
+ * Santé & Check-In — refonte Player §2.
+ *
+ * Le check-in (sommeil, courbatures, énergie, stress) est réel : le score et le
+ * niveau de vigilance sont calculés à partir des réponses du jour. Les
+ * indicateurs qui dépendent du staff (ratio de charge ACWR, charge prévue) et
+ * l'agenda n'affichent **aucune valeur inventée** : ils disent honnêtement
+ * qu'ils seront connectés aux données réelles (DATA-01).
+ */
 export const PlayerWellnessScreen: React.FC = () => {
   const profile = useSessionProfile();
   const userId = profile?.uid || 'player-demo';
@@ -29,51 +45,27 @@ export const PlayerWellnessScreen: React.FC = () => {
   const [energy, setEnergy] = useState(4);
   const [stress, setStress] = useState(2);
   const [savedToday, setSavedToday] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [wellnessRecord, setWellnessRecord] = useState<PlayerDailyWellness | null>(null);
   const [showGuideModal, setShowGuideModal] = useState(false);
 
-  const guideSections: GuideSection[] = [
-    {
-      icon: 'sunny',
-      iconColor: '#FBBF24',
-      title: 'Check-In Matinal Quotidien (30 sec)',
-      description: 'Chaque matin, ajuste rapidement tes 4 curseurs : sommeil, courbatures, énergie et stress. Ce rituel permet d\'évaluer ta charge interne et ton niveau de fraîcheur.',
-      badge: 'QUOTIDIEN',
-    },
-    {
-      icon: 'pulse',
-      iconColor: '#30D158',
-      title: 'Ratio ACWR & Alerte Coach IA',
-      description: 'Le ratio Charge Aiguë / Charge Chronique mesure la tolérance de tes muscles à l\'effort. S\'il s\'écarte de la zone optimale (0.8 à 1.3), le préparateur physique adapte ton entraînement.',
-      badge: 'SANTÉ IA',
-    },
-    {
-      icon: 'calendar',
-      iconColor: '#0A84FF',
-      title: 'Agenda & Convocations Équipe',
-      description: 'Visualise tes prochaines séances sur le terrain, tes matchs et les sessions de récupération en balnéo. Tes statuts de convocation y sont synchronisés en direct.',
-      badge: 'SYNCHRO',
-    },
-    {
-      icon: 'shield-checkmark',
-      iconColor: '#A855F7',
-      title: 'Bouclier Anti-Blessure',
-      description: 'Plus de 80% des blessures musculaires peuvent être évitées en ajustant l\'intensité avant la rupture. Ton check-in protège ton intégrité physique tout au long de la saison.',
-    },
-  ];
-
   useEffect(() => {
+    if (!profile?.uid) return;
+    let alive = true;
     void playerWellnessService.getTodayWellness(userId).then((res) => {
-      if (res) {
-        setSleepHours(res.sleepHours);
-        setSleepQuality(res.sleepQuality);
-        setSoreness(res.soreness);
-        setEnergy(res.energy);
-        setStress(res.stress);
-        setWellnessRecord(res);
-        setSavedToday(true);
-      }
+      if (!alive || !res) return;
+      setSleepHours(res.sleepHours);
+      setSleepQuality(res.sleepQuality);
+      setSoreness(res.soreness);
+      setEnergy(res.energy);
+      setStress(res.stress);
+      setWellnessRecord(res);
+      setSavedToday(true);
     });
+    return () => {
+      alive = false;
+    };
   }, [userId]);
 
   const currentScore = calculateWellnessScore({
@@ -84,17 +76,29 @@ export const PlayerWellnessScreen: React.FC = () => {
     stress,
   });
 
-  const handleSaveCheckin = async () => {
+  const riskTone =
+    currentScore.risk === 'low'
+      ? { color: CLUB_TOKENS.success, soft: CLUB_TOKENS.successSoft, label: 'Forme optimale' }
+      : currentScore.risk === 'moderate'
+      ? { color: CLUB_TOKENS.warning, soft: CLUB_TOKENS.warningSoft, label: 'Vigilance fatigue' }
+      : { color: CLUB_TOKENS.danger, soft: CLUB_TOKENS.dangerSoft, label: 'Risque de blessure' };
+
+  const handleSaveCheckin = () => {
     prodayHaptics.impactMedium();
-    const res = await playerWellnessService.saveTodayWellness(userId, {
-      sleepHours,
-      sleepQuality,
-      soreness,
-      energy,
-      stress,
-    });
-    setWellnessRecord(res);
-    setSavedToday(true);
+    setSaveError(false);
+    setSaveBusy(true);
+    playerWellnessService
+      .saveTodayWellness(userId, { sleepHours, sleepQuality, soreness, energy, stress })
+      .then((res) => {
+        setWellnessRecord(res);
+        setSavedToday(true);
+        prodayHaptics.rsvpConfirm();
+      })
+      .catch(() => {
+        setSaveError(true);
+        prodayHaptics.error();
+      })
+      .finally(() => setSaveBusy(false));
   };
 
   const getSorenessLabel = (val: number) => {
@@ -131,29 +135,69 @@ export const PlayerWellnessScreen: React.FC = () => {
     }
   };
 
-  const upcomingEvents = [
+  const guideSections: GuideSection[] = [
     {
-      id: 'e1',
-      title: 'Séance Tactique & Vitesse',
-      date: "Aujourd'hui · 19:30",
-      location: 'Terrain Annexe 1',
-      type: 'training',
+      icon: 'sunny',
+      iconColor: CLUB_TOKENS.warning,
+      title: 'Check-in matinal quotidien (30 sec)',
+      description: 'Chaque matin, ajuste tes 4 curseurs : sommeil, courbatures, énergie et stress. Ce rituel donne au staff une lecture de ta charge interne et de ta fraîcheur.',
+      badge: 'QUOTIDIEN',
     },
     {
-      id: 'e2',
-      title: 'J17 : FC ProDay vs RC France',
-      date: 'Samedi 14 Mars · 18:00',
-      location: 'Stade Municipal',
-      type: 'match',
+      icon: 'pulse',
+      iconColor: playerColors.accent,
+      title: 'Score de forme & vigilance',
+      description: 'Ton score sur 100 et le niveau de vigilance sont calculés à partir de tes réponses réelles du jour — jamais d\'une valeur figée.',
+      badge: 'TEMPS RÉEL',
     },
     {
-      id: 'e3',
-      title: 'Récupération Active & Cryo',
-      date: 'Lundi 16 Mars · 18:30',
-      location: 'Espace Santé & Balnéo',
-      type: 'recovery',
+      icon: 'shield-checkmark',
+      iconColor: playerColors.accentAlt,
+      title: 'Prévention des blessures',
+      description: 'Un check-in régulier permet au préparateur physique d\'ajuster l\'intensité avant la surcharge. Tes réponses sont transmises au staff.',
+      badge: 'PRÉVENTION',
+    },
+    {
+      icon: 'heart',
+      iconColor: CLUB_TOKENS.warning,
+      title: 'Ratio de charge ACWR',
+      description: 'Le ratio charge aiguë / charge chronique provient des données d\'entraînement du staff. Il s\'affichera ici dès que cette connexion sera disponible — aucune valeur n\'est inventée en attendant.',
     },
   ];
+
+  /** Échelle 1–5 — puces du socle : la sélection se lit au contour d'accent. */
+  const renderScale = (
+    value: number,
+    onChange: (next: number) => void,
+    label: string,
+    testID: string,
+  ) => (
+    <View style={styles.scaleRow} accessibilityRole="radiogroup" accessibilityLabel={label}>
+      {[1, 2, 3, 4, 5].map((lvl) => {
+        const active = value === lvl;
+        return (
+          <TouchableOpacity
+            key={lvl}
+            testID={`${testID}-${lvl}`}
+            style={[playerChip(PLAYER_SURFACE_TOKENS, active), styles.scaleChip]}
+            onPress={() => {
+              prodayHaptics.selection();
+              onChange(lvl);
+            }}
+            activeOpacity={0.8}
+            accessibilityRole="radio"
+            /** `checked` porte l'état d'un radio sur natif ; `selected` couvre le web. */
+            accessibilityState={{ checked: active, selected: active }}
+            accessibilityLabel={`${label} : ${lvl} sur 5`}
+          >
+            <Text style={[styles.scaleChipText, active && styles.scaleChipTextActive]}>
+              {lvl}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
 
   return (
     <ScrollView
@@ -161,11 +205,13 @@ export const PlayerWellnessScreen: React.FC = () => {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Title */}
+      {/* En-tête */}
       <View style={styles.topHeader}>
-        <View>
+        <View style={styles.headerTextCol}>
           <Text style={styles.screenSubtitle}>Prévention & Récupération</Text>
-          <Text style={styles.screenTitle}>Santé & Check-In</Text>
+          <Text style={styles.screenTitle} numberOfLines={2}>
+            Forme & Check-In
+          </Text>
         </View>
 
         <View style={styles.topHeaderRight}>
@@ -176,83 +222,48 @@ export const PlayerWellnessScreen: React.FC = () => {
               setShowGuideModal(true);
             }}
             activeOpacity={0.8}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
             accessibilityLabel="Guide de la page"
           >
-            <Ionicons name="help-circle-outline" size={16} color="#30D158" />
+            <Ionicons name="help-circle-outline" size={16} color={playerColors.accent} />
             <Text style={styles.guideBtnText}>Guide</Text>
           </TouchableOpacity>
 
-          <View
-            style={[
-              styles.riskPill,
-              currentScore.risk === 'low'
-                ? styles.riskLow
-                : currentScore.risk === 'moderate'
-                ? styles.riskModerate
-                : styles.riskHigh,
-            ]}
-          >
+          <View style={[styles.riskPill, { backgroundColor: riskTone.soft, borderColor: riskTone.color }]}>
             <Ionicons
               name={currentScore.risk === 'low' ? 'checkmark-circle' : 'warning'}
               size={14}
-              color={
-                currentScore.risk === 'low'
-                  ? '#30D158'
-                  : currentScore.risk === 'moderate'
-                  ? '#FBBF24'
-                  : '#FF453A'
-              }
+              color={riskTone.color}
             />
-            <Text
-              style={[
-                styles.riskText,
-                {
-                  color:
-                    currentScore.risk === 'low'
-                      ? '#30D158'
-                      : currentScore.risk === 'moderate'
-                      ? '#FBBF24'
-                      : '#FF453A',
-                },
-              ]}
-            >
-              {currentScore.risk === 'low'
-                ? 'Forme Optimale'
-                : currentScore.risk === 'moderate'
-                ? 'Vigilance Fatigue'
-                : 'Risque Blessure'}
+            <Text style={[styles.riskText, { color: riskTone.color }]} numberOfLines={1}>
+              {riskTone.label}
             </Text>
           </View>
         </View>
       </View>
 
-      {/* Dismissible Onboarding Guide Banner */}
       <PlayerPageGuideBanner
         pageKey="wellness"
-        title="Guide Santé & Prévention Blessures"
-        subtitle="Découvre pourquoi le check-in matinal et l'ACWR protègent ton corps"
+        title="Guide Forme & Prévention Blessures"
+        subtitle="Découvre pourquoi le check-in matinal protège ton corps"
         onOpenGuide={() => setShowGuideModal(true)}
       />
 
-      {/* Daily Morning Check-in Card */}
-      <LinearGradient
-        colors={['#161E2E', '#0F172A']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.checkinCard}
-      >
+      {/* Check-in du jour — valeurs réelles saisies par le joueur */}
+      <View style={[styles.checkinCard, playerCard(PLAYER_SURFACE_TOKENS)]}>
         <View style={styles.checkinHeader}>
           <View style={styles.checkinHeaderLeft}>
-            <Ionicons name="sunny" size={18} color="#FBBF24" />
-            <Text style={styles.checkinTitle}>Check-In Matinal Quotidien</Text>
+            <Ionicons name="sunny" size={18} color={CLUB_TOKENS.warning} />
+            <Text style={styles.checkinTitle}>Check-In matinal du jour</Text>
           </View>
           <Text style={styles.scoreBadge}>{currentScore.score}/100</Text>
         </View>
 
-        {/* 1. Sleep Stepper */}
+        {/* Sommeil */}
         <View style={styles.controlRow}>
-          <View>
-            <Text style={styles.controlLabel}>Sommeil (heures)</Text>
+          <View style={styles.controlTextCol}>
+            <Text style={styles.controlLabel}>Sommeil</Text>
             <Text style={styles.controlValue}>{sleepHours} h de repos</Text>
           </View>
           <View style={styles.stepperContainer}>
@@ -262,8 +273,11 @@ export const PlayerWellnessScreen: React.FC = () => {
                 prodayHaptics.selection();
                 setSleepHours(Math.max(4, sleepHours - 0.5));
               }}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Réduire le sommeil"
             >
-              <Ionicons name="remove" size={16} color="#FFFFFF" />
+              <Ionicons name="remove" size={16} color={playerColors.text} />
             </TouchableOpacity>
             <Text style={styles.stepDisplay}>{sleepHours}h</Text>
             <TouchableOpacity
@@ -272,189 +286,110 @@ export const PlayerWellnessScreen: React.FC = () => {
                 prodayHaptics.selection();
                 setSleepHours(Math.min(12, sleepHours + 0.5));
               }}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Augmenter le sommeil"
             >
-              <Ionicons name="add" size={16} color="#FFFFFF" />
+              <Ionicons name="add" size={16} color={playerColors.text} />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* 2. Soreness Level */}
+        {/* Courbatures */}
         <View style={styles.controlRow}>
-          <View>
-            <Text style={styles.controlLabel}>Courbatures & Raideurs</Text>
+          <View style={styles.controlTextCol}>
+            <Text style={styles.controlLabel}>Courbatures & raideurs</Text>
             <Text style={styles.controlValue}>{getSorenessLabel(soreness)}</Text>
           </View>
-          <View style={styles.segmentedButtons}>
-            {[1, 2, 3, 4, 5].map((lvl) => (
-              <TouchableOpacity
-                key={lvl}
-                style={[styles.segBtn, soreness === lvl && styles.segBtnActive]}
-                onPress={() => {
-                  prodayHaptics.selection();
-                  setSoreness(lvl);
-                }}
-              >
-                <Text style={[styles.segBtnText, soreness === lvl && styles.segBtnTextActive]}>
-                  {lvl}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {renderScale(soreness, setSoreness, 'Courbatures', 'soreness')}
         </View>
 
-        {/* 3. Energy Level */}
+        {/* Énergie */}
         <View style={styles.controlRow}>
-          <View>
-            <Text style={styles.controlLabel}>Niveau d'Énergie</Text>
+          <View style={styles.controlTextCol}>
+            <Text style={styles.controlLabel}>Niveau d'énergie</Text>
             <Text style={styles.controlValue}>{getEnergyLabel(energy)}</Text>
           </View>
-          <View style={styles.segmentedButtons}>
-            {[1, 2, 3, 4, 5].map((lvl) => (
-              <TouchableOpacity
-                key={lvl}
-                style={[styles.segBtn, energy === lvl && styles.segBtnActive]}
-                onPress={() => {
-                  prodayHaptics.selection();
-                  setEnergy(lvl);
-                }}
-              >
-                <Text style={[styles.segBtnText, energy === lvl && styles.segBtnTextActive]}>
-                  {lvl}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {renderScale(energy, setEnergy, 'Énergie', 'energy')}
         </View>
 
-        {/* 4. Stress Level */}
-        <View style={styles.controlRow}>
-          <View>
-            <Text style={styles.controlLabel}>Stress / Tension</Text>
+        {/* Stress */}
+        <View style={[styles.controlRow, styles.controlRowLast]}>
+          <View style={styles.controlTextCol}>
+            <Text style={styles.controlLabel}>Stress / tension</Text>
             <Text style={styles.controlValue}>
               {stress <= 2 ? 'Calme' : stress === 3 ? 'Moyen' : 'Élevé'}
             </Text>
           </View>
-          <View style={styles.segmentedButtons}>
-            {[1, 2, 3, 4, 5].map((lvl) => (
-              <TouchableOpacity
-                key={lvl}
-                style={[styles.segBtn, stress === lvl && styles.segBtnActive]}
-                onPress={() => {
-                  prodayHaptics.selection();
-                  setStress(lvl);
-                }}
-              >
-                <Text style={[styles.segBtnText, stress === lvl && styles.segBtnTextActive]}>
-                  {lvl}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {renderScale(stress, setStress, 'Stress', 'stress')}
         </View>
 
-        {/* Validation Button */}
         <TouchableOpacity
-          style={styles.validateBtn}
+          style={[styles.validateBtn, saveBusy && styles.validateBtnBusy]}
           onPress={handleSaveCheckin}
+          disabled={saveBusy}
           activeOpacity={0.88}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: saveBusy }}
         >
-          <LinearGradient
-            colors={savedToday ? ['#059669', '#10B981'] : ['#30D158', '#22C55E']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.validateGradient}
-          >
-            <Ionicons
-              name={savedToday ? 'checkmark-done-circle' : 'checkmark-circle'}
-              size={18}
-              color="#000000"
-            />
-            <Text style={styles.validateText}>
-              {savedToday ? 'Check-In Transmis au Staff ✓' : 'Valider mon Check-In du Jour'}
-            </Text>
-          </LinearGradient>
+          <Ionicons
+            name={savedToday ? 'checkmark-done-circle' : 'checkmark-circle'}
+            size={18}
+            color={playerColors.bg}
+          />
+          <Text style={styles.validateText}>
+            {savedToday ? 'Check-In transmis au staff' : 'Valider mon Check-In du jour'}
+          </Text>
         </TouchableOpacity>
-      </LinearGradient>
 
-      {/* ACWR Coach Workload Sync Card */}
-      <View style={styles.acwrCard}>
+        {saveError ? (
+          <Text style={styles.saveFeedbackError}>
+            Check-In non enregistré — vérifie ta connexion puis réessaie.
+          </Text>
+        ) : savedToday && wellnessRecord ? (
+          <Text style={styles.saveFeedbackOk}>
+            Enregistré aujourd'hui — visible par le staff.
+          </Text>
+        ) : null}
+      </View>
+
+      {/* Ratio de charge ACWR — donnée staff non connectée : état honnête */}
+      <View style={[styles.acwrCard, playerCard(PLAYER_SURFACE_TOKENS)]}>
         <View style={styles.acwrHeader}>
           <View style={styles.acwrIcon}>
-            <MaterialCommunityIcons name="heart-pulse" size={20} color="#30D158" />
+            <MaterialCommunityIcons name="heart-pulse" size={20} color={playerColors.accent} />
           </View>
-          <View style={styles.acwrTextContainer}>
-            <Text style={styles.acwrTitle}>Ratio Charge ACWR (Aigu / Chronique)</Text>
-            <Text style={styles.acwrSub}>Synchronisé avec le Pôle Coach ProDay</Text>
+          <View style={styles.acwrTextCol}>
+            <Text style={styles.acwrTitle}>Ratio de charge ACWR</Text>
+            <Text style={styles.acwrSub}>Charge aiguë / charge chronique</Text>
           </View>
-          <Text style={styles.acwrValue}>1.08</Text>
+          <Text style={styles.acwrValue}>—</Text>
         </View>
-
-        <View style={styles.acwrBarContainer}>
-          <View style={styles.acwrBarTrack}>
-            <View style={[styles.acwrBarFill, { width: '54%' }]} />
-          </View>
-          <View style={styles.acwrLabels}>
-            <Text style={styles.acwrRangeLabel}>Sous-charge (0.5)</Text>
-            <Text style={[styles.acwrRangeLabel, { color: '#30D158' }]}>Optimal (0.8 - 1.3)</Text>
-            <Text style={styles.acwrRangeLabel}>Surcharge (1.5+)</Text>
-          </View>
-        </View>
+        <Text style={styles.honestNote}>
+          Le ratio réel provient des données d'entraînement saisies par le staff. Il s'affichera
+          ici dès que cette connexion sera disponible — aucune valeur n'est inventée.
+        </Text>
       </View>
 
-      {/* Unified Calendar Timeline */}
-      <View style={styles.calendarSection}>
-        <View style={styles.calendarHeader}>
-          <Text style={styles.calendarSectionTitle}>Agenda Équipe & Convocations</Text>
-          <Text style={styles.calendarSectionSub}>Synchronisé avec le planning officiel</Text>
-        </View>
-
-        <View style={styles.eventsList}>
-          {upcomingEvents.map((evt) => (
-            <View key={evt.id} style={styles.eventRow}>
-              <View
-                style={[
-                  styles.eventIconCircle,
-                  evt.type === 'match'
-                    ? { backgroundColor: 'rgba(48, 209, 88, 0.15)' }
-                    : evt.type === 'recovery'
-                    ? { backgroundColor: 'rgba(168, 85, 247, 0.15)' }
-                    : { backgroundColor: 'rgba(10, 132, 255, 0.15)' },
-                ]}
-              >
-                <Ionicons
-                  name={evt.type === 'match' ? 'football' : evt.type === 'recovery' ? 'water' : 'barbell'}
-                  size={16}
-                  color={evt.type === 'match' ? '#30D158' : evt.type === 'recovery' ? '#C084FC' : '#0A84FF'}
-                />
-              </View>
-
-              <View style={styles.eventInfoCol}>
-                <Text style={styles.eventTitle}>{evt.title}</Text>
-                <Text style={styles.eventMeta}>
-                  {evt.date} · {evt.location}
-                </Text>
-              </View>
-
-              <View style={styles.eventStatusBadge}>
-                <Ionicons name="checkmark-circle" size={14} color="#30D158" />
-                <Text style={styles.eventStatusText}>Convoqué</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+      {/* Agenda — aucune source connectée pour l'instant */}
+      <View style={styles.sectionBlock}>
+        <Text style={styles.sectionTitle}>Agenda équipe & convocations</Text>
+        <Text style={styles.honestNote}>
+          Tes séances réelles, tes matchs et les sessions de récupération apparaîtront ici —
+          retrouve tes convocations et tes réponses dans l'onglet Calendrier.
+        </Text>
       </View>
 
-      {/* Interactive Page Guide Modal */}
       <PlayerPageGuideModal
         visible={showGuideModal}
         onClose={() => setShowGuideModal(false)}
-        pageTitle="Santé, Forme & Planning"
-        pageSubtitle="Protège ton intégrité physique et synchronise-toi avec le staff"
-        badgeLabel="GUIDE SANTÉ & PRÉVENTION"
-        badgeColor="#30D158"
+        pageTitle="Forme & Récupération"
+        pageSubtitle="Indique ton état de forme réel au staff en 30 secondes"
+        badgeLabel="GUIDE FORME & RÉCUPÉRATION"
+        badgeColor={playerColors.accent}
         introText="Cet écran te permet d'indiquer ton état de fatigue chaque matin en 30 secondes pour que le préparateur physique et le coach adaptent la charge de travail et préviennent les blessures."
         sections={guideSections}
-        proTip="Remplis ton check-in avant 11h du matin : le staff s'appuie sur la moyenne du groupe pour calibrer l'intensité des séances d'entraînement !"
+        proTip="Remplis ton check-in avant 11h : le staff s'appuie sur les remontées du groupe pour calibrer l'intensité des séances d'entraînement."
         ctaLabel="Compris, je gère !"
       />
     </ScrollView>
@@ -464,50 +399,55 @@ export const PlayerWellnessScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0B0E',
+    backgroundColor: playerColors.bg,
   },
   content: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: playerForm.space.lg,
+    paddingBottom: playerForm.space.xxl,
   },
+
+  /* En-tête */
   topHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    /** 320 pt : le titre garde sa largeur, guide + vigilance passent dessous. */
+    flexWrap: 'wrap',
+    gap: playerForm.space.sm,
+    marginBottom: playerForm.space.lg,
+  },
+  headerTextCol: {
+    flex: 1,
+    minWidth: 168,
   },
   topHeaderRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: playerForm.space.sm,
   },
   guideIconBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    minHeight: playerForm.chipHeight - 12,
+    backgroundColor: playerColors.accentSoft,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: playerColors.border,
     paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 12,
+    borderRadius: playerForm.chipRadius,
   },
   guideBtnText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
+    ...playerType.micro,
     fontWeight: '800',
-    color: '#30D158',
+    color: playerColors.accent,
   },
   screenSubtitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 12,
-    color: '#94A3B8',
+    ...playerType.caption,
+    color: playerColors.textMuted,
   },
   screenTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#FFFFFF',
+    ...playerType.title,
+    color: playerColors.text,
   },
   riskPill: {
     flexDirection: 'row',
@@ -515,290 +455,197 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 12,
+    borderRadius: playerForm.chipRadius,
     borderWidth: 1,
-  },
-  riskLow: {
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
-    borderColor: 'rgba(48, 209, 88, 0.3)',
-  },
-  riskModerate: {
-    backgroundColor: 'rgba(251, 191, 36, 0.12)',
-    borderColor: 'rgba(251, 191, 36, 0.3)',
-  },
-  riskHigh: {
-    backgroundColor: 'rgba(255, 69, 58, 0.12)',
-    borderColor: 'rgba(255, 69, 58, 0.3)',
+    maxWidth: 168,
   },
   riskText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
+    ...playerType.micro,
     fontWeight: '800',
+    flexShrink: 1,
   },
+
+  /* Check-in */
   checkinCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 16,
-    marginBottom: 16,
+    padding: playerForm.cardPaddingH,
+    marginBottom: playerForm.space.lg,
   },
   checkinHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    gap: playerForm.space.sm,
+    marginBottom: playerForm.space.sm,
   },
   checkinHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: playerForm.space.sm,
+    flex: 1,
   },
   checkinTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    ...playerType.headline,
+    color: playerColors.text,
+    flexShrink: 1,
   },
   scoreBadge: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 14,
-    fontWeight: '900',
-    color: '#30D158',
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    ...playerType.callout,
+    fontWeight: '800',
+    color: playerColors.accent,
+    backgroundColor: playerColors.accentSoft,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: playerForm.fieldRadius - 10,
   },
   controlRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    /** Écrans étroits : l'échelle 1–5 passe sous le libellé plutôt que d'être clipsée. */
+    flexWrap: 'wrap',
+    gap: playerForm.space.sm,
+    minHeight: playerForm.rowMinHeight,
+    borderBottomWidth: playerForm.separatorThickness,
+    borderBottomColor: playerColors.border,
+  },
+  controlRowLast: {
+    borderBottomWidth: 0,
+  },
+  controlTextCol: {
+    flex: 1,
   },
   controlLabel: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    ...playerType.callout,
+    color: playerColors.text,
   },
   controlValue: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
-    color: '#64748B',
+    ...playerType.caption,
+    color: playerColors.textDim,
     marginTop: 2,
   },
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#141418',
-    borderRadius: 12,
+    gap: playerForm.space.sm,
+    backgroundColor: playerColors.surfaceRaised,
+    borderRadius: playerForm.fieldRadius,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: playerColors.border,
     padding: 3,
-    gap: 8,
   },
   stepBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    /** Cible tactile du socle (44 pt) ; 34 pt mesurés avant sur écran étroit. */
+    width: playerForm.chipHeight,
+    height: playerForm.chipHeight,
+    borderRadius: playerForm.fieldRadius - 6,
+    backgroundColor: playerColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepDisplay: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 13,
+    ...playerType.callout,
     fontWeight: '800',
-    color: '#FFFFFF',
-    minWidth: 26,
+    color: playerColors.text,
+    minWidth: 38,
     textAlign: 'center',
   },
-  segmentedButtons: {
+  scaleRow: {
     flexDirection: 'row',
-    backgroundColor: '#141418',
-    borderRadius: 12,
-    padding: 3,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
     gap: 4,
   },
-  segBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+  scaleChip: {
+    width: 40,
+    minHeight: playerForm.chipHeight,
+    paddingHorizontal: 0,
   },
-  segBtnActive: {
-    backgroundColor: '#30D158',
+  scaleChipText: {
+    ...playerType.caption,
+    color: playerColors.textMuted,
   },
-  segBtnText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#94A3B8',
-  },
-  segBtnTextActive: {
-    color: '#000000',
-    fontWeight: '900',
+  scaleChipTextActive: {
+    color: playerColors.accent,
+    fontWeight: '800',
   },
   validateBtn: {
-    marginTop: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  validateGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
+    gap: playerForm.space.sm,
+    minHeight: playerForm.actionMinHeight,
+    borderRadius: playerForm.actionRadius,
+    backgroundColor: playerColors.accent,
+    marginTop: playerForm.space.lg,
+  },
+  validateBtnBusy: {
+    opacity: 0.6,
   },
   validateText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 13,
+    ...playerType.callout,
     fontWeight: '800',
-    color: '#000000',
+    color: playerColors.bg,
   },
+  saveFeedbackOk: {
+    ...playerType.caption,
+    color: CLUB_TOKENS.success,
+    marginTop: playerForm.space.sm,
+    textAlign: 'center',
+  },
+  saveFeedbackError: {
+    ...playerType.caption,
+    color: CLUB_TOKENS.danger,
+    marginTop: playerForm.space.sm,
+    textAlign: 'center',
+  },
+
+  /* ACWR */
   acwrCard: {
-    backgroundColor: '#141418',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 16,
-    marginBottom: 18,
+    padding: playerForm.cardPaddingH,
+    marginBottom: playerForm.space.lg,
   },
   acwrHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
+    gap: playerForm.space.md,
+    marginBottom: playerForm.space.md,
   },
   acwrIcon: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    borderRadius: playerForm.fieldRadius,
+    backgroundColor: playerColors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  acwrTextContainer: {
+  acwrTextCol: {
     flex: 1,
   },
   acwrTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    ...playerType.headline,
+    color: playerColors.text,
   },
   acwrSub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
-    color: '#64748B',
+    ...playerType.caption,
+    color: playerColors.textDim,
     marginTop: 1,
   },
   acwrValue: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#30D158',
+    ...playerType.stat,
+    color: playerColors.textMuted,
   },
-  acwrBarContainer: {
-    marginTop: 4,
+
+  /* Sections */
+  sectionBlock: {
+    marginBottom: playerForm.space.lg,
   },
-  acwrBarTrack: {
-    height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 4,
-    overflow: 'hidden',
+  sectionTitle: {
+    ...playerType.section,
+    color: playerColors.text,
+    marginBottom: playerForm.space.sm,
   },
-  acwrBarFill: {
-    height: '100%',
-    backgroundColor: '#30D158',
-    borderRadius: 4,
-  },
-  acwrLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 6,
-  },
-  acwrRangeLabel: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 9,
-    fontWeight: '600',
-    color: '#64748B',
-  },
-  calendarSection: {
-    marginBottom: 20,
-  },
-  calendarHeader: {
-    marginBottom: 10,
-  },
-  calendarSectionTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  calendarSectionSub: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 1,
-  },
-  eventsList: {
-    backgroundColor: '#141418',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    overflow: 'hidden',
-  },
-  eventRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  eventIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  eventInfoCol: {
-    flex: 1,
-  },
-  eventTitle: {
-    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  eventMeta: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  eventStatusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  eventStatusText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#30D158',
+  honestNote: {
+    ...playerType.caption,
+    color: playerColors.textMuted,
+    lineHeight: 18,
   },
 });

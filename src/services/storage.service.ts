@@ -7,6 +7,8 @@ import { getFirebaseAuth, getFirebaseStorage } from '../lib/firebase';
 export interface UploadFileInput {
   uri: string;
   mimeType: string;
+  /** Nom d'origine, conservé tel quel sur les justificatifs financiers. */
+  fileName?: string;
 }
 
 const UPLOAD_LOG_PREFIX = '[storage.upload]';
@@ -492,6 +494,19 @@ function requireAuthUid(requestedUid?: string): string {
 
 export type ProfileMediaFolder = 'avatars' | 'gallery';
 
+/**
+ * Feuille d'équipe déposée avant conversion PDF → tableau.
+ *
+ * Le dossier suit l'uid de l'auteur : la Cloud Function `extractSquadSheetText`
+ * refuse tout autre chemin, et supprime le fichier après lecture (la feuille
+ * contient des données de mineurs).
+ */
+export const SQUAD_SHEET_PREFIX = 'squad-sheets';
+
+export function buildSquadSheetPath(uid: string, stamp: number): string {
+  return `${SQUAD_SHEET_PREFIX}/${uid}/${stamp}.pdf`;
+}
+
 export const storageService = {
   async uploadProfileImage(
     uid: string,
@@ -541,6 +556,34 @@ export const storageService = {
 
     await uploadFileToStorageRef(storageRef, file.uri, contentType, `document:${documentType}`);
     return getDownloadURL(storageRef);
+  },
+
+  /**
+   * Dépose une feuille d'équipe PDF et renvoie **son chemin de stockage**, seule
+   * information dont la Cloud Function a besoin.
+   *
+   * Aucune URL de téléchargement n'est demandée : les règles Storage refusent
+   * toute lecture cliente (`squad-sheets/**`), et l'écran n'a jamais besoin de
+   * relire la feuille — le serveur la convertit puis l'efface.
+   */
+  async uploadSquadSheet(uid: string, file: UploadFileInput): Promise<{ path: string }> {
+    const storage = getFirebaseStorage();
+    if (!storage) {
+      throw new Error(
+        'Firebase Storage non configuré. Renseignez EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET dans .env et activez Storage.'
+      );
+    }
+
+    const ownerUid = requireAuthUid(uid);
+    const path = buildSquadSheetPath(ownerUid, Date.now());
+    const storageRef = ref(storage, path);
+
+    try {
+      await uploadFileToStorageRef(storageRef, file.uri, 'application/pdf', 'squad-sheet');
+      return { path };
+    } catch (error) {
+      throw mapStorageUploadError(error);
+    }
   },
 
   async uploadSponsorQuoteDocument(
@@ -654,6 +697,39 @@ export const storageService = {
     const storageRef = ref(storage, path);
     await uploadFileToStorageRef(storageRef, file.uri, contentType, `personal-vault:${category}`);
     return { path };
+  },
+
+  /**
+   * Justificatif financier club (reçu, bordereau) — chemin `club_finance_receipts/{clubId}`.
+   * Lecture réservée au staff rattaché à ce club par les règles Storage.
+   */
+  async uploadClubFinanceReceipt(
+    clubId: string,
+    entryKey: string,
+    file: UploadFileInput,
+  ): Promise<{ name: string; url: string }> {
+    const storage = getFirebaseStorage();
+    if (!storage) {
+      throw new Error('Firebase Storage non configuré pour les justificatifs.');
+    }
+    const ownerUid = requireAuthUid();
+    const contentType = file.mimeType.includes('pdf')
+      ? 'application/pdf'
+      : normalizeImageMimeType(file.mimeType);
+    const ext = extensionForMime(contentType);
+    const safeKey = entryKey.replace(/[^A-Za-z0-9_-]+/g, '-').slice(0, 64);
+    const path = `club_finance_receipts/${clubId}/${safeKey}_${ownerUid}_${Date.now()}.${ext}`;
+    const storageRef = ref(storage, path);
+    await uploadFileToStorageRef(
+      storageRef,
+      file.uri,
+      contentType,
+      'club-finance-receipt',
+    );
+    return {
+      name: file.fileName?.trim() || `justificatif.${ext}`,
+      url: await getDownloadURL(storageRef),
+    };
   },
 
   /** Coffre médical — path only ; téléchargement via getSensitiveDocumentUrl. */

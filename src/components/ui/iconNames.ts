@@ -35,6 +35,9 @@ export type IconName =
   | 'add'
   | 'close'
   | 'play'
+  | 'pause'
+  | 'expand'
+  | 'contract'
   | 'tune'
   | 'share'
   | 'star'
@@ -72,4 +75,5 @@ export type IconName =
   | 'mic'
   | 'fitness'
   | 'cloud-upload'
-  | 'download';
+  | 'download'
+  | 'bus';

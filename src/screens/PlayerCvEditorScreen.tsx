@@ -129,7 +129,9 @@ export const PlayerCvEditorScreen: React.FC<PlayerCvEditorScreenProps> = ({
             style={[styles.achievementRow, { borderColor: colors.border, backgroundColor: colors.surface }]}
           >
             <Text style={[styles.achievementText, { color: colors.text }]}>{a}</Text>
-            <TouchableOpacity onPress={() => removeAchievement(i)} hitSlop={8}>
+            <TouchableOpacity onPress={() => removeAchievement(i)} hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer">
               <Icon name="close" size={18} color={colors.textMuted} />
             </TouchableOpacity>
           </View>

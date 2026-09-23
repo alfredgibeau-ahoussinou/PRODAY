@@ -131,6 +131,8 @@ function offerFromFirestore(id: string, data: Record<string, unknown>): Standalo
     status,
     trip_status: mapTripStatus(data.trip_status),
     club_only: data.club_only === true,
+    event_id: data.event_id ? String(data.event_id) : undefined,
+    event_title: data.event_title ? String(data.event_title) : undefined,
     created_at: toDate(data.created_at),
     updated_at: toDate(data.updated_at),
   };
@@ -243,6 +245,8 @@ export const carpoolOffersService = {
       notes: input.notes?.trim() || null,
       passengers: [],
       status: 'open',
+      event_id: input.event_id?.trim() || null,
+      event_title: input.event_title?.trim() || null,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     });
@@ -281,6 +285,10 @@ export const carpoolOffersService = {
       ...(patch.notes !== undefined ? { notes: patch.notes?.trim() || null } : {}),
       ...(patch.status ? { status: patch.status } : {}),
       ...(patch.club_only !== undefined ? { club_only: patch.club_only === true } : {}),
+      ...(patch.event_id !== undefined ? { event_id: patch.event_id?.trim() || null } : {}),
+      ...(patch.event_title !== undefined
+        ? { event_title: patch.event_title?.trim() || null }
+        : {}),
       updated_at: serverTimestamp(),
     });
   },
@@ -292,6 +300,39 @@ export const carpoolOffersService = {
     if (!offer) return;
     if (offer.driver_uid !== driverUid) throw new Error('Suppression non autorisée.');
     await deleteDoc(doc(database, COL, offerId));
+  },
+
+  /**
+   * Conducteur — annule un trajet : les passagers confirmés et en attente sont
+   * prévenus (notification staff ciblée), puis l'offre passe en `cancelled`.
+   * Jamais une annulation silencieuse.
+   */
+  async cancelJourney(offerId: string, driverUid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const offer = await this.getById(offerId);
+    if (!offer) throw new Error('Trajet introuvable.');
+    if (offer.driver_uid !== driverUid) throw new Error('Action réservée au conducteur.');
+    if (offer.status === 'completed') throw new Error('Ce trajet est déjà terminé.');
+
+    await updateDoc(doc(database, COL, offerId), {
+      status: 'cancelled',
+      updated_at: serverTimestamp(),
+    });
+
+    const { staffNotificationsService } = await import('./staffNotifications.service');
+    const recipientUids = (offer.passengers ?? [])
+      .filter((p) => p.status === 'pending' || p.status === 'confirmed' || !p.status)
+      .map((p) => p.uid);
+    if (recipientUids.length > 0) {
+      await staffNotificationsService.notifyRecipients({
+        recipient_uids: recipientUids,
+        type: 'generic',
+        title: 'Trajet annulé',
+        body: `${offer.driver_name} a annulé le trajet « ${offer.title} » du ${offer.departs_at.toLocaleDateString('fr-FR')} (${offer.meeting_place ?? offer.city ?? 'départ'}).`,
+        club_id: offer.club_id,
+      });
+    }
   },
 
   async requestSeat(

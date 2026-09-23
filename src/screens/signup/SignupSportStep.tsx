@@ -127,15 +127,22 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
             form.setSelectedFffCategory('');
             form.setSelectedRosterMember(null);
           }
+          form.setError(null);
           form.setFieldErrors({});
         }}
         selectedClub={form.selectedFffClub}
-        onSelectClub={form.setSelectedFffClub}
+        onSelectClub={(c) => {
+          form.setSelectedFffClub(c);
+          form.setError(null);
+          form.setFieldErrors({});
+        }}
         selectedCategory={fffCategory}
         onSelectCategory={(cat) => {
           form.setSelectedFffCategory(cat);
           form.setCategory(cat);
           form.setLevel(cat);
+          form.setError(null);
+          form.setFieldErrors({});
         }}
         selectedRosterMember={form.selectedRosterMember}
         onSelectRosterMember={(member) => {

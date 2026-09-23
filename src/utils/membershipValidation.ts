@@ -1,6 +1,6 @@
 import type { Membership, MembershipStatus } from '../models/Membership';
 
-const TERMINAL_STATUSES = new Set<MembershipStatus>(['left', 'rejected']);
+const TERMINAL_STATUSES = new Set<MembershipStatus>(['left', 'rejected', 'cancelled']);
 
 export function hasActiveClubMembership(
   memberships: Membership[],

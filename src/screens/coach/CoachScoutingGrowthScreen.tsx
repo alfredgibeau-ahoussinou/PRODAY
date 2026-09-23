@@ -1,14 +1,32 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
   TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { proSemantic, proRadius, proForm } from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { usersService } from '../../services/users.service';
+import { coachEvaluationsService } from '../../services/coachEvaluations.service';
+import { coachObjectivesService } from '../../services/coachObjectives.service';
+import type { User } from '../../models/User';
+import type { CoachPlayerEvaluation } from '../../models/CoachEvaluation';
+import type { CoachSeasonObjective } from '../../models/CoachSeasonObjective';
+import { formatCoachRating } from '../../utils/coachEvaluationRatings';
+import { CoachPlayerEvaluationSheet } from '../../components/coach/growth/CoachPlayerEvaluationSheet';
+import { PressableSpring } from '../../components/motion';
+import { CoachText } from '../../components/coach/coachPortalUi';
+import { CoachScreenHeader } from '../../components/coach/CoachScreenHeader';
 
 interface OpponentScout {
   id: string;
@@ -18,16 +36,6 @@ interface OpponentScout {
   system: string;
   dangerPlayer: string;
   weakness: string;
-}
-
-interface PlayerGrowthReport {
-  id: string;
-  name: string;
-  age: number;
-  pos: string;
-  progressionScore: number; // +X%
-  radar: { tech: number; tact: number; phys: number; ment: number; reg: number };
-  certifiedStatus: 'certified' | 'in_review';
 }
 
 const OPPONENTS_SCOUT: OpponentScout[] = [
@@ -60,485 +68,745 @@ const OPPONENTS_SCOUT: OpponentScout[] = [
   },
 ];
 
-const PLAYERS_GROWTH: PlayerGrowthReport[] = [
-  {
-    id: 'p1',
-    name: 'Yanis B.',
-    age: 19,
-    pos: 'Avant-Centre',
-    progressionScore: 19,
-    radar: { tech: 84, tact: 80, phys: 88, ment: 82, reg: 85 },
-    certifiedStatus: 'certified',
-  },
-  {
-    id: 'p2',
-    name: 'Lucas M.',
-    age: 20,
-    pos: 'Ailier Droit',
-    progressionScore: 23,
-    radar: { tech: 86, tact: 76, phys: 90, ment: 78, reg: 81 },
-    certifiedStatus: 'certified',
-  },
-  {
-    id: 'p3',
-    name: 'Thomas D.',
-    age: 21,
-    pos: 'Milieu Défensif',
-    progressionScore: 14,
-    radar: { tech: 78, tact: 87, phys: 85, ment: 89, reg: 86 },
-    certifiedStatus: 'certified',
-  },
+type GrowthTab = 'growth' | 'team_objectives' | 'opponents' | 'staff_channel';
+type PositionFilter = 'all' | 'gk' | 'def' | 'mid' | 'att';
+
+const POSITION_FILTERS: { key: PositionFilter; label: string }[] = [
+  { key: 'all', label: 'Tous' },
+  { key: 'gk', label: 'Gardiens' },
+  { key: 'def', label: 'Défenseurs' },
+  { key: 'mid', label: 'Milieux' },
+  { key: 'att', label: 'Attaquants' },
 ];
 
-interface VoiceScoutNote {
-  id: string;
-  playerName: string;
-  category: string;
-  timestamp: string;
-  duration: string;
-  transcript: string;
-  tags: string[];
-  status: 'integrated' | 'pending';
+function matchesPositionFilter(user: User, filter: PositionFilter): boolean {
+  if (filter === 'all') return true;
+  const pos = (user.profile?.position || '').toLowerCase();
+  switch (filter) {
+    case 'gk':
+      return pos.includes('gardien') || pos.includes('gk') || pos.includes('goal');
+    case 'def':
+      return (
+        pos.includes('défens') ||
+        pos.includes('defens') ||
+        pos.includes('latéral') ||
+        pos.includes('lateral') ||
+        pos.includes('axial') ||
+        pos.includes('cb') ||
+        pos.includes('lb') ||
+        pos.includes('rb')
+      );
+    case 'mid':
+      return (
+        pos.includes('milieu') ||
+        pos.includes('mid') ||
+        pos.includes('relayeur') ||
+        pos.includes('mdf') ||
+        pos.includes('mc') ||
+        pos.includes('mo')
+      );
+    case 'att':
+      return (
+        pos.includes('attaq') ||
+        pos.includes('avant') ||
+        pos.includes('ailier') ||
+        pos.includes('buteur') ||
+        pos.includes('striker') ||
+        pos.includes('fw')
+      );
+    default:
+      return true;
+  }
 }
 
-const INITIAL_VOICE_NOTES: VoiceScoutNote[] = [
-  {
-    id: 'vn-1',
-    playerName: 'Yanis B.',
-    category: 'Match R1 (J16)',
-    timestamp: 'Hier · 16:42',
-    duration: '00:38',
-    transcript: "Superbe appel contre-appel à la 34e min. Première touche orientée vers l'intérieur remarquable. Attention : replacement défensif lent après perte haute.",
-    tags: ['Technique', 'Finition', 'Transition'],
-    status: 'integrated',
-  },
-  {
-    id: 'vn-2',
-    playerName: 'Thomas D.',
-    category: 'Entraînement - Rondo & Pressing',
-    timestamp: 'Mardi · 19:15',
-    duration: '00:45',
-    transcript: "Capacité d'orientation du corps avant la passe en progression sous pression. Volume de course impressionnant, leadership vocal confirmé.",
-    tags: ['Tactique', 'Athlétique', 'Mental'],
-    status: 'integrated',
-  },
-];
-
 export const CoachScoutingGrowthScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'growth' | 'vocal_scouting' | 'opponents' | 'staff_channel'>('growth');
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [selectedPlayerName, setSelectedPlayerName] = useState('Yanis B.');
-  const [transcriptText, setTranscriptText] = useState(
-    "Observation terrain : Très bonne anticipation des trajectoires aériennes. Appui solide sur le pied gauche, orienter davantage le regard avant la relance."
-  );
-  const [selectedTags, setSelectedTags] = useState<string[]>(['Technique', 'Athlétique']);
-  const [voiceNotes, setVoiceNotes] = useState<VoiceScoutNote[]>(INITIAL_VOICE_NOTES);
+  const { tokens, teamId, teamName } = useCoachTheme();
+  const session = useSessionProfile();
 
-  const handleToggleRecord = () => {
-    if (!isRecording) {
-      setIsRecording(true);
-      setRecordingSeconds(1);
-    } else {
-      setIsRecording(false);
-      Alert.alert('Retranscription IA Terminée', 'Votre dictée audio a été transcrite par l’IA ProDay. Vous pouvez l’ajuster avant validation.');
-    }
-  };
+  const clubId = session?.profile.club_id || '';
+  const coachUid = session?.uid || 'coach';
 
-  const handleToggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
-  };
+  const [activeTab, setActiveTab] = useState<GrowthTab>('growth');
+  const [positionFilter, setPositionFilter] = useState<PositionFilter>('all');
 
-  const handleValidateVoiceNote = () => {
-    if (!transcriptText.trim()) {
-      Alert.alert('Texte vide', 'Veuillez dicter ou saisir une observation terrain.');
+  // Real data state
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [players, setPlayers] = useState<User[]>([]);
+  const [evaluationsMap, setEvaluationsMap] = useState<Record<string, CoachPlayerEvaluation | undefined>>({});
+  const [objectivesMap, setObjectivesMap] = useState<Record<string, CoachSeasonObjective[]>>({});
+  const [teamObjectives, setTeamObjectives] = useState<CoachSeasonObjective[]>([]);
+
+  // Evaluation sheet modal state
+  const [evaluatingPlayer, setEvaluatingPlayer] = useState<User | null>(null);
+
+  // New team objective creation form state
+  const [showAddTeamObjective, setShowAddTeamObjective] = useState<boolean>(false);
+  const [newTeamObjTitle, setNewTeamObjTitle] = useState<string>('');
+  const [newTeamObjDesc, setNewTeamObjDesc] = useState<string>('');
+  const [newTeamObjTarget, setNewTeamObjTarget] = useState<string>('');
+  const [newTeamObjProgress, setNewTeamObjProgress] = useState<number>(0);
+  const [savingTeamObjective, setSavingTeamObjective] = useState<boolean>(false);
+
+  const loadAll = useCallback(async () => {
+    if (!clubId) {
+      setLoading(false);
       return;
     }
-    const newNote: VoiceScoutNote = {
-      id: `vn-${Date.now()}`,
-      playerName: selectedPlayerName,
-      category: 'Observation terrain en direct',
-      timestamp: "À l'instant",
-      duration: isRecording ? `00:${recordingSeconds < 10 ? '0' : ''}${recordingSeconds}` : '00:32',
-      transcript: transcriptText.trim(),
-      tags: selectedTags.length > 0 ? selectedTags : ['Observation'],
-      status: 'integrated',
-    };
-    setVoiceNotes([newNote, ...voiceNotes]);
-    setIsRecording(false);
-    setRecordingSeconds(0);
-    Alert.alert(
-      'Note Vocale Validée & Intégrée',
-      `L'observation pour ${selectedPlayerName} a été intégrée avec succès dans son dossier joueur et son passeport de compétences.`
-    );
+    try {
+      const [members, evals, objectives] = await Promise.all([
+        usersService.listMembersByClubId(clubId),
+        coachEvaluationsService.listForClub(clubId, 100),
+        coachObjectivesService.listForClub(clubId, 100),
+      ]);
+
+      // Filter players in club
+      const realPlayers = members.filter((m) => m.role === 'player' || !m.role);
+      setPlayers(realPlayers.length > 0 ? realPlayers : members);
+
+      // Latest evaluation per player
+      const evMap: Record<string, CoachPlayerEvaluation | undefined> = {};
+      for (const ev of evals) {
+        if (!evMap[ev.player_uid]) {
+          evMap[ev.player_uid] = ev;
+        }
+      }
+      setEvaluationsMap(evMap);
+
+      // Objectives per player & team objectives
+      const objMap: Record<string, CoachSeasonObjective[]> = {};
+      const teamObjs: CoachSeasonObjective[] = [];
+      for (const obj of objectives) {
+        if (obj.scope === 'player' && obj.player_uid) {
+          if (!objMap[obj.player_uid]) objMap[obj.player_uid] = [];
+          objMap[obj.player_uid].push(obj);
+        } else if (obj.scope === 'team') {
+          teamObjs.push(obj);
+        }
+      }
+      setObjectivesMap(objMap);
+      setTeamObjectives(teamObjs);
+    } catch (err) {
+      console.warn('[CoachScoutingGrowthScreen] load error:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [clubId]);
+
+  useEffect(() => {
+    void loadAll();
+  }, [loadAll]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    void loadAll();
+  }, [loadAll]);
+
+  // Filtered players according to selected position
+  const filteredPlayers = useMemo(() => {
+    return players.filter((p) => matchesPositionFilter(p, positionFilter));
+  }, [players, positionFilter]);
+
+  const handleCreateTeamObjective = async () => {
+    if (!newTeamObjTitle.trim()) {
+      Alert.alert('Champ requis', 'Veuillez saisir un intitulé pour l’objectif d’équipe.');
+      return;
+    }
+    setSavingTeamObjective(true);
+    try {
+      await coachObjectivesService.create(coachUid, {
+        club_id: clubId,
+        team_id: teamId,
+        scope: 'team',
+        title: newTeamObjTitle.trim(),
+        description: newTeamObjDesc.trim() || undefined,
+        target_label: newTeamObjTarget.trim() || undefined,
+        progress: newTeamObjProgress,
+        season_label: 'Saison en cours',
+      });
+      setNewTeamObjTitle('');
+      setNewTeamObjDesc('');
+      setNewTeamObjTarget('');
+      setNewTeamObjProgress(0);
+      setShowAddTeamObjective(false);
+      void loadAll();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Impossible de créer l’objectif.';
+      Alert.alert('Erreur', msg);
+    } finally {
+      setSavingTeamObjective(false);
+    }
   };
 
-  const generateCertifiedDossier = (player: PlayerGrowthReport) => {
-    Alert.alert(
-      'Dossier ProDay Certifié Généré',
-      `Le bilan de progression officiel certifié pour ${player.name} (+${player.progressionScore}% de progression) a été compilé. Prêt pour transmission aux recruteurs et cellules de détection.`
+  const handleUpdateTeamObjProgress = async (id: string, newProgress: number) => {
+    const clamped = Math.min(100, Math.max(0, newProgress));
+    setTeamObjectives((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, progress: clamped } : o)),
     );
+    try {
+      await coachObjectivesService.setProgress(id, clamped);
+    } catch {
+      void loadAll();
+    }
   };
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      {/* 1. Header: 360° Scouting, Bilan & Staff */}
-      <View style={styles.header}>
-        <View style={styles.headerIcon}>
-          <MaterialCommunityIcons name="account-search" size={24} color="#64D2FF" />
+    <View style={[styles.root, { backgroundColor: tokens.bg }]}>
+      <CoachScreenHeader
+        title="Suivi Joueurs & Objectifs"
+        fallbackNavId="plus"
+        hasUnsavedChanges={Boolean(newTeamObjTitle.trim())}
+      />
+      <ScrollView
+        style={styles.root}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={tokens.accent}
+          />
+        }
+      >
+        {/* 1. Header: 360° Scouting, Bilan & Objectifs */}
+        <View style={[styles.header, { backgroundColor: tokens.surface, borderColor: withAlpha('0A84FF', 0.25) }]}>
+          <View style={[styles.headerIcon, { backgroundColor: withAlpha('0A84FF', 0.15) }]}>
+            <MaterialCommunityIcons name="account-search" size={24} color={proSemantic.info} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={styles.badgeRow}>
+              <View style={[styles.badgePsd, { backgroundColor: withAlpha('0A84FF', 0.15) }]}>
+                <Text style={styles.badgePsdText}>Suivi 360°</Text>
+              </View>
+              <View style={[styles.badgeCert, { backgroundColor: withAlpha(tokens.accent, 0.15) }]}>
+                <Text style={[styles.badgeCertText, { color: tokens.accent }]}>Objectifs de Saison</Text>
+              </View>
+            </View>
+            <Text style={[styles.headerTitle, { color: tokens.foreground }]}>
+              Suivi Joueur 360° & Objectifs
+            </Text>
+            <Text style={[styles.headerSubtitle, { color: tokens.muted }]}>
+              {teamName || 'Effectif du club'} · {players.length} joueur{players.length > 1 ? 's' : ''} inscrits
+            </Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <View style={styles.badgeRow}>
-            <View style={styles.badgePsd}>
-              <Text style={styles.badgePsdText}>ProSoccerData™ Standard</Text>
-            </View>
-            <View style={styles.badgeCert}>
-              <Text style={styles.badgeCertText}>Certification ProDay</Text>
-            </View>
-          </View>
-          <Text style={styles.headerTitle}>Scouting, Bilan 360° & Marketplace</Text>
-          <Text style={styles.headerSubtitle}>Base adversaires, scouting vocal, dossiers certifiés et canal staff</Text>
-        </View>
-      </View>
 
-      {/* 2. Top Segment Switcher */}
-      <View style={styles.segmentBar}>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeTab === 'growth' && styles.segmentBtnActive]}
-          onPress={() => setActiveTab('growth')}
+        {/* 2. Top Segment Switcher */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.segmentBarScroll}
+          style={{ marginBottom: 14 }}
         >
-          <Text style={[styles.segmentBtnText, activeTab === 'growth' && styles.segmentBtnTextActive]}>
-            Bilan 360°
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeTab === 'vocal_scouting' && styles.segmentBtnActive]}
-          onPress={() => setActiveTab('vocal_scouting')}
-        >
-          <Text style={[styles.segmentBtnText, activeTab === 'vocal_scouting' && styles.segmentBtnTextActive]}>
-            Scouting Vocal
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeTab === 'opponents' && styles.segmentBtnActive]}
-          onPress={() => setActiveTab('opponents')}
-        >
-          <Text style={[styles.segmentBtnText, activeTab === 'opponents' && styles.segmentBtnTextActive]}>
-            Adversaires
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeTab === 'staff_channel' && styles.segmentBtnActive]}
-          onPress={() => setActiveTab('staff_channel')}
-        >
-          <Text style={[styles.segmentBtnText, activeTab === 'staff_channel' && styles.segmentBtnTextActive]}>
-            Canal Staff
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'growth' && { backgroundColor: tokens.elevated }]}
+            onPress={() => setActiveTab('growth')}
+          >
+            <Text style={[styles.segmentBtnText, { color: activeTab === 'growth' ? tokens.foreground : tokens.muted }]}>
+              Bilan 360° ({players.length})
+            </Text>
+          </TouchableOpacity>
 
-      {/* TAB 1: 360° PLAYER GROWTH & CERTIFIED MARKETPLACE */}
-      {activeTab === 'growth' && (
-        <>
-          <View style={styles.bannerMarketplace}>
-            <MaterialCommunityIcons name="certificate" size={20} color="#C5A059" />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bannerMarketplaceTitle}>Marketplace & Dossiers Certifiés FFF/ProDay</Text>
-              <Text style={styles.bannerMarketplaceText}>
-                Générez des fiches de progression 360° infalsifiables intégrant métriques GPS, notes de match et axes de travail.
-              </Text>
-            </View>
-          </View>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'team_objectives' && { backgroundColor: tokens.elevated }]}
+            onPress={() => setActiveTab('team_objectives')}
+          >
+            <Text style={[styles.segmentBtnText, { color: activeTab === 'team_objectives' ? tokens.foreground : tokens.muted }]}>
+              Objectifs Collectifs ({teamObjectives.length})
+            </Text>
+          </TouchableOpacity>
 
-          {PLAYERS_GROWTH.map((p) => (
-            <View key={p.id} style={styles.playerGrowthCard}>
-              <View style={styles.playerGrowthHeader}>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.nameRow}>
-                    <Text style={styles.playerGrowthName}>{p.name}</Text>
-                    <View style={styles.certifiedTag}>
-                      <Ionicons name="checkmark-circle" size={14} color="#30D158" />
-                      <Text style={styles.certifiedTagText}>Certifié</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.playerGrowthMeta}>{p.pos} · {p.age} ans · Groupe Seniors R1</Text>
-                </View>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'opponents' && { backgroundColor: tokens.elevated }]}
+            onPress={() => setActiveTab('opponents')}
+          >
+            <Text style={[styles.segmentBtnText, { color: activeTab === 'opponents' ? tokens.foreground : tokens.muted }]}>
+              Base Adversaires ({OPPONENTS_SCOUT.length})
+            </Text>
+          </TouchableOpacity>
 
-                <View style={styles.progressionBadge}>
-                  <Feather name="trending-up" size={14} color="#30D158" />
-                  <Text style={styles.progressionBadgeText}>+{p.progressionScore} %</Text>
-                </View>
-              </View>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'staff_channel' && { backgroundColor: tokens.elevated }]}
+            onPress={() => setActiveTab('staff_channel')}
+          >
+            <Text style={[styles.segmentBtnText, { color: activeTab === 'staff_channel' ? tokens.foreground : tokens.muted }]}>
+              Canal Staff
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
 
-              {/* 5-Pillar Radar Scores Bar */}
-              <View style={styles.radarScoresRow}>
-                <View style={styles.radarScoreItem}>
-                  <Text style={styles.radarScoreLabel}>TECH</Text>
-                  <Text style={styles.radarScoreVal}>{p.radar.tech}</Text>
-                </View>
-                <View style={styles.radarScoreItem}>
-                  <Text style={styles.radarScoreLabel}>TACT</Text>
-                  <Text style={styles.radarScoreVal}>{p.radar.tact}</Text>
-                </View>
-                <View style={styles.radarScoreItem}>
-                  <Text style={styles.radarScoreLabel}>PHYS</Text>
-                  <Text style={styles.radarScoreVal}>{p.radar.phys}</Text>
-                </View>
-                <View style={styles.radarScoreItem}>
-                  <Text style={styles.radarScoreLabel}>MENT</Text>
-                  <Text style={styles.radarScoreVal}>{p.radar.ment}</Text>
-                </View>
-                <View style={styles.radarScoreItem}>
-                  <Text style={styles.radarScoreLabel}>RÉGUL</Text>
-                  <Text style={styles.radarScoreVal}>{p.radar.reg}</Text>
-                </View>
-              </View>
-
-              {/* Generate Official Dossier CTA */}
-              <TouchableOpacity
-                style={styles.generateDossierBtn}
-                activeOpacity={0.8}
-                onPress={() => generateCertifiedDossier(p)}
-              >
-                <MaterialCommunityIcons name="file-certificate-outline" size={16} color="#000000" />
-                <Text style={styles.generateDossierText}>Générer Dossier de Recrutement Certifié</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </>
-      )}
-
-      {/* TAB: SCOUTING VOCAL (Page 8) */}
-      {activeTab === 'vocal_scouting' && (
-        <View style={styles.vocalSection}>
-          {/* Top Banner */}
-          <View style={styles.bannerVocal}>
-            <MaterialCommunityIcons name="microphone-message" size={22} color="#0A84FF" />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bannerVocalTitle}>Scouting Vocal & Dictée Bord de Touche</Text>
-              <Text style={styles.bannerVocalText}>
-                Enregistrez vos observations terrain en direct. L'IA ProDay transcrit vos notes et les intègre instantanément au passeport du joueur.
-              </Text>
-            </View>
-          </View>
-
-          {/* Active Voice Recorder Card */}
-          <View style={styles.vocalRecorderCard}>
-            {/* Player Target Selector */}
-            <Text style={styles.vocalLabel}>Joueur ciblé par l'observation :</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.playerPickerRow} contentContainerStyle={{ gap: 8 }}>
-              {['Yanis B.', 'Lucas M.', 'Thomas D.', 'Collectif'].map((pName) => (
-                <TouchableOpacity
-                  key={pName}
-                  style={[
-                    styles.playerPickerPill,
-                    selectedPlayerName === pName && styles.playerPickerPillActive,
-                  ]}
-                  onPress={() => setSelectedPlayerName(pName)}
-                >
-                  <Text
-                    style={[
-                      styles.playerPickerPillText,
-                      selectedPlayerName === pName && styles.playerPickerPillTextActive,
-                    ]}
-                  >
-                    {pName}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {/* Record / Stop Button */}
-            <View style={styles.recordActionCenter}>
-              <TouchableOpacity
-                style={[
-                  styles.recordBtn,
-                  isRecording ? styles.recordBtnActive : styles.recordBtnIdle,
-                ]}
-                activeOpacity={0.85}
-                onPress={handleToggleRecord}
-              >
-                <MaterialCommunityIcons
-                  name={isRecording ? 'stop-circle' : 'microphone'}
-                  size={32}
-                  color="#FFFFFF"
-                />
-                <Text style={styles.recordBtnText}>
-                  {isRecording
-                    ? `Arrêter & Retranscrire (00:${recordingSeconds < 10 ? '0' : ''}${recordingSeconds})`
-                    : "Démarrer l'enregistrement vocal terrain"}
-                </Text>
-              </TouchableOpacity>
-              {isRecording && (
-                <View style={styles.recordingLivePill}>
-                  <View style={styles.recordingPulseDot} />
-                  <Text style={styles.recordingLiveText}>Enregistrement en direct · Micro bord de terrain ouvert</Text>
-                </View>
-              )}
-            </View>
-
-            {/* AI Transcript Box */}
-            <View style={styles.transcriptBox}>
-              <View style={styles.transcriptHeader}>
-                <View style={styles.transcriptLabelRow}>
-                  <MaterialCommunityIcons name="text-box-search-outline" size={16} color="#64D2FF" />
-                  <Text style={styles.transcriptTitle}>Retranscription IA ProDay</Text>
-                </View>
-                <View style={styles.editableBadge}>
-                  <Text style={styles.editableBadgeText}>Éditable</Text>
-                </View>
-              </View>
-              <TextInput
-                style={styles.transcriptInput}
-                multiline
-                value={transcriptText}
-                onChangeText={setTranscriptText}
-                placeholder="Dictez ou saisissez l'observation du joueur..."
-                placeholderTextColor="#636366"
-              />
-            </View>
-
-            {/* Tags Attribution */}
-            <Text style={styles.vocalLabel}>Catégorisation tactique & technique :</Text>
-            <View style={styles.tagWrap}>
-              {['Technique', 'Tactique', 'Athlétique', 'Mental', 'Finition', 'Transition', 'Pied faible'].map((tag) => {
-                const isSelected = selectedTags.includes(tag);
+        {/* TAB 1: 360° PLAYER GROWTH & ROSTER */}
+        {activeTab === 'growth' && (
+          <>
+            {/* Position Filter Chips */}
+            <View style={styles.filterRow}>
+              {POSITION_FILTERS.map((f) => {
+                const isActive = positionFilter === f.key;
                 return (
-                  <TouchableOpacity
-                    key={tag}
-                    style={[styles.tagPill, isSelected && styles.tagPillActive]}
-                    onPress={() => handleToggleTag(tag)}
+                  <PressableSpring
+                    key={f.key}
+                    style={[
+                      styles.filterChip,
+                      {
+                        backgroundColor: isActive ? withAlpha(tokens.accent, 0.15) : tokens.surface,
+                        borderColor: isActive ? tokens.accent : tokens.border,
+                      },
+                    ]}
+                    onPress={() => setPositionFilter(f.key)}
                   >
-                    <Text style={[styles.tagPillText, isSelected && styles.tagPillTextActive]}>
-                      {tag}
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        { color: isActive ? tokens.accent : tokens.muted, fontWeight: isActive ? '700' : '500' },
+                      ]}
+                    >
+                      {f.label}
                     </Text>
-                  </TouchableOpacity>
+                  </PressableSpring>
                 );
               })}
             </View>
 
-            {/* Validate Button */}
-            <TouchableOpacity
-              style={styles.validateVocalBtn}
-              activeOpacity={0.85}
-              onPress={handleValidateVoiceNote}
-            >
-              <Ionicons name="checkmark-done-circle" size={18} color="#000000" />
-              <Text style={styles.validateVocalBtnText}>Valider & Intégrer au dossier joueur</Text>
-            </TouchableOpacity>
-          </View>
+            {loading ? (
+              <View style={styles.centerBox}>
+                <ActivityIndicator size="large" color={tokens.accent} />
+                <CoachText variant="caption" muted style={{ marginTop: 12 }}>
+                  Chargement de l’effectif réel...
+                </CoachText>
+              </View>
+            ) : filteredPlayers.length === 0 ? (
+              <View style={[styles.emptyBox, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+                <Feather name="users" size={28} color={tokens.muted} />
+                <CoachText variant="body" style={{ fontWeight: '700', marginTop: 10, color: tokens.foreground }}>
+                  Aucun joueur trouvé
+                </CoachText>
+                <CoachText variant="caption" muted style={{ textAlign: 'center', marginTop: 4 }}>
+                  Aucun membre ne correspond au filtre de poste sélectionné.
+                </CoachText>
+              </View>
+            ) : (
+              filteredPlayers.map((player) => {
+                const lastEval = evaluationsMap[player.uid];
+                const playerObjs = objectivesMap[player.uid] || [];
+                const avgProgress =
+                  playerObjs.length > 0
+                    ? Math.round(
+                        playerObjs.reduce((acc, o) => acc + o.progress, 0) / playerObjs.length,
+                      )
+                    : null;
 
-          {/* Section: Validated Field Notes History */}
-          <Text style={[styles.sectionTitle, { marginTop: 18 }]}>
-            Observations Validées & Intégrées aux Dossiers
-          </Text>
-          {voiceNotes.map((note) => (
-            <View key={note.id} style={styles.voiceNoteCard}>
-              <View style={styles.voiceNoteTop}>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={styles.voiceNotePlayer}>{note.playerName}</Text>
-                    <View style={styles.integratedPill}>
-                      <Ionicons name="checkmark-circle" size={12} color="#30D158" />
-                      <Text style={styles.integratedPillText}>Dossier à jour</Text>
+                return (
+                  <View
+                    key={player.uid}
+                    style={[styles.playerCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
+                  >
+                    {/* Header Joueur */}
+                    <View style={styles.playerCardTop}>
+                      <View style={[styles.avatarCircle, { backgroundColor: withAlpha(tokens.accent, 0.2) }]}>
+                        <Text style={[styles.avatarInitials, { color: tokens.accent }]}>
+                          {player.display_name.slice(0, 2).toUpperCase()}
+                        </Text>
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={[styles.playerNameText, { color: tokens.foreground }]}>
+                            {player.display_name}
+                          </Text>
+                          {lastEval?.visible_to_player && (
+                            <View style={[styles.tagMini, { backgroundColor: proSemantic.successSoft }]}>
+                              <Text style={[styles.tagMiniText, { color: proSemantic.success }]}>Partagé</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={[styles.playerMetaText, { color: tokens.muted }]}>
+                          {player.profile?.position || 'Poste non défini'}
+                          {player.profile?.category ? ` · ${player.profile.category}` : ''}
+                          {player.profile?.age ? ` · ${player.profile.age} ans` : ''}
+                        </Text>
+                      </View>
+
+                      {/* Overall Note Badge */}
+                      {lastEval ? (
+                        <View style={[styles.overallScoreBadge, { backgroundColor: withAlpha(tokens.accent, 0.15), borderColor: tokens.accent }]}>
+                          <Text style={[styles.overallScoreVal, { color: tokens.accent }]}>
+                            {formatCoachRating(lastEval.ratings.overall)}
+                          </Text>
+                          <Text style={[styles.overallScoreLabel, { color: tokens.accent }]}>Global</Text>
+                        </View>
+                      ) : (
+                        <View style={[styles.overallScoreBadge, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
+                          <Text style={[styles.overallScoreVal, { color: tokens.muted }]}>—</Text>
+                          <Text style={[styles.overallScoreLabel, { color: tokens.muted }]}>Non noté</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Dimensions Radar Breakdown */}
+                    {lastEval && (
+                      <View style={[styles.radarPillsRow, { backgroundColor: tokens.elevated }]}>
+                        <View style={styles.radarPillItem}>
+                          <Text style={[styles.radarPillKey, { color: tokens.muted }]}>TECH</Text>
+                          <Text style={[styles.radarPillVal, { color: tokens.foreground }]}>
+                            {lastEval.ratings.technical != null ? lastEval.ratings.technical : '—'}
+                          </Text>
+                        </View>
+                        <View style={styles.radarPillItem}>
+                          <Text style={[styles.radarPillKey, { color: tokens.muted }]}>TACT</Text>
+                          <Text style={[styles.radarPillVal, { color: tokens.foreground }]}>
+                            {lastEval.ratings.tactical != null ? lastEval.ratings.tactical : '—'}
+                          </Text>
+                        </View>
+                        <View style={styles.radarPillItem}>
+                          <Text style={[styles.radarPillKey, { color: tokens.muted }]}>PHYS</Text>
+                          <Text style={[styles.radarPillVal, { color: tokens.foreground }]}>
+                            {lastEval.ratings.physical != null ? lastEval.ratings.physical : '—'}
+                          </Text>
+                        </View>
+                        <View style={styles.radarPillItem}>
+                          <Text style={[styles.radarPillKey, { color: tokens.muted }]}>MENT</Text>
+                          <Text style={[styles.radarPillVal, { color: tokens.foreground }]}>
+                            {lastEval.ratings.mental != null ? lastEval.ratings.mental : '—'}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Appréciations excerpt */}
+                    {lastEval?.notes ? (
+                      <View style={[styles.notesBox, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
+                        <Text style={[styles.notesExcerpt, { color: withAlpha(tokens.foreground, 0.85) }]} numberOfLines={2}>
+                          « {lastEval.notes} »
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    {/* Objectives summary preview */}
+                    <View style={styles.objectivesPreviewRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Feather name="target" size={14} color={tokens.accent} />
+                        <Text style={[styles.objCountText, { color: tokens.muted }]}>
+                          {playerObjs.length} objectif{playerObjs.length > 1 ? 's' : ''} de saison
+                        </Text>
+                      </View>
+                      {avgProgress != null && (
+                        <View style={[styles.avgProgBadge, { backgroundColor: withAlpha(proSemantic.info, 0.15) }]}>
+                          <Text style={[styles.avgProgText, { color: proSemantic.info }]}>
+                            {avgProgress}% moyen
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Evaluation Action CTA */}
+                    <PressableSpring
+                      style={[styles.evaluateBtn, { backgroundColor: tokens.accent }]}
+                      onPress={() => setEvaluatingPlayer(player)}
+                    >
+                      <Feather name="clipboard" size={16} color={tokens.bg} />
+                      <Text style={[styles.evaluateBtnText, { color: tokens.bg }]}>
+                        Évaluer le joueur & Objectifs
+                      </Text>
+                    </PressableSpring>
+                  </View>
+                );
+              })
+            )}
+          </>
+        )}
+
+        {/* TAB 2: TEAM COLLECTIVE OBJECTIVES */}
+        {activeTab === 'team_objectives' && (
+          <View style={styles.tabContent}>
+            {/* Header banner */}
+            <View style={[styles.teamObjBanner, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.teamObjBannerTitle, { color: tokens.foreground }]}>
+                  Objectifs Collectifs de l’Équipe
+                </Text>
+                <Text style={[styles.teamObjBannerSubtitle, { color: tokens.muted }]}>
+                  Définissez la feuille de route du groupe pour la saison et pilotez l’avancement.
+                </Text>
+              </View>
+
+              <PressableSpring
+                style={[styles.addTeamObjBtn, { backgroundColor: tokens.accent }]}
+                onPress={() => setShowAddTeamObjective((prev) => !prev)}
+              >
+                <Ionicons name={showAddTeamObjective ? 'close' : 'add'} size={18} color={tokens.bg} />
+                <Text style={[styles.addTeamObjBtnText, { color: tokens.bg }]}>
+                  {showAddTeamObjective ? 'Annuler' : 'Nouvel Objectif'}
+                </Text>
+              </PressableSpring>
+            </View>
+
+            {/* Inline creation form */}
+            {showAddTeamObjective && (
+              <View style={[styles.teamObjFormCard, { backgroundColor: tokens.surface, borderColor: tokens.accent }]}>
+                <Text style={[styles.formHeaderTitle, { color: tokens.accent }]}>
+                  Créer un Objectif Collectif
+                </Text>
+
+                <TextInput
+                  style={[styles.inputField, { backgroundColor: tokens.elevated, borderColor: tokens.border, color: tokens.foreground }]}
+                  placeholder="Intitulé (ex : Finir sur le podium en championnat)"
+                  placeholderTextColor={tokens.muted}
+                  value={newTeamObjTitle}
+                  onChangeText={setNewTeamObjTitle}
+                />
+
+                <TextInput
+                  style={[styles.textArea, { backgroundColor: tokens.elevated, borderColor: tokens.border, color: tokens.foreground, marginTop: 8 }]}
+                  placeholder="Description ou plan d'action de l'équipe (optionnel)"
+                  placeholderTextColor={tokens.muted}
+                  multiline
+                  numberOfLines={2}
+                  value={newTeamObjDesc}
+                  onChangeText={setNewTeamObjDesc}
+                />
+
+                <TextInput
+                  style={[styles.inputField, { backgroundColor: tokens.elevated, borderColor: tokens.border, color: tokens.foreground, marginTop: 8 }]}
+                  placeholder="Indicateur cible (ex : 45 points, moins de 25 buts encaissés)"
+                  placeholderTextColor={tokens.muted}
+                  value={newTeamObjTarget}
+                  onChangeText={setNewTeamObjTarget}
+                />
+
+                {/* Progress Selector */}
+                <View style={{ marginTop: 10 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={[styles.inputLabel, { color: tokens.muted }]}>Progression actuelle :</Text>
+                    <Text style={{ color: tokens.accent, fontWeight: '700' }}>{newTeamObjProgress}%</Text>
+                  </View>
+                  <View style={styles.progressPillsRow}>
+                    {[0, 25, 50, 75, 100].map((step) => (
+                      <PressableSpring
+                        key={step}
+                        style={[
+                          styles.progressPill,
+                          newTeamObjProgress === step
+                            ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
+                            : { backgroundColor: tokens.elevated, borderColor: tokens.border },
+                        ]}
+                        onPress={() => setNewTeamObjProgress(step)}
+                      >
+                        <Text
+                          style={{
+                            color: newTeamObjProgress === step ? tokens.bg : tokens.foreground,
+                            fontWeight: '700',
+                            fontSize: 12,
+                          }}
+                        >
+                          {step}%
+                        </Text>
+                      </PressableSpring>
+                    ))}
+                  </View>
+                </View>
+
+                <PressableSpring
+                  style={[styles.submitFormBtn, { backgroundColor: tokens.accent }]}
+                  onPress={handleCreateTeamObjective}
+                  disabled={savingTeamObjective}
+                >
+                  {savingTeamObjective ? (
+                    <ActivityIndicator size="small" color={tokens.bg} />
+                  ) : (
+                    <Text style={[styles.submitFormBtnText, { color: tokens.bg }]}>
+                      Enregistrer l’objectif collectif
+                    </Text>
+                  )}
+                </PressableSpring>
+              </View>
+            )}
+
+            {/* List of Team Objectives */}
+            {teamObjectives.length === 0 ? (
+              <View style={[styles.emptyBox, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+                <Feather name="target" size={32} color={tokens.muted} />
+                <Text style={[styles.emptyTitle, { color: tokens.foreground }]}>
+                  Aucun objectif d'équipe défini
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: tokens.muted }]}>
+                  Créez des objectifs collectifs pour fixer le cap de la saison avec vos joueurs.
+                </Text>
+              </View>
+            ) : (
+              teamObjectives.map((obj) => (
+                <View
+                  key={obj.id}
+                  style={[styles.teamObjCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
+                >
+                  <View style={styles.teamObjCardHeader}>
+                    <View style={{ flex: 1, paddingRight: 8 }}>
+                      <Text style={[styles.teamObjTitle, { color: tokens.foreground }]}>
+                        {obj.title}
+                      </Text>
+                      {obj.description ? (
+                        <Text style={[styles.teamObjDesc, { color: tokens.muted }]}>
+                          {obj.description}
+                        </Text>
+                      ) : null}
+                      {obj.target_label ? (
+                        <View style={styles.targetLabelRow}>
+                          <Ionicons name="flag-outline" size={12} color={tokens.accent} />
+                          <Text style={[styles.targetLabelText, { color: tokens.accent }]}>
+                            {obj.target_label}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+
+                    <View style={[styles.teamObjBadge, { backgroundColor: withAlpha(tokens.accent, 0.15) }]}>
+                      <Text style={[styles.teamObjBadgeText, { color: tokens.accent }]}>
+                        {obj.progress}%
+                      </Text>
                     </View>
                   </View>
-                  <Text style={styles.voiceNoteMeta}>
-                    {note.category} · {note.timestamp} · {note.duration}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.voiceNoteTranscript}>{note.transcript}</Text>
-              <View style={styles.voiceNoteTagsRow}>
-                {note.tags.map((t, idx) => (
-                  <View key={idx} style={styles.voiceNoteTag}>
-                    <Text style={styles.voiceNoteTagText}>{t}</Text>
+
+                  {/* Progress bar */}
+                  <View style={[styles.progressBarBg, { backgroundColor: tokens.elevated }]}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        {
+                          width: `${obj.progress}%`,
+                          backgroundColor: obj.progress === 100 ? proSemantic.success : tokens.accent,
+                        },
+                      ]}
+                    />
                   </View>
-                ))}
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
 
-      {/* TAB 2: OPPONENT SCOUTING DATABASE */}
-      {activeTab === 'opponents' && (
-        <>
-          <Text style={styles.sectionTitle}>Fiches de Veille & Scouting des Prochains Adversaires</Text>
-          {OPPONENTS_SCOUT.map((opp) => (
-            <View key={opp.id} style={styles.scoutOppCard}>
-              <View style={styles.scoutOppTop}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.scoutOppName}>{opp.name}</Text>
-                  <Text style={styles.scoutOppRank}>{opp.rank} · {opp.nextMatchDate}</Text>
+                  {/* Progress adjust steppers */}
+                  <View style={styles.progressAdjustmentRow}>
+                    <Text style={[styles.progressAdjustLabel, { color: tokens.muted }]}>Ajustement :</Text>
+                    <View style={styles.progressBtnsGroup}>
+                      <PressableSpring
+                        style={[styles.progressStepBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
+                        onPress={() => handleUpdateTeamObjProgress(obj.id, obj.progress - 10)}
+                      >
+                        <Text style={[styles.progressStepBtnText, { color: tokens.foreground }]}>-10%</Text>
+                      </PressableSpring>
+                      <PressableSpring
+                        style={[styles.progressStepBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
+                        onPress={() => handleUpdateTeamObjProgress(obj.id, obj.progress + 10)}
+                      >
+                        <Text style={[styles.progressStepBtnText, { color: tokens.foreground }]}>+10%</Text>
+                      </PressableSpring>
+                      {obj.progress < 100 && (
+                        <PressableSpring
+                          style={[styles.progressStepBtn, { backgroundColor: withAlpha(proSemantic.success, 0.15), borderColor: proSemantic.success }]}
+                          onPress={() => handleUpdateTeamObjProgress(obj.id, 100)}
+                        >
+                          <Ionicons name="checkmark" size={12} color={proSemantic.success} />
+                          <Text style={[styles.progressStepBtnText, { color: proSemantic.success }]}>100%</Text>
+                        </PressableSpring>
+                      )}
+                    </View>
+                  </View>
                 </View>
-                <View style={styles.systemBadge}>
-                  <Text style={styles.systemBadgeText}>{opp.system}</Text>
+              ))
+            )}
+          </View>
+        )}
+
+        {/* TAB 3: OPPONENT SCOUTING DATABASE */}
+        {activeTab === 'opponents' && (
+          <>
+            <Text style={[styles.sectionTitle, { color: tokens.foreground }]}>
+              Fiches de Veille & Scouting des Prochains Adversaires
+            </Text>
+            {OPPONENTS_SCOUT.map((opp) => (
+              <View key={opp.id} style={[styles.scoutOppCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+                <View style={styles.scoutOppTop}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.scoutOppName, { color: tokens.foreground }]}>{opp.name}</Text>
+                    <Text style={[styles.scoutOppRank, { color: tokens.muted }]}>{opp.rank} · {opp.nextMatchDate}</Text>
+                  </View>
+                  <View style={[styles.systemBadge, { backgroundColor: withAlpha('0A84FF', 0.15) }]}>
+                    <Text style={styles.systemBadgeText}>{opp.system}</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.scoutDetailBox, { backgroundColor: tokens.elevated, borderLeftColor: tokens.accent }]}>
+                  <Text style={[styles.scoutDetailLabel, { color: tokens.accent }]}>Joueur Clé / Danger :</Text>
+                  <Text style={[styles.scoutDetailVal, { color: tokens.foreground }]}>{opp.dangerPlayer}</Text>
+                </View>
+
+                <View style={[styles.scoutDetailBox, { backgroundColor: tokens.elevated, marginTop: 6, borderLeftColor: proSemantic.danger }]}>
+                  <Text style={[styles.scoutDetailLabel, { color: proSemantic.danger }]}>Faille Exploitable :</Text>
+                  <Text style={[styles.scoutDetailVal, { color: tokens.foreground }]}>{opp.weakness}</Text>
                 </View>
               </View>
+            ))}
+          </>
+        )}
 
-              <View style={styles.scoutDetailBox}>
-                <Text style={styles.scoutDetailLabel}>Joueur Clé / Danger :</Text>
-                <Text style={styles.scoutDetailVal}>{opp.dangerPlayer}</Text>
-              </View>
-
-              <View style={[styles.scoutDetailBox, { marginTop: 6, borderLeftColor: '#FF453A' }]}>
-                <Text style={[styles.scoutDetailLabel, { color: '#FF453A' }]}>Faille Exploitable :</Text>
-                <Text style={styles.scoutDetailVal}>{opp.weakness}</Text>
-              </View>
+        {/* TAB 4: STAFF ENCRYPTED CHANNEL */}
+        {activeTab === 'staff_channel' && (
+          <View style={[styles.staffChannelCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+            <View style={styles.staffChannelHeader}>
+              <MaterialCommunityIcons name="shield-lock-outline" size={18} color={tokens.accent} />
+              <Text style={[styles.staffChannelTitle, { color: tokens.foreground }]}>Canal Sécurisé du Staff Technique</Text>
             </View>
-          ))}
-        </>
-      )}
+            <Text style={[styles.staffChannelDesc, { color: tokens.muted }]}>
+              Échanges confidentiels réservés aux entraîneurs, préparateur physique et staff médical.
+            </Text>
 
-      {/* TAB 3: STAFF ENCRYPTED CHANNEL */}
-      {activeTab === 'staff_channel' && (
-        <View style={styles.staffChannelCard}>
-          <View style={styles.staffChannelHeader}>
-            <MaterialCommunityIcons name="shield-lock-outline" size={18} color="#C5A059" />
-            <Text style={styles.staffChannelTitle}>Canal Sécurisé du Staff Technique</Text>
-          </View>
-          <Text style={styles.staffChannelDesc}>
-            Échanges confidentiels réservés aux entraîneurs, préparateur physique et staff médical.
-          </Text>
-
-          {/* AI Audio Briefing Pill */}
-          <View style={styles.audioBriefPill}>
-            <MaterialCommunityIcons name="waveform" size={20} color="#0A84FF" />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.audioBriefTitle}>Brief Hebdomadaire Vocal IA (3 min)</Text>
-              <Text style={styles.audioBriefSub}>Synthèse audio des charges d’entraînement et du plan match</Text>
+            {/* AI Audio Briefing Pill */}
+            <View style={[styles.audioBriefPill, { backgroundColor: tokens.elevated, borderColor: withAlpha('0A84FF', 0.25) }]}>
+              <MaterialCommunityIcons name="waveform" size={20} color={proSemantic.info} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.audioBriefTitle, { color: tokens.foreground }]}>Brief Hebdomadaire Vocal IA (3 min)</Text>
+                <Text style={[styles.audioBriefSub, { color: tokens.muted }]}>Synthèse audio des charges d’entraînement et du plan match</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.playBriefBtn}
+                onPress={() => Alert.alert('Lecture du Brief', 'Lecture audio du briefing staff en cours...')}
+              >
+                <Ionicons name="play" size={16} color={tokens.foreground} />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.playBriefBtn}
-              onPress={() => Alert.alert('Lecture du Brief', 'Lecture audio du briefing staff en cours...')}
-            >
-              <Ionicons name="play" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
 
-          {/* Chat Messages */}
-          <View style={styles.chatMessage}>
-            <Text style={styles.chatAuthor}>Préparateur Physique · 09:15</Text>
-            <Text style={styles.chatBody}>Lucas M. a ressenti une légère gêne aux ischio-jambiers. Son protocole vélo est validé pour ce soir.</Text>
-          </View>
+            {/* Chat Messages */}
+            <View style={[styles.chatMessage, { backgroundColor: tokens.elevated }]}>
+              <Text style={[styles.chatAuthor, { color: tokens.accent }]}>Préparateur Physique · 09:15</Text>
+              <Text style={[styles.chatBody, { color: withAlpha(tokens.foreground, 0.85) }]}>
+                Lucas M. a ressenti une légère gêne aux ischio-jambiers. Son protocole vélo est validé pour ce soir.
+              </Text>
+            </View>
 
-          <View style={styles.chatMessage}>
-            <Text style={styles.chatAuthor}>Entraîneur Adjoint · 10:40</Text>
-            <Text style={styles.chatBody}>Vidéo du match de RC France découpée. Leurs latéraux décrochent dès la 70e minute.</Text>
+            <View style={[styles.chatMessage, { backgroundColor: tokens.elevated }]}>
+              <Text style={[styles.chatAuthor, { color: tokens.accent }]}>Entraîneur Adjoint · 10:40</Text>
+              <Text style={[styles.chatBody, { color: withAlpha(tokens.foreground, 0.85) }]}>
+                Vidéo du match de RC France découpée. Leurs latéraux décrochent dès la 70e minute.
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
+      </ScrollView>
+
+      {/* Evaluation Sheet Modal */}
+      {evaluatingPlayer && (
+        <CoachPlayerEvaluationSheet
+          visible={Boolean(evaluatingPlayer)}
+          onClose={() => setEvaluatingPlayer(null)}
+          player={evaluatingPlayer}
+          onSaved={() => {
+            void loadAll();
+          }}
+        />
       )}
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   content: {
     padding: 16,
@@ -547,10 +815,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     gap: 12,
-    backgroundColor: '#141418',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(100, 210, 255, 0.25)',
     padding: 14,
     marginBottom: 14,
   },
@@ -558,7 +824,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'rgba(100, 210, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -568,203 +833,380 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   badgePsd: {
-    backgroundColor: 'rgba(100, 210, 255, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   badgePsdText: {
-    color: '#64D2FF',
+    color: proSemantic.info,
     fontSize: 9,
     fontWeight: '800',
-    fontFamily: '-apple-system',
   },
   badgeCert: {
-    backgroundColor: 'rgba(197, 160, 89, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   badgeCertText: {
-    color: '#C5A059',
     fontSize: 9,
     fontWeight: '800',
-    fontFamily: '-apple-system',
   },
   headerTitle: {
-    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
-    fontFamily: '-apple-system',
   },
   headerSubtitle: {
-    color: '#8B8B9A',
     fontSize: 11,
-    fontFamily: '-apple-system',
     marginTop: 2,
   },
-  segmentBar: {
+  segmentBarScroll: {
     flexDirection: 'row',
-    backgroundColor: '#141418',
-    borderRadius: 10,
-    padding: 3,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    gap: 8,
   },
   segmentBtn: {
-    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    minHeight: 38,
     alignItems: 'center',
-    paddingVertical: 7,
-    borderRadius: 8,
-  },
-  segmentBtnActive: {
-    backgroundColor: '#1C1C22',
+    justifyContent: 'center',
   },
   segmentBtnText: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  segmentBtnTextActive: {
-    color: '#FFFFFF',
-  },
-  bannerMarketplace: {
-    flexDirection: 'row',
-    gap: 10,
-    backgroundColor: '#141418',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.25)',
-    padding: 12,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  bannerMarketplaceTitle: {
-    color: '#C5A059',
     fontSize: 12,
+    fontWeight: '600',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+    flexWrap: 'wrap',
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterChipText: {
+    fontSize: 12,
+  },
+  centerBox: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyBox: {
+    padding: 24,
+    borderRadius: proRadius.lg,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  emptyTitle: {
+    fontSize: 14,
     fontWeight: '700',
-    fontFamily: '-apple-system',
+    marginTop: 10,
   },
-  bannerMarketplaceText: {
-    color: '#8B8B9A',
-    fontSize: 10,
-    lineHeight: 14,
-    fontFamily: '-apple-system',
-    marginTop: 2,
+  emptySubtitle: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
   },
-  playerGrowthCard: {
-    backgroundColor: '#141418',
+  playerCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 14,
     marginBottom: 12,
   },
-  playerGrowthHeader: {
+  playerCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  avatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  playerNameText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tagMini: {
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  tagMiniText: {
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  playerMetaText: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  overallScoreBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 50,
+  },
+  overallScoreVal: {
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  overallScoreLabel: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  radarPillsRow: {
+    flexDirection: 'row',
+    borderRadius: 10,
+    padding: 8,
+    marginBottom: 10,
+    justifyContent: 'space-around',
+  },
+  radarPillItem: {
+    alignItems: 'center',
+  },
+  radarPillKey: {
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  radarPillVal: {
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  notesBox: {
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  notesExcerpt: {
+    fontSize: 11,
+    fontStyle: 'italic',
+    lineHeight: 16,
+  },
+  objectivesPreviewRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  objCountText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
-  playerGrowthName: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  certifiedTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+  avgProgBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
-  certifiedTagText: {
-    color: '#30D158',
-    fontSize: 9,
+  avgProgText: {
+    fontSize: 10,
     fontWeight: '700',
   },
-  playerGrowthMeta: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontFamily: '-apple-system',
-    marginTop: 2,
-  },
-  progressionBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  progressionBadgeText: {
-    color: '#30D158',
-    fontSize: 12,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  radarScoresRow: {
-    flexDirection: 'row',
-    backgroundColor: '#1C1C22',
-    borderRadius: 10,
-    padding: 8,
-    marginBottom: 12,
-    justifyContent: 'space-around',
-  },
-  radarScoreItem: {
-    alignItems: 'center',
-  },
-  radarScoreLabel: {
-    color: '#8B8B9A',
-    fontSize: 9,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  radarScoreVal: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    marginTop: 2,
-  },
-  generateDossierBtn: {
+  evaluateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#C5A059',
+    gap: 8,
     borderRadius: 10,
-    paddingVertical: 9,
+    minHeight: 44,
+    paddingVertical: 10,
   },
-  generateDossierText: {
-    color: '#000000',
+  evaluateBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  tabContent: {
+    gap: 12,
+  },
+  teamObjBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 4,
+  },
+  teamObjBannerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  teamObjBannerSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  addTeamObjBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    minHeight: 44,
+  },
+  addTeamObjBtnText: {
     fontSize: 11,
     fontWeight: '800',
-    fontFamily: '-apple-system',
   },
-  sectionTitle: {
-    color: '#FFFFFF',
+  teamObjFormCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 8,
+  },
+  formHeaderTitle: {
     fontSize: 13,
     fontWeight: '700',
-    fontFamily: '-apple-system',
+    marginBottom: 10,
+  },
+  inputField: {
+    borderRadius: proRadius.md,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    height: proForm.fieldHeight,
+    fontSize: 13,
+  },
+  textArea: {
+    borderRadius: proRadius.md,
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 13,
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  progressPillsRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  progressPill: {
+    flex: 1,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitFormBtn: {
+    marginTop: 12,
+    minHeight: 44,
+    borderRadius: proRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitFormBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  teamObjCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 10,
+  },
+  teamObjCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  teamObjTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  teamObjDesc: {
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  targetLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  targetLabelText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  teamObjBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  teamObjBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  progressBarBg: {
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressAdjustmentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  progressAdjustLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  progressBtnsGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  progressStepBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    borderWidth: 1,
+    minHeight: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  progressStepBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
     marginBottom: 10,
   },
   scoutOppCard: {
-    backgroundColor: '#141418',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 14,
     marginBottom: 12,
   },
@@ -775,53 +1217,39 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   scoutOppName: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
-    fontFamily: '-apple-system',
   },
   scoutOppRank: {
-    color: '#8B8B9A',
     fontSize: 11,
-    fontFamily: '-apple-system',
     marginTop: 2,
   },
   systemBadge: {
-    backgroundColor: 'rgba(10, 132, 255, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   systemBadgeText: {
-    color: '#0A84FF',
+    color: proSemantic.info,
     fontSize: 11,
     fontWeight: '700',
-    fontFamily: '-apple-system',
   },
   scoutDetailBox: {
-    backgroundColor: '#1C1C22',
     borderRadius: 8,
     padding: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#C5A059',
   },
   scoutDetailLabel: {
-    color: '#C5A059',
     fontSize: 10,
     fontWeight: '700',
-    fontFamily: '-apple-system',
   },
   scoutDetailVal: {
-    color: '#D1D1D6',
     fontSize: 11,
-    fontFamily: '-apple-system',
     marginTop: 2,
   },
   staffChannelCard: {
-    backgroundColor: '#141418',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 14,
   },
   staffChannelHeader: {
@@ -831,332 +1259,49 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   staffChannelTitle: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
-    fontFamily: '-apple-system',
   },
   staffChannelDesc: {
-    color: '#8B8B9A',
     fontSize: 11,
-    fontFamily: '-apple-system',
     marginBottom: 14,
   },
   audioBriefPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#1C1C22',
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: 'rgba(10, 132, 255, 0.25)',
     marginBottom: 14,
   },
   audioBriefTitle: {
-    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
-    fontFamily: '-apple-system',
   },
   audioBriefSub: {
-    color: '#8B8B9A',
     fontSize: 10,
-    fontFamily: '-apple-system',
   },
   playBriefBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#0A84FF',
+    backgroundColor: proSemantic.info,
     alignItems: 'center',
     justifyContent: 'center',
   },
   chatMessage: {
-    backgroundColor: '#1C1C22',
     borderRadius: 10,
     padding: 10,
     marginBottom: 8,
   },
   chatAuthor: {
-    color: '#C5A059',
     fontSize: 10,
     fontWeight: '700',
-    fontFamily: '-apple-system',
     marginBottom: 2,
   },
   chatBody: {
-    color: '#D1D1D6',
     fontSize: 11,
     lineHeight: 16,
-    fontFamily: '-apple-system',
-  },
-  vocalSection: {
-    marginBottom: 20,
-  },
-  bannerVocal: {
-    flexDirection: 'row',
-    gap: 10,
-    backgroundColor: '#141418',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(10, 132, 255, 0.25)',
-    padding: 12,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  bannerVocalTitle: {
-    color: '#0A84FF',
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  bannerVocalText: {
-    color: '#8B8B9A',
-    fontSize: 10,
-    lineHeight: 14,
-    fontFamily: '-apple-system',
-    marginTop: 2,
-  },
-  vocalRecorderCard: {
-    backgroundColor: '#141418',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 14,
-    marginBottom: 12,
-  },
-  vocalLabel: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-    marginBottom: 8,
-  },
-  playerPickerRow: {
-    marginBottom: 14,
-  },
-  playerPickerPill: {
-    backgroundColor: '#1C1C22',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  playerPickerPillActive: {
-    backgroundColor: 'rgba(10, 132, 255, 0.15)',
-    borderColor: '#0A84FF',
-  },
-  playerPickerPillText: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  playerPickerPillTextActive: {
-    color: '#0A84FF',
-    fontWeight: '700',
-  },
-  recordActionCenter: {
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  recordBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    width: '100%',
-  },
-  recordBtnIdle: {
-    backgroundColor: '#0A84FF',
-  },
-  recordBtnActive: {
-    backgroundColor: '#FF3B30',
-  },
-  recordBtnText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  recordingLivePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 8,
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  recordingPulseDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FF3B30',
-  },
-  recordingLiveText: {
-    color: '#FF3B30',
-    fontSize: 10,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  transcriptBox: {
-    backgroundColor: '#1C1C22',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 12,
-    marginVertical: 12,
-  },
-  transcriptHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  transcriptLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  transcriptTitle: {
-    color: '#64D2FF',
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  editableBadge: {
-    backgroundColor: 'rgba(100, 210, 255, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  editableBadgeText: {
-    color: '#64D2FF',
-    fontSize: 9,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  transcriptInput: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    lineHeight: 18,
-    fontFamily: '-apple-system',
-    minHeight: 60,
-    textAlignVertical: 'top',
-  },
-  tagWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 14,
-  },
-  tagPill: {
-    backgroundColor: '#1C1C22',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  tagPillActive: {
-    backgroundColor: 'rgba(197, 160, 89, 0.2)',
-    borderColor: '#C5A059',
-  },
-  tagPillText: {
-    color: '#8B8B9A',
-    fontSize: 10,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  tagPillTextActive: {
-    color: '#C5A059',
-    fontWeight: '700',
-  },
-  validateVocalBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#C5A059',
-    borderRadius: 12,
-    paddingVertical: 12,
-  },
-  validateVocalBtnText: {
-    color: '#000000',
-    fontSize: 12,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  voiceNoteCard: {
-    backgroundColor: '#141418',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 12,
-    marginBottom: 10,
-  },
-  voiceNoteTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  voiceNotePlayer: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  integratedPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  integratedPillText: {
-    color: '#30D158',
-    fontSize: 9,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  voiceNoteMeta: {
-    color: '#8B8B9A',
-    fontSize: 10,
-    fontFamily: '-apple-system',
-    marginTop: 2,
-  },
-  voiceNoteTranscript: {
-    color: '#D1D1D6',
-    fontSize: 11,
-    lineHeight: 16,
-    fontFamily: '-apple-system',
-    marginBottom: 8,
-  },
-  voiceNoteTagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  voiceNoteTag: {
-    backgroundColor: '#1C1C22',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  voiceNoteTagText: {
-    color: '#8B8B9A',
-    fontSize: 9,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
   },
 });

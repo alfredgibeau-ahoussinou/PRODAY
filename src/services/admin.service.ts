@@ -215,6 +215,8 @@ export interface AdminCreateUserInput {
   password: string;
   display_name: string;
   role: UserRole;
+  /** Multi-rôles sélectionnés (ex. ['coach', 'player']). */
+  roles?: UserRole[];
   city?: string;
   product_line?: ProductLineId;
   medical_specialty?: string;
@@ -229,6 +231,8 @@ export interface AdminCreateUserInput {
 export type AdminUserUpdatePatch = {
   display_name?: string;
   role?: UserRole;
+  /** Multi-rôles assignés (ex. ['coach', 'player']). */
+  roles?: UserRole[];
   is_admin?: boolean;
   product_line?: ProductLineId;
   is_active?: boolean;
@@ -263,6 +267,8 @@ export type AdminUserUpdatePatch = {
   admin_note?: string | null;
   /** Tags admin. */
   admin_tags?: string[] | null;
+  /** Forfait / abonnement explicite. */
+  subscription_plan?: string | null;
   /** Rattachement club (profile.club_id) — ex. désignation président. */
   club_id?: string | null;
 };
@@ -325,6 +331,12 @@ export const adminService = {
     const update: Record<string, unknown> = { updated_at: serverTimestamp() };
     if (patch.display_name !== undefined) update.display_name = patch.display_name;
     if (patch.role !== undefined) update.role = patch.role;
+    if (patch.roles !== undefined) {
+      update.roles = patch.roles;
+      if (!patch.role && patch.roles.length > 0) {
+        update.role = patch.roles[0];
+      }
+    }
     if (patch.is_admin !== undefined) update.is_admin = patch.is_admin;
     if (patch.is_active !== undefined) update.is_active = patch.is_active;
     if (patch.is_verified !== undefined) update.is_verified = patch.is_verified;
@@ -393,8 +405,11 @@ export const adminService = {
     if (patch.admin_tags !== undefined) {
       update.admin_tags = patch.admin_tags ?? [];
     }
+    if (patch.subscription_plan !== undefined) {
+      update.subscription_plan = patch.subscription_plan || null;
+    }
     if (patch.club_id !== undefined) {
-      update['profile.club_id'] = patch.club_id?.trim() || null;
+      update['profile.club_id'] = patch.club_id || null;
     }
 
     if (patch.product_line !== undefined || patch.role !== undefined) {

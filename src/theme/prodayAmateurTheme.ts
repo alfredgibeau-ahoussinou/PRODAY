@@ -17,12 +17,12 @@ export const amateurColorOverrides = {
   inkMuted: '#A3A3A3',
   inkFaint: '#737373',
   background: '#000000',
-  backgroundAlt: '#0A0A0A',
-  surface: '#141414',
-  surfaceMuted: '#1A1A1A',
+  backgroundAlt: '#0A0A0F',
+  surface: '#121218',
+  surfaceMuted: '#1A1A24',
   surfaceInverse: '#FAFAFA',
   heroMuted: 'rgba(255, 255, 255, 0.72)',
-  border: 'rgba(255, 255, 255, 0.1)',
+  border: 'rgba(255, 255, 255, 0.08)',
   borderStrong: poleAccentSoft('player', 0.55),
   borderMedium: poleAccentSoft('player', 0.28),
   text: '#FAFAFA',
@@ -32,8 +32,8 @@ export const amateurColorOverrides = {
   tone2: A,
   tone3: '#5B73FF',
   tone4: '#93A4FF',
-  navy: '#0A0A0A',
-  navySoft: '#171717',
+  navy: '#0A0A0F',
+  navySoft: '#121218',
   blueBright: '#5B73FF',
   bluePrimary: A,
   blueCyan: '#5B73FF',
@@ -44,8 +44,8 @@ export const amateurColorOverrides = {
 } as const;
 
 export const amateurGradients = {
-  hero: ['#000000', '#0A0A0A'] as const,
+  hero: ['#000000', '#0A0A0F'] as const,
   heroDark: ['#000000', '#050505'] as const,
-  card: ['#1A1A1A', '#0A0A0A'] as const,
+  card: ['#1A1A24', '#0A0A0F'] as const,
   cta: ['#E5E5E5', A] as const,
 };

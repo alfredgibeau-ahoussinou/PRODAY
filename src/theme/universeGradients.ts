@@ -8,9 +8,9 @@ export type GradientStops = readonly [string, string, ...string[]];
 export const hommeGradients = {
   hero: ['#000000', '#14532D'] as const,
   heroDark: ['#000000', '#052e16'] as const,
-  card: ['#1A1A1A', '#0A0A0A'] as const,
+  card: ['#1A1A24', '#0A0A0F'] as const,
   cta: ['#15803D', '#4ADE80'] as const,
-  ambient: ['rgba(74, 222, 128, 0.12)', '#0A0A0A', '#000000'] as const,
+  ambient: ['rgba(74, 222, 128, 0.12)', '#0A0A0F', '#000000'] as const,
 };
 
 export function gradientsForLine(line: ProductLineId): {
@@ -26,7 +26,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: womanGradients.heroDark,
       card: womanGradients.card,
       cta: womanGradients.cta,
-      ambient: ['rgba(244, 114, 182, 0.14)', '#0A0A0A', '#000000'] as const,
+      ambient: ['rgba(244, 114, 182, 0.14)', '#0A0A0F', '#000000'] as const,
     };
   }
   if (line === 'pro_club') {
@@ -41,7 +41,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: proGradients.heroDark,
       card: proGradients.card,
       cta: proGradients.cta,
-      ambient: ['rgba(197, 160, 89, 0.18)', '#0A0A0A', '#000000'] as const,
+      ambient: ['rgba(197, 160, 89, 0.18)', '#0A0A0F', '#000000'] as const,
     };
   }
   if (line === 'amateur') {
@@ -50,7 +50,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: amateurGradients.heroDark,
       card: amateurGradients.card,
       cta: amateurGradients.cta,
-      ambient: ['rgba(255, 255, 255, 0.12)', '#0A0A0A', '#000000'] as const,
+      ambient: ['rgba(255, 255, 255, 0.12)', '#0A0A0F', '#000000'] as const,
     };
   }
   if (line === 'supporter') {
@@ -59,7 +59,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: supporterGradients.heroDark,
       card: supporterGradients.card,
       cta: supporterGradients.cta,
-      ambient: ['rgba(6, 182, 212, 0.22)', '#0A0A0A', '#000000'] as const,
+      ambient: ['rgba(6, 182, 212, 0.22)', '#0A0A0F', '#000000'] as const,
     };
   }
   if (line === 'sante') {
@@ -68,7 +68,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: santeGradients.heroDark,
       card: santeGradients.card,
       cta: santeGradients.cta,
-      ambient: ['rgba(45, 212, 191, 0.14)', '#0A0A0A', '#000000'] as const,
+      ambient: ['rgba(45, 212, 191, 0.14)', '#0A0A0F', '#000000'] as const,
     };
   }
   if (line === 'sponsor') {
@@ -90,13 +90,19 @@ export function ctaGradient(line: ProductLineId): GradientStops {
   return gradientsForLine(line).cta;
 }
 
-/** Continuité couleurs planche brand → shells. */
+/**
+ * Continuité couleurs planche brand → shells.
+ *
+ * Pôle Club : **palette mesurée sur la référence** (D-011) — canvas noir,
+ * surface élevée `#262E33`, accent or `#F8D548` (dégradé CTA depuis l'or
+ * assombri relevé sur l'antialiasing du FAB), aucun wash teinté.
+ */
 const proClubGradients = {
   hero: ['#000000', '#000000'] as const,
-  heroDark: ['#000000', '#0A0A0A'] as const,
-  card: ['#0A0A0A', '#000000'] as const,
-  cta: ['#047857', '#10B981'] as const,
-  /** Discover / canvas Club — noir pur, pas de wash vert. */
+  heroDark: ['#000000', '#0A0A0F'] as const,
+  card: ['#262E33', '#0A0A0F'] as const,
+  cta: ['#9F8629', '#F8D548'] as const,
+  /** Discover / canvas Club — noir pur, pas de wash teinté. */
   ambient: ['#000000', '#000000', '#000000'] as const,
 };
 
@@ -110,10 +116,10 @@ const presidentGradients = {
 
 const proStaffGradients = {
   hero: ['#000000', '#1A1408'] as const,
-  heroDark: ['#000000', '#0A0A0A'] as const,
-  card: ['#1A1A1A', '#0A0A0A'] as const,
+  heroDark: ['#000000', '#0A0A0F'] as const,
+  card: ['#1A1A24', '#0A0A0F'] as const,
   cta: ['#9A7B2F', '#C5A059'] as const,
-  ambient: ['rgba(197, 160, 89, 0.18)', '#0A0A0A', '#000000'] as const,
+  ambient: ['rgba(197, 160, 89, 0.18)', '#0A0A0F', '#000000'] as const,
 };
 
 const sponsorGradients = {
@@ -133,7 +139,7 @@ const parentGradients = {
 };
 
 const joueurGradients = {
-  hero: ['#000000', '#0A0A0A'] as const,
+  hero: ['#000000', '#0A0A0F'] as const,
   heroDark: ['#000000', '#050505'] as const,
   card: ['#0c0c0c', '#000000'] as const,
   cta: ['#E5E5E5', '#FFFFFF'] as const,
@@ -159,7 +165,7 @@ const supporterBrandGradients = {
 /** Ambient FLASH générique (cyan) */
 export const flashAmbient = [
   `rgba(34, 211, 238, 0.14)`,
-  '#0A0A0A',
+  '#0A0A0F',
   '#000000',
 ] as const;
 

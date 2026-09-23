@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
-import { CoachText } from './coachPortalUi';
+import { CoachText } from './CoachText';
 import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import {

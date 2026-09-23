@@ -1,53 +1,86 @@
 import React from 'react';
 import {
+  Image,
   StyleSheet,
   Text,
   View,
-  TouchableOpacity,
-  Platform,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
-import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { PressableSpring } from '../motion/PressableSpring';
+import {
+  COACH_COMPONENT_FALLBACK,
+  COACH_PITCH,
+  type CoachComponentTokens,
+} from '../../features/coach/theme/coachPitchTokens';
+import { proRadius } from '../../theme/professionalDesign';
+import type { SquadAvailability, SquadPlayer } from '../../utils/coachSquadRoster';
 
-export type FutPlayerPosition =
-  | 'GK'
-  | 'LB'
-  | 'CB'
-  | 'RB'
-  | 'CDM'
-  | 'CM'
-  | 'CAM'
-  | 'RW'
-  | 'LW'
-  | 'ST';
-
-export interface FutPlayer {
-  id: string;
-  num: number;
-  name: string;
-  pos: FutPlayerPosition;
-  ovr: number; // e.g. 88
-  rating: number; // e.g. 7.8/10
-  role: 'starter' | 'sub' | 'unselected';
-  rsvp: 'present' | 'absent' | 'pending' | 'injured';
-  form: 'peak' | 'good' | 'tired' | 'injured';
-  fatigueRisk: boolean;
-  pac: number;
-  sho: number;
-  pas: number;
-  dri: number;
-  def: number;
-  phy: number;
-}
+export type PlayerMarkerSize = 'pitch' | 'bench' | 'detail';
 
 interface CoachFutPlayerCardProps {
-  player: FutPlayer;
-  size?: 'pitch' | 'bench' | 'detail';
+  /** Joueur **réel** du club — numéro et poste peuvent être non renseignés. */
+  player: SquadPlayer;
+  size?: PlayerMarkerSize;
   isSelected?: boolean;
   isTarget?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
+  /**
+   * Fin de geste — utilisé par le terrain pour reposer un jeton levé par appui
+   * long quand aucun glisser n'a suivi, et quand le terrain reprend la main.
+   */
+  onPressOut?: () => void;
+  /** Masque le libellé (utile quand le terrain est très étroit). */
+  hideName?: boolean;
+  /** Largeur imposée du libellé, pour que deux voisins ne se chevauchent jamais. */
+  labelWidth?: number;
+  /** Diamètre imposé du disque — le terrain le calcule pour rester sans chevauchement. */
+  avatarSize?: number;
+  /** Jetons du socle professionnel injectés par l'écran (repli hors shell). */
+  tokens?: CoachComponentTokens;
+  style?: StyleProp<ViewStyle>;
 }
 
+const SIZES: Record<PlayerMarkerSize, { avatar: number; name: number; num: number }> = {
+  pitch: { avatar: 42, name: 10.5, num: 9.5 },
+  bench: { avatar: 36, name: 10, num: 9 },
+  detail: { avatar: 56, name: 13, num: 11 },
+};
+
+export function playerInitials(name: string): string {
+  const parts = name
+    .replace(/[.]/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length === 0) return '—';
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+  return `${parts[0]!.slice(0, 1)}${parts[parts.length - 1]!.slice(0, 1)}`.toUpperCase();
+}
+
+/** Pastille de disponibilité — une seule, discrète, jamais un badge à texte. */
+export function availabilityTone(availability: SquadAvailability): string {
+  switch (availability) {
+    case 'present':
+      return COACH_PITCH.available;
+    case 'pending':
+      return COACH_PITCH.pending;
+    case 'absent':
+    default:
+      return COACH_PITCH.unavailable;
+  }
+}
+
+/**
+ * Jeton de joueur — **une seule forme** pour le terrain, le banc et les fiches.
+ *
+ * Le rendu FUT (angle doré, bandeau d'OVR, bandeau de statistiques) est
+ * remplacé par le registre partagé Coach ↔ Club/Admin : un disque de
+ * dimensions constantes (photo ou initiales), le numéro en pastille, le
+ * libellé en dessous. Aucune statistique sur le terrain : elles vivent dans la
+ * fiche joueur.
+ */
 export const CoachFutPlayerCard: React.FC<CoachFutPlayerCardProps> = ({
   player,
   size = 'pitch',
@@ -55,321 +88,155 @@ export const CoachFutPlayerCard: React.FC<CoachFutPlayerCardProps> = ({
   isTarget = false,
   onPress,
   onLongPress,
+  onPressOut,
+  hideName = false,
+  labelWidth,
+  avatarSize,
+  tokens = COACH_COMPONENT_FALLBACK,
+  style,
 }) => {
-  const isBench = size === 'bench';
+  const base = SIZES[size];
+  const dims = avatarSize ? { ...base, avatar: avatarSize } : base;
+  const status = availabilityTone(player.availability);
 
-  // Form glow indicator styling
-  const getFormColor = () => {
-    switch (player.form) {
-      case 'peak':
-        return '#30D158'; // Emerald neon
-      case 'good':
-        return '#0A84FF'; // Royal blue
-      case 'tired':
-        return '#FF9F0A'; // Amber alert
-      case 'injured':
-        return '#FF453A'; // Crimson red
-      default:
-        return '#30D158';
-    }
-  };
-
-  const formColor = getFormColor();
+  const ringColor = isSelected
+    ? tokens.accent
+    : isTarget
+      ? tokens.muted
+      : tokens.isLight
+        ? tokens.border
+        : COACH_PITCH.lineStrong;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.88}
+    <PressableSpring
       onPress={onPress}
       onLongPress={onLongPress}
-      style={[
-        styles.cardContainer,
-        isBench ? styles.cardBench : styles.cardPitch,
-        isSelected && styles.cardSelected,
-        isTarget && styles.cardTarget,
-      ]}
+      onPressOut={onPressOut}
+      scaleTo={0.94}
+      haptic={false}
+      disabled={!onPress && !onLongPress && !onPressOut}
+      accessibilityRole="button"
+      accessibilityLabel={`${player.name}${player.num != null ? ` (n° ${player.num})` : ''}${
+        player.pos ? `, ${player.pos}` : ''
+      }`}
+      style={[styles.root, { width: dims.avatar + 18 }, style]}
     >
-      {/* Outer Metallic Bevel Border */}
       <View
         style={[
-          styles.innerCard,
-          isBench ? styles.innerCardBench : styles.innerCardPitch,
-          isSelected && { borderColor: '#FFD700', borderWidth: 1.5 },
-          isTarget && { borderColor: '#30D158', borderWidth: 1.5 },
+          styles.avatarWrap,
+          {
+            width: dims.avatar,
+            height: dims.avatar,
+            borderRadius: proRadius.pill,
+            borderColor: ringColor,
+            borderWidth: isSelected || isTarget ? 2 : 1,
+            backgroundColor: isSelected ? tokens.soft : tokens.elevated,
+          },
         ]}
       >
-        {/* Top Header: OVR + Position Badge + Form Glow Dot */}
-        <View style={styles.cardHeader}>
-          <View style={styles.ovrWrap}>
-            <Text style={[styles.ovrText, isBench && styles.ovrTextBench]}>{player.ovr}</Text>
-            <Text style={[styles.posText, isBench && styles.posTextBench]}>{player.pos}</Text>
-          </View>
-
-          {/* Form Wellness Halo Indicator */}
-          <View style={[styles.formGlowBadge, { backgroundColor: formColor }]}>
-            <View style={[styles.formGlowDot, { backgroundColor: '#FFFFFF' }]} />
-          </View>
-        </View>
-
-        {/* Center: Player Silhouette / Jersey Number */}
-        <View style={[styles.avatarBox, isBench && styles.avatarBoxBench]}>
-          <View style={[styles.jerseyCircle, { borderColor: formColor }]}>
-            <Text style={[styles.jerseyNum, isBench && styles.jerseyNumBench]}>#{player.num}</Text>
-          </View>
-          {player.fatigueRisk && (
-            <View style={styles.fatigueBadge}>
-              <Feather name="alert-triangle" size={8} color="#FF9F0A" />
-            </View>
-          )}
-        </View>
-
-        {/* Bottom Banner: Player Name */}
-        <View style={[styles.nameBanner, isBench && styles.nameBannerBench]}>
+        {player.photoUrl ? (
+          <Image
+            source={{ uri: player.photoUrl }}
+            style={[styles.photo, { borderRadius: proRadius.pill }]}
+          />
+        ) : (
           <Text
-            style={[styles.nameText, isBench && styles.nameTextBench]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
+          style={[styles.initials, { fontSize: dims.avatar * 0.34, color: tokens.foreground }]}
+          numberOfLines={1}
+          allowFontScaling={false}
           >
-            {player.name}
+            {playerInitials(player.name)}
           </Text>
-        </View>
+        )}
 
-        {/* Mini Stats Matrix (for Pitch Cards) */}
-        {!isBench && (
-          <View style={styles.statsStrip}>
-            <Text style={styles.statMini}>
-              {player.pac} <Text style={styles.statLabel}>VIT</Text>
-            </Text>
-            <Text style={styles.statMini}>
-              {player.pas} <Text style={styles.statLabel}>PAS</Text>
-            </Text>
-            <Text style={styles.statMini}>
-              {player.def} <Text style={styles.statLabel}>DEF</Text>
+        {player.num != null ? (
+          <View style={[styles.numberPill, { backgroundColor: tokens.accent }]}>
+            <Text
+              style={[styles.numberText, { fontSize: dims.num, color: tokens.onAccent }]}
+              allowFontScaling={false}
+            >
+              {player.num}
             </Text>
           </View>
-        )}
+        ) : null}
+
+        {/* Disponibilité : un point de couleur, pas un badge textuel. */}
+        <View
+          style={[
+            styles.statusDot,
+            { backgroundColor: status, borderColor: tokens.bg },
+          ]}
+        />
       </View>
 
-      {/* Selected Pulse Indicator Bar */}
-      {isSelected && (
-        <View style={styles.selectionIndicator}>
-          <MaterialCommunityIcons name="swap-horizontal-bold" size={10} color="#000000" />
-        </View>
-      )}
-    </TouchableOpacity>
+      {!hideName ? (
+        <Text
+          style={[
+            styles.name,
+            {
+              fontSize: dims.name,
+              color: isSelected ? tokens.accent : tokens.foreground,
+              width: labelWidth ?? dims.avatar + 34,
+            },
+          ]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          adjustsFontSizeToFit
+          minimumFontScale={0.78}
+          allowFontScaling={false}
+        >
+          {player.name}
+        </Text>
+      ) : null}
+    </PressableSpring>
   );
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
+  root: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  avatarWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.45,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    overflow: 'visible',
   },
-  cardPitch: {
-    width: 62,
-    height: 84,
-  },
-  cardBench: {
-    width: 56,
-    height: 80,
-  },
-  cardSelected: {
-    transform: [{ scale: 1.08 }],
-    ...Platform.select({
-      ios: {
-        shadowColor: '#FFD700',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.85,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 10,
-      },
-    }),
-  },
-  cardTarget: {
-    transform: [{ scale: 1.05 }],
-    ...Platform.select({
-      ios: {
-        shadowColor: '#30D158',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.85,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  innerCard: {
+  photo: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#16161C',
-    borderRadius: 12,
-    borderWidth: 1.2,
-    borderColor: '#C5A059', // FUT Gold Metallic
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    overflow: 'hidden',
   },
-  innerCardPitch: {
-    borderRadius: 12,
+  initials: {
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
-  innerCardBench: {
-    borderRadius: 10,
-    borderColor: 'rgba(197, 160, 89, 0.6)',
-  },
-  cardHeader: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  ovrWrap: {
-    alignItems: 'center',
-  },
-  ovrText: {
-    color: '#FFD700', // Gold numeral
-    fontSize: 13,
-    fontWeight: '900',
-    fontFamily: '-apple-system',
-    letterSpacing: -0.5,
-    lineHeight: 14,
-  },
-  ovrTextBench: {
-    fontSize: 11,
-    lineHeight: 12,
-  },
-  posText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.5,
-  },
-  posTextBench: {
-    fontSize: 7,
-  },
-  formGlowBadge: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#30D158',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.9,
-        shadowRadius: 4,
-      },
-    }),
-  },
-  formGlowDot: {
-    width: 2.5,
-    height: 2.5,
-    borderRadius: 1.5,
-  },
-  avatarBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    marginVertical: 1,
-  },
-  avatarBoxBench: {
-    marginVertical: 0,
-  },
-  jerseyCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#1E1E26',
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  jerseyNum: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  jerseyNumBench: {
-    fontSize: 9,
-  },
-  fatigueBadge: {
+  numberPill: {
     position: 'absolute',
-    top: -2,
-    right: -4,
-    backgroundColor: '#1C1C22',
-    borderRadius: 6,
-    padding: 1,
-    borderWidth: 0.5,
-    borderColor: '#FF9F0A',
-  },
-  nameBanner: {
-    width: '100%',
-    backgroundColor: 'rgba(28, 28, 36, 0.9)',
-    borderRadius: 4,
-    paddingVertical: 1.5,
-    alignItems: 'center',
-    borderTopWidth: 0.5,
-    borderTopColor: 'rgba(255, 215, 0, 0.3)',
-  },
-  nameBannerBench: {
-    paddingVertical: 1.5,
-  },
-  nameText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    textTransform: 'uppercase',
-    letterSpacing: 0.2,
-  },
-  nameTextBench: {
-    fontSize: 7.5,
-  },
-  statsStrip: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingTop: 2,
-    borderTopWidth: 0.5,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  statMini: {
-    color: '#FFFFFF',
-    fontSize: 6.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  statLabel: {
-    color: '#8B8B9A',
-    fontSize: 5.5,
-    fontWeight: '600',
-  },
-  selectionIndicator: {
-    position: 'absolute',
-    bottom: -6,
-    backgroundColor: '#FFD700',
-    borderRadius: 8,
+    top: -4,
+    right: -6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: proRadius.pill,
     paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderWidth: 1,
-    borderColor: '#000000',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  numberText: {
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  statusDot: {
+    position: 'absolute',
+    bottom: -1,
+    left: -1,
+    width: 10,
+    height: 10,
+    borderRadius: proRadius.pill,
+    borderWidth: 2,
+  },
+  name: {
+    fontWeight: '700',
+    textAlign: 'center',
+    letterSpacing: -0.1,
   },
 });

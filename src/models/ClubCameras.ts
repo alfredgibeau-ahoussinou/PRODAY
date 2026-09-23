@@ -16,6 +16,7 @@ export type ClubCameraSyncStatus = 'idle' | 'syncing' | 'ok' | 'error';
 
 export type MatchVideoSource =
   | 'camera_api'
+  | 'external_link'
   | 'import'
   | 'device_capture'
   | 'upload';
@@ -26,6 +27,9 @@ export type MatchVideoStatus =
   | 'processing'
   | 'ready'
   | 'failed';
+
+/** Nature déclarée de la source ; « live » n'est jamais déduit d'un simple lien. */
+export type MatchVideoKind = 'live' | 'replay' | 'imported' | 'unknown';
 
 export type MatchVideoShareAudience = 'players' | 'coaches' | 'parents' | 'staff';
 
@@ -61,15 +65,18 @@ export interface CreateClubCameraInput {
   club_id: string;
   vendor: VideoCameraVendor;
   model?: string;
+  display_name?: string;
+  connection_label?: string;
   team_id?: string;
   team_label?: string;
-  created_by_uid: string;
+  created_by_uid?: string;
   external_device_id?: string;
 }
 
 export interface MatchVideoClip {
   id: string;
   label: string;
+  type?: 'goal' | 'save' | 'transition' | 'set_piece' | 'other';
   starts_at_sec?: number;
   ends_at_sec?: number;
   player_uids?: string[];
@@ -84,6 +91,10 @@ export interface ClubMatchVideo {
   vendor?: VideoCameraVendor;
   source: MatchVideoSource;
   status: MatchVideoStatus;
+  /** Persistance réellement confirmée par le service. */
+  persistence?: 'firestore' | 'local_only';
+  source_verified?: boolean;
+  kind?: MatchVideoKind;
   team_id?: string;
   team_label?: string;
   event_id?: string;
@@ -157,8 +168,8 @@ export const CAMERA_STATUS_LABELS: Record<ClubCameraConnectionStatus, string> = 
 export const MATCH_VIDEO_STATUS_LABELS: Record<MatchVideoStatus, string> = {
   recording: 'Enregistrement',
   uploading: 'Import…',
-  processing: 'Analyse…',
-  ready: 'Prête',
+  processing: 'Traitement en cours',
+  ready: 'Source prête à lire',
   failed: 'Échec',
 };
 

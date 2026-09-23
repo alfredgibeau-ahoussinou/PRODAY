@@ -1,23 +1,35 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
+  LayoutChangeEvent,
+  PanResponder,
   StyleSheet,
   Text,
   View,
-  LayoutChangeEvent,
-  Platform,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
-import Svg, {
-  Rect,
-  Circle,
-  Line,
-  Path,
-  Defs,
-  LinearGradient,
-  Stop,
-} from 'react-native-svg';
-import * as Haptics from 'expo-haptics';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { CoachFutPlayerCard, FutPlayer } from './CoachFutPlayerCard';
+import Svg, { G, Line, Rect } from 'react-native-svg';
+import {
+  CoachFutPlayerCard,
+  type PlayerMarkerSize,
+} from './CoachFutPlayerCard';
+import type { SquadPlayer } from '../../utils/coachSquadRoster';
+import {
+  CoachPitchSurface,
+  coachPitchInsets,
+} from './CoachPitchSurface';
+import { PressableSpring } from '../motion/PressableSpring';
+import { prodayHaptics } from '../../utils/prodayHaptics';
+import {
+  COACH_COMPONENT_FALLBACK,
+  COACH_PITCH,
+  type CoachComponentTokens,
+} from '../../features/coach/theme/coachPitchTokens';
+import { proRadius } from '../../theme/professionalDesign';
+import {
+  resolvePitchLines,
+  type CoachPitchLineKind,
+} from '../../utils/coachLineupGuide';
 
 export {
   MatchFormatKey,
@@ -34,414 +46,609 @@ export {
   HISTORICAL_HYBRID_SYSTEMS,
   SMALL_SIDED_SYSTEMS,
 } from '../../constants/tacticalMatrix';
+
 import {
-  MatchFormatKey,
   MATCH_FORMATS_CONFIG,
-  ALL_FORMATION_COORDINATES,
-  ALL_CHEMISTRY_LINKS,
+  type MatchFormatKey,
+  type PitchSlot,
 } from '../../constants/tacticalMatrix';
+import {
+  ALL_CHEMISTRY_LINKS,
+  ALL_FORMATION_COORDINATES,
+} from '../../constants/tacticalMatrix';
+
+/** Jeton en cours de déplacement (repère du terrain, en points). */
+type DragState = {
+  slotIndex: number;
+  player: SquadPlayer;
+  x: number;
+  y: number;
+  /** Poste le plus proche du doigt — celui qui s'allume. */
+  targetIndex: number;
+  /** Demi-largeur de la colonne du jeton d'origine, pour borner le geste. */
+  half: number;
+};
 
 export type FormationKey = string;
 export const FORMATION_COORDINATES = ALL_FORMATION_COORDINATES;
 export const CHEMISTRY_LINKS = ALL_CHEMISTRY_LINKS;
 
-interface CoachPitchViewProps {
-  starters: FutPlayer[];
-  format?: MatchFormatKey;
-  formation: string;
-  selectedPlayerId: string | null;
-  onSelectPlayer: (player: FutPlayer) => void;
-  onSwapPositions: (playerA: FutPlayer, playerB: FutPlayer) => void;
+/**
+ * Poste le plus proche d'un point — la seule règle qui décide où tombe un
+ * jeton relâché.
+ *
+ * Un terrain n'a pas de position libre : les crans de la formation **sont** les
+ * positions possibles. On accroche donc toujours au cran le plus proche, ce qui
+ * rend le dépôt prévisible où que le doigt se lève, sans zone morte.
+ * Renvoie `-1` quand il n'y a aucun cran (formation inconnue).
+ */
+export function nearestPointIndex(
+  points: readonly { x: number; y: number }[],
+  x: number,
+  y: number,
+): number {
+  let best = -1;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  points.forEach((point, index) => {
+    const distance = (point.x - x) ** 2 + (point.y - y) ** 2;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = index;
+    }
+  });
+  return best;
 }
 
+export type CoachPitchViewProps = {
+  /** Onze positionnel : index de cran → joueur, ou `null` pour un poste libre. */
+  slots?: (SquadPlayer | null)[];
+  /** Raccourci : onze fourni dans l'ordre des crans. */
+  starters?: SquadPlayer[];
+  format?: MatchFormatKey;
+  formation: string;
+  selectedPlayerId?: string | null;
+  selectedSlotIndex?: number | null;
+  onSelectPlayer?: (player: SquadPlayer, slotIndex: number) => void;
+  /** Touche un poste libre (ou occupé) pendant la séquence guidée. */
+  onSelectSlot?: (slotIndex: number, slot: PitchSlot) => void;
+  onSwapPositions?: (playerA: SquadPlayer, playerB: SquadPlayer) => void;
+  /**
+   * Glisser-déposer d'un jeton vers un autre poste — **alternative au
+   * sélecteur**. Activé seulement si le parent sait quoi faire du déplacement :
+   * sans cette prop, aucun geste n'est capté.
+   */
+  onMovePlayer?: (player: SquadPlayer, toSlotIndex: number) => void;
+  /** Ligne mise en avant pendant la séquence guidée. */
+  highlightLine?: CoachPitchLineKind | null;
+  /** Traits de liaison tactiques — **désactivés par défaut** (décor superflu). */
+  showChemistry?: boolean;
+  /** Hauteur imposée (sinon ratio de format, borné). */
+  height?: number;
+  /** Jetons du socle professionnel injectés par l'écran (repli hors shell). */
+  tokens?: CoachComponentTokens;
+  style?: StyleProp<ViewStyle>;
+};
+
+const MIN_HEIGHT = 260;
+const MAX_HEIGHT = 660;
+/**
+ * Largeur maximale du terrain. Sans cette borne, un desktop élargirait la
+ * pelouse sur toute la largeur du contenu (1 180 px) et le rapport 1:1,34
+ * donnerait un terrain écrasé : on garde une **portrait** naturel à toutes les
+ * tailles d'écran.
+ */
+const MAX_WIDTH = 520;
+
+function pitchRatio(format: MatchFormatKey): number {
+  switch (format) {
+    case 'futsal':
+      return 1.14;
+    case '5v5':
+      return 1.2;
+    case '4v4':
+      return 1.08;
+    case '3v3':
+      return 1.02;
+    case '8v8':
+      return 1.28;
+    case '11v11':
+    default:
+      return 1.34;
+  }
+}
+
+/**
+ * Terrain de composition — sobre, proportionné, sans commandes sur la pelouse.
+ *
+ * Principes respectés :
+ * - **Tracé discret** : blancs alpha très bas sur un vert profond, une seule
+ *   bande de ton ; aucun damier à fort contraste, aucun décor de stade.
+ * - **Jetons homogènes** : un seul disque par joueur (photo ou initiales), le
+ *   numéro en pastille, le nom juste en dessous — mêmes dimensions partout.
+ * - **Aucun chevauchement** : la largeur d'une ligne est divisée par son nombre
+ *   de crans, ce qui borne le diamètre des jetons et la largeur des libellés.
+ * - **Commandes hors pelouse** : ce composant ne dessine que le terrain.
+ * - **Adaptatif** : la hauteur découle de la largeur mesurée et du format, donc
+ *   le terrain reste juste de l'iPhone au desktop.
+ *
+ * Deux façons de placer un joueur, pour ne pas dépendre d'un seul geste :
+ * **toucher** un poste (le parent ouvre alors son sélecteur) ou **maintenir puis
+ * faire glisser** un jeton sur un autre poste. Le glisser commence par un appui
+ * long, précisément parce que le terrain vit dans une liste qui défile : sans
+ * ça, un balayage vertical sur un jeton ferait glisser le joueur au lieu de
+ * faire défiler la page.
+ */
 export const CoachPitchView: React.FC<CoachPitchViewProps> = ({
-  starters,
+  slots: slotsProp,
+  starters = [],
   format = '11v11',
   formation,
-  selectedPlayerId,
+  selectedPlayerId = null,
+  selectedSlotIndex = null,
   onSelectPlayer,
+  onSelectSlot,
   onSwapPositions,
+  onMovePlayer,
+  highlightLine = null,
+  showChemistry = false,
+  height,
+  tokens = COACH_COMPONENT_FALLBACK,
+  style,
 }) => {
-  const [pitchLayout, setPitchLayout] = useState({ width: 340, height: 410 });
+  const [measuredWidth, setMeasuredWidth] = useState(340);
 
-  const onLayout = (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    if (width > 50 && height > 50) {
-      setPitchLayout({ width, height });
-    }
+  const onLayout = (event: LayoutChangeEvent) => {
+    const { width } = event.nativeEvent.layout;
+    if (width > 80) setMeasuredWidth(width);
   };
 
-  const slots = ALL_FORMATION_COORDINATES[formation] || ALL_FORMATION_COORDINATES['4-3-3'] || [];
-  const links = ALL_CHEMISTRY_LINKS[formation] || [];
+  const formationSlots: PitchSlot[] = useMemo(
+    () => ALL_FORMATION_COORDINATES[formation] ?? ALL_FORMATION_COORDINATES['4-3-3'] ?? [],
+    [formation],
+  );
+
+  const players: (SquadPlayer | null)[] = useMemo(() => {
+    if (slotsProp) return slotsProp;
+    return formationSlots.map((_, index) => starters[index] ?? null);
+  }, [slotsProp, starters, formationSlots]);
+
+  const lines = useMemo(
+    () => resolvePitchLines(formationSlots, formation),
+    [formationSlots, formation],
+  );
+
   const isFutsal = format === 'futsal' || MATCH_FORMATS_CONFIG[format]?.isFutsal === true;
+  const canvasHeight = height ?? Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, measuredWidth * pitchRatio(format)));
+  const width = measuredWidth;
+  /** Marge du tracé — fournie par la géométrie partagée, comme le tracé lui-même. */
+  const inset = coachPitchInsets(width, canvasHeight);
+  const usableWidth = Math.max(120, width - inset.x * 2);
 
-  // Dynamic card dimensions based on format starter count (compact 11v11 ensures full pitch visibility)
-  const cardWidth = format === '11v11' ? 62 : format === '8v8' ? 68 : 74;
-  const cardHeight = format === '11v11' ? 84 : format === '8v8' ? 92 : 100;
+  /**
+   * Diamètre des jetons : trois contraintes, la plus serrée gagne.
+   * 1. la **colonne** la plus dense (aucun jeton ne touche son voisin de ligne),
+   * 2. la **verticale** la plus serrée (aucune ligne ne recouvre la suivante),
+   * 3. une proportion de la largeur du terrain, pour rester élégant.
+   */
+  const avatarSize = useMemo(() => {
+    const narrowest = lines.reduce((min, line) => Math.min(min, line.slotIndexes.length), 99);
+    const column = usableWidth / Math.max(1, narrowest);
+    const fromColumns = Math.floor(column - 12);
+    const fromWidth = Math.floor(width * 0.13);
 
-  const triggerHaptic = () => {
-    try {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {
-      // ignore
+    let tightestGap = canvasHeight;
+    for (let index = 1; index < lines.length; index += 1) {
+      tightestGap = Math.min(tightestGap, (lines[index]!.y - lines[index - 1]!.y) * canvasHeight);
     }
+    const fromVertical = Math.floor(tightestGap - 20);
+
+    return Math.max(26, Math.min(52, fromColumns, fromWidth, fromVertical));
+  }, [canvasHeight, lines, usableWidth, width]);
+
+  /** Hauteur de bande pour le cadrage d'étape : la ligne mise en avant respire. */
+  const bandHeight = canvasHeight / Math.max(3, lines.length * 1.35);
+
+  const linesForSlot = useMemo(() => {
+    const map = new Map<number, CoachPitchLineKind>();
+    lines.forEach((line) => {
+      line.slotIndexes.forEach((index) => map.set(index, line.kind));
+    });
+    return map;
+  }, [lines]);
+
+  const highlighted = highlightLine
+    ? lines.find((line) => line.kind === highlightLine) ?? null
+    : null;
+
+  /**
+   * Position de repos de chaque jeton, dans le repère du terrain.
+   *
+   * Calculée **une seule fois** : c'est le même point qui place le jeton, qui
+   * résout le poste le plus proche pendant le glisser, et qui sert de repère de
+   * retour. Sans ce calcul partagé, le glisser pourrait « atterrir » ailleurs
+   * que là où le jeton est dessiné.
+   */
+  const slotGeometry = useMemo(
+    () =>
+      formationSlots.map((slot, index) => {
+        const columnCount = Math.max(
+          1,
+          lines.find((line) => line.slotIndexes.includes(index))?.slotIndexes.length ?? 1,
+        );
+        const columnWidth = usableWidth / columnCount;
+        const half = Math.min(columnWidth, avatarSize + 18) / 2;
+        const cx = Math.max(inset.x + half, Math.min(width - inset.x - half, slot.x * width));
+        const cy = Math.max(
+          inset.y + avatarSize * 0.75,
+          Math.min(canvasHeight - inset.y - avatarSize * 1.1, slot.y * canvasHeight),
+        );
+        return { cx, cy, half };
+      }),
+    [avatarSize, canvasHeight, formationSlots, inset.x, inset.y, lines, usableWidth, width],
+  );
+
+  // ——— Glisser-déposer d'un jeton ———
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const dragRef = useRef<DragState | null>(null);
+  const claimedRef = useRef(false);
+  /**
+   * Les gestionnaires du `PanResponder` sont créés une fois : ils lisent donc
+   * toujours l'état **courant** via ces références, jamais via une closure
+   * figée au premier rendu.
+   */
+  const geometryRef = useRef({ slotGeometry, players, onMovePlayer });
+  geometryRef.current = { slotGeometry, players, onMovePlayer };
+
+  const clampX = (value: number, half: number) =>
+    Math.max(inset.x + half, Math.min(width - inset.x - half, value));
+  const clampY = (value: number) =>
+    Math.max(
+      inset.y + avatarSize * 0.75,
+      Math.min(canvasHeight - inset.y - avatarSize * 1.1, value),
+    );
+
+  /** Le dépôt s'accroche toujours au cran le plus proche (voir `nearestPointIndex`). */
+  const snapSlotIndex = (x: number, y: number) =>
+    nearestPointIndex(
+      geometryRef.current.slotGeometry.map((point) => ({ x: point.cx, y: point.cy })),
+      x,
+      y,
+    );
+
+  const beginDrag = (slotIndex: number, player: SquadPlayer) => {
+    if (!onMovePlayer) return;
+    const start = slotGeometry[slotIndex];
+    if (!start) return;
+    const next: DragState = {
+      slotIndex,
+      player,
+      x: start.cx,
+      y: start.cy,
+      targetIndex: slotIndex,
+      half: start.half,
+    };
+    claimedRef.current = false;
+    dragRef.current = next;
+    setDrag(next);
+    prodayHaptics.press();
   };
 
-  const handleCardPress = (player: FutPlayer) => {
-    triggerHaptic();
-    if (!selectedPlayerId) {
-      onSelectPlayer(player);
-    } else if (selectedPlayerId === player.id) {
-      onSelectPlayer(player);
-    } else {
-      const previousPlayer = starters.find((p) => p.id === selectedPlayerId);
-      if (previousPlayer) {
-        onSwapPositions(previousPlayer, player);
-      } else {
-        onSelectPlayer(player);
+  /** Fin de geste : le jeton rejoint le poste le plus proche, ou revient à sa place. */
+  const endDrag = (apply: boolean) => {
+    const current = dragRef.current;
+    dragRef.current = null;
+    claimedRef.current = false;
+    setDrag(null);
+    if (!current || !apply) return;
+    /** Reposé sur son propre poste : aucun changement, donc rien à annuler. */
+    if (current.targetIndex === current.slotIndex) return;
+    /**
+     * Poste libre **ou** occupé : c'est le parent qui tranche, parce que lui seul
+     * sait qui occupe le poste et comment l'échange doit se comporter.
+     */
+    geometryRef.current.onMovePlayer?.(current.player, current.targetIndex);
+  };
+
+  const dragControlsRef = useRef({ move: (_dx: number, _dy: number) => {}, end: (_apply: boolean) => {} });
+  dragControlsRef.current = {
+    move: (dx: number, dy: number) => {
+      const current = dragRef.current;
+      if (!current) return;
+      const start = geometryRef.current.slotGeometry[current.slotIndex];
+      if (!start) return;
+      const x = clampX(start.cx + dx, current.half);
+      const y = clampY(start.cy + dy);
+      const target = snapSlotIndex(x, y);
+      const next: DragState = {
+        ...current,
+        x,
+        y,
+        /** `-1` ne peut pas arriver (le terrain a toujours des crans) ; on garde le poste. */
+        targetIndex: target >= 0 ? target : current.targetIndex,
+      };
+      dragRef.current = next;
+      setDrag(next);
+    },
+    end: (apply: boolean) => endDrag(apply),
+  };
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        /** Le toucher simple reste au jeton (il ouvre le sélecteur du parent). */
+        onStartShouldSetPanResponder: () => false,
+        /** Le glisser ne démarre qu'après l'appui long qui a levé le jeton. */
+        onMoveShouldSetPanResponder: () => dragRef.current !== null,
+        onMoveShouldSetPanResponderCapture: () => false,
+        /** Une fois le jeton levé, la liste ne doit plus reprendre la main. */
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderGrant: () => {
+          claimedRef.current = true;
+        },
+        onPanResponderMove: (_event, gesture) => {
+          dragControlsRef.current.move(gesture.dx, gesture.dy);
+        },
+        onPanResponderRelease: () => {
+          dragControlsRef.current.end(true);
+        },
+        onPanResponderTerminate: () => {
+          dragControlsRef.current.end(false);
+        },
+      }),
+    [],
+  );
+
+  const handlePress = (player: SquadPlayer, slotIndex: number) => {
+    if (onSelectSlot) {
+      onSelectSlot(slotIndex, formationSlots[slotIndex]!);
+      return;
+    }
+    if (!onSelectPlayer) return;
+    if (selectedPlayerId && selectedPlayerId !== player.id && onSwapPositions) {
+      const previous = players.find((entry) => entry?.id === selectedPlayerId);
+      if (previous) {
+        onSwapPositions(previous, player);
+        return;
       }
     }
+    onSelectPlayer(player, slotIndex);
   };
 
-  const teamOvr = useMemo(() => {
-    if (!starters.length) return 80;
-    const sum = starters.reduce((acc, p) => acc + (p.ovr || 75), 0);
-    return Math.round(sum / starters.length);
-  }, [starters]);
+  const labelWidth = Math.max(
+    56,
+    Math.min(96, usableWidth / Math.max(3, Math.min(5, lines.length + 1))),
+  );
 
   return (
-    <View style={styles.outerContainer}>
-      {/* FUT Pitch HUD Top Bar */}
-      <View style={styles.hudBar}>
-        <View style={styles.hudItem}>
-          <Text style={styles.hudLabel}>NOTE MOYENNE</Text>
-          <View style={styles.hudValueRow}>
-            <Text style={styles.hudOvrVal}>{teamOvr}</Text>
-            <Text style={styles.hudOvrSuffix}>GEN</Text>
-          </View>
-        </View>
+    <View
+      style={[
+        styles.canvas,
+        { height: canvasHeight, backgroundColor: COACH_PITCH.canvas, borderColor: tokens.border },
+        style,
+      ]}
+      onLayout={onLayout}
+      {...panResponder.panHandlers}
+    >
+      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+        <CoachPitchSurface
+          width={width}
+          height={canvasHeight}
+          isFutsal={isFutsal}
+          gradientId="coachTurf"
+        />
 
-        <View style={styles.hudDivider} />
-
-        <View style={styles.hudItem}>
-          <Text style={styles.hudLabel}>COLLECTIF ÉQUIPE</Text>
-          <View style={styles.hudValueRow}>
-            <MaterialCommunityIcons name="star-shooting" size={14} color="#30D158" />
-            <Text style={[styles.hudOvrVal, { color: '#30D158' }]}>
-              {format === '11v11'
-                ? '33/33'
-                : format === '8v8'
-                ? '24/24'
-                : format === '5v5' || format === 'futsal'
-                ? '15/15'
-                : format === '4v4'
-                ? '12/12'
-                : '9/9'}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.hudDivider} />
-
-        <View style={styles.hudItem}>
-          <Text style={styles.hudLabel}>FORMAT & SYSTÈME</Text>
-          <Text style={styles.hudFormationVal}>{formation}</Text>
-        </View>
-      </View>
-
-      {/* Vector Pitch Canvas */}
-      <View style={styles.pitchCanvas} onLayout={onLayout}>
-        <Svg
-          width={pitchLayout.width}
-          height={pitchLayout.height}
-          style={StyleSheet.absoluteFill}
-        >
-          <Defs>
-            {isFutsal ? (
-              <LinearGradient id="futsalGrad" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%" stopColor="#0B1A30" />
-                <Stop offset="50%" stopColor="#0F2548" />
-                <Stop offset="100%" stopColor="#081426" />
-              </LinearGradient>
-            ) : (
-              <LinearGradient id="turfGrad" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%" stopColor="#103F22" />
-                <Stop offset="50%" stopColor="#134C28" />
-                <Stop offset="100%" stopColor="#0D351D" />
-              </LinearGradient>
-            )}
-          </Defs>
-
-          {/* Background Turf or Futsal Court */}
+        {/* Cadrage d'étape : une bande douce derrière la ligne travaillée. */}
+        {highlighted ? (
           <Rect
-            x="0"
-            y="0"
-            width={pitchLayout.width}
-            height={pitchLayout.height}
-            fill={isFutsal ? 'url(#futsalGrad)' : 'url(#turfGrad)'}
+            x={inset.x / 2}
+            y={highlighted.y * canvasHeight - bandHeight / 2}
+            width={width - inset.x}
+            height={bandHeight}
+            rx={proRadius.lg}
+            fill={tokens.accent}
+            opacity={0.1}
           />
+        ) : null}
 
-          {/* Alternating Stripes (for outdoor grass formats) */}
-          {!isFutsal &&
-            Array.from({ length: 10 }).map((_, i) => (
-              <Rect
-                key={i}
-                x="0"
-                y={(pitchLayout.height / 10) * i}
-                width={pitchLayout.width}
-                height={pitchLayout.height / 10}
-                fill={i % 2 === 0 ? 'rgba(255, 255, 255, 0.035)' : 'rgba(0, 0, 0, 0.05)'}
-              />
-            ))}
+        {showChemistry ? (
+          <G stroke={tokens.accent} strokeWidth="1" strokeDasharray="3,5" opacity={0.35}>
+            {(ALL_CHEMISTRY_LINKS[formation] ?? []).map(([from, to], index) => {
+              const a = formationSlots[from];
+              const b = formationSlots[to];
+              if (!a || !b) return null;
+              return (
+                <Line
+                  key={`link-${index}`}
+                  x1={a.x * width}
+                  y1={a.y * canvasHeight}
+                  x2={b.x * width}
+                  y2={b.y * canvasHeight}
+                />
+              );
+            })}
+          </G>
+        ) : null}
+      </Svg>
 
-          {/* Outer Boundary Touchlines */}
-          <Rect
-            x="14"
-            y="14"
-            width={pitchLayout.width - 28}
-            height={pitchLayout.height - 28}
-            fill="none"
-            stroke={isFutsal ? '#E5C07B' : 'rgba(255, 255, 255, 0.55)'}
-            strokeWidth="1.5"
-            rx={isFutsal ? 0 : 4}
-          />
+      {/* Poste visé pendant un glisser : une cible lisible, jamais un décor. */}
+      {drag && drag.targetIndex !== drag.slotIndex ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.dropTarget,
+            {
+              left: slotGeometry[drag.targetIndex]!.cx - (avatarSize + 10) / 2,
+              top: slotGeometry[drag.targetIndex]!.cy - (avatarSize + 10) / 2,
+              width: avatarSize + 10,
+              height: avatarSize + 10,
+              borderRadius: proRadius.pill,
+              borderColor: tokens.accent,
+            },
+          ]}
+        />
+      ) : null}
 
-          {/* Center Halfway Line */}
-          <Line
-            x1="14"
-            y1={pitchLayout.height / 2}
-            x2={pitchLayout.width - 14}
-            y2={pitchLayout.height / 2}
-            stroke={isFutsal ? '#E5C07B' : 'rgba(255, 255, 255, 0.55)'}
-            strokeWidth="1.5"
-          />
+      {/* Jetons — positionnés dans les bornes du terrain, jamais sur le tracé. */}
+      {formationSlots.map((slot, index) => {
+        const player = players[index] ?? null;
+        const lineKind = linesForSlot.get(index) ?? null;
+        const geometry = slotGeometry[index]!;
+        const isDragged = drag?.slotIndex === index;
+        const isSwapTarget =
+          drag !== null && drag.targetIndex === index && !isDragged && player !== null;
+        /**
+         * Le cadrage d'étape atténue les lignes non travaillées, mais jamais le
+         * jeton qu'on tient : on ne déplace pas ce qu'on ne voit pas.
+         */
+        const dim = highlightLine !== null && lineKind !== highlightLine && !isDragged;
+        const cx = isDragged ? drag.x : geometry.cx;
+        const cy = isDragged ? drag.y : geometry.cy;
 
-          {/* Center Circle & Spot */}
-          <Circle
-            cx={pitchLayout.width / 2}
-            cy={pitchLayout.height / 2}
-            r="44"
-            fill="none"
-            stroke={isFutsal ? '#E5C07B' : 'rgba(255, 255, 255, 0.55)'}
-            strokeWidth="1.5"
-          />
-          <Circle
-            cx={pitchLayout.width / 2}
-            cy={pitchLayout.height / 2}
-            r="3"
-            fill={isFutsal ? '#E5C07B' : 'rgba(255, 255, 255, 0.85)'}
-          />
+        const markerSize: PlayerMarkerSize = avatarSize < 36 ? 'bench' : 'pitch';
 
-          {/* Futsal Specific Markings (Semi-circle 6m D-arcs) */}
-          {isFutsal ? (
-            <>
-              {/* Top 6m Futsal D-arc */}
-              <Path
-                d={`M ${pitchLayout.width * 0.28} 14 A 50 50 0 0 0 ${pitchLayout.width * 0.72} 14`}
-                fill="none"
-                stroke="#E5C07B"
-                strokeWidth="1.5"
-              />
-              {/* Bottom 6m Futsal D-arc */}
-              <Path
-                d={`M ${pitchLayout.width * 0.28} ${pitchLayout.height - 14} A 50 50 0 0 1 ${pitchLayout.width * 0.72} ${pitchLayout.height - 14}`}
-                fill="none"
-                stroke="#E5C07B"
-                strokeWidth="1.5"
-              />
-              {/* Futsal Penalty Spots */}
-              <Circle cx={pitchLayout.width / 2} cy={pitchLayout.height * 0.18} r="3" fill="#E5C07B" />
-              <Circle cx={pitchLayout.width / 2} cy={pitchLayout.height * 0.82} r="3" fill="#E5C07B" />
-            </>
-          ) : (
-            /* Traditional Outdoor Boxes (11v11, 8v8, 4v4) */
-            <>
-              {/* Top Penalty Box */}
-              <Rect
-                x={pitchLayout.width * 0.25}
-                y="14"
-                width={pitchLayout.width * 0.5}
-                height={pitchLayout.height * 0.16}
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.55)"
-                strokeWidth="1.5"
-              />
-              {/* Top 6-yard Box */}
-              <Rect
-                x={pitchLayout.width * 0.37}
-                y="14"
-                width={pitchLayout.width * 0.26}
-                height={pitchLayout.height * 0.065}
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.55)"
-                strokeWidth="1.5"
-              />
-              {/* Bottom Penalty Box */}
-              <Rect
-                x={pitchLayout.width * 0.25}
-                y={pitchLayout.height - 14 - pitchLayout.height * 0.16}
-                width={pitchLayout.width * 0.5}
-                height={pitchLayout.height * 0.16}
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.55)"
-                strokeWidth="1.5"
-              />
-              {/* Bottom 6-yard Box */}
-              <Rect
-                x={pitchLayout.width * 0.37}
-                y={pitchLayout.height - 14 - pitchLayout.height * 0.065}
-                width={pitchLayout.width * 0.26}
-                height={pitchLayout.height * 0.065}
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.55)"
-                strokeWidth="1.5"
-              />
-            </>
-          )}
-
-          {/* Dynamic Tactical Chemistry Links */}
-          {links.map(([fromIdx, toIdx], lIdx) => {
-            const slotFrom = slots[fromIdx];
-            const slotTo = slots[toIdx];
-            if (!slotFrom || !slotTo) return null;
-
-            const x1 = slotFrom.x * pitchLayout.width;
-            const y1 = slotFrom.y * pitchLayout.height;
-            const x2 = slotTo.x * pitchLayout.width;
-            const y2 = slotTo.y * pitchLayout.height;
-
-            return (
-              <Line
-                key={`chem-${lIdx}`}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke={isFutsal ? '#FFD700' : '#30D158'}
-                strokeWidth="2"
-                strokeDasharray="4,2"
-                opacity={0.85}
-              />
-            );
-          })}
-        </Svg>
-
-        {/* Starting Players FIFA Ultimate Team Cards */}
-        {slots.map((slot, idx) => {
-          const player = starters[idx];
-          if (!player) return null;
-
-          const isSelected = selectedPlayerId === player.id;
-          const isTarget = selectedPlayerId !== null && !isSelected;
-
-          const left = slot.x * pitchLayout.width - cardWidth / 2;
-          const top = slot.y * pitchLayout.height - cardHeight / 2;
-
-          return (
-            <View
-              key={player.id}
-              style={[
-                styles.playerCardSlot,
-                {
-                  left,
-                  top,
-                  width: cardWidth,
-                  height: cardHeight,
-                },
-              ]}
-            >
+        return (
+          <View
+            key={`slot-${index}`}
+            style={[
+              styles.marker,
+              isDragged && styles.markerDragged,
+              {
+                left: cx - geometry.half,
+                top: cy - avatarSize * 0.75,
+                width: geometry.half * 2,
+                opacity: dim || isSwapTarget ? 0.42 : 1,
+              },
+            ]}
+          >
+            {player ? (
               <CoachFutPlayerCard
                 player={player}
-                size="pitch"
-                isSelected={isSelected}
-                isTarget={isTarget}
-                onPress={() => handleCardPress(player)}
+                size={markerSize}
+                tokens={tokens}
+                avatarSize={avatarSize}
+                /** Le libellé ne dépasse jamais la colonne : il se tronque proprement. */
+                labelWidth={Math.min(labelWidth, geometry.half * 2)}
+                isSelected={
+                  isDragged || selectedPlayerId === player.id || selectedSlotIndex === index
+                }
+                hideName={avatarSize < 30}
+                onPress={() => handlePress(player, index)}
+                onLongPress={
+                  onMovePlayer ? () => beginDrag(index, player) : undefined
+                }
+                onPressOut={
+                  onMovePlayer
+                    ? () => {
+                        /** Appui long relâché sans glisser : le jeton se repose. */
+                        if (!claimedRef.current) endDrag(false);
+                      }
+                    : undefined
+                }
               />
-            </View>
-          );
-        })}
-      </View>
+            ) : (
+              <EmptySlotMarker
+                position={slot.defaultPos}
+                size={avatarSize}
+                tokens={tokens}
+                onPress={onSelectSlot ? () => onSelectSlot(index, slot) : undefined}
+              />
+            )}
+          </View>
+        );
+      })}
     </View>
   );
 };
 
+/** Poste libre — cible tactile explicite, même gabarit que les jetons occupés. */
+function EmptySlotMarker({
+  position,
+  size,
+  tokens,
+  onPress,
+}: {
+  position: string;
+  size: number;
+  tokens: CoachComponentTokens;
+  onPress?: () => void;
+}) {
+  return (
+    <PressableSpring
+      onPress={onPress}
+      disabled={!onPress}
+      scaleTo={0.94}
+      accessibilityRole="button"
+      accessibilityLabel={`Poste ${position} à composer`}
+      style={styles.emptyRoot}
+    >
+      <View
+        style={[
+          styles.emptyCircle,
+          {
+            width: size,
+            height: size,
+            borderRadius: proRadius.pill,
+            borderColor: tokens.border,
+            backgroundColor: tokens.elevated,
+          },
+        ]}
+      >
+        <Text
+          style={[styles.emptyLabel, { color: tokens.muted, fontSize: Math.max(9, size * 0.28) }]}
+          allowFontScaling={false}
+        >
+          {position}
+        </Text>
+      </View>
+      <Text style={[styles.emptyHint, { color: tokens.muted }]} numberOfLines={1} allowFontScaling={false}>
+        Choisir
+      </Text>
+    </PressableSpring>
+  );
+}
+
 const styles = StyleSheet.create({
-  outerContainer: {
-    borderRadius: 20,
-    backgroundColor: '#0F0F14',
-    borderWidth: 1.5,
-    borderColor: 'rgba(212, 175, 55, 0.25)',
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  hudBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: '#16161E',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  hudItem: {
-    alignItems: 'center',
-  },
-  hudLabel: {
-    color: '#8B8B9A',
-    fontSize: 8,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  hudValueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 2,
-  },
-  hudOvrVal: {
-    color: '#FFD700',
-    fontSize: 15,
-    fontWeight: '900',
-    fontFamily: '-apple-system',
-  },
-  hudOvrSuffix: {
-    color: '#8B8B9A',
-    fontSize: 9,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  hudFormationVal: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  hudDivider: {
-    width: 1,
-    height: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  pitchCanvas: {
+  canvas: {
     width: '100%',
-    height: 410,
+    maxWidth: MAX_WIDTH,
+    alignSelf: 'center',
+    borderRadius: proRadius.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
     position: 'relative',
   },
-  playerCardSlot: {
+  marker: {
     position: 'absolute',
     alignItems: 'center',
+  },
+  /** Jeton tenu : au-dessus des autres, légèrement levé, jamais translucide. */
+  markerDragged: {
+    zIndex: 5,
+    elevation: 5,
+    transform: [{ scale: 1.06 }],
+  },
+  /** Poste visé : contour d'accent pointillé, comme la sélection de puce. */
+  dropTarget: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+  },
+  emptyRoot: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  emptyCircle: {
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+  },
+  emptyLabel: {
+    fontWeight: '700',
+    letterSpacing: 0.4,
+  },
+  emptyHint: {
+    fontSize: 9.5,
+    fontWeight: '600',
   },
 });

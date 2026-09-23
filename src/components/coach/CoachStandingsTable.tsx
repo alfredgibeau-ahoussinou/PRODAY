@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import {
+  proSemantic,
+} from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import { COACH_CLEAR_SURFACES as CLEAR } from '../../utils/coachTeamTheme';
+import {
   StyleSheet,
   Text,
   View,
@@ -7,6 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { COACH_SITE } from '../../content/coachPageIdentity';
 
 export interface StandingsRow {
   rank: number;
@@ -24,121 +30,6 @@ export interface StandingsRow {
   isCurrentTeam?: boolean;
 }
 
-const DEFAULT_STANDINGS: StandingsRow[] = [
-  {
-    rank: 1,
-    clubName: 'FC ProDay Démo',
-    clubCode: 'FCP',
-    points: 38,
-    played: 16,
-    won: 12,
-    drawn: 2,
-    lost: 2,
-    goalsFor: 35,
-    goalsAgainst: 12,
-    goalDiff: 23,
-    form: ['W', 'W', 'W', 'D', 'W'],
-    isCurrentTeam: true,
-  },
-  {
-    rank: 2,
-    clubName: 'RC France Academy',
-    clubCode: 'RCF',
-    points: 35,
-    played: 16,
-    won: 11,
-    drawn: 2,
-    lost: 3,
-    goalsFor: 29,
-    goalsAgainst: 14,
-    goalDiff: 15,
-    form: ['W', 'W', 'L', 'W', 'W'],
-  },
-  {
-    rank: 3,
-    clubName: 'AS Montferrand',
-    clubCode: 'ASM',
-    points: 31,
-    played: 16,
-    won: 9,
-    drawn: 4,
-    lost: 3,
-    goalsFor: 26,
-    goalsAgainst: 18,
-    goalDiff: 8,
-    form: ['D', 'W', 'W', 'D', 'L'],
-  },
-  {
-    rank: 4,
-    clubName: 'Olympique Paris Sud',
-    clubCode: 'OPS',
-    points: 27,
-    played: 16,
-    won: 8,
-    drawn: 3,
-    lost: 5,
-    goalsFor: 24,
-    goalsAgainst: 20,
-    goalDiff: 4,
-    form: ['L', 'W', 'D', 'W', 'W'],
-  },
-  {
-    rank: 5,
-    clubName: 'CS Neuilly Football',
-    clubCode: 'CSN',
-    points: 23,
-    played: 16,
-    won: 6,
-    drawn: 5,
-    lost: 5,
-    goalsFor: 20,
-    goalsAgainst: 21,
-    goalDiff: -1,
-    form: ['D', 'L', 'W', 'L', 'D'],
-  },
-  {
-    rank: 6,
-    clubName: 'Stade Banlieue Ouest',
-    clubCode: 'SBO',
-    points: 20,
-    played: 16,
-    won: 5,
-    drawn: 5,
-    lost: 6,
-    goalsFor: 18,
-    goalsAgainst: 22,
-    goalDiff: -4,
-    form: ['L', 'D', 'L', 'W', 'D'],
-  },
-  {
-    rank: 7,
-    clubName: 'Entente Jeunesse 92',
-    clubCode: 'EJ92',
-    points: 15,
-    played: 16,
-    won: 4,
-    drawn: 3,
-    lost: 9,
-    goalsFor: 14,
-    goalsAgainst: 27,
-    goalDiff: -13,
-    form: ['L', 'L', 'W', 'L', 'L'],
-  },
-  {
-    rank: 8,
-    clubName: 'Union Sportive Étoile',
-    clubCode: 'USE',
-    points: 11,
-    played: 16,
-    won: 2,
-    drawn: 5,
-    lost: 9,
-    goalsFor: 11,
-    goalsAgainst: 31,
-    goalDiff: -20,
-    form: ['D', 'L', 'L', 'L', 'D'],
-  },
-];
 
 interface Props {
   data?: StandingsRow[];
@@ -149,18 +40,18 @@ interface Props {
 }
 
 export const CoachStandingsTable: React.FC<Props> = ({
-  data = DEFAULT_STANDINGS,
+  data = [],
   compact = false,
-  divisionName = 'Régional 1 — Poule B (Saison 2026/2027)',
+  divisionName = 'Compétition officielle rattachée',
   onSelectTeam,
   lightMode = false,
 }) => {
   const [filter, setFilter] = useState<'all' | 'home' | 'away'>('all');
   const [isAutoSync, setIsAutoSync] = useState(true);
-  const [lastSyncTime, setLastSyncTime] = useState('À l’instant');
   const [manualOverrideActive, setManualOverrideActive] = useState(false);
 
   const rows = compact ? data.slice(0, 5) : data;
+  const hasNoData = rows.length === 0;
 
   const toggleSyncMode = () => {
     setManualOverrideActive(!manualOverrideActive);
@@ -176,12 +67,12 @@ export const CoachStandingsTable: React.FC<Props> = ({
             <View style={[styles.liveSyncDot, manualOverrideActive && styles.liveSyncDotManual]} />
             <View>
               <Text style={[styles.officialFeedTitle, lightMode && styles.textDark]}>
-                {manualOverrideActive ? 'Mode Manuel Actif (Contestation)' : 'Flux FFF / District Officiel en Direct'}
+                {manualOverrideActive ? 'Mode Manuel Actif (Contestation)' : 'Aucun flux officiel connecté'}
               </Text>
               <Text style={[styles.officialFeedSubtitle, lightMode && styles.textMutedDark]}>
                 {manualOverrideActive
                   ? 'Modifications locales autorisées · Synchronisation suspendue'
-                  : `API FFF Synchronisée · Résultats homologués (${lastSyncTime})`}
+                  : 'Le classement réel de la compétition rattachée s’affichera ici — aucun tableau fictif n’est montré.'}
               </Text>
             </View>
           </View>
@@ -194,7 +85,7 @@ export const CoachStandingsTable: React.FC<Props> = ({
             <MaterialCommunityIcons
               name={manualOverrideActive ? 'sync-alert' : 'shield-sync-outline'}
               size={13}
-              color={manualOverrideActive ? '#FF9F0A' : '#30D158'}
+              color={manualOverrideActive ? proSemantic.warning : proSemantic.success}
             />
             <Text style={[styles.overrideBtnText, manualOverrideActive && styles.overrideBtnTextActive]}>
               {manualOverrideActive ? 'Revenir Auto' : 'Forçage Manuel'}
@@ -203,19 +94,9 @@ export const CoachStandingsTable: React.FC<Props> = ({
         </View>
       )}
 
-      {/* Latest Official Validated Match Strip */}
-      {!compact && (
-        <View style={[styles.latestMatchStrip, lightMode && styles.latestMatchStripLight]}>
-          <MaterialCommunityIcons name="check-decagram" size={14} color="#C5A059" />
-          <Text style={[styles.latestMatchText, lightMode && styles.textDark]}>
-            Dernier résultat validé FFF : <Text style={styles.latestMatchBold}>FC ProDay 3 - 1 AS Montferrand</Text> (J16)
-          </Text>
-        </View>
-      )}
-
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <MaterialCommunityIcons name="trophy-outline" size={18} color="#C5A059" />
+          <MaterialCommunityIcons name="trophy-outline" size={18} color={tokens.accent} />
           <View>
             <Text style={[styles.title, lightMode && styles.textDark]}>Classement Officiel FFF</Text>
             <Text style={[styles.subtitle, lightMode && styles.textMutedDark]}>{divisionName}</Text>
@@ -265,7 +146,20 @@ export const CoachStandingsTable: React.FC<Props> = ({
           </View>
 
           {/* Table Rows */}
-          {rows.map((row) => {
+          {hasNoData ? (
+            <View style={styles.emptyRows}>
+              <MaterialCommunityIcons name="trophy-outline" size={22} color={tokens.muted} />
+              <Text style={[styles.emptyRowsTitle, lightMode && styles.textDark]}>
+                Aucun classement disponible
+              </Text>
+              <Text style={[styles.emptyRowsText, lightMode && styles.textMutedDark]}>
+                Le classement apparaîtra ici dès qu'une compétition officielle
+                sera rattachée au club et que la source réelle sera connectée.
+                Aucun tableau fictif n'est affiché.
+              </Text>
+            </View>
+          ) : (
+            rows.map((row) => {
             const isPromotion = row.rank <= 2;
             const isRelegation = row.rank >= 7;
 
@@ -279,8 +173,7 @@ export const CoachStandingsTable: React.FC<Props> = ({
                   row.isCurrentTeam && (lightMode ? styles.currentTeamRowLight : styles.currentTeamRow),
                 ]}
                 onPress={() => onSelectTeam?.(row)}
-              >
-                {/* Rank Badge */}
+              >                {/* Rank Badge */}
                 <View style={[styles.rankBadge, lightMode && styles.rankBadgeLight, isPromotion && styles.rankPromo, isRelegation && styles.rankReleg]}>
                   <Text style={[styles.rankText, lightMode && styles.textDark, row.isCurrentTeam && (lightMode ? styles.boldGold : styles.boldWhite)]}>
                     {row.rank}
@@ -341,22 +234,22 @@ export const CoachStandingsTable: React.FC<Props> = ({
                 )}
               </TouchableOpacity>
             );
-          })}
+          }))}
         </View>
       </ScrollView>
 
       {/* Legend Footer */}
       <View style={[styles.footerLegend, lightMode && styles.footerLegendLight]}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendBar, { backgroundColor: '#30D158' }]} />
+          <View style={[styles.legendBar, { backgroundColor: proSemantic.success }]} />
           <Text style={[styles.legendLabel, lightMode && styles.textMutedDark]}>Montée N3</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendBar, { backgroundColor: '#0A84FF' }]} />
+          <View style={[styles.legendBar, { backgroundColor: proSemantic.info }]} />
           <Text style={[styles.legendLabel, lightMode && styles.textMutedDark]}>Barrages</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendBar, { backgroundColor: '#FF453A' }]} />
+          <View style={[styles.legendBar, { backgroundColor: proSemantic.danger }]} />
           <Text style={[styles.legendLabel, lightMode && styles.textMutedDark]}>Relégation R2</Text>
         </View>
       </View>
@@ -364,49 +257,67 @@ export const CoachStandingsTable: React.FC<Props> = ({
   );
 };
 
+const tokens = COACH_SITE;
+
 const styles = StyleSheet.create({
+  emptyRows: {
+    alignItems: 'flex-start',
+    paddingVertical: 18,
+    paddingHorizontal: 14,
+    gap: 6,
+  },
+  emptyRowsTitle: {
+    color: tokens.foreground,
+    fontSize: 13.5,
+    fontWeight: '700',
+      },
+  emptyRowsText: {
+    color: withAlpha('FFFFFF', 0.5),
+    fontSize: 11.5,
+    lineHeight: 17,
+      },
   cardLight: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
+    backgroundColor: tokens.foreground,
+    borderColor: CLEAR.border,
   },
   officialFeedBannerLight: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
+    backgroundColor: CLEAR.surface,
+    borderColor: CLEAR.border,
   },
   latestMatchStripLight: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FDE68A',
+    backgroundColor: withAlpha('F59E0B', 0.1),
+    borderColor: withAlpha('F59E0B', 0.4),
   },
   textDark: {
-    color: '#0F172A',
+    color: CLEAR.foreground,
   },
   textMutedDark: {
-    color: '#64748B',
+    color: CLEAR.muted,
   },
   filterPillsLight: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: CLEAR.surface,
   },
   tableRowHeaderLight: {
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: CLEAR.border,
   },
   tableRowLight: {
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: CLEAR.surface,
   },
   currentTeamRowLight: {
-    backgroundColor: '#FEF9C3',
-    borderLeftColor: '#C5A059',
+    backgroundColor: withAlpha('F59E0B', 0.15),
+    borderLeftColor: tokens.accent,
   },
   rankBadgeLight: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: CLEAR.surface,
   },
   footerLegendLight: {
-    borderTopColor: '#E2E8F0',
+    borderTopColor: CLEAR.border,
   },
   card: {
-    backgroundColor: '#121217',
+    backgroundColor: CLEAR.elevated,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: tokens.border,
     padding: 16,
     marginVertical: 8,
   },
@@ -414,13 +325,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: withAlpha('FFFFFF', 0.04),
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 9,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: withAlpha('FFFFFF', 0.06),
   },
   officialFeedLeft: {
     flexDirection: 'row',
@@ -432,70 +343,66 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#30D158',
+    backgroundColor: proSemantic.success,
     marginRight: 8,
   },
   liveSyncDotManual: {
-    backgroundColor: '#FF9F0A',
+    backgroundColor: proSemantic.warning,
   },
   officialFeedTitle: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 12,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   officialFeedSubtitle: {
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: withAlpha('FFFFFF', 0.5),
     fontSize: 10,
     fontWeight: '500',
-    fontFamily: '-apple-system',
-    marginTop: 1,
+        marginTop: 1,
   },
   overrideBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    backgroundColor: withAlpha('10B981', 0.12),
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.25)',
+    borderColor: withAlpha('10B981', 0.25),
   },
   overrideBtnActive: {
-    backgroundColor: 'rgba(255, 159, 10, 0.12)',
-    borderColor: 'rgba(255, 159, 10, 0.25)',
+    backgroundColor: withAlpha('F59E0B', 0.12),
+    borderColor: withAlpha('F59E0B', 0.25),
   },
   overrideBtnText: {
-    color: '#30D158',
+    color: proSemantic.success,
     fontSize: 10,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   overrideBtnTextActive: {
-    color: '#FF9F0A',
+    color: proSemantic.warning,
   },
   latestMatchStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(197, 160, 89, 0.08)',
+    backgroundColor: withAlpha(tokens.accent, 0.08),
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 6,
     marginBottom: 14,
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.18)',
+    borderColor: withAlpha(tokens.accent, 0.18),
   },
   latestMatchText: {
-    color: '#E5E5EA',
+    color: tokens.elevated,
     fontSize: 11,
     fontWeight: '500',
-    fontFamily: '-apple-system',
-    flex: 1,
+        flex: 1,
   },
   latestMatchBold: {
-    color: '#C5A059',
+    color: tokens.accent,
     fontWeight: '700',
   },
   header: {
@@ -512,20 +419,18 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 15,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   subtitle: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 11,
     fontWeight: '500',
-    fontFamily: '-apple-system',
-  },
+      },
   filterPills: {
     flexDirection: 'row',
-    backgroundColor: '#1C1C22',
+    backgroundColor: COACH_SITE.elevated,
     borderRadius: 8,
     padding: 2,
     gap: 2,
@@ -536,16 +441,15 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   pillActive: {
-    backgroundColor: 'rgba(197, 160, 89, 0.25)',
+    backgroundColor: withAlpha(tokens.accent, 0.25),
   },
   pillText: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 11,
     fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
+      },
   pillTextActive: {
-    color: '#C5A059',
+    color: tokens.accent,
   },
   tableContainer: {
     minWidth: 360,
@@ -555,7 +459,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: tokens.border,
     marginBottom: 4,
   },
   tableRow: {
@@ -563,28 +467,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
+    borderBottomColor: withAlpha('FFFFFF', 0.04),
     borderRadius: 8,
   },
   currentTeamRow: {
-    backgroundColor: 'rgba(197, 160, 89, 0.08)',
+    backgroundColor: withAlpha(tokens.accent, 0.08),
     borderLeftWidth: 3,
-    borderLeftColor: '#C5A059',
+    borderLeftColor: tokens.accent,
     paddingLeft: 4,
   },
   th: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 11,
     fontWeight: '600',
-    fontFamily: '-apple-system',
-    textAlign: 'center',
+        textAlign: 'center',
   },
   td: {
-    color: '#E5E5EA',
+    color: tokens.elevated,
     fontSize: 12,
     fontWeight: '500',
-    fontFamily: '-apple-system',
-    textAlign: 'center',
+        textAlign: 'center',
   },
   colRank: {
     width: 28,
@@ -597,25 +499,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 6,
-    backgroundColor: '#1C1C22',
+    backgroundColor: COACH_SITE.elevated,
   },
   rankPromo: {
-    backgroundColor: 'rgba(48, 209, 88, 0.2)',
+    backgroundColor: withAlpha('10B981', 0.2),
   },
   rankReleg: {
-    backgroundColor: 'rgba(255, 69, 58, 0.2)',
+    backgroundColor: withAlpha('EF4444', 0.2),
   },
   rankText: {
-    color: '#E5E5EA',
+    color: tokens.elevated,
     fontSize: 11,
     fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+      },
   boldWhite: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
   },
   boldGold: {
-    color: '#C5A059',
+    color: tokens.accent,
     fontWeight: '800',
   },
   colClub: {
@@ -623,13 +524,12 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   clubNameText: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 12,
     fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
+      },
   currentTeamText: {
-    color: '#C5A059',
+    color: tokens.accent,
     fontWeight: '700',
   },
   colPoints: {
@@ -638,17 +538,17 @@ const styles = StyleSheet.create({
   },
   pointsText: {
     fontSize: 13,
-    color: '#FFFFFF',
+    color: tokens.foreground,
   },
   colStat: {
     width: 28,
   },
   diffPositive: {
-    color: '#30D158',
+    color: proSemantic.success,
     fontWeight: '600',
   },
   diffNegative: {
-    color: '#FF453A',
+    color: proSemantic.danger,
     fontWeight: '600',
   },
   colForm: {
@@ -667,16 +567,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   formWin: {
-    backgroundColor: '#30D158',
+    backgroundColor: proSemantic.success,
   },
   formDraw: {
-    backgroundColor: '#8E8E93',
+    backgroundColor: tokens.muted,
   },
   formLoss: {
-    backgroundColor: '#FF453A',
+    backgroundColor: proSemantic.danger,
   },
   formLetter: {
-    color: '#FFFFFF',
+    color: tokens.foreground,
     fontSize: 9,
     fontWeight: '800',
   },
@@ -686,7 +586,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: withAlpha('FFFFFF', 0.05),
   },
   legendItem: {
     flexDirection: 'row',
@@ -699,9 +599,8 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   legendLabel: {
-    color: '#8B8B9A',
+    color: tokens.muted,
     fontSize: 10,
     fontWeight: '500',
-    fontFamily: '-apple-system',
-  },
+      },
 });

@@ -723,7 +723,9 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
             <TouchableOpacity
               onPress={() => setSelectedTeamAction(null)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
+
+              accessibilityRole="button"
+              accessibilityLabel="Fermer">
               <Ionicons name="close-circle" size={22} color={ELITE_COLORS.textMuted} />
             </TouchableOpacity>
           </View>

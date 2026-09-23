@@ -5,52 +5,64 @@ import {
 } from '../services/frenchFootballStandings.service';
 import { resolveActiveClubLeague } from '../features/club/hooks/clubLeagueResolution';
 
+/**
+ * Contrat honnête des classements (invariant DATA-01) : sans source réelle
+ * (Firestore vide, scraper FFF injoignable), le service renvoie un shell vide
+ * explicitement marqué — jamais de classement ni de buteur inventé.
+ */
 describe('Club Standings & League Exploration Hub', () => {
-  describe('Poule Club (Seniors R1 · Poule B)', () => {
-    it('provides official certified seed data for r1_idf_b (Seniors R1 Poule B)', () => {
+  describe('Dégradation vide (aucune donnée fictive)', () => {
+    it('buildCertifiedSeedLeague renvoie un shell vide, non certifié, marqué indisponible', () => {
       const data = buildCertifiedSeedLeague('r1_idf_b', '2026-2027');
 
       expect(data).toBeDefined();
       expect(data.id).toBe('r1_idf_b');
-      expect(data.standings.length).toBe(12);
-
-      // FC ProDay en tête du classement
-      const leader = data.standings[0];
-      expect(leader.rank).toBe(1);
-      expect(leader.name).toBe('FC ProDay');
-      expect(leader.points).toBe(39);
-      expect(leader.played).toBe(16);
-      expect(leader.won).toBe(12);
-      expect(leader.drawn).toBe(3);
-      expect(leader.lost).toBe(1);
-      expect(leader.goal_diff).toBe(22);
-      expect(leader.isMyTeam).toBe(true);
-      expect(leader.form).toEqual(['V', 'V', 'V', 'N', 'V']);
-
-      // 2e Racing CFF
-      const second = data.standings[1];
-      expect(second.rank).toBe(2);
-      expect(second.name).toBe('Racing CFF');
-      expect(second.points).toBe(36);
-
-      // Buteurs
-      expect(data.scorers.length).toBeGreaterThanOrEqual(3);
-      expect(data.scorers[0].name).toBe('Kylian Perez');
-      expect(data.scorers[0].club).toBe('FC ProDay');
-      expect(data.scorers[0].goals).toBe(14);
+      expect(data.standings).toEqual([]);
+      expect(data.scorers).toEqual([]);
+      expect(data.officialFffCertified).toBe(false);
+      expect(data.source).toBe('no_source');
+      expect(data.syncStatus).toBe('unavailable');
     });
 
-    it('provides archive 2025-2026 season for r1_idf_b', () => {
+    it('ne réinjecte jamais les anciens tableaux fictifs (FC ProDay, Kylian Perez…)', () => {
       const data = buildCertifiedSeedLeague('r1_idf_b', '2025-2026');
-      expect(data.standings.length).toBe(12);
-      expect(data.standings[0].name).toBe('FC ProDay');
-      expect(data.standings[0].played).toBe(22);
-      expect(data.standings[0].points).toBe(54);
+      const serialized = JSON.stringify(data);
+      expect(serialized).not.toContain('FC ProDay');
+      expect(serialized).not.toContain('Kylian Perez');
+      expect(serialized).not.toContain('Racing CFF');
+      expect(data.standings.length).toBe(0);
+    });
+
+    it('getLeagueStandings sans source => shell vide synchronisé honnête', async () => {
+      const data = await frenchFootballStandingsService.getLeagueStandings('d1_d92');
+      expect(data.id).toBe('d1_d92');
+      expect(data.standings).toEqual([]);
+      expect(data.scorers).toEqual([]);
+      expect(data.officialFffCertified).toBe(false);
+    });
+
+    it('getLeagueStandings pour une ligue inconnue => shell vide sans exception', async () => {
+      const data = await frenchFootballStandingsService.getLeagueStandings('ligue_inconnue_x');
+      expect(data.id).toBe('ligue_inconnue_x');
+      expect(data.standings).toEqual([]);
+      expect(data.officialFffCertified).toBe(false);
+    });
+
+    it('fetchLiveStandings hors ligne => shell vide marqué indisponible', async () => {
+      const live = await frenchFootballStandingsService.fetchLiveStandings('d1_d92');
+      expect(live.standings).toEqual([]);
+      expect(live.syncStatus).toBe('unavailable');
+      expect(live.source).toBe('no_source');
+    });
+
+    it('recherche de club sans source => aucun résultat inventé', async () => {
+      const res = await frenchFootballStandingsService.searchClubs('Suresnes');
+      expect(res).toEqual([]);
     });
   });
 
-  describe('resolveActiveClubLeague Fallback', () => {
-    it('automatically defaults to r1_idf_b / FC ProDay when no explicit FFF link exists', () => {
+  describe('resolveActiveClubLeague (aucune poule fabriquée)', () => {
+    it('sans rattachement FFF explicite => résolution nulle honnête', () => {
       const resolved = resolveActiveClubLeague({
         club: null,
         teams: [],
@@ -58,13 +70,13 @@ describe('Club Standings & League Exploration Hub', () => {
         season: '2026-2027',
       });
 
-      expect(resolved.leagueId).toBe('r1_idf_b');
-      expect(resolved.teamId).toBe('fc_proday');
-      expect(resolved.teamName).toBe('FC ProDay');
-      expect(resolved.divisionLabel).toContain('Régional 1');
+      expect(resolved.leagueId).toBeNull();
+      expect(resolved.teamId).toBeNull();
+      expect(resolved.teamName).toBeNull();
+      expect(resolved.source).toBeNull();
     });
 
-    it('uses custom club name in fallback if club has a name', () => {
+    it('un club nommé n’obtient pas de poule inventée', () => {
       const resolved = resolveActiveClubLeague({
         club: { id: 'club_1', name: 'FC ProDay Elite' } as any,
         teams: [],
@@ -72,7 +84,8 @@ describe('Club Standings & League Exploration Hub', () => {
         season: '2026-2027',
       });
 
-      expect(resolved.leagueId).toBe('r1_idf_b');
+      expect(resolved.leagueId).toBeNull();
+      expect(resolved.teamId).toBeNull();
       expect(resolved.teamName).toBe('FC ProDay Elite');
     });
 
@@ -97,7 +110,7 @@ describe('Club Standings & League Exploration Hub', () => {
     });
   });
 
-  describe('Exploration des Autres Ligues Françaises', () => {
+  describe('Exploration des Ligues Françaises (catalogue réel)', () => {
     it('contains all categories and major French leagues', () => {
       const categories = frenchFootballStandingsService.getCategories();
       expect(categories.length).toBeGreaterThanOrEqual(4);
@@ -107,32 +120,29 @@ describe('Club Standings & League Exploration Hub', () => {
       expect(categoryIds).toContain('regional_idf');
       expect(categoryIds).toContain('district_92');
 
-      // Check National leagues
       const natCategory = categories.find((c) => c.id === 'national');
       const natLeagueIds = natCategory?.leagues.map((l) => l.id);
       expect(natLeagueIds).toContain('ligue1');
       expect(natLeagueIds).toContain('ligue2');
       expect(natLeagueIds).toContain('national1');
 
-      // Check Regional Poule B
       const regCategory = categories.find((c) => c.id === 'regional_idf');
       const regLeagueIds = regCategory?.leagues.map((l) => l.id);
       expect(regLeagueIds).toContain('r1_idf_b');
 
-      // Check Districts
       const distCategory = categories.find((c) => c.id === 'district_92');
       const distLeagueIds = distCategory?.leagues.map((l) => l.id);
       expect(distLeagueIds).toContain('d1_d92');
     });
 
-    it('can load data for any league in France seamlessly', async () => {
+    it('le catalogue reste consultable sans données figées', async () => {
       const l1 = await frenchFootballStandingsService.getLeagueStandings('ligue1');
-      expect(l1.standings.length).toBeGreaterThan(0);
       expect(l1.name).toContain('Ligue 1');
+      expect(l1.standings).toEqual([]);
 
       const d92 = await frenchFootballStandingsService.getLeagueStandings('d1_d92');
-      expect(d92.standings.length).toBeGreaterThan(0);
       expect(d92.name).toContain('District 92');
+      expect(d92.standings).toEqual([]);
     });
   });
 });

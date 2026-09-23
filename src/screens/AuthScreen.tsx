@@ -540,10 +540,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               visual={signupVisual}
               title={universeAuthCopy.gateTitle}
               subtitle={universeAuthCopy.gateSub}
-              createLabel={t('auth.createAccount') || 'Créer un compte'}
-              loginLabel={t('auth.login') || 'Se connecter'}
-              onCreate={openSignup}
+              onCreateWithEmail={openSignup}
+              onPhoneAuth={() => {
+                clearErrors();
+                setShowPhoneAuth(true);
+              }}
               onLogin={() => setMode('login')}
+              onSocialSuccess={() => void goHomeAfterAuth()}
+              onNeedsProfile={(prefill) => {
+                setSignupPrefill(prefill);
+                openSignup();
+              }}
+              onError={(msg) => setBanner(msg)}
+              disabled={loading}
             />
           )}
         </AuthModeSwitch>

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { withAlpha } from '../../utils/coachTeamTheme';
 import {
   ActivityIndicator,
   Alert,
@@ -25,6 +26,8 @@ import {
   CoachTrainingDrillDiagram,
   inferDrillType,
 } from '../../components/coach/CoachTrainingDrillDiagram';
+import { CoachDiagramViewerModal } from '../../components/coach/diagram/CoachDiagramViewerModal';
+import { createPresetDiagram, type ExerciseDiagramData } from '../../models/ExerciseDiagram';
 import { CoachTrainingTeamRoster } from '../../components/coach/CoachTrainingTeamRoster';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { Icon } from '../../components/ui/Icon';
@@ -32,6 +35,10 @@ import { PressableSpring } from '../../components/motion';
 import { spacing, radius } from '../../theme/designTokens';
 import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { Ionicons } from '@expo/vector-icons';
+import { CoachShareConvocationModal } from '../../components/coach/convocation/CoachShareConvocationModal';
+import { CoachSessionDebriefModal } from '../../components/coach/training/CoachSessionDebriefModal';
+import { CoachQuickNoteModal } from '../../components/coach/notes/CoachQuickNoteModal';
 import {
   filterMembersForTeam,
   filterTrainingsForTeam,
@@ -91,6 +98,25 @@ export function CoachTrainingEventHub({
   const [aiSource, setAiSource] = useState<'mistral' | 'local' | null>(null);
   const [aiApplying, setAiApplying] = useState(false);
   const [aiResult, setAiResult] = useState<TrainingPhase[] | null>(null);
+
+  const [activeViewerDiagram, setActiveViewerDiagram] = useState<ExerciseDiagramData | null>(null);
+  const [activeViewerTitle, setActiveViewerTitle] = useState('');
+  const [activeViewerObjective, setActiveViewerObjective] = useState('');
+  const [activeViewerInstructions, setActiveViewerInstructions] = useState('');
+  const [activeViewerDuration, setActiveViewerDuration] = useState<number | undefined>(undefined);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [debriefModalOpen, setDebriefModalOpen] = useState(false);
+  const [quickNoteModalOpen, setQuickNoteModalOpen] = useState(false);
+
+  const openDrillViewer = (ex: { name: string; description?: string; duration_min?: number }) => {
+    const drillType = inferDrillType(ex.name, ex.description);
+    const diag = createPresetDiagram(drillType, ex.name, profile?.uid || 'coach-local');
+    setActiveViewerDiagram(diag);
+    setActiveViewerTitle(ex.name);
+    setActiveViewerObjective(ex.description || 'Atelier tactique');
+    setActiveViewerInstructions(ex.description || '');
+    setActiveViewerDuration(ex.duration_min);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -360,12 +386,49 @@ export function CoachTrainingEventHub({
 
   return (
     <View style={styles.root}>
-      <Pressable onPress={onBack} style={styles.backRow} accessibilityRole="button">
-        <Icon name="arrow-back" size={22} color={tokens.foreground} />
-        <CoachText variant="body" accent>
-          {t('coach.portal.eventHub.backPlanning')}
-        </CoachText>
-      </Pressable>
+      <View style={styles.topRow}>
+        <Pressable onPress={onBack} style={styles.backRow} accessibilityRole="button">
+          <Icon name="arrow-back" size={22} color={tokens.foreground} />
+          <CoachText variant="body" accent>
+            {t('coach.portal.eventHub.backPlanning')}
+          </CoachText>
+        </Pressable>
+        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+          <Pressable
+            onPress={() => setDebriefModalOpen(true)}
+            style={[styles.shareBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
+            accessibilityRole="button"
+            accessibilityLabel="Débrief et RPE séance"
+          >
+            <Ionicons name="bar-chart-outline" size={14} color={tokens.accent} />
+            <CoachText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+              Débrief RPE
+            </CoachText>
+          </Pressable>
+          <Pressable
+            onPress={() => setQuickNoteModalOpen(true)}
+            style={[styles.shareBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
+            accessibilityRole="button"
+            accessibilityLabel="Note rapide"
+          >
+            <Ionicons name="document-text-outline" size={14} color={tokens.accent} />
+            <CoachText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+              Note
+            </CoachText>
+          </Pressable>
+          <Pressable
+            onPress={() => setShareModalOpen(true)}
+            style={[styles.shareBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
+            accessibilityRole="button"
+            accessibilityLabel="Partager la convocation"
+          >
+            <Ionicons name="share-social-outline" size={14} color={tokens.accent} />
+            <CoachText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+              Partager
+            </CoachText>
+          </Pressable>
+        </View>
+      </View>
 
       <View style={styles.meta}>
         <CoachText variant="caption" muted style={styles.type}>
@@ -629,7 +692,7 @@ export function CoachTrainingEventHub({
             ) : null}
 
             {aiResult ? (
-              <View style={[styles.aiForm, { borderColor: 'rgba(255, 255, 255, 0.15)', backgroundColor: tokens.surface, borderRadius: radius.md, padding: spacing.md }]}>
+              <View style={[styles.aiForm, { borderColor: withAlpha('FFFFFF', 0.15), backgroundColor: tokens.surface, borderRadius: radius.md, padding: spacing.md }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Icon name="star-four-points" size={16} color={tokens.accent} />
@@ -639,7 +702,7 @@ export function CoachTrainingEventHub({
                         : 'Séance IA ProDay'}
                     </CoachText>
                   </View>
-                  <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
+                  <View style={{ backgroundColor: tokens.border, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
                     <CoachText variant="caption" style={{ color: tokens.accent, fontSize: 10, fontWeight: '700' }}>
                       {aiSource === 'local' ? 'HORS LIGNE' : 'GEMINI FLASH'}
                     </CoachText>
@@ -647,53 +710,56 @@ export function CoachTrainingEventHub({
                 </View>
 
                 {aiNotes.toLowerCase().includes('blood') || aiNotes.toLowerCase().includes('sang') || aiNotes.toLowerCase().includes('intensit') ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(239, 68, 68, 0.15)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
-                    <CoachText variant="caption" style={{ color: '#F87171', fontWeight: '800', fontSize: 11 }}>
-                      🔥 SESSION HAUTE INTENSITÉ / BLOOD BATH
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: withAlpha('EF4444', 0.15), paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: withAlpha('EF4444', 0.3) }}>
+                    <Icon name="flash" size={14} color={withAlpha('EF4444', 0.72)} />
+                    <CoachText variant="caption" style={{ color: withAlpha('EF4444', 0.72), fontWeight: '800', fontSize: 11 }}>
+                      SESSION HAUTE INTENSITÉ
                     </CoachText>
                   </View>
                 ) : null}
 
                 {aiResult.map((phase, i) => (
-                  <View key={`${phase.name}-${i}`} style={{ marginTop: spacing.sm, backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.06)' }}>
+                  <View key={`${phase.name}-${i}`} style={{ marginTop: spacing.sm, backgroundColor: withAlpha('FFFFFF', 0.03), borderRadius: 10, padding: 12, borderWidth: 1, borderColor: withAlpha('FFFFFF', 0.06) }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                       <CoachText variant="caption" accent style={{ fontWeight: '800', fontSize: 13 }}>
                         {phase.label || phaseLabel(phase.name)}
                       </CoachText>
-                      <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                      <View style={{ backgroundColor: tokens.border, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
                         <CoachText variant="caption" style={{ color: tokens.foreground, fontWeight: '700', fontSize: 11 }}>
                           {phase.duration_min} min
                         </CoachText>
                       </View>
                     </View>
                     {phase.exercises.map((ex, j) => (
-                      <View key={`ex-${i}-${j}`} style={{ marginTop: spacing.xs, borderTopWidth: j > 0 ? 1 : 0, borderTopColor: 'rgba(255, 255, 255, 0.05)', paddingTop: j > 0 ? 8 : 2 }}>
+                      <View key={`ex-${i}-${j}`} style={{ marginTop: spacing.xs, borderTopWidth: j > 0 ? 1 : 0, borderTopColor: withAlpha('FFFFFF', 0.05), paddingTop: j > 0 ? 8 : 2 }}>
                         <CoachText variant="caption" style={{ fontWeight: '700', color: tokens.foreground, fontSize: 13 }}>
                           • {ex.name}
                         </CoachText>
                         <CoachText variant="caption" muted style={{ lineHeight: 18, marginTop: 2 }}>{ex.description}</CoachText>
                         {ex.duration_min ? (
                           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                            <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: withAlpha('FFFFFF', 0.05), paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                              <Icon name="time" size={10} color={tokens.muted} />
                               <CoachText variant="caption" muted style={{ fontSize: 10 }}>
-                                ⏱ {ex.duration_min} min
+                                {ex.duration_min} min
                                 {ex.reps ? ` · ${ex.reps} reps` : ''}
                                 {ex.sets ? ` × ${ex.sets} séries` : ''}
                                 {ex.rest_sec ? ` · ${ex.rest_sec}s repos` : ''}
                               </CoachText>
                             </View>
                             {ex.equipment?.length ? (
-                              <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: withAlpha('FFFFFF', 0.05), paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                <Icon name="bag" size={10} color={tokens.muted} />
                                 <CoachText variant="caption" muted style={{ fontSize: 10 }}>
-                                  🎒 {ex.equipment.join(', ')}
+                                  {ex.equipment.join(', ')}
                                 </CoachText>
                               </View>
                             ) : null}
                           </View>
                         ) : null}
                         {ex.tips?.map((tip, k) => (
-                          <View key={`tip-${i}-${j}-${k}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: 'rgba(245, 158, 11, 0.08)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                            <CoachText variant="caption" style={{ color: '#FBBF24', fontSize: 11, fontWeight: '600', flex: 1 }}>
+                          <View key={`tip-${i}-${j}-${k}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: withAlpha('F59E0B', 0.08), paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                            <CoachText variant="caption" style={{ color: withAlpha(tokens.accent, 0.9), fontSize: 11, fontWeight: '600', flex: 1 }}>
                               ⚡ {tip}
                             </CoachText>
                           </View>
@@ -704,6 +770,7 @@ export function CoachTrainingEventHub({
                           title={ex.name}
                           width={280}
                           height={145}
+                          onPress={() => openDrillViewer(ex)}
                         />
                       </View>
                     ))}
@@ -767,6 +834,46 @@ export function CoachTrainingEventHub({
           </PressableSpring>
         ) : null}
       </ScrollView>
+
+      {activeViewerDiagram ? (
+        <CoachDiagramViewerModal
+          visible={Boolean(activeViewerDiagram)}
+          diagram={activeViewerDiagram}
+          exerciseName={activeViewerTitle}
+          objective={activeViewerObjective}
+          instructions={activeViewerInstructions}
+          durationMin={activeViewerDuration}
+          onClose={() => setActiveViewerDiagram(null)}
+        />
+      ) : null}
+      <CoachShareConvocationModal
+        visible={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        event={scopedEvent}
+        members={teamMembers}
+      />
+      {debriefModalOpen && profile ? (
+        <CoachSessionDebriefModal
+          visible={debriefModalOpen}
+          onClose={() => setDebriefModalOpen(false)}
+          eventId={scopedEvent.id}
+          coachUid={profile.uid}
+          sessionTitle={scopedEvent.title}
+          players={teamMembers.map((m) => ({ uid: m.uid, name: m.display_name }))}
+        />
+      ) : null}
+      {quickNoteModalOpen && profile ? (
+        <CoachQuickNoteModal
+          visible={quickNoteModalOpen}
+          onClose={() => setQuickNoteModalOpen(false)}
+          coachUid={profile.uid}
+          clubId={profile.profile.club_id || 'proday_club'}
+          teamId={activeTeamId || undefined}
+          eventId={scopedEvent.id}
+          sessionTitle={scopedEvent.title}
+          players={teamMembers.map((m) => ({ uid: m.uid, name: m.display_name }))}
+        />
+      ) : null}
     </View>
   );
 }
@@ -775,6 +882,21 @@ function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0, backgroundColor: tokens.bg },
     centered: { justifyContent: 'center', alignItems: 'center' },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingRight: spacing.lg,
+    },
+    shareBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+    },
     backRow: {
       flexDirection: 'row',
       alignItems: 'center',

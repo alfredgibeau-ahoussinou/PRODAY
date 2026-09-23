@@ -700,21 +700,13 @@ export function useSignupForm(initial?: {
     if (hasClub) {
       if (!selectedFffClub) {
         errs.club =
-          'Recherchez et sélectionnez votre club FFF (ville, code postal ou n° d’affiliation), ou choisissez « Sans club ».';
+          'Recherchez et sélectionnez votre club FFF (ville, code postal ou n° d’affiliation), ou choisissez « Sans club pour le moment ».';
       } else {
         const activeCat = selectedFffCategory || category;
         if (!activeCat) {
           errs.category =
             'Sélectionnez votre catégorie / équipe FFF du club (liste officielle DOFA), ou saisissez-la telle qu’indiquée sur votre licence.';
         }
-        if (!selectedRosterMember && displayName.trim().length < 2) {
-          errs.displayName =
-            'Indiquez votre nom tel qu’il figure sur votre licence FFF.';
-        }
-      }
-    } else {
-      if (displayName.trim().length < 2) {
-        errs.displayName = 'Renseignez votre nom et prénom officiels.';
       }
     }
 

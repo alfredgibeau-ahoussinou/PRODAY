@@ -2,13 +2,17 @@ import type { IconName } from '../components/ui/iconNames';
 import type { ClubNavItemId } from '../features/club/navigation/clubNavConfig';
 import { CLUB_TOKENS, CLUB_SITE_LEGACY } from '../features/club/theme/clubTokens';
 
-/** Chrome partagé app Club — fond noir + accent émeraude (UI only). */
+/**
+ * Chrome partagé app Club — palette mesurée sur la charte de référence (D-011) :
+ * canvas noir, surfaces gris bleuté froid, accent or, encre noire sur l'accent.
+ */
 export const CLUB_SITE = {
   ...CLUB_SITE_LEGACY,
   accent: CLUB_TOKENS.accent,
   deep: CLUB_TOKENS.accentDeep,
   soft: CLUB_TOKENS.accentSoft,
-  glow: CLUB_TOKENS.pitchSoft,
+  /** Halo = accent de pôle, pas le vert terrain (`pitch`) — qui reste sémantique. */
+  glow: CLUB_TOKENS.glow,
   bg: CLUB_TOKENS.bg,
   band: CLUB_TOKENS.headerWash,
   surface: CLUB_TOKENS.surface,

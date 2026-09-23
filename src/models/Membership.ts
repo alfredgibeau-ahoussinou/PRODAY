@@ -1,16 +1,27 @@
-export type MembershipStatus = 'pending' | 'active' | 'suspended' | 'left' | 'rejected';
+export type MembershipStatus =
+  | 'pending'
+  | 'active'
+  | 'suspended'
+  | 'left'
+  | 'rejected'
+  | 'cancelled';
 
 export type MembershipRole = 'player' | 'coach' | 'parent';
 
-/** Lien membre (joueur, coach, parent) <-> équipe / club (affiliation validée). */
+/** Lien membre (joueur, coach, parent) <-> équipe / club (affiliation validée ou en cours). */
 export interface Membership {
   id: string;
   club_id: string;
+  club_name?: string;
   team_id: string;
+  requested_team_name?: string;
   player_uid: string;
   player_name: string;
   role?: MembershipRole;
+  requested_role?: MembershipRole;
   category?: string;
+  applicant_message?: string;
+  rejection_reason?: string;
   identity_document_name?: string;
   identity_document_url?: string;
   identity_document_type?: 'cni' | 'passport' | 'fff_license' | 'club_mandate' | 'other';
@@ -28,12 +39,16 @@ export interface Membership {
 
 export interface RequestMembershipInput {
   club_id: string;
+  club_name?: string;
   team_id?: string;
+  requested_team_name?: string;
   player_uid: string;
   player_name: string;
   license_number?: string;
   role?: MembershipRole;
+  requested_role?: MembershipRole;
   category?: string;
+  applicant_message?: string;
   identity_document_name?: string;
   identity_document_url?: string;
   identity_document_type?: 'cni' | 'passport' | 'fff_license' | 'club_mandate' | 'other';
@@ -42,10 +57,12 @@ export interface RequestMembershipInput {
 
 export interface InvitePlayerMembershipInput {
   club_id: string;
+  club_name?: string;
   team_id?: string;
   player_uid: string;
   player_name: string;
   invited_by_uid: string;
   role?: MembershipRole;
   category?: string;
+  applicant_message?: string;
 }

@@ -1,25 +1,54 @@
 /**
- * Pôle Club — Logistique & Covoiturage Intégré
- * Déplacements matchs extérieurs, véhicules, places & itinéraire GPS stade.
+ * Pôle Club — Covoiturage & Logistique Déplacements.
+ * Données réelles uniquement (DATA-01) : offres persistées `carpool_offers`
+ * + trajets événement `team_events.carpool_slots`. Aucune donnée de démo.
+ *
+ * Design System Club (clubDesignSystem / clubUi) : en-tête sur canvas,
+ * cartes surface arrondies, pilules de filtre à contour d'accent, boutons
+ * pilule. Zéro émoji unicode.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Linking,
-  Modal,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { carpoolOffersService } from '../../../services/carpoolOffers.service';
+import { StandaloneCarpoolForm } from '../../../components/carpool/StandaloneCarpoolForm';
+import { useSessionProfile } from '../../../hooks/useSessionProfile';
+import { buildCarpoolVehicles } from '../../../utils/clubHubRealData';
+import type { User } from '../../../models/User';
+import type { StandaloneCarpoolOffer } from '../../../models/StandaloneCarpoolOffer';
+import type { CarpoolPassenger } from '../../../models/TeamEvent';
+import {
+  isPassengerPending,
+  isStandalonePassenger,
+  standaloneAvailableSeats,
+  standalonePendingCount,
+} from '../../../utils/standaloneCarpool';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import type { IconName } from '../../../components/ui/iconNames';
-import { ProDayText } from '../../../components/ui/ProDayText';
 import { useClubTheme } from '../shell/ClubThemeContext';
-import { APPLE_TYPOGRAPHY } from '../../../theme/appleTypography';
-import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
+import { useClubShellNav } from '../shell/ClubShellNavContext';
+import {
+  ClubButton,
+  ClubEmptyState,
+  ClubLoading,
+  ClubSearchField,
+  ClubSectionCard,
+  ClubSegmentedControl,
+  ClubStatusPill,
+  ClubText,
+} from './clubUi';
+import {
+  clubRadius,
+  clubSpace,
+  clubForm,
+  clubSurfaceCard,
+} from '../theme/clubDesignSystem';
+import type { ClubThemeTokens } from '../theme/clubTokens';
 
 export type CarpoolVehicle = {
   id: string;
@@ -35,604 +64,721 @@ export type CarpoolVehicle = {
   contactPhone: string;
 };
 
-export const DEMO_VEHICLES: CarpoolVehicle[] = [
-  {
-    id: 'car-1',
-    driverName: 'Minibus Club #1 (Coach Karim)',
-    driverRole: 'Véhicule Officiel Club',
-    vehicleModel: 'Renault Master 9 places',
-    totalSeats: 9,
-    availableSeats: 2,
-    meetupPoint: 'Stade Municipal (Devant la grille principale)',
-    departureTime: '11:45',
-    destinationStadium: 'Stade Montbauron · Allée des Marronniers, Versailles',
-    passengers: ['Karim Ziani (Staff)', 'Lucas M.', 'Yanis B.', 'Sofiane R.', 'Enzo G.', 'Adam T.', 'Ilan K.'],
-    contactPhone: '06 11 22 33 44',
-  },
-  {
-    id: 'car-2',
-    driverName: 'Stéphane Moreau (Parent)',
-    driverRole: 'Parent Bénévole',
-    vehicleModel: 'Peugeot 5008 (7 places)',
-    totalSeats: 6,
-    availableSeats: 3,
-    meetupPoint: 'Parking de la Gare SNCF',
-    departureTime: '12:00',
-    destinationStadium: 'Stade Montbauron, Versailles',
-    passengers: ['Stéphane M.', 'Matéo D.', 'Hugo P.'],
-    contactPhone: '06 22 33 44 55',
-  },
-  {
-    id: 'car-3',
-    driverName: 'Nadia Benali (Parent)',
-    driverRole: 'Parent Bénévole',
-    vehicleModel: 'Volkswagen Tiguan',
-    totalSeats: 4,
-    availableSeats: 1,
-    meetupPoint: 'Stade Municipal',
-    departureTime: '12:00',
-    destinationStadium: 'Stade Montbauron, Versailles',
-    passengers: ['Nadia B.', 'Axel L.', 'Noah V.'],
-    contactPhone: '06 33 44 55 66',
-  },
-];
-
 type Props = {
   vehicles?: CarpoolVehicle[];
+  clubId?: string;
   onBookSeat?: (vehicleId: string) => void;
 };
 
-export function ClubCarpoolBoard({
-  vehicles = DEMO_VEHICLES,
-}: Props) {
-  const { tokens } = useClubTheme();
-  const [carList, setCarList] = useState<CarpoolVehicle[]>(vehicles);
-  const [proposeOpen, setProposeOpen] = useState(false);
+type JourneyCardModel = {
+  offer: StandaloneCarpoolOffer;
+  title: string;
+  dayLabel: string;
+  timeLabel: string;
+  destinationLabel: string;
+  vehicleLabel: string;
+  meetupLabel: string;
+  available: number;
+  totalSeats: number;
+  confirmed: number;
+  pending: number;
+  isMine: boolean;
+  isBooked: boolean;
+  isPending: boolean;
+};
 
-  // New vehicle form
-  const [driverName, setDriverName] = useState('');
-  const [vehicleModel, setVehicleModel] = useState('');
-  const [totalSeats, setTotalSeats] = useState('4');
-  const [meetupPoint, setMeetupPoint] = useState('Stade Municipal');
-  const [departureTime, setDepartureTime] = useState('12:00');
+const SCOPE_OPTIONS = [
+  { id: 'all' as const, label: 'Tous les trajets' },
+  { id: 'mine' as const, label: 'Mes trajets' },
+  { id: 'past' as const, label: 'Historique' },
+];
+
+function dayLabelOf(date: Date): string {
+  if (!Number.isFinite(date.getTime())) return 'Date à confirmer';
+  return date.toLocaleDateString('fr-FR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
+function timeLabelOf(date: Date): string {
+  if (!Number.isFinite(date.getTime())) return '—';
+  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function isPast(offer: StandaloneCarpoolOffer): boolean {
+  return (
+    offer.status === 'completed' ||
+    offer.status === 'cancelled' ||
+    offer.departs_at.getTime() < Date.now() - 6 * 60 * 60 * 1000
+  );
+}
+
+function passengerNames(offer: StandaloneCarpoolOffer): string[] {
+  return (offer.passengers ?? [])
+    .filter((p) => p.status === 'confirmed' || !p.status)
+    .map((p) => p.name);
+}
+
+export function ClubCarpoolBoard({ vehicles, clubId, onBookSeat }: Props) {
+  const { tokens } = useClubTheme();
+  const shellNav = useClubShellNav();
+  const profile = useSessionProfile();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
+
+  const [serviceOffers, setServiceOffers] = useState<StandaloneCarpoolOffer[] | null>(
+    vehicles ? null : [],
+  );
+  const [loading, setLoading] = useState(false);
+  const [proposeOpen, setProposeOpen] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [scope, setScope] = useState<(typeof SCOPE_OPTIONS)[number]['id']>('all');
+  const [search, setSearch] = useState('');
+
+  const carList = useMemo<JourneyCardModel[]>(() => {
+    if (vehicles) {
+      return vehicles.map((v) => ({
+        offer: {
+          id: v.id,
+          driver_uid: '',
+          driver_name: v.driverName,
+          title: v.destinationStadium,
+          departs_at: new Date(NaN),
+          seats: v.totalSeats,
+          status: 'open',
+          passengers: [],
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        title: v.destinationStadium || 'Trajet',
+        dayLabel: '—',
+        timeLabel: v.departureTime,
+        destinationLabel: v.destinationStadium,
+        vehicleLabel: v.vehicleModel,
+        available: v.availableSeats,
+        totalSeats: v.totalSeats,
+        confirmed: v.passengers.length,
+        pending: 0,
+        isMine: false,
+        isBooked: false,
+        isPending: false,
+        meetupLabel: v.meetupPoint,
+      }));
+    }
+    return (serviceOffers ?? []).map((offer) => {
+      const myPassenger = profile
+        ? (offer.passengers ?? []).find((p) => p.uid === profile.uid)
+        : undefined;
+      return {
+        offer,
+        title: offer.title?.trim() || offer.destination_label?.trim() || 'Trajet libre',
+        dayLabel: dayLabelOf(offer.departs_at),
+        timeLabel: timeLabelOf(offer.departs_at),
+        destinationLabel: offer.destination_label?.trim() || 'Destination à préciser',
+        vehicleLabel: offer.club_only ? 'Membres du club' : 'Trajet libre',
+        meetupLabel: offer.meeting_place?.trim() || offer.city?.trim() || 'RDV à préciser',
+        available: standaloneAvailableSeats(offer),
+        totalSeats: offer.seats,
+        confirmed: passengerNames(offer).length,
+        pending: standalonePendingCount(offer),
+        isMine: profile ? offer.driver_uid === profile.uid : false,
+        isBooked: profile
+          ? isStandalonePassenger(offer, profile.uid) && !isPassengerPending(myPassenger ?? { uid: profile.uid, name: '' })
+          : false,
+        isPending: myPassenger ? isPassengerPending(myPassenger) : false,
+      };
+    });
+  }, [vehicles, serviceOffers, profile]);
+
+  const loadOffers = useCallback(async () => {
+    if (vehicles) return; // injection (tests / mocks)
+    setLoading(true);
+    try {
+      const offers = await carpoolOffersService.listOpen(60, clubId);
+      setServiceOffers(offers);
+    } catch {
+      setServiceOffers((prev) => prev ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, [vehicles, clubId]);
+
+  useEffect(() => {
+    void loadOffers();
+  }, [loadOffers]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return carList.filter((card) => {
+      if (scope === 'mine' && !(card.isMine || card.isBooked || card.isPending)) return false;
+      if (scope === 'past' && !isPast(card.offer)) return false;
+      if (scope === 'all' && isPast(card.offer)) return false;
+      if (q) {
+        const haystack = `${card.title} ${card.destinationLabel} ${card.offer.driver_name} ${card.offer.event_title ?? ''}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [carList, scope, search]);
 
   const totalSeatsAvail = useMemo(
-    () => carList.reduce((sum, c) => sum + c.availableSeats, 0),
-    [carList],
+    () => filtered.reduce((sum, c) => (isPast(c.offer) ? sum : sum + c.available), 0),
+    [filtered],
   );
   const totalPassengers = useMemo(
-    () => carList.reduce((sum, c) => sum + c.passengers.length, 0),
+    () => carList.reduce((sum, c) => sum + c.confirmed, 0),
     [carList],
   );
 
   const openGps = (address: string) => {
     const url = `https://maps.apple.com/?q=${encodeURIComponent(address)}`;
-    void Linking.openURL(url);
+    void Linking.openURL(url).catch(() => undefined);
   };
 
-  const handleBook = (vehicle: CarpoolVehicle) => {
-    if (vehicle.availableSeats <= 0) {
-      Alert.alert('Complet', 'Ce véhicule n’a plus de place disponible.');
+  const openLinkedEvent = (eventId: string) => {
+    shellNav?.requestNav('calendar');
+    void eventId;
+  };
+
+  /** Passager — demande une place (dupliqué / complet / mineur gérés par le service). */
+  const handleBook = async (card: JourneyCardModel) => {
+    const offer = card.offer;
+    if (card.available <= 0) {
+      Alert.alert('Complet', 'Ce trajet n’a plus de place disponible.');
       return;
     }
+    if (!profile) {
+      Alert.alert(
+        'Connexion requise',
+        'Connectez-vous pour réserver une place — aucune réservation simulée n’est effectuée.',
+      );
+      return;
+    }
+    try {
+      setBusyId(offer.id);
+      await carpoolOffersService.requestSeat(
+        offer.id,
+        profile.uid,
+        profile.display_name || 'Passager',
+      );
+      Alert.alert(
+        'Place demandée',
+        `Votre demande a été envoyée à ${offer.driver_name}. Elle reste en attente jusqu’à sa confirmation — le point de rendez-vous et l’heure de départ apparaissent sur le trajet.`,
+      );
+      onBookSeat?.(offer.id);
+      await loadOffers();
+    } catch (e) {
+      Alert.alert(
+        'Réservation impossible',
+        e instanceof Error ? e.message : 'Le trajet n’est plus disponible.',
+      );
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  /** Passager — annule sa réservation / sa demande. */
+  const handleCancelBooking = (card: JourneyCardModel) => {
+    Alert.alert('Annuler ma place', `Retirer votre réservation chez ${card.offer.driver_name} ?`, [
+      { text: 'Non', style: 'cancel' },
+      {
+        text: 'Oui, annuler',
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            setBusyId(card.offer.id);
+            try {
+              await carpoolOffersService.cancelSeat(card.offer.id, profile?.uid ?? '');
+              await loadOffers();
+            } catch (e) {
+              Alert.alert('Erreur', e instanceof Error ? e.message : 'Annulation impossible.');
+            } finally {
+              setBusyId(null);
+            }
+          })();
+        },
+      },
+    ]);
+  };
+
+  /** Conducteur — accepte ou refuse une demande. */
+  const handleRespond = (card: JourneyCardModel, passenger: CarpoolPassenger, accept: boolean) => {
+    void (async () => {
+      setBusyId(card.offer.id);
+      try {
+        await carpoolOffersService.respondToSeat(card.offer.id, profile?.uid ?? '', passenger.uid, accept);
+        await loadOffers();
+      } catch (e) {
+        Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
+      } finally {
+        setBusyId(null);
+      }
+    })();
+  };
+
+  /** Conducteur — annule tout le trajet, prévient les passagers. */
+  const handleCancelJourney = (card: JourneyCardModel) => {
+    const passengerCount = card.confirmed + card.pending;
     Alert.alert(
-      'Place réservée',
-      `Votre place dans le véhicule de ${vehicle.driverName} est confirmée. Rendez-vous à ${vehicle.departureTime} au ${vehicle.meetupPoint}.`,
+      'Annuler le trajet',
+      passengerCount > 0
+        ? `${passengerCount} passager(s) inscrit(s) recevront une notification d’annulation.`
+        : 'Le trajet sera retiré des propositions du club.',
+      [
+        { text: 'Non', style: 'cancel' },
+        {
+          text: 'Annuler le trajet',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              setBusyId(card.offer.id);
+              try {
+                await carpoolOffersService.cancelJourney(card.offer.id, profile?.uid ?? '');
+                await loadOffers();
+              } catch (e) {
+                Alert.alert('Erreur', e instanceof Error ? e.message : 'Annulation impossible.');
+              } finally {
+                setBusyId(null);
+              }
+            })();
+          },
+        },
+      ],
     );
   };
 
-  const handleCreateVehicle = () => {
-    if (!driverName.trim() || !vehicleModel.trim()) {
-      Alert.alert('Champs requis', 'Veuillez renseigner le nom du conducteur et le véhicule.');
-      return;
-    }
-    const newCar: CarpoolVehicle = {
-      id: `car-${Date.now()}`,
-      driverName,
-      driverRole: 'Parent Bénévole',
-      vehicleModel,
-      totalSeats: parseInt(totalSeats, 10) || 4,
-      availableSeats: parseInt(totalSeats, 10) || 4,
-      meetupPoint,
-      departureTime,
-      destinationStadium: 'Stade Montbauron, Versailles',
-      passengers: [driverName],
-      contactPhone: '06 00 00 00 00',
-    };
-    setCarList((prev) => [newCar, ...prev]);
-    setProposeOpen(false);
-    Alert.alert('Véhicule enregistré', 'Votre véhicule est maintenant visible pour le covoiturage du match.');
-  };
-
+  if (loading && serviceOffers?.length === 0) {
+    return <ClubLoading />;
+  }
   return (
     <View style={styles.container}>
-      {/* 1. Prochain Déplacement Officiel */}
-      <View style={[styles.matchCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-        <View style={styles.matchCardTop}>
-          <View style={[styles.awayBadge, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
-            <Icon name="car" size={13} color="#3B82F6" />
-            <ProDayText style={[styles.awayBadgeText, { color: '#3B82F6' }]}>
-              DÉPLACEMENT OFFICIEL
-            </ProDayText>
-          </View>
-          <ProDayText style={[styles.kickoffText, { color: tokens.muted }]}>
-            Dimanche 13 Sept. à 13:30
-          </ProDayText>
+      {/* Synthèse réelle des offres persistées — aucun faux trajet */}
+      <View style={StyleSheet.flatten([styles.summaryCard, clubSurfaceCard(tokens)])}>
+        <View style={styles.summaryTop}>
+          <ClubStatusPill
+            label={`${carList.filter((c) => !isPast(c.offer)).length} trajet(s) actif(s)`}
+            tone="accent"
+          />
+          <ClubText variant="caption" muted>
+            {totalSeatsAvail} place{totalSeatsAvail > 1 ? 's' : ''} libre{totalSeatsAvail > 1 ? 's' : ''}
+            {' · '}
+            {totalPassengers} inscrit{totalPassengers > 1 ? 's' : ''}
+          </ClubText>
         </View>
-
-        <ProDayText style={[styles.matchTitle, { color: tokens.foreground }]}>
-          FC Versailles 78 vs ProDay FC (U17 R2)
-        </ProDayText>
-
-        <View style={styles.venueRow}>
-          <Icon name="location" size={14} color={tokens.muted} />
-          <ProDayText style={[styles.venueText, { color: tokens.muted }]}>
-            Stade Montbauron · Allée des Marronniers, 78000 Versailles (28 km)
-          </ProDayText>
-        </View>
-
-        <View style={[styles.matchFooter, { borderTopColor: tokens.border }]}>
-          <View style={styles.seatsSummary}>
-            <ProDayText style={[styles.seatsNum, { color: tokens.accent }]}>
-              {totalSeatsAvail} places
-            </ProDayText>
-            <ProDayText style={[styles.seatsLabel, { color: tokens.muted }]}>
-              disponibles ({totalPassengers} inscrits)
-            </ProDayText>
-          </View>
-
-          <PressableSpring
-            onPress={() => openGps('Stade Montbauron Versailles')}
-            style={[styles.gpsBtn, { backgroundColor: tokens.accentSoft }]}
-            scaleTo={0.96}
-          >
-            <Icon name="location" size={14} color={tokens.accent} />
-            <ProDayText style={[styles.gpsBtnText, { color: tokens.accent }]}>
-              Itinéraire GPS
-            </ProDayText>
-          </PressableSpring>
-        </View>
+        <ClubText variant="caption" muted>
+          Les destinations réelles saisies par les conducteurs apparaissent ci-dessous. Les demandes
+          restent en attente jusqu’à la confirmation du conducteur — aucune réservation automatique.
+        </ClubText>
       </View>
 
-      {/* 2. Bouton d'Action : Proposer son véhicule */}
-      <PressableSpring
+      <ClubButton
+        label="Proposer mon véhicule"
+        icon="add"
+        variant="primary"
         onPress={() => setProposeOpen(true)}
-        style={[styles.proposeBtn, { backgroundColor: tokens.accent }]}
-        scaleTo={0.98}
-      >
-        <Icon name="add" size={18} color="#000000" />
-        <ProDayText style={styles.proposeBtnText}>
-          Proposer mon véhicule pour le trajet
-        </ProDayText>
-      </PressableSpring>
+      />
 
-      {/* 3. Liste des Véhicules & Places */}
-      <View style={styles.vehiclesList}>
-        {carList.map((car) => (
-          <View
-            key={car.id}
-            style={[styles.vehicleCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
-          >
-            <View style={styles.vehicleHeader}>
-              <View style={styles.driverInfo}>
-                <View style={[styles.carIconBox, { backgroundColor: tokens.accentSoft }]}>
-                  <Icon name="car" size={18} color={tokens.accent} />
-                </View>
-                <View>
-                  <ProDayText style={[styles.driverName, { color: tokens.foreground }]}>
-                    {car.driverName}
-                  </ProDayText>
-                  <ProDayText style={[styles.driverRole, { color: tokens.muted }]}>
-                    {car.vehicleModel} · {car.driverRole}
-                  </ProDayText>
-                </View>
-              </View>
+      <ClubSearchField
+        value={search}
+        onChangeText={setSearch}
+        placeholder="Rechercher par destination, conducteur, événement…"
+      />
 
-              <View
-                style={[
-                  styles.availBadge,
-                  {
-                    backgroundColor:
-                      car.availableSeats > 0
-                        ? 'rgba(16, 185, 129, 0.15)'
-                        : 'rgba(239, 68, 68, 0.15)',
-                  },
-                ]}
-              >
-                <ProDayText
-                  style={[
-                    styles.availBadgeText,
-                    { color: car.availableSeats > 0 ? '#10B981' : '#EF4444' },
-                  ]}
-                >
-                  {car.availableSeats > 0
-                    ? `${car.availableSeats} place${car.availableSeats > 1 ? 's' : ''} libre${car.availableSeats > 1 ? 's' : ''}`
-                    : 'Complet'}
-                </ProDayText>
-              </View>
-            </View>
+      <ClubSegmentedControl
+        options={SCOPE_OPTIONS}
+        value={scope}
+        onChange={setScope}
+      />
 
-            <View style={[styles.routeBox, { backgroundColor: tokens.bg, borderColor: tokens.border }]}>
-              <View style={styles.routeItem}>
-                <Icon name="flag" size={13} color={tokens.accent} />
-                <ProDayText style={[styles.routeText, { color: tokens.foreground }]}>
-                  Départ {car.departureTime} : {car.meetupPoint}
-                </ProDayText>
-              </View>
-            </View>
-
-            <View style={styles.passengersSection}>
-              <ProDayText style={[styles.passengersLabel, { color: tokens.muted }]}>
-                Passagers confirmés ({car.passengers.length}) :
-              </ProDayText>
-              <View style={styles.passengersWrap}>
-                {car.passengers.map((p, idx) => (
-                  <View key={idx} style={[styles.passengerPill, { backgroundColor: tokens.accentSoft }]}>
-                    <ProDayText style={[styles.passengerPillText, { color: tokens.foreground }]}>
-                      {p}
-                    </ProDayText>
+      {/* Liste des trajets */}
+      <View style={styles.list}>
+        {filtered.length === 0 ? (
+          <ClubEmptyState
+            title={scope === 'mine' ? 'Aucun trajet pour vous' : 'Aucun trajet proposé'}
+            body={
+              scope === 'mine'
+                ? 'Vos réservations et vos propositions apparaîtront ici.'
+                : 'Les véhicules et places disponibles pour les déplacements du club apparaissent dès qu’un conducteur se propose — aucune donnée de démonstration n’est affichée.'
+            }
+            actionLabel={scope === 'all' ? 'Proposer un trajet' : undefined}
+            onAction={scope === 'all' ? () => setProposeOpen(true) : undefined}
+            icon="car"
+          />
+        ) : (
+          filtered.map((card) => {
+            const driverControls = card.isMine && !isPast(card.offer);
+            const requestable =
+              !card.isMine &&
+              !card.isBooked &&
+              !card.isPending &&
+              card.available > 0 &&
+              card.offer.status === 'open' &&
+              !isPast(card.offer);
+            const linkedEventLabel = card.offer.event_title?.trim();
+            return (
+              <View key={card.offer.id} style={StyleSheet.flatten([styles.vehicleCard, clubSurfaceCard(tokens)])}>
+                <View style={styles.vehicleHeader}>
+                  <View style={styles.driverInfo}>
+                    <View style={[styles.carIconBox, { backgroundColor: tokens.accentSoft }]}>
+                      <Icon name="car" size={18} color={tokens.accent} />
+                    </View>
+                    <View style={styles.driverCopy}>
+                      <ClubText variant="h3" numberOfLines={1}>
+                        {card.offer.driver_name || 'Conducteur'}
+                      </ClubText>
+                      <ClubText variant="caption" muted numberOfLines={1}>
+                        {card.vehicleLabel} · {card.dayLabel} · départ {card.timeLabel}
+                      </ClubText>
+                    </View>
                   </View>
-                ))}
+                  <ClubStatusPill
+                    label={
+                      card.available > 0
+                        ? `${card.available}/${card.totalSeats} libre${card.totalSeats > 1 ? 's' : ''}`
+                        : 'Complet'
+                    }
+                    tone={card.available > 0 ? 'ok' : 'alert'}
+                  />
+                </View>
+
+                <ClubText variant="body" numberOfLines={1}>
+                  {card.title}
+                </ClubText>
+
+                <View style={[styles.routeBox, { backgroundColor: tokens.elevated }]}>
+                  <View style={styles.routeItem}>
+                    <Icon name="flag" size={13} color={tokens.accent} />
+                    <ClubText variant="caption" numberOfLines={1} style={styles.routeDestination}>
+                      Départ {card.timeLabel} : {card.meetupLabel}
+                    </ClubText>
+                  </View>
+                  {card.destinationLabel !== 'Destination à préciser' ? (
+                    <View style={styles.routeItem}>
+                      <Icon name="location" size={13} color={tokens.accent} />
+                      <ClubText variant="caption" numberOfLines={1} style={styles.routeDestination}>
+                        {card.destinationLabel}
+                      </ClubText>
+                    </View>
+                  ) : null}
+                  {card.offer.notes?.trim() ? (
+                    <View style={styles.routeItem}>
+                      <Icon name="document" size={13} color={tokens.muted} />
+                      <ClubText variant="caption" muted numberOfLines={2} style={styles.routeDestination}>
+                        {card.offer.notes.trim()}
+                      </ClubText>
+                    </View>
+                  ) : null}
+                </View>
+
+                {linkedEventLabel ? (
+                  <PressableSpring
+                    onPress={() => openLinkedEvent(card.offer.event_id ?? '')}
+                    scaleTo={0.97}
+                    haptic
+                    style={styles.eventLink}
+                  >
+                    <Icon name="calendar" size={14} color={tokens.accent} />
+                    <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }} numberOfLines={1}>
+                      {linkedEventLabel}
+                    </ClubText>
+                    <Icon name="chevron-forward" size={12} color={tokens.accent} />
+                  </PressableSpring>
+                ) : null}
+
+                {/* Passagers confirmés + capacité restante */}
+                {card.confirmed > 0 ? (
+                  <View style={styles.passengersSection}>
+                    <ClubText variant="label" muted>
+                      Passagers confirmés ({card.confirmed}/{card.totalSeats})
+                    </ClubText>
+                    <View style={styles.passengersWrap}>
+                      {passengerNames(card.offer).map((p, idx) => (
+                        <View key={`${card.offer.id}-p-${idx}`} style={[styles.passengerPill, { backgroundColor: tokens.elevated }]}>
+                          <ClubText variant="caption">{p}</ClubText>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
+
+                {/* Demandes en attente côté conducteur : accepter / refuser */}
+                {driverControls && card.pending > 0 ? (
+                  <ClubSectionCard title={`Demandes en attente (${card.pending})`}>
+                    {(card.offer.passengers ?? [])
+                      .filter((p) => isPassengerPending(p))
+                      .map((p) => (
+                        <View key={p.uid} style={styles.pendingRow}>
+                          <ClubText variant="body" style={{ flex: 1 }} numberOfLines={1}>
+                            {p.name}
+                            {p.pickup_place?.trim() ? ` · récupère à ${p.pickup_place.trim()}` : ''}
+                          </ClubText>
+                          <ClubButton
+                            label="Accepter"
+                            icon="checkmark-circle"
+                            variant="secondary"
+                            onPress={() => handleRespond(card, p, true)}
+                            disabled={busyId === card.offer.id || card.available <= 0}
+                          />
+                          <ClubButton
+                            label="Refuser"
+                            icon="close"
+                            variant="outline"
+                            onPress={() => handleRespond(card, p, false)}
+                            disabled={busyId === card.offer.id}
+                          />
+                        </View>
+                      ))}
+                    {card.available <= 0 ? (
+                      <ClubText variant="caption" muted>
+                        Toutes les places sont confirmées — refusez ou annulez une réservation pour libérer une place.
+                      </ClubText>
+                    ) : null}
+                  </ClubSectionCard>
+                ) : null}
+
+                {/* Mon statut passager */}
+                {card.isPending ? (
+                  <View style={[styles.myStatus, { backgroundColor: tokens.warningSoft }]}>
+                    <Icon name="time" size={14} color={tokens.warning} />
+                    <ClubText variant="caption" style={{ color: tokens.warning, fontWeight: '700' }}>
+                      Demande envoyée — en attente de la réponse du conducteur.
+                    </ClubText>
+                  </View>
+                ) : null}
+                {card.isBooked && !driverControls ? (
+                  <View style={[styles.myStatus, { backgroundColor: tokens.successSoft }]}>
+                    <Icon name="checkmark-circle" size={14} color={tokens.success} />
+                    <ClubText variant="caption" style={{ color: tokens.success, fontWeight: '700' }}>
+                      Place confirmée chez {card.offer.driver_name}.
+                    </ClubText>
+                  </View>
+                ) : null}
+
+                <View style={[styles.vehicleFooter, { borderTopColor: tokens.border }]}>
+                  {!card.isMine && card.offer.meeting_place?.trim() ? (
+                    <PressableSpring
+                      onPress={() => openGps(card.offer.meeting_place!)}
+                      style={styles.gpsBtn}
+                      scaleTo={0.96}
+                    >
+                      <Icon name="location" size={14} color={tokens.accent} />
+                      <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+                        Itinéraire
+                      </ClubText>
+                    </PressableSpring>
+                  ) : null}
+
+                  {card.isBooked || card.isPending ? (
+                    <ClubButton
+                      label={card.isPending ? 'Retirer ma demande' : 'Annuler ma place'}
+                      icon="close"
+                      variant="outline"
+                      onPress={() => handleCancelBooking(card)}
+                      disabled={busyId === card.offer.id}
+                    />
+                  ) : requestable ? (
+                    <ClubButton
+                      label="Demander une place"
+                      icon="handshake"
+                      variant="primary"
+                      onPress={() => void handleBook(card)}
+                      disabled={busyId === card.offer.id}
+                    />
+                  ) : null}
+
+                  {driverControls ? (
+                    <ClubButton
+                      label="Annuler le trajet"
+                      icon="trash"
+                      variant="outline"
+                      onPress={() => handleCancelJourney(card)}
+                      disabled={busyId === card.offer.id}
+                    />
+                  ) : null}
+                </View>
               </View>
-            </View>
-
-            <View style={[styles.vehicleFooter, { borderTopColor: tokens.border }]}>
-              <PressableSpring
-                onPress={() => Alert.alert('Appel conducteur', `Composer le ${car.contactPhone} ?`)}
-                style={styles.callDriverBtn}
-                scaleTo={0.96}
-              >
-                <Icon name="call" size={14} color={tokens.muted} />
-                <ProDayText style={[styles.callDriverText, { color: tokens.muted }]}>
-                  Contacter
-                </ProDayText>
-              </PressableSpring>
-
-              {car.availableSeats > 0 ? (
-                <PressableSpring
-                  onPress={() => handleBook(car)}
-                  style={[styles.bookBtn, { backgroundColor: tokens.accent }]}
-                  scaleTo={0.96}
-                >
-                  <ProDayText style={styles.bookBtnText}>
-                    Réserver 1 place
-                  </ProDayText>
-                </PressableSpring>
-              ) : null}
-            </View>
-          </View>
-        ))}
+            );
+          })
+        )}
       </View>
 
-      {/* Modal Proposer Véhicule */}
-      <Modal
-        visible={proposeOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setProposeOpen(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-          <View style={[styles.modalBox, { backgroundColor: '#12151C', borderColor: tokens.border }]}>
-            <View style={styles.modalHeader}>
-              <ProDayText style={[styles.modalTitle, { color: tokens.foreground }]}>
-                Proposer un Trajet
-              </ProDayText>
-              <TouchableOpacity onPress={() => setProposeOpen(false)}>
-                <Icon name="close" size={24} color={tokens.muted} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalBody}>
-              <View style={styles.formGroup}>
-                <ProDayText style={[styles.formLabel, { color: tokens.muted }]}>
-                  Nom & Prénom du conducteur
-                </ProDayText>
-                <TextInput
-                  value={driverName}
-                  onChangeText={setDriverName}
-                  placeholder="Ex: Stéphane Moreau"
-                  placeholderTextColor={tokens.muted}
-                  style={[styles.formInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <ProDayText style={[styles.formLabel, { color: tokens.muted }]}>
-                  Modèle de véhicule
-                </ProDayText>
-                <TextInput
-                  value={vehicleModel}
-                  onChangeText={setVehicleModel}
-                  placeholder="Ex: Renault Scenic (5 places)"
-                  placeholderTextColor={tokens.muted}
-                  style={[styles.formInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <ProDayText style={[styles.formLabel, { color: tokens.muted }]}>
-                  Nombre de places disponibles pour les joueurs
-                </ProDayText>
-                <TextInput
-                  value={totalSeats}
-                  onChangeText={setTotalSeats}
-                  keyboardType="number-pad"
-                  style={[styles.formInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <ProDayText style={[styles.formLabel, { color: tokens.muted }]}>
-                  Lieu de rendez-vous
-                </ProDayText>
-                <TextInput
-                  value={meetupPoint}
-                  onChangeText={setMeetupPoint}
-                  style={[styles.formInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <ProDayText style={[styles.formLabel, { color: tokens.muted }]}>
-                  Heure de départ
-                </ProDayText>
-                <TextInput
-                  value={departureTime}
-                  onChangeText={setDepartureTime}
-                  style={[styles.formInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
-                />
-              </View>
-            </View>
-
-            <View style={styles.modalFooter}>
-              <PressableSpring
-                onPress={handleCreateVehicle}
-                style={[styles.publishVehicleBtn, { backgroundColor: tokens.accent }]}
-                scaleTo={0.97}
-              >
-                <ProDayText style={styles.publishVehicleBtnText}>
-                  Enregistrer le véhicule
-                </ProDayText>
-              </PressableSpring>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {proposeOpen ? (
+        <CarpoolProposeModal
+          profile={profile}
+          clubId={clubId}
+          onClose={() => setProposeOpen(false)}
+          onSaved={() => {
+            setProposeOpen(false);
+            void loadOffers();
+          }}
+        />
+      ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: clubSpace.lg,
-    paddingTop: 8,
-    gap: 14,
-  },
-  matchCard: {
-    borderRadius: clubRadius.lg,
-    borderWidth: 1,
-    padding: 16,
-    gap: 10,
-  },
-  matchCardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  awayBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  awayBadgeText: {
-    ...APPLE_TYPOGRAPHY.caption1,
-    fontWeight: '700',
-  },
-  kickoffText: {
-    ...APPLE_TYPOGRAPHY.caption1,
-  },
-  matchTitle: {
-    ...APPLE_TYPOGRAPHY.title3,
-  },
-  venueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  venueText: {
-    ...APPLE_TYPOGRAPHY.caption1,
-  },
-  matchFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 10,
-    borderTopWidth: 1,
-  },
-  seatsSummary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  seatsNum: {
-    ...APPLE_TYPOGRAPHY.subheadline,
-    fontWeight: '700',
-  },
-  seatsLabel: {
-    ...APPLE_TYPOGRAPHY.caption1,
-  },
-  gpsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
-  },
-  gpsBtnText: {
-    ...APPLE_TYPOGRAPHY.caption1,
-    fontWeight: '700',
-  },
-  proposeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: 14,
-  },
-  proposeBtnText: {
-    ...APPLE_TYPOGRAPHY.subheadline,
-    fontWeight: '700',
-    color: '#000000',
-  },
-  vehiclesList: {
-    gap: 12,
-    paddingBottom: 40,
-  },
-  vehicleCard: {
-    borderRadius: clubRadius.lg,
-    borderWidth: 1,
-    padding: 16,
-    gap: 12,
-  },
-  vehicleHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  driverInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  carIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  driverName: {
-    ...APPLE_TYPOGRAPHY.headline,
-  },
-  driverRole: {
-    ...APPLE_TYPOGRAPHY.caption1,
-    marginTop: 2,
-  },
-  availBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  availBadgeText: {
-    ...APPLE_TYPOGRAPHY.caption1,
-    fontWeight: '700',
-  },
-  routeBox: {
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  routeItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  routeText: {
-    ...APPLE_TYPOGRAPHY.caption1,
-  },
-  passengersSection: {
-    gap: 6,
-  },
-  passengersLabel: {
-    ...APPLE_TYPOGRAPHY.caption1,
-  },
-  passengersWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  passengerPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  passengerPillText: {
-    ...APPLE_TYPOGRAPHY.caption1,
-    fontWeight: '600',
-  },
-  vehicleFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 10,
-    borderTopWidth: 1,
-  },
-  callDriverBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingVertical: 6,
-  },
-  callDriverText: {
-    ...APPLE_TYPOGRAPHY.caption1,
-  },
-  bookBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  bookBtnText: {
-    ...APPLE_TYPOGRAPHY.caption1,
-    fontWeight: '700',
-    color: '#000000',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalBox: {
-    width: '100%',
-    maxWidth: 500,
-    borderRadius: 24,
-    borderWidth: 1,
-    padding: 20,
-    gap: 14,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  modalTitle: { ...APPLE_TYPOGRAPHY.title2 },
-  modalBody: { gap: 10 },
-  formGroup: { gap: 4 },
-  formLabel: { ...APPLE_TYPOGRAPHY.caption1 },
-  formInput: {
-    height: 42,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    ...APPLE_TYPOGRAPHY.body,
-  },
-  modalFooter: { marginTop: 6 },
-  publishVehicleBtn: {
-    paddingVertical: 12,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  publishVehicleBtnText: {
-    ...APPLE_TYPOGRAPHY.subheadline,
-    fontWeight: '700',
-    color: '#000000',
-  },
-});
+/** Modal de proposition — formulaire partagé Pôle Covoiturage. */
+function CarpoolProposeModal({
+  profile,
+  clubId,
+  onClose,
+  onSaved,
+}: {
+  profile: User | null;
+  clubId?: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
+  if (!profile) {
+    return (
+      <ClubEmptyState
+        title="Connexion requise"
+        body="Connectez-vous pour proposer un trajet réel — aucune offre simulée n’est créée."
+        icon="lock"
+      />
+    );
+  }
+  return (
+    <View style={styles.modalBackdrop}>
+      <View style={[styles.modalSheet, { backgroundColor: tokens.raised }]}>
+        <View style={styles.modalHeader}>
+          <ClubText variant="h3">Proposer un trajet</ClubText>
+          <PressableSpring onPress={onClose} scaleTo={0.94} hitSlop={8}>
+            <Icon name="close" size={22} color={tokens.muted} />
+          </PressableSpring>
+        </View>
+        <StandaloneCarpoolForm
+          profile={{ ...profile, profile: { ...profile.profile, club_id: clubId ?? profile.profile.club_id } }}
+          offer={null}
+          expanded
+          onToggle={onClose}
+          onSaved={onSaved}
+        />
+      </View>
+    </View>
+  );
+}
+
+function createStyles(tokens: ClubThemeTokens) {
+  return StyleSheet.create({
+    container: {
+      gap: clubSpace.md,
+    },
+    summaryCard: {
+      padding: clubSpace.lg,
+      gap: clubSpace.sm,
+    },
+    summaryTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.sm,
+    },
+    list: { gap: clubSpace.md },
+    vehicleCard: {
+      padding: clubSpace.lg,
+      gap: clubSpace.md,
+    },
+    vehicleHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.sm,
+    },
+    driverInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubForm.rowGap,
+      flex: 1,
+      minWidth: 0,
+    },
+    carIconBox: {
+      width: 38,
+      height: 38,
+      borderRadius: clubRadius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    driverCopy: { flex: 1, minWidth: 0, gap: 2 },
+    routeBox: {
+      borderRadius: clubRadius.sm,
+      padding: clubSpace.md,
+      gap: 6,
+    },
+    routeItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    routeDestination: { flex: 1 },
+    eventLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      alignSelf: 'flex-start',
+      paddingVertical: 2,
+    },
+    passengersSection: { gap: clubSpace.xs },
+    passengersWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    passengerPill: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: clubRadius.pill,
+    },
+    pendingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.xs,
+      flexWrap: 'wrap',
+    },
+    myStatus: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: clubSpace.md,
+      borderRadius: clubRadius.sm,
+    },
+    vehicleFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.sm,
+      paddingTop: clubSpace.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      flexWrap: 'wrap',
+    },
+    gpsBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 6,
+    },
+    modalBackdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.72)',
+      justifyContent: 'flex-end',
+      zIndex: 20,
+    },
+    modalSheet: {
+      maxHeight: '88%',
+      borderTopLeftRadius: clubRadius.xxl,
+      borderTopRightRadius: clubRadius.xxl,
+      padding: clubSpace.lg,
+      paddingBottom: clubSpace.xxl,
+      gap: clubSpace.sm,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+  });
+}

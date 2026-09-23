@@ -11,7 +11,8 @@ export type FriendlyMatchStatus =
   | 'ACCEPTED'
   | 'DECLINED'
   | 'PLAYED'
-  | 'CANCELLED';
+  | 'CANCELLED'
+  | 'DRAFT';
 
 export type FriendlyMatchKind =
   | 'amical'
@@ -44,19 +45,37 @@ export interface FriendlyMatch {
   /** Équipe / catégorie côté demandeur. */
   requester_team_id?: string;
   requester_team_label?: string;
+  /** Équipe adverse ciblée si connue */
+  opponent_team_id?: string;
+  opponent_team_label?: string;
   location?: GeoPoint;
   city: string;
   date: Date;
   time_label?: string;
+  meeting_time_label?: string;
+  timezone?: string;
   category: string;
+  game_format?: 'foot_11' | 'foot_8' | 'futsal' | string;
   level: string;
   level_type: 'loisir' | 'competition' | 'mixte';
   match_kind?: FriendlyMatchKind;
   venue_side?: FriendlyVenueSide;
+  venue_address?: string;
   has_pitch: boolean;
   message?: string;
   status: FriendlyMatchStatus;
   counter_proposal?: FriendlyMatchCounterProposal;
+  rules_half_duration_min?: number;
+  rules_jerseys?: string;
+  rules_refereeing?: string;
+  rules_hosting_notes?: string;
+  is_external_opponent?: boolean;
+  external_opponent_club_name?: string;
+  external_opponent_city?: string;
+  external_opponent_contact_name?: string;
+  external_opponent_contact_phone?: string;
+  external_opponent_contact_email?: string;
+  linked_event_id?: string;
   created_at: Date;
   updated_at?: Date;
 }
@@ -70,17 +89,35 @@ export interface CreateFriendlyMatchInput {
   opponent_club_name?: string;
   requester_team_id?: string;
   requester_team_label?: string;
+  opponent_team_id?: string;
+  opponent_team_label?: string;
   city: string;
   date: Date;
   time_label: string;
+  meeting_time_label?: string;
+  timezone?: string;
   category: string;
+  game_format?: 'foot_11' | 'foot_8' | 'futsal' | string;
   level: string;
   level_type: 'loisir' | 'competition' | 'mixte';
   match_kind?: FriendlyMatchKind;
   venue_side?: FriendlyVenueSide;
+  venue_address?: string;
   message?: string;
-  /** OPEN = tableau public · INVITED = invitation ciblée. */
-  mode?: 'open' | 'direct';
+  /** OPEN = tableau public · INVITED = invitation ciblée · DRAFT = brouillon. */
+  mode?: 'open' | 'direct' | 'draft';
+  status?: FriendlyMatchStatus;
+  rules_half_duration_min?: number;
+  rules_jerseys?: string;
+  rules_refereeing?: string;
+  rules_hosting_notes?: string;
+  is_external_opponent?: boolean;
+  external_opponent_club_name?: string;
+  external_opponent_city?: string;
+  external_opponent_contact_name?: string;
+  external_opponent_contact_phone?: string;
+  external_opponent_contact_email?: string;
+  linked_event_id?: string;
   location?: GeoPoint;
 }
 
@@ -117,4 +154,5 @@ export const FRIENDLY_STATUS_LABELS: Record<FriendlyMatchStatus, string> = {
   DECLINED: 'Refusé',
   PLAYED: 'Joué',
   CANCELLED: 'Annulé',
+  DRAFT: 'Brouillon',
 };

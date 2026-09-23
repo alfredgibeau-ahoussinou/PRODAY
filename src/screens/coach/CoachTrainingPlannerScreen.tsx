@@ -1,1370 +1,1490 @@
-import React, { useState } from 'react';
+/**
+ * Entraînements — planificateur de séance du coach.
+ *
+ * Refonte : la page ne présente plus une « séance N°48 » fictive avec un RPE
+ * inventé et un « générateur IA » simulé. Tout ce qui est affiché vient des
+ * données du coach : équipe active, effectif conviable (adhésions réelles),
+ * prochaine séance du calendrier (créée via `teamEventsService`), et génération
+ * Copilote **réelle** (`aiTrainingService` + repli local partagé). La
+ * bibliothèque d'ateliers est le même contenu pédagogique, déplacé dans le
+ * modèle pur `utils/coachTrainingPlanner`.
+ *
+ * Le socle de forme est celui du pôle (`professionalDesign` + tokens) : zéro
+ * couleur littérale, comme les autres écrans convertis.
+ */
+
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
   ActivityIndicator,
-  Alert,
+  KeyboardAvoidingView,
   Modal,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import { Icon } from '../../components/ui/Icon';
+import { PressableSpring } from '../../components/motion';
+import {
+  CoachChapterScroll,
+} from '../../components/coach/coachPortalUi';
+import { CoachScreenHeader } from '../../components/coach/CoachScreenHeader';
 import {
   CoachTrainingDrillDiagram,
   type DrillType,
 } from '../../components/coach/CoachTrainingDrillDiagram';
+import { CoachDiagramViewerModal } from '../../components/coach/diagram/CoachDiagramViewerModal';
+import { CoachDiagramEditorModal } from '../../components/coach/diagram/CoachDiagramEditorModal';
+import { coachDiagramsService } from '../../services/coachDiagrams.service';
+import { createPresetDiagram, type ExerciseDiagramData } from '../../models/ExerciseDiagram';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { usersService } from '../../services/users.service';
+import { teamEventsService } from '../../services/teamEvents.service';
+import { aiTrainingService } from '../../services/aiTraining.service';
+import {
+  composedPlanFromPrompt,
+  type ParsedCoachSessionPrompt,
+} from '../../utils/coachSessionPrompt';
+import { defaultRecommendedSessionStart } from '../../utils/coachTrainingRecommendation';
+import {
+  INTENSITY_LABELS,
+  THEMATIC_DRILLS_LIBRARY,
+  defaultSession,
+  fromTemplate,
+  sessionExercisesFromPhases,
+  sessionExercisesFromPlan,
+  sessionSummary,
+  type SessionExercise,
+  type SessionIntensity,
+  type ThematicDrillTemplate,
+} from '../../utils/coachTrainingPlanner';
+import { proForm, proRadius, proSemantic, proSpace, proType } from '../../theme/professionalDesign';
+import { withAlpha } from '../../components/navigation/tabBarShared';
+import type { CoachComponentTokens } from '../../features/coach/theme/coachPitchTokens';
+import type { TeamEvent } from '../../models/TeamEvent';
+import type { User } from '../../models/User';
 
-export interface SessionExercise {
-  id: string;
-  name: string;
-  durationMin: number;
-  drillType: DrillType;
-  intensity: 'low' | 'medium' | 'high';
-  playerCount: number;
-  objective: string;
-  instructions: string;
-  thematic?: string;
-}
-
-export interface ThematicDrillTemplate {
-  id: string;
-  theme: 'all' | 'activation' | 'rondo' | 'circuit' | 'finishing' | 'pressing' | 'set_pieces';
-  themeLabel: string;
-  name: string;
-  durationMin: number;
-  drillType: DrillType;
-  intensity: 'low' | 'medium' | 'high';
-  playerCount: number;
-  objective: string;
-  instructions: string;
-}
-
-export const THEMATIC_DRILLS_LIBRARY: ThematicDrillTemplate[] = [
-  // 1. Échauffement & Activation
-  {
-    id: 'th-act-1',
-    theme: 'activation',
-    themeLabel: 'Échauffement',
-    name: 'Activation Neuro-Musculaire & Appuis Dynamiques',
-    durationMin: 15,
-    drillType: 'generic',
-    intensity: 'low',
-    playerCount: 18,
-    objective: 'Mise en route cardiovasculaire et gammes athlétiques progressives',
-    instructions: 'Courses progressives, déverrouillage articulaire, appuis dynamiques et étirements actifs.',
-  },
-  {
-    id: 'th-act-2',
-    theme: 'activation',
-    themeLabel: 'Échauffement',
-    name: 'Passe & Suit Vivacité Décisionnelle',
-    durationMin: 12,
-    drillType: 'circuit',
-    intensity: 'medium',
-    playerCount: 14,
-    objective: 'Vitesse de transmission et orientation corporelle avant contrôle',
-    instructions: 'Circuit carré 12x12m. Passes courtes appuyées, changements de rythme et appels dans les intervalles.',
-  },
-  // 2. Rondos & Conservation
-  {
-    id: 'th-ron-1',
-    theme: 'rondo',
-    themeLabel: 'Rondos',
-    name: 'Rondo 4v2 Espaces Réduits à 2 Touches',
-    durationMin: 20,
-    drillType: 'rondo',
-    intensity: 'medium',
-    playerCount: 6,
-    objective: 'Conservation sous pressing et orientation du corps',
-    instructions: 'Zone 15x15m. 4 joueurs en périphérie à 2 touches max. 2 chasseurs au centre. Si interception, permutation.',
-  },
-  {
-    id: 'th-ron-2',
-    theme: 'rondo',
-    themeLabel: 'Rondos',
-    name: 'Rondo 5v2 avec Appui Central & Transition',
-    durationMin: 18,
-    drillType: 'rondo',
-    intensity: 'medium',
-    playerCount: 7,
-    objective: 'Fixer à l’intérieur pour libérer la périphérie',
-    instructions: 'Zone 18x18m. Recherche prioritaire de la passe cassant la ligne des 2 récupérateurs.',
-  },
-  // 3. Sortie de Balle & Circuits
-  {
-    id: 'th-cir-1',
-    theme: 'circuit',
-    themeLabel: 'Circuits',
-    name: 'Sortie de Balle depuis le 6m & Dézonage Piston',
-    durationMin: 25,
-    drillType: 'circuit',
-    intensity: 'high',
-    playerCount: 11,
-    objective: 'Décrochage du milieu sentinelle et projection du latéral',
-    instructions: 'Relance gardien au pied, appel du 6 dans la boîte, relais vers le latéral lancé.',
-  },
-  {
-    id: 'th-cir-2',
-    theme: 'circuit',
-    themeLabel: 'Circuits',
-    name: 'Circuit Déviation Axiale & Troisième Homme',
-    durationMin: 20,
-    drillType: 'circuit',
-    intensity: 'medium',
-    playerCount: 12,
-    objective: 'Combinaisons rapides en une touche sur appui-soutien',
-    instructions: 'Passe verticale vers le 9 dos au but, remise en une touche vers le milieu qui lance l’ailier opposé.',
-  },
-  // 4. Finition & Couloirs
-  {
-    id: 'th-fin-1',
-    theme: 'finishing',
-    themeLabel: 'Finition',
-    name: 'Centres au Cordeau & Coordination 1er / 2nd Poteau',
-    durationMin: 25,
-    drillType: 'finishing',
-    intensity: 'high',
-    playerCount: 10,
-    objective: 'Attaque synchronisée des zones de finition dans la surface',
-    instructions: 'Passe axiale vers l’ailier lancé. Centre fort à ras de terre ou au 2nd poteau. Attaque conjointe du BU et du MO.',
-  },
-  {
-    id: 'th-fin-2',
-    theme: 'finishing',
-    themeLabel: 'Finition',
-    name: 'Frappes Sous Pression en Entrée de Surface 2v1',
-    durationMin: 20,
-    drillType: 'finishing',
-    intensity: 'high',
-    playerCount: 8,
-    objective: 'Spontanéité de frappe et élimination en vitesse',
-    instructions: 'Duel offensif à 20 mètres. Prise de risque rapide sous la pression d’un défenseur en retard.',
-  },
-  // 5. Pressing & Bloc équipe
-  {
-    id: 'th-pre-1',
-    theme: 'pressing',
-    themeLabel: 'Pressing',
-    name: 'Pressing Haut Coordonné sur Passe Latérale',
-    durationMin: 22,
-    drillType: 'pressing',
-    intensity: 'high',
-    playerCount: 14,
-    objective: 'Déclenchement synchronisé du pressing sur temps de passe',
-    instructions: 'Dès que le défenseur adverse joue vers son latéral, l’ailier bloque l’extérieur et le milieu cadre l’axe.',
-  },
-  {
-    id: 'th-pre-2',
-    theme: 'pressing',
-    themeLabel: 'Pressing',
-    name: 'Coulissement Défensif en Bloc Médian 4-4-2',
-    durationMin: 20,
-    drillType: 'possession',
-    intensity: 'medium',
-    playerCount: 16,
-    objective: 'Compacité axiale et gestion de la profondeur',
-    instructions: 'Terrain réduit. L’équipe en bloc doit coulisser sans se faire traverser entre les lignes.',
-  },
-  // 6. Coups de Pied Arrêtés
-  {
-    id: 'th-set-1',
-    theme: 'set_pieces',
-    themeLabel: 'Coups Arrêtés',
-    name: 'Corners Offensifs : Blocage Premier Poteau & Déviation',
-    durationMin: 15,
-    drillType: 'finishing',
-    intensity: 'medium',
-    playerCount: 18,
-    objective: 'Création d’espace pour l’attaquant lancé au second poteau',
-    instructions: 'Tireur rentrant. Deux joueurs créent le blocage au premier poteau pour libérer le point de penalty.',
-  },
-];
-
-const DEFAULT_SESSION: SessionExercise[] = [
-  THEMATIC_DRILLS_LIBRARY[0],
-  THEMATIC_DRILLS_LIBRARY[2],
-  THEMATIC_DRILLS_LIBRARY[6],
-  {
-    id: 'ex4',
-    name: 'Opposition Dirigée 8v8 + 2 Jokers Flottants',
-    durationMin: 20,
-    drillType: 'possession',
-    intensity: 'high',
-    playerCount: 18,
-    objective: 'Animation offensive et recherche du surnombre',
-    instructions: 'Terrain réduit (surface à surface). Obligation de passer par un couloir avant de finaliser dans l’axe.',
-    thematic: 'opposition',
-  },
-  {
-    id: 'ex5',
-    name: 'Retour au Calme & Débriefing Collectif',
-    durationMin: 10,
-    drillType: 'generic',
-    intensity: 'low',
-    playerCount: 18,
-    objective: 'Récupération active et fixation des objectifs match',
-    instructions: 'Trottinage souple, travail de respiration guidée et rappel des consignes pour dimanche.',
-    thematic: 'recup',
-  },
-];
-
-const THEME_FILTERS = [
+const DRILL_FILTERS: { id: string; label: string }[] = [
   { id: 'all', label: 'Toutes' },
+  { id: 'custom', label: 'Mes schémas' },
   { id: 'activation', label: 'Échauffement' },
   { id: 'rondo', label: 'Rondos' },
   { id: 'circuit', label: 'Circuits' },
   { id: 'finishing', label: 'Finition' },
   { id: 'pressing', label: 'Pressing' },
   { id: 'set_pieces', label: 'Coups Arrêtés' },
-] as const;
+];
+
+const AI_SUGGESTIONS = [
+  'Pressing haut 4v3',
+  'Transition rapide axiale',
+  'Finition 2v1 couloirs',
+];
+
+/** Type de atelier sélectionnable — sous-union affichable en puces. */
+const DRILL_TYPES: DrillType[] = ['rondo', 'circuit', 'finishing', 'possession', 'pressing', 'generic'];
+
+const DRILL_TYPE_LABELS: Record<DrillType, string> = {
+  rondo: 'Rondo',
+  circuit: 'Circuit',
+  finishing: 'Finition',
+  possession: 'Possession',
+  pressing: 'Pressing',
+  generic: 'Atelier',
+};
+
+const INTENSITY_TONE: Record<SessionIntensity, string> = {
+  low: proSemantic.success,
+  medium: proSemantic.warning,
+  high: proSemantic.danger,
+};
 
 export const CoachTrainingPlannerScreen: React.FC = () => {
-  const [exercises, setExercises] = useState<SessionExercise[]>(DEFAULT_SESSION);
-  const [selectedTheme, setSelectedTheme] = useState<string>('all');
-  const [showAiGen, setShowAiGen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>('th-ron-1');
-  const [showLibraryModal, setShowLibraryModal] = useState(false);
-  const [libraryFilter, setLibraryFilter] = useState<string>('all');
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
+  const profile = useSessionProfile();
+  const clubId = profile?.profile.club_id ?? null;
 
-  const triggerHaptic = () => {
-    try {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {
-      // ignore
+  // ——— Données réelles : effectif conviable + prochaine séance ———
+  const [players, setPlayers] = useState<User[]>([]);
+  const [nextSession, setNextSession] = useState<TeamEvent | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!clubId) {
+      setPlayers([]);
+      setNextSession(null);
+      setLoading(false);
+      return;
     }
-  };
+    try {
+      const [memberList, eventList] = await Promise.all([
+        usersService.listMembersByClubId(clubId),
+        teamEventsService.listForClub(clubId, 60),
+      ]);
+      setPlayers(memberList.filter((member) => member.role === 'player'));
+      const now = Date.now();
+      setNextSession(
+        eventList
+          .filter((event) => event.event_type === 'training' && event.starts_at.getTime() >= now)
+          .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0] ?? null,
+      );
+    } catch {
+      setPlayers([]);
+      setNextSession(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [clubId]);
 
-  const totalDuration = exercises.reduce((acc, curr) => acc + curr.durationMin, 0);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
-  const updateExerciseIntensity = (id: string, intensity: 'low' | 'medium' | 'high') => {
-    triggerHaptic();
-    setExercises((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, intensity } : e))
-    );
-  };
+  // ——— Séance en cours d'édition ———
+  const [exercises, setExercises] = useState<SessionExercise[]>(() => defaultSession());
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const updateExerciseDuration = (id: string, delta: number) => {
-    triggerHaptic();
-    setExercises((prev) =>
-      prev.map((e) =>
-        e.id === id ? { ...e, durationMin: Math.max(5, e.durationMin + delta) } : e
-      )
-    );
-  };
+  // ——— Schémas d'exercice : Visualiseur, Présentation & Créateur ———
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerDiagram, setViewerDiagram] = useState<ExerciseDiagramData | null>(null);
+  const [viewerExercise, setViewerExercise] = useState<SessionExercise | null>(null);
 
-  const updateExercisePlayerCount = (id: string, delta: number) => {
-    triggerHaptic();
-    setExercises((prev) =>
-      prev.map((e) =>
-        e.id === id ? { ...e, playerCount: Math.max(2, (e.playerCount || 14) + delta) } : e
-      )
-    );
-  };
+  const [editorVisible, setEditorVisible] = useState(false);
+  const [editorDiagram, setEditorDiagram] = useState<ExerciseDiagramData | null>(null);
+  const [editorTargetExerciseId, setEditorTargetExerciseId] = useState<string | null>(null);
+  const [customDiagrams, setCustomDiagrams] = useState<ExerciseDiagramData[]>([]);
 
-  const updateExerciseDrillType = (id: string, drillType: DrillType) => {
-    triggerHaptic();
-    setExercises((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, drillType } : e))
-    );
-  };
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [libraryFilter, setLibraryFilter] = useState('all');
+  const [showAi, setShowAi] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiSource, setAiSource] = useState<'cloud' | 'local' | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const addManualExercise = () => {
-    triggerHaptic();
-    const newEx: SessionExercise = {
+  const summary = useMemo(() => sessionSummary(exercises), [exercises]);
+  const playerCount = players.length;
+
+  const loadCustomDiagrams = useCallback(async () => {
+    if (!profile) return;
+    try {
+      const list = await coachDiagramsService.listDiagrams({
+        uid: profile.uid,
+        clubId: clubId || undefined,
+      });
+      setCustomDiagrams(list);
+    } catch {
+      setCustomDiagrams([]);
+    }
+  }, [profile, clubId]);
+
+  React.useEffect(() => {
+    void loadCustomDiagrams();
+  }, [loadCustomDiagrams]);
+
+  const updateExercise = useCallback((id: string, patch: Partial<SessionExercise>) => {
+    setExercises((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  }, []);
+
+  const handleOpenViewer = useCallback(
+    (exercise: SessionExercise) => {
+      const diag =
+        exercise.diagram ||
+        createPresetDiagram(exercise.drillType, exercise.name, profile?.uid || 'coach-local');
+      setViewerDiagram(diag);
+      setViewerExercise(exercise);
+      setViewerVisible(true);
+    },
+    [profile?.uid],
+  );
+
+  const handleOpenEditor = useCallback(
+    (exercise: SessionExercise) => {
+      const diag =
+        exercise.diagram ||
+        createPresetDiagram(exercise.drillType, exercise.name, profile?.uid || 'coach-local');
+      setEditorDiagram(diag);
+      setEditorTargetExerciseId(exercise.id);
+      setEditorVisible(true);
+    },
+    [profile?.uid],
+  );
+
+  const handleCreateNewDiagram = useCallback(() => {
+    setEditorDiagram(null);
+    setEditorTargetExerciseId(null);
+    setEditorVisible(true);
+  }, []);
+
+  const handleSaveDiagram = useCallback(
+    async (saved: ExerciseDiagramData, mode: 'save_original' | 'create_copy') => {
+      try {
+        if (mode === 'save_original') {
+          await coachDiagramsService.saveDiagram(saved, {
+            uid: profile?.uid || 'coach-local',
+            clubId: clubId || undefined,
+          });
+        }
+        if (editorTargetExerciseId) {
+          updateExercise(editorTargetExerciseId, {
+            diagram: saved,
+            name: saved.name || undefined,
+            objective: saved.objective || undefined,
+            instructions: saved.instructions || undefined,
+          });
+        } else {
+          await coachDiagramsService.saveDiagram(saved, {
+            uid: profile?.uid || 'coach-local',
+            clubId: clubId || undefined,
+          });
+          const created: SessionExercise = {
+            id: `diag-ex-${Date.now()}`,
+            name: saved.name || 'Nouvel atelier tactique',
+            durationMin: 20,
+            drillType: 'generic',
+            intensity: 'medium',
+            playerCount: Math.max(2, playerCount),
+            objective: saved.objective || 'Objectif tactique',
+            instructions: saved.instructions || 'Mise en place et principes de jeu.',
+            diagram: saved,
+            stages: saved.stages,
+          };
+          setExercises((prev) => [...prev, created]);
+          setExpandedId(created.id);
+        }
+        await loadCustomDiagrams();
+      } catch {
+        // Enregistrement sécurisé
+      } finally {
+        setEditorVisible(false);
+        setEditorDiagram(null);
+        setEditorTargetExerciseId(null);
+      }
+    },
+    [editorTargetExerciseId, profile?.uid, clubId, updateExercise, playerCount, loadCustomDiagrams],
+  );
+
+  const addDrill = useCallback((template: ThematicDrillTemplate) => {
+    const created = fromTemplate(template);
+    setExercises((prev) => [...prev, created]);
+    setExpandedId(created.id);
+  }, []);
+
+  const addManualExercise = useCallback(() => {
+    const created: SessionExercise = {
       id: `manual-${Date.now()}`,
-      name: 'Nouvel Atelier Personnalisé',
+      name: 'Nouvel atelier',
       durationMin: 15,
       drillType: 'rondo',
       intensity: 'medium',
-      playerCount: 12,
-      objective: 'Atelier configuré manuellement par le coach',
-      instructions: 'Définissez vos règles de touches, dimensions et rotations.',
+      playerCount: Math.max(2, playerCount),
+      objective: 'Objectif à préciser',
+      instructions: 'Définissez les règles, dimensions et rotations.',
     };
-    setExercises((prev) => [...prev, newEx]);
-    setExpandedId(newEx.id);
-  };
+    setExercises((prev) => [...prev, created]);
+    setExpandedId(created.id);
+  }, [playerCount]);
 
-  const addDrillFromLibrary = (template: ThematicDrillTemplate) => {
-    triggerHaptic();
-    const newEx: SessionExercise = {
-      ...template,
-      id: `drill-${Date.now()}-${template.id}`,
-    };
-    setExercises((prev) => [...prev, newEx]);
-    setExpandedId(newEx.id);
-    setShowLibraryModal(false);
-    Alert.alert('Atelier Ajouté', `« ${template.name} » a été ajouté à votre séance.`);
-  };
-
-  const deleteExercise = (id: string) => {
-    triggerHaptic();
+  const deleteExercise = useCallback((id: string) => {
     setExercises((prev) => prev.filter((e) => e.id !== id));
-  };
+  }, []);
 
-  const generateCustomDrill = () => {
-    if (!aiPrompt.trim()) return;
-    triggerHaptic();
-    setIsGenerating(true);
-    setTimeout(() => {
-      setIsGenerating(false);
-      const newEx: SessionExercise = {
-        id: `ai-${Date.now()}`,
-        name: `Atelier IA : ${aiPrompt}`,
-        durationMin: 20,
-        drillType: 'pressing',
-        intensity: 'high',
-        playerCount: 14,
-        objective: 'Fermeture immédiate des lignes de passe axiales',
-        instructions: 'Bloc médian compact. Cadrage du porteur à la passe latérale et coulissement coordonné vers le ballon.',
-      };
-      setExercises((prev) => [newEx, ...prev]);
-      setExpandedId(newEx.id);
+  const moveExercise = useCallback((index: number, direction: -1 | 1) => {
+    setExercises((prev) => {
+      const next = [...prev];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }, []);
+
+  // ——— Copilote : génération réelle (cloud) + repli local partagé ———
+  const generateSession = useCallback(async () => {
+    const prompt = aiPrompt.trim();
+    if (!prompt || aiLoading) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      let created: SessionExercise[] | null = null;
+      if (clubId) {
+        try {
+          const res = await aiTrainingService.generateCollective({
+            club_id: clubId,
+            objective: 'technique',
+            duration_min: 90,
+            level: 'intermediate',
+            player_count: Math.max(1, playerCount),
+            coach_notes: prompt,
+          });
+          if (res?.phases?.length) {
+            created = sessionExercisesFromPhases(res.phases, {
+              playerCount: Math.max(1, playerCount),
+            });
+            setAiSource('cloud');
+          }
+        } catch {
+          // Repli local — le même moteur que le Copilote hors cloud.
+        }
+      }
+      if (!created) {
+        created = sessionExercisesFromPlan(composedPlanFromPrompt(prompt), {
+          playerCount: Math.max(1, playerCount),
+        });
+        setAiSource('local');
+      }
+      setExercises(created);
+      setExpandedId(null);
+      setShowAi(false);
       setAiPrompt('');
-      setShowAiGen(false);
-    }, 600);
-  };
+    } catch {
+      setAiError('La génération a échoué. Décrivez à nouveau votre intention.');
+    } finally {
+      setAiLoading(false);
+    }
+  }, [aiPrompt, aiLoading, clubId, playerCount]);
+
+  // ——— Programmation réelle de la séance ———
+  const scheduleSession = useCallback(async () => {
+    if (!profile || !clubId || saving) return;
+    if (exercises.length === 0) return;
+    setSaving(true);
+    try {
+      const startsAt = nextSession?.starts_at ?? defaultRecommendedSessionStart();
+      const totalMin = summary.totalMin;
+      await teamEventsService.create({
+        title: nextSession?.title || 'Séance d’entraînement',
+        description: `Séance planifiée depuis le planificateur.\n\nAteliers :\n${exercises
+          .map((e, i) => `${i + 1}. ${e.name} (${e.durationMin} min)`)
+          .join('\n')}\n\nDurée totale : ${totalMin} min`,
+        event_type: 'training',
+        organizer_uid: profile.uid,
+        organizer_name: profile.display_name || 'Coach',
+        team_id: nextSession?.team_id,
+        club_id: clubId,
+        starts_at: startsAt,
+        city: nextSession?.city || profile.city || 'Terrain principal',
+        invitee_uids: players.map((player) => player.uid),
+      });
+      setNextSession(null);
+      await load();
+    } catch {
+      // Le silence n'est pas un succès : sans repère visuel, on reste sobre.
+    } finally {
+      setSaving(false);
+    }
+  }, [profile, clubId, saving, exercises, nextSession, summary.totalMin, players, load]);
+
+  const libraryItems = useMemo(
+    () =>
+      libraryFilter === 'custom'
+        ? []
+        : THEMATIC_DRILLS_LIBRARY.filter(
+            (template) => libraryFilter === 'all' || template.theme === libraryFilter,
+          ),
+    [libraryFilter],
+  );
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* 1. Header: Session Overview & Periodization (Design v4) */}
-      <View style={styles.sessionHeaderCard}>
-        <View style={styles.sessionBadgeRow}>
-          <View style={styles.themeBadge}>
-            <Text style={styles.themeBadgeText}>SÉANCE N°48 · TRANSITION & FINITION</Text>
+    <View style={styles.root}>
+      <CoachScreenHeader
+        title="Entraînements"
+        fallbackNavId="today"
+        hasUnsavedChanges={exercises.length > 0}
+      />
+      <CoachChapterScroll>
+        {/* ——— Séance du calendrier, si elle existe ——— */}
+        {loading ? (
+          <View style={styles.centerBlock}>
+            <ActivityIndicator size="small" color={tokens.accent} />
           </View>
-          <View style={styles.rpeBadge}>
-            <Text style={styles.rpeBadgeText}>Intensité : RPE 7.5/10</Text>
-          </View>
-        </View>
-
-        <Text style={styles.sessionTitle}>Sortie de Balle Rapide & Attaque des Couloirs</Text>
-        <Text style={styles.sessionSubtitle}>Mardi 19:30 · Terrain Synthétique 1 · Seniors 1</Text>
-
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Feather name="clock" size={14} color="#D97706" />
-            <Text style={styles.metaText}>{totalDuration} min au total</Text>
-          </View>
-          <View style={styles.metaDivider} />
-          <View style={styles.metaItem}>
-            <MaterialCommunityIcons name="layers-outline" size={14} color="#0284C7" />
-            <Text style={styles.metaText}>{exercises.length} ateliers planifiés</Text>
-          </View>
-          <View style={styles.metaDivider} />
-          <View style={styles.metaItem}>
-            <MaterialCommunityIcons name="account-group-outline" size={14} color="#16A34A" />
-            <Text style={styles.metaText}>18 Joueurs attendus</Text>
-          </View>
-        </View>
-
-        {/* Action button to open Thematic Library Modal */}
-        <TouchableOpacity
-          style={styles.openLibraryBtn}
-          activeOpacity={0.85}
-          onPress={() => {
-            triggerHaptic();
-            setShowLibraryModal(true);
-          }}
-        >
-          <MaterialCommunityIcons name="book-open-page-variant-outline" size={18} color="#0F172A" />
-          <Text style={styles.openLibraryBtnText}>Bibliothèque par Thématique (11 ateliers)</Text>
-          <Feather name="arrow-right" size={16} color="#0F172A" />
-        </TouchableOpacity>
-      </View>
-
-      {/* 2. Page 7 Specification: Création Assistée par IA (Optionnelle & Rétractable) */}
-      <View style={styles.aiGeneratorCard}>
-        <TouchableOpacity
-          style={styles.aiGenHeaderRow}
-          activeOpacity={0.8}
-          onPress={() => {
-            triggerHaptic();
-            setShowAiGen(!showAiGen);
-          }}
-        >
-          <View style={styles.aiGenTitleRow}>
-            <MaterialCommunityIcons name="star-four-points" size={16} color="#D97706" />
-            <Text style={styles.aiGenTitle}>Création Assistée par IA (Optionnel)</Text>
-          </View>
-          <Feather name={showAiGen ? 'chevron-up' : 'chevron-down'} size={16} color="#64748B" />
-        </TouchableOpacity>
-
-        {showAiGen && (
-          <View style={styles.aiGenBody}>
-            <Text style={styles.aiGenDesc}>
-              Décrivez votre intention tactique pour générer un atelier sur-mesure 100% modifiable :
+        ) : nextSession ? (
+          <View style={styles.nextSessionCard}>
+            <View style={styles.nextSessionBadge}>
+              <MaterialCommunityIcons name="calendar-check" size={13} color={tokens.accent} />
+              <Text style={styles.nextSessionBadgeText}>PROCHAINE SÉANCE</Text>
+            </View>
+            <Text style={styles.nextSessionTitle}>{nextSession.title}</Text>
+            <Text style={styles.nextSessionMeta}>
+              {nextSession.starts_at.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              })}{' '}
+              ·{' '}
+              {nextSession.starts_at.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+              {nextSession.location_label || nextSession.location || nextSession.city
+                ? ` · ${nextSession.location_label || nextSession.location || nextSession.city}`
+                : ''}
             </Text>
+          </View>
+        ) : clubId ? (
+          <Text style={styles.honestNote}>
+            Aucune séance programmée. Composez la séance ci-dessous puis ajoutez-la au calendrier.
+          </Text>
+        ) : null}
 
-            {/* Quick Suggestions Chips */}
-            <View style={styles.aiSuggestionsRow}>
-              {['Pressing haut 4v3', 'Transition rapide axiale', 'Finition 2v1 couloirs'].map((sug) => (
-                <TouchableOpacity
-                  key={sug}
-                  style={styles.aiSugChip}
-                  onPress={() => setAiPrompt(sug)}
+        {/* ——— Carte séance : résumé dérivé, rien d'inventé ——— */}
+        <View style={styles.sessionCard}>
+          <View style={styles.sessionTopRow}>
+            <Text style={styles.sessionTitle}>Séance en préparation</Text>
+            <View style={styles.sessionChips}>
+              <View style={styles.durationChip}>
+                <Feather name="clock" size={12} color={tokens.muted} />
+                <Text style={styles.durationChipText}>{summary.totalMin} min</Text>
+              </View>
+              {summary.dominant ? (
+                <View
+                  style={[
+                    styles.intensityChip,
+                    { backgroundColor: withAlpha(INTENSITY_TONE[summary.dominant], 0.14) },
+                  ]}
                 >
-                  <Text style={styles.aiSugChipText}>+ {sug}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View style={styles.inputRow}>
-              <TextInput
-                style={styles.promptInput}
-                placeholder="Ex : Sortie de balle sous pressing 4v3..."
-                placeholderTextColor="#94A3B8"
-                value={aiPrompt}
-                onChangeText={setAiPrompt}
-              />
-              <TouchableOpacity
-                style={[styles.generateBtn, isGenerating && styles.generateBtnLoading]}
-                activeOpacity={0.8}
-                onPress={generateCustomDrill}
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="lightning-bolt" size={16} color="#FFFFFF" />
-                    <Text style={styles.generateBtnText}>Générer</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+                  <Text style={[styles.intensityChipText, { color: INTENSITY_TONE[summary.dominant] }]}>
+                    {INTENSITY_LABELS[summary.dominant]}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </View>
-        )}
-      </View>
+          <Text style={styles.sessionCount}>
+            {summary.count} atelier{summary.count > 1 ? 's' : ''}
+            {clubId && playerCount > 0 ? ` · ${playerCount} joueurs conviables` : ''}
+          </Text>
 
-      {/* 3. Filter Bar by Theme */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-        {THEME_FILTERS.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            style={[styles.filterPill, selectedTheme === item.id && styles.filterPillActive]}
-            onPress={() => {
-              triggerHaptic();
-              setSelectedTheme(item.id);
-            }}
-          >
-            <Text style={[styles.filterPillText, selectedTheme === item.id && styles.filterPillTextActive]}>
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          <View style={styles.sessionActionsRow}>
+            <PressableSpring
+              onPress={() => setShowLibrary(true)}
+              scaleTo={0.97}
+              haptic
+              accessibilityRole="button"
+              accessibilityLabel="Ouvrir la bibliothèque d'ateliers"
+              style={[styles.libraryBtn, { borderColor: withAlpha(tokens.accent, 0.4) }]}
+            >
+              <Icon name="bookmark" size={15} color={tokens.accent} />
+              <Text style={[styles.libraryBtnText, { color: tokens.accent }]}>Bibliothèque</Text>
+            </PressableSpring>
+            <PressableSpring
+              onPress={handleCreateNewDiagram}
+              scaleTo={0.97}
+              haptic
+              accessibilityRole="button"
+              accessibilityLabel="Créer un schéma d'atelier personnalisé"
+              style={[styles.libraryBtn, { borderColor: withAlpha(tokens.accent, 0.4) }]}
+            >
+              <MaterialCommunityIcons name="vector-polyline" size={15} color={tokens.accent} />
+              <Text style={[styles.libraryBtnText, { color: tokens.accent }]}>Créer schéma</Text>
+            </PressableSpring>
+            <PressableSpring
+              onPress={addManualExercise}
+              scaleTo={0.97}
+              haptic
+              accessibilityRole="button"
+              accessibilityLabel="Ajouter un atelier manuel"
+              style={[styles.libraryBtn, { borderColor: withAlpha(tokens.accent, 0.4) }]}
+            >
+              <Ionicons name="add" size={15} color={tokens.accent} />
+              <Text style={[styles.libraryBtnText, { color: tokens.accent }]}>Atelier libre</Text>
+            </PressableSpring>
+          </View>
+        </View>
 
-      {/* 4. Timeline Header with + Atelier Manuel Button */}
-      <View style={styles.timelineHeaderRow}>
-        <Text style={styles.timelineHeader}>Déroulé de la Séance ({exercises.length})</Text>
-        <TouchableOpacity style={styles.addManualBtn} onPress={addManualExercise} activeOpacity={0.8}>
-          <Feather name="plus" size={14} color="#0F172A" />
-          <Text style={styles.addManualText}>Atelier Manuel</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 5. Timeline List of Exercises with Interactive Vector Diagram & Steppers */}
-      {exercises
-        .filter((ex) => {
-          if (selectedTheme === 'all') return true;
-          return ex.drillType === selectedTheme || (ex as any).theme === selectedTheme;
-        })
-        .map((ex, idx) => {
-          const isExpanded = expandedId === ex.id;
-
-          return (
-            <View key={ex.id} style={styles.exerciseCard}>
-              <TouchableOpacity
-                style={styles.exerciseTopRow}
-                activeOpacity={0.8}
-                onPress={() => {
-                  triggerHaptic();
-                  setExpandedId(isExpanded ? null : ex.id);
-                }}
-              >
-                <View style={styles.exerciseIndexBadge}>
-                  <Text style={styles.exerciseIndexText}>0{idx + 1}</Text>
-                </View>
-                <View style={styles.exerciseMainInfo}>
-                  <Text style={styles.exerciseName}>{ex.name}</Text>
-                  <View style={styles.exerciseTags}>
-                    <Text style={styles.exerciseDuration}>{ex.durationMin} min</Text>
-                    <Text style={styles.tagDot}>•</Text>
-                    <Text style={styles.exercisePlayers}>{ex.playerCount || 14} joueurs</Text>
-                    <Text style={styles.tagDot}>•</Text>
-                    <Text
-                      style={[
-                        styles.exerciseIntensity,
-                        ex.intensity === 'high'
-                          ? { color: '#EF4444' }
-                          : ex.intensity === 'medium'
-                          ? { color: '#D97706' }
-                          : { color: '#16A34A' },
-                      ]}
-                    >
-                      RPE {ex.intensity === 'high' ? 'Élevé' : ex.intensity === 'medium' ? 'Moyen' : 'Faible'}
-                    </Text>
-                  </View>
-                </View>
-                <Feather
-                  name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={18}
-                  color="#64748B"
-                />
-              </TouchableOpacity>
-
-              {/* Collapsible Detail Section with Interactive Graphical Diagram & Controls */}
-              {isExpanded && (
-                <View style={styles.expandedSection}>
-                  <View style={styles.objectiveBox}>
-                    <Text style={styles.objectiveLabel}>Objectif pédagogique :</Text>
-                    <Text style={styles.objectiveText}>{ex.objective}</Text>
-                  </View>
-
-                  {/* Vector Tactical Board Diagram */}
-                  <View style={styles.diagramContainer}>
-                    <CoachTrainingDrillDiagram
-                      drillType={ex.drillType}
-                      title={ex.name}
-                      intensity={ex.intensity}
-                      width={310}
-                      height={180}
-                    />
-                  </View>
-
-                  {/* 1-Tap Steppers & Controls */}
-                  <View style={styles.controlsPanel}>
-                    <Text style={styles.panelTitle}>PARAMÈTRES DE L'ATELIER (1 TAP)</Text>
-
-                    {/* Steppers Row: Duration & Player Count */}
-                    <View style={styles.steppersRow}>
-                      <View style={styles.stepperBlock}>
-                        <Text style={styles.stepperLabel}>Durée (min)</Text>
-                        <View style={styles.stepperControl}>
-                          <TouchableOpacity
-                            style={styles.stepperBtn}
-                            onPress={() => updateExerciseDuration(ex.id, -5)}
-                          >
-                            <Feather name="minus" size={13} color="#0F172A" />
-                          </TouchableOpacity>
-                          <Text style={styles.stepperVal}>{ex.durationMin}m</Text>
-                          <TouchableOpacity
-                            style={styles.stepperBtn}
-                            onPress={() => updateExerciseDuration(ex.id, 5)}
-                          >
-                            <Feather name="plus" size={13} color="#0F172A" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-
-                      <View style={styles.stepperBlock}>
-                        <Text style={styles.stepperLabel}>Joueurs</Text>
-                        <View style={styles.stepperControl}>
-                          <TouchableOpacity
-                            style={styles.stepperBtn}
-                            onPress={() => updateExercisePlayerCount(ex.id, -1)}
-                          >
-                            <Feather name="minus" size={13} color="#0F172A" />
-                          </TouchableOpacity>
-                          <Text style={styles.stepperVal}>{ex.playerCount || 14}</Text>
-                          <TouchableOpacity
-                            style={styles.stepperBtn}
-                            onPress={() => updateExercisePlayerCount(ex.id, 1)}
-                          >
-                            <Feather name="plus" size={13} color="#0F172A" />
-                          </TouchableOpacity>
-                        </View>
+        {/* ——— Ateliers ——— */}
+        {exercises.length === 0 ? (
+          <Text style={styles.honestNote}>
+            Séance vide. Ajoutez des ateliers depuis la bibliothèque ou le Copilote.
+          </Text>
+        ) : (
+          exercises.map((exercise, index) => {
+            const expanded = expandedId === exercise.id;
+            return (
+              <View key={exercise.id} style={styles.exerciseCard}>
+                <PressableSpring
+                  onPress={() => setExpandedId(expanded ? null : exercise.id)}
+                  scaleTo={0.99}
+                  haptic
+                  accessibilityRole="button"
+                  accessibilityLabel={`Atelier ${exercise.name}, ${exercise.durationMin} minutes`}
+                >
+                  <View style={styles.exerciseRow}>
+                    <View style={styles.diagramWrap}>
+                      <CoachTrainingDrillDiagram
+                        drillType={exercise.drillType}
+                        diagramData={exercise.diagram}
+                        title={exercise.name}
+                        width={84}
+                        height={56}
+                        onPress={() => handleOpenViewer(exercise)}
+                      />
+                    </View>
+                    <View style={styles.exerciseMain}>
+                      <Text numberOfLines={2} style={styles.exerciseName}>
+                        {exercise.name}
+                      </Text>
+                      <View style={styles.exerciseMetaRow}>
+                        <Text style={styles.exerciseMeta}>{exercise.durationMin} min</Text>
+                        <View style={styles.exerciseDot} />
+                        <Text style={styles.exerciseMeta}>{DRILL_TYPE_LABELS[exercise.drillType]}</Text>
+                        <View
+                          style={[
+                            styles.exerciseIntensityDot,
+                            { backgroundColor: INTENSITY_TONE[exercise.intensity] },
+                          ]}
+                        />
+                        <Text style={styles.exerciseMeta}>
+                          {INTENSITY_LABELS[exercise.intensity]}
+                        </Text>
                       </View>
                     </View>
+                    <Feather
+                      name={expanded ? 'chevron-up' : 'chevron-down'}
+                      size={16}
+                      color={tokens.muted}
+                    />
+                  </View>
+                </PressableSpring>
 
-                    {/* Intensity Segmented Bar */}
+                {expanded ? (
+                  <View style={styles.expandedBody}>
+                    <Text style={styles.exerciseObjective}>{exercise.objective}</Text>
+                    <Text style={styles.exerciseInstructions}>{exercise.instructions}</Text>
+
                     <View style={styles.controlRow}>
-                      <Text style={styles.controlLabel}>Intensité / Charge</Text>
-                      <View style={styles.segmentedRow}>
-                        {(['low', 'medium', 'high'] as const).map((lvl) => {
-                          const active = ex.intensity === lvl;
+                      <Text style={styles.controlLabel}>Durée</Text>
+                      <Stepper
+                        label={`${exercise.durationMin} min`}
+                        onDecrement={() =>
+                          updateExercise(exercise.id, {
+                            durationMin: Math.max(5, exercise.durationMin - 5),
+                          })
+                        }
+                        onIncrement={() =>
+                          updateExercise(exercise.id, {
+                            durationMin: Math.min(120, exercise.durationMin + 5),
+                          })
+                        }
+                      />
+                    </View>
+
+                    <View style={styles.controlRow}>
+                      <Text style={styles.controlLabel}>Joueurs</Text>
+                      <Stepper
+                        label={`${exercise.playerCount}`}
+                        onDecrement={() =>
+                          updateExercise(exercise.id, {
+                            playerCount: Math.max(2, exercise.playerCount - 2),
+                          })
+                        }
+                        onIncrement={() =>
+                          updateExercise(exercise.id, {
+                            playerCount: Math.min(40, exercise.playerCount + 2),
+                          })
+                        }
+                      />
+                    </View>
+
+                    <View style={styles.controlRow}>
+                      <Text style={styles.controlLabel}>Type</Text>
+                      <View style={styles.typeChips}>
+                        {DRILL_TYPES.map((type) => {
+                          const active = exercise.drillType === type;
                           return (
-                            <TouchableOpacity
-                              key={lvl}
+                            <PressableSpring
+                              key={type}
+                              onPress={() => updateExercise(exercise.id, { drillType: type })}
+                              scaleTo={0.94}
+                              haptic
                               style={[
-                                styles.segmentBtn,
-                                active && styles.segmentBtnActive,
-                                active && lvl === 'high' && { borderColor: '#EF4444' },
-                                active && lvl === 'medium' && { borderColor: '#F59E0B' },
-                                active && lvl === 'low' && { borderColor: '#16A34A' },
+                                styles.typeChip,
+                                active && { backgroundColor: withAlpha(tokens.accent, 0.16) },
                               ]}
-                              onPress={() => updateExerciseIntensity(ex.id, lvl)}
                             >
                               <Text
                                 style={[
-                                  styles.segmentText,
-                                  active && { color: lvl === 'high' ? '#EF4444' : lvl === 'medium' ? '#D97706' : '#16A34A', fontWeight: '700' },
+                                  styles.typeChipText,
+                                  { color: active ? tokens.accent : tokens.muted },
                                 ]}
                               >
-                                {lvl === 'low' ? 'Basse' : lvl === 'medium' ? 'Moyenne' : 'Haute'}
+                                {DRILL_TYPE_LABELS[type]}
                               </Text>
-                            </TouchableOpacity>
+                            </PressableSpring>
                           );
                         })}
                       </View>
                     </View>
 
-                    {/* Drill Type Visual Schema Selector */}
                     <View style={styles.controlRow}>
-                      <Text style={styles.controlLabel}>Schéma Vectoriel Terrain</Text>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.schemaScroll}>
-                        {(['rondo', 'finishing', 'circuit', 'possession', 'pressing', 'generic'] as const).map((dType) => {
-                          const active = ex.drillType === dType;
+                      <Text style={styles.controlLabel}>Intensité</Text>
+                      <View style={styles.typeChips}>
+                        {(['low', 'medium', 'high'] as SessionIntensity[]).map((level) => {
+                          const active = exercise.intensity === level;
                           return (
-                            <TouchableOpacity
-                              key={dType}
-                              style={[styles.schemaChip, active && styles.schemaChipActive]}
-                              onPress={() => updateExerciseDrillType(ex.id, dType)}
+                            <PressableSpring
+                              key={level}
+                              onPress={() => updateExercise(exercise.id, { intensity: level })}
+                              scaleTo={0.94}
+                              haptic
+                              style={[
+                                styles.typeChip,
+                                active && {
+                                  backgroundColor: withAlpha(INTENSITY_TONE[level], 0.14),
+                                  borderColor: withAlpha(INTENSITY_TONE[level], 0.5),
+                                },
+                              ]}
                             >
-                              <Text style={[styles.schemaChipText, active && styles.schemaChipTextActive]}>
-                                {dType.toUpperCase()}
+                              <Text
+                                style={[
+                                  styles.typeChipText,
+                                  { color: active ? INTENSITY_TONE[level] : tokens.muted },
+                                ]}
+                              >
+                                {INTENSITY_LABELS[level]}
                               </Text>
-                            </TouchableOpacity>
+                            </PressableSpring>
                           );
                         })}
-                      </ScrollView>
+                      </View>
                     </View>
 
-                    {/* Delete Action */}
-                    <View style={styles.actionRow}>
-                      <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteExercise(ex.id)}>
-                        <Feather name="trash-2" size={13} color="#EF4444" />
-                        <Text style={styles.deleteBtnText}>Supprimer cet atelier</Text>
-                      </TouchableOpacity>
+                    <View style={styles.diagramActionRow}>
+                      <PressableSpring
+                        onPress={() => handleOpenViewer(exercise)}
+                        scaleTo={0.96}
+                        haptic
+                        accessibilityRole="button"
+                        accessibilityLabel="Montrer aux joueurs en mode présentation"
+                        style={[styles.diagramActionBtn, styles.presentationModeBtn]}
+                      >
+                        <MaterialCommunityIcons name="presentation-play" size={15} color={tokens.bg} />
+                        <Text style={[styles.diagramActionText, { color: tokens.bg }]}>
+                          Montrer aux joueurs
+                        </Text>
+                      </PressableSpring>
+
+                      <PressableSpring
+                        onPress={() => handleOpenEditor(exercise)}
+                        scaleTo={0.96}
+                        haptic
+                        accessibilityRole="button"
+                        accessibilityLabel="Modifier ou créer le schéma d'atelier"
+                        style={styles.diagramActionBtn}
+                      >
+                        <Feather name="edit-2" size={13} color={tokens.accent} />
+                        <Text style={[styles.diagramActionText, { color: tokens.accent }]}>
+                          {exercise.diagram ? 'Modifier schéma' : 'Créer schéma'}
+                        </Text>
+                      </PressableSpring>
+                    </View>
+
+                    <View style={styles.orderRow}>
+                      <PressableSpring
+                        onPress={() => moveExercise(index, -1)}
+                        scaleTo={0.9}
+                        haptic
+                        disabled={index === 0}
+                        style={styles.orderBtn}
+                      >
+                        <Ionicons name="arrow-up" size={15} color={tokens.muted} />
+                      </PressableSpring>
+                      <PressableSpring
+                        onPress={() => moveExercise(index, 1)}
+                        scaleTo={0.9}
+                        haptic
+                        disabled={index === exercises.length - 1}
+                        style={styles.orderBtn}
+                      >
+                        <Ionicons name="arrow-down" size={15} color={tokens.muted} />
+                      </PressableSpring>
+                      <PressableSpring
+                        onPress={() => deleteExercise(exercise.id)}
+                        scaleTo={0.94}
+                        haptic
+                        style={styles.deleteBtn}
+                      >
+                        <Ionicons name="trash-outline" size={14} color={proSemantic.danger} />
+                        <Text style={[styles.deleteBtnText, { color: proSemantic.danger }]}>
+                          Retirer
+                        </Text>
+                      </PressableSpring>
                     </View>
                   </View>
+                ) : null}
+              </View>
+            );
+          })
+        )}
 
-                  {/* Consignes Text */}
-                  <View style={styles.instructionsBox}>
-                    <Text style={styles.instructionsLabel}>Consignes & Règles du Jeu :</Text>
-                    <Text style={styles.instructionsText}>{ex.instructions}</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-          );
-        })}
-
-      {/* 6. Page 7 Modal: Bibliothèque par Thématique */}
-      <Modal
-        visible={showLibraryModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowLibraryModal(false)}
-      >
-        <View style={styles.modalRoot}>
-          {/* Modal Header */}
-          <View style={styles.modalHeader}>
-            <View>
-              <Text style={styles.modalTitle}>Bibliothèque d’Ateliers</Text>
-              <Text style={styles.modalSubtitle}>Sélectionnez et injectez un atelier thématique</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.modalCloseBtn}
-              onPress={() => setShowLibraryModal(false)}
-            >
-              <Feather name="x" size={20} color="#0F172A" />
-            </TouchableOpacity>
+        {/* ——— Copilote : une ligne qui ouvre la génération réelle ——— */}
+        <PressableSpring
+          onPress={() => setShowAi(true)}
+          scaleTo={0.98}
+          haptic
+          accessibilityRole="button"
+          accessibilityLabel="Générer une séance avec le Copilote"
+          style={styles.aiRow}
+        >
+          <View style={styles.aiIconWrap}>
+            <MaterialCommunityIcons name="star-four-points" size={16} color={tokens.accent} />
           </View>
+          <View style={styles.aiCopy}>
+            <Text style={styles.aiTitle}>Générer avec le Copilote</Text>
+            <Text numberOfLines={1} style={styles.aiSubtitle}>
+              Décrivez votre intention, la séance reste modifiable
+            </Text>
+          </View>
+          <Feather name="arrow-right" size={15} color={tokens.muted} />
+        </PressableSpring>
 
-          {/* Modal Theme Filter Pills */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modalFilterRow}>
-            {THEME_FILTERS.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={[styles.filterPill, libraryFilter === item.id && styles.filterPillActive]}
-                onPress={() => {
-                  triggerHaptic();
-                  setLibraryFilter(item.id);
-                }}
-              >
-                <Text style={[styles.filterPillText, libraryFilter === item.id && styles.filterPillTextActive]}>
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+        {clubId ? (
+          <PressableSpring
+            onPress={() => void scheduleSession()}
+            disabled={saving || exercises.length === 0}
+            scaleTo={0.98}
+            haptic
+            accessibilityRole="button"
+            accessibilityLabel="Ajouter la séance au calendrier"
+            style={[styles.scheduleBtn, { backgroundColor: tokens.accent }]}
+          >
+            {saving ? (
+              <ActivityIndicator size="small" color={tokens.onAccent} />
+            ) : (
+              <MaterialCommunityIcons name="calendar-plus" size={17} color={tokens.onAccent} />
+            )}
+            <Text style={[styles.scheduleBtnText, { color: tokens.onAccent }]}>
+              {nextSession ? 'Mettre à jour la séance' : 'Ajouter au calendrier'}
+            </Text>
+          </PressableSpring>
+        ) : null}
 
-          {/* Drills List from Library */}
-          <ScrollView contentContainerStyle={styles.modalListContent}>
-            {THEMATIC_DRILLS_LIBRARY
-              .filter((tpl) => libraryFilter === 'all' || tpl.theme === libraryFilter)
-              .map((template) => (
-                <View key={template.id} style={styles.libraryCard}>
-                  <View style={styles.libraryCardTop}>
-                    <View style={styles.libraryThemeBadge}>
-                      <Text style={styles.libraryThemeBadgeText}>{template.themeLabel.toUpperCase()}</Text>
-                    </View>
-                    <Text style={styles.libraryDuration}>{template.durationMin} min · {template.playerCount} joueurs</Text>
-                  </View>
+        <Text style={styles.honestFooter}>
+          La séance part dans le calendrier réel de l'équipe — convocations et présences suivent le
+          circuit habituel.
+        </Text>
+      </CoachChapterScroll>
 
-                  <Text style={styles.libraryCardName}>{template.name}</Text>
-                  <Text style={styles.libraryCardObjective}>{template.objective}</Text>
-
-                  <View style={styles.libraryDiagramWrapper}>
-                    <CoachTrainingDrillDiagram
-                      drillType={template.drillType}
-                      title={template.name}
-                      intensity={template.intensity}
-                      width={280}
-                      height={140}
-                    />
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.addFromLibraryBtn}
-                    activeOpacity={0.85}
-                    onPress={() => addDrillFromLibrary(template)}
+      {/* ——— Bibliothèque (feuille modale, filtres partagés) ——— */}
+      <Modal visible={showLibrary} animationType="slide" onRequestClose={() => setShowLibrary(false)}>
+        <View style={[styles.modalRoot, { backgroundColor: tokens.bg }]}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Bibliothèque d'ateliers</Text>
+            <PressableSpring onPress={() => setShowLibrary(false)} scaleTo={0.9} haptic>
+              <Ionicons name="close" size={20} color={tokens.foreground} />
+            </PressableSpring>
+          </View>
+          <View style={styles.libraryFilters}>
+            {DRILL_FILTERS.map((filter) => {
+              const active = libraryFilter === filter.id;
+              return (
+                <PressableSpring
+                  key={filter.id}
+                  onPress={() => setLibraryFilter(filter.id)}
+                  scaleTo={0.94}
+                  haptic
+                  style={[
+                    styles.libraryChip,
+                    active && { backgroundColor: withAlpha(tokens.accent, 0.16) },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.libraryChipText,
+                      { color: active ? tokens.accent : tokens.muted },
+                    ]}
                   >
-                    <Feather name="plus" size={16} color="#FFFFFF" />
-                    <Text style={styles.addFromLibraryBtnText}>Ajouter à la Séance (1 tap)</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
+                    {filter.label}
+                  </Text>
+                </PressableSpring>
+              );
+            })}
+          </View>
+          <ScrollView contentContainerStyle={styles.libraryList} showsVerticalScrollIndicator={false}>
+            {libraryFilter === 'custom' ? (
+              <View style={{ gap: proSpace.sm }}>
+                <PressableSpring
+                  onPress={() => {
+                    setShowLibrary(false);
+                    handleCreateNewDiagram();
+                  }}
+                  scaleTo={0.98}
+                  haptic
+                  style={[
+                    styles.libraryBtn,
+                    {
+                      borderColor: withAlpha(tokens.accent, 0.5),
+                      marginBottom: proSpace.sm,
+                      paddingHorizontal: proSpace.md,
+                    },
+                  ]}
+                >
+                  <Ionicons name="add-circle" size={17} color={tokens.accent} />
+                  <Text style={[styles.libraryBtnText, { color: tokens.accent }]}>
+                    Créer un nouveau schéma d'atelier
+                  </Text>
+                </PressableSpring>
+                {customDiagrams.length === 0 ? (
+                  <Text style={styles.honestNote}>
+                    Aucun schéma personnalisé créé. Appuyez sur Créer pour concevoir votre premier atelier.
+                  </Text>
+                ) : (
+                  customDiagrams.map((diag) => (
+                    <PressableSpring
+                      key={diag.id}
+                      onPress={() => {
+                        const created: SessionExercise = {
+                          id: `diag-ex-${Date.now()}-${diag.id}`,
+                          name: diag.name || 'Atelier personnalisé',
+                          durationMin: 20,
+                          drillType: (diag.drillType as DrillType) || 'generic',
+                          intensity: 'medium',
+                          playerCount: Math.max(2, playerCount),
+                          objective: diag.objective || 'Objectif tactique',
+                          instructions: diag.instructions || 'Mise en place.',
+                          diagram: diag,
+                          stages: diag.stages,
+                        };
+                        setExercises((prev) => [...prev, created]);
+                        setExpandedId(created.id);
+                        setShowLibrary(false);
+                      }}
+                      scaleTo={0.98}
+                      haptic
+                      style={styles.libraryCard}
+                    >
+                      <View style={styles.diagramWrap}>
+                        <CoachTrainingDrillDiagram diagramData={diag} width={76} height={50} showBadge={false} />
+                      </View>
+                      <View style={styles.libraryCopy}>
+                        <Text numberOfLines={2} style={styles.libraryName}>
+                          {diag.name}
+                        </Text>
+                        <Text style={styles.libraryMeta}>
+                          {diag.stages?.length ? `${diag.stages.length} étapes · ` : ''}
+                          {diag.pitchTemplate === 'full'
+                            ? 'Grand terrain'
+                            : diag.pitchTemplate === 'half'
+                              ? 'Demi-terrain'
+                              : 'Zone'}
+                        </Text>
+                      </View>
+                      <Ionicons name="add" size={16} color={tokens.accent} />
+                    </PressableSpring>
+                  ))
+                )}
+              </View>
+            ) : (
+              libraryItems.map((template) => (
+                <PressableSpring
+                  key={template.id}
+                  onPress={() => {
+                    addDrill(template);
+                    setShowLibrary(false);
+                  }}
+                  scaleTo={0.98}
+                  haptic
+                  style={styles.libraryCard}
+                >
+                  <View style={styles.diagramWrap}>
+                    <CoachTrainingDrillDiagram drillType={template.drillType} width={72} height={48} />
+                  </View>
+                  <View style={styles.libraryCopy}>
+                    <Text numberOfLines={2} style={styles.libraryName}>
+                      {template.name}
+                    </Text>
+                    <Text style={styles.libraryMeta}>
+                      {template.durationMin} min · {template.themeLabel}
+                    </Text>
+                  </View>
+                  <Ionicons name="add" size={16} color={tokens.accent} />
+                </PressableSpring>
+              ))
+            )}
           </ScrollView>
         </View>
       </Modal>
-    </ScrollView>
+
+      {/* ——— Copilote (modale) ——— */}
+      <Modal visible={showAi} animationType="slide" onRequestClose={() => setShowAi(false)}>
+        <View style={[styles.modalRoot, { backgroundColor: tokens.bg }]}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Copilote — séance</Text>
+            <PressableSpring onPress={() => setShowAi(false)} scaleTo={0.9} haptic>
+              <Ionicons name="close" size={20} color={tokens.foreground} />
+            </PressableSpring>
+          </View>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ flex: 1 }}
+          >
+            <ScrollView
+              contentContainerStyle={styles.aiBody}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.aiSuggestions}>
+                {AI_SUGGESTIONS.map((suggestion) => (
+                  <PressableSpring
+                    key={suggestion}
+                    onPress={() => setAiPrompt(suggestion)}
+                    scaleTo={0.94}
+                    haptic
+                    style={[styles.libraryChip, { borderColor: withAlpha(tokens.accent, 0.4) }]}
+                  >
+                    <Text style={[styles.libraryChipText, { color: tokens.accent }]}>
+                      + {suggestion}
+                    </Text>
+                  </PressableSpring>
+                ))}
+              </View>
+              <TextInput
+                style={styles.aiInput}
+                placeholder="Ex : sortie de balle sous pressing 4v3…"
+                placeholderTextColor={tokens.muted}
+                value={aiPrompt}
+                onChangeText={setAiPrompt}
+                multiline
+              />
+              {aiError ? <Text style={styles.aiErrorText}>{aiError}</Text> : null}
+              {aiSource ? (
+                <Text style={styles.aiSourceText}>
+                  {aiSource === 'cloud'
+                    ? 'Dernière séance générée par le Copilote cloud.'
+                    : 'Dernière séance générée par le moteur local (cloud indisponible).'}
+                </Text>
+              ) : null}
+              <PressableSpring
+                onPress={() => void generateSession()}
+                disabled={aiLoading || !aiPrompt.trim()}
+                scaleTo={0.98}
+                haptic
+                style={[styles.scheduleBtn, { backgroundColor: tokens.accent }, styles.aiGenerateBtn]}
+              >
+                {aiLoading ? (
+                  <ActivityIndicator size="small" color={tokens.onAccent} />
+                ) : (
+                  <MaterialCommunityIcons name="star-four-points" size={17} color={tokens.onAccent} />
+                )}
+                <Text style={[styles.scheduleBtnText, { color: tokens.onAccent }]}>Générer</Text>
+              </PressableSpring>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
+
+      {/* ——— Visualiseur zoomable & Mode Présentation (« Montrer aux joueurs ») ——— */}
+      {viewerDiagram ? (
+        <CoachDiagramViewerModal
+          visible={viewerVisible}
+          diagram={viewerDiagram}
+          exerciseName={viewerExercise?.name}
+          objective={viewerExercise?.objective}
+          instructions={viewerExercise?.instructions}
+          durationMin={viewerExercise?.durationMin}
+          intensity={viewerExercise ? INTENSITY_LABELS[viewerExercise.intensity] : undefined}
+          onClose={() => {
+            setViewerVisible(false);
+            setViewerDiagram(null);
+            setViewerExercise(null);
+          }}
+          onEdit={
+            viewerExercise
+              ? () => {
+                  setViewerVisible(false);
+                  handleOpenEditor(viewerExercise);
+                }
+              : undefined
+          }
+        />
+      ) : null}
+
+      {/* ——— Créateur / Éditeur visuel de schéma ——— */}
+      <CoachDiagramEditorModal
+        visible={editorVisible}
+        initialDiagram={editorDiagram}
+        exerciseTitle={
+          editorTargetExerciseId
+            ? exercises.find((e) => e.id === editorTargetExerciseId)?.name
+            : 'Nouveau schéma'
+        }
+        isAttachedToSession={Boolean(editorTargetExerciseId)}
+        onClose={() => {
+          setEditorVisible(false);
+          setEditorDiagram(null);
+          setEditorTargetExerciseId(null);
+        }}
+        onSave={handleSaveDiagram}
+      />
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 48,
-  },
+function Stepper({
+  label,
+  onIncrement,
+  onDecrement,
+}: {
+  label: string;
+  onIncrement: () => void;
+  onDecrement: () => void;
+}) {
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
+  return (
+    <View style={styles.stepper}>
+      <PressableSpring onPress={onDecrement} scaleTo={0.9} haptic style={styles.stepperBtn}>
+        <Ionicons name="remove" size={14} color={tokens.foreground} />
+      </PressableSpring>
+      <Text style={styles.stepperLabel}>{label}</Text>
+      <PressableSpring onPress={onIncrement} scaleTo={0.9} haptic style={styles.stepperBtn}>
+        <Ionicons name="add" size={14} color={tokens.foreground} />
+      </PressableSpring>
+    </View>
+  );
+}
 
-  /* Header Card */
-  sessionHeaderCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 16,
-    marginBottom: 14,
-  },
-  sessionBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  themeBadge: {
-    backgroundColor: '#FFFBEB',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  themeBadgeText: {
-    color: '#B45309',
-    fontSize: 9.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.4,
-  },
-  rpeBadge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  rpeBadgeText: {
-    color: '#D97706',
-    fontSize: 10,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  sessionTitle: {
-    color: '#0F172A',
-    fontSize: 18,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: -0.3,
-    marginBottom: 2,
-  },
-  sessionSubtitle: {
-    color: '#64748B',
-    fontSize: 11,
-    fontFamily: '-apple-system',
-    marginBottom: 12,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    paddingVertical: 9,
-    paddingHorizontal: 8,
-    marginBottom: 12,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  metaText: {
-    color: '#475569',
-    fontSize: 10.5,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  metaDivider: {
-    width: 1,
-    height: 14,
-    backgroundColor: '#E2E8F0',
-  },
-  openLibraryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    paddingVertical: 11,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  openLibraryBtnText: {
-    color: '#0F172A',
-    fontSize: 12.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
+const createStyles = (tokens: CoachComponentTokens) =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: tokens.bg,
+    },
+    centerBlock: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: proSpace.xl,
+    },
+    honestNote: {
+      ...proType.caption,
+      color: tokens.muted,
+      textAlign: 'center',
+      paddingHorizontal: proSpace.lg,
+      paddingVertical: proSpace.md,
+    },
+    honestFooter: {
+      ...proType.caption,
+      color: tokens.muted,
+      textAlign: 'center',
+      paddingHorizontal: proSpace.xl,
+      paddingBottom: proSpace.xl,
+    },
+    nextSessionCard: {
+      backgroundColor: tokens.surface,
+      borderRadius: proRadius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      padding: proSpace.lg,
+      gap: 4,
+    },
+    nextSessionBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    nextSessionBadgeText: {
+      ...proType.caption,
+      color: tokens.accent,
+      fontWeight: '800',
+      letterSpacing: 0.6,
+    },
+    nextSessionTitle: {
+      ...proType.h3,
+      color: tokens.foreground,
+    },
+    nextSessionMeta: {
+      ...proType.caption,
+      color: tokens.muted,
+    },
+    sessionCard: {
+      backgroundColor: tokens.surface,
+      borderRadius: proRadius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      padding: proSpace.lg,
+      gap: proSpace.xs,
+    },
+    sessionTopRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: proSpace.sm,
+    },
+    sessionTitle: {
+      ...proType.h3,
+      color: tokens.foreground,
+      flex: 1,
+    },
+    sessionChips: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    durationChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: tokens.elevated,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: proForm.chipRadius,
+    },
+    durationChipText: {
+      ...proType.caption,
+      color: tokens.foreground,
+      fontWeight: '700',
+    },
+    intensityChip: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: proForm.chipRadius,
+    },
+    intensityChipText: {
+      ...proType.caption,
+      fontWeight: '800',
+    },
+    sessionCount: {
+      ...proType.caption,
+      color: tokens.muted,
+    },
+    sessionActionsRow: {
+      flexDirection: 'row',
+      gap: proSpace.sm,
+      marginTop: proSpace.sm,
+    },
+    libraryBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      minHeight: proForm.actionMinHeight,
+      borderRadius: proForm.chipRadius,
+      borderWidth: 1,
+      backgroundColor: tokens.surface,
+    },
+    libraryBtnText: {
+      ...proType.body,
+      fontWeight: '700',
+    },
+    exerciseCard: {
+      backgroundColor: tokens.surface,
+      borderRadius: proRadius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      overflow: 'hidden',
+    },
+    exerciseRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: proSpace.md,
+      padding: proSpace.md,
+    },
+    diagramWrap: {
+      borderRadius: proRadius.sm,
+      overflow: 'hidden',
+      backgroundColor: tokens.elevated,
+    },
+    exerciseMain: {
+      flex: 1,
+      minWidth: 0,
+      gap: 3,
+    },
+    exerciseName: {
+      ...proType.body,
+      color: tokens.foreground,
+      fontWeight: '700',
+    },
+    exerciseMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    exerciseMeta: {
+      ...proType.caption,
+      color: tokens.muted,
+    },
+    exerciseDot: {
+      width: 3,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: tokens.muted,
+    },
+    exerciseIntensityDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+    },
+    expandedBody: {
+      paddingHorizontal: proSpace.md,
+      paddingBottom: proSpace.md,
+      gap: proSpace.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+      paddingTop: proSpace.md,
+    },
+    exerciseObjective: {
+      ...proType.caption,
+      color: tokens.foreground,
+      fontWeight: '600',
+    },
+    exerciseInstructions: {
+      ...proType.caption,
+      color: tokens.muted,
+    },
+    controlRow: {
+      gap: 6,
+    },
+    controlLabel: {
+      ...proType.caption,
+      color: tokens.muted,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    stepper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: proSpace.md,
+    },
+    stepperBtn: {
+      width: proForm.chipHeight,
+      height: proForm.chipHeight,
+      borderRadius: proForm.chipRadius,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.elevated,
+    },
+    stepperLabel: {
+      ...proType.body,
+      color: tokens.foreground,
+      fontWeight: '700',
+      minWidth: 56,
+      textAlign: 'center',
+    },
+    typeChips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    typeChip: {
+      paddingHorizontal: proSpace.md,
+      paddingVertical: 6,
+      borderRadius: proForm.chipRadius,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
+    },
+    typeChipText: {
+      ...proType.caption,
+      fontWeight: '700',
+    },
+    diagramActionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: proSpace.sm,
+      marginTop: proSpace.xs,
+    },
+    diagramActionBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: proForm.chipRadius,
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.accent, 0.4),
+      backgroundColor: tokens.elevated,
+    },
+    presentationModeBtn: {
+      backgroundColor: tokens.accent,
+      borderColor: tokens.accent,
+    },
+    diagramActionText: {
+      ...proType.caption,
+      fontWeight: '800',
+    },
+    orderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: proSpace.sm,
+    },
+    orderBtn: {
+      width: proForm.chipHeight,
+      height: proForm.chipHeight,
+      borderRadius: proForm.chipRadius,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.elevated,
+    },
+    deleteBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginLeft: 'auto',
+      paddingHorizontal: proSpace.md,
+      paddingVertical: 6,
+      borderRadius: proForm.chipRadius,
+      borderWidth: 1,
+      borderColor: withAlpha(proSemantic.danger, 0.4),
+    },
+    deleteBtnText: {
+      ...proType.caption,
+      fontWeight: '700',
+    },
+    aiRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: proSpace.md,
+      backgroundColor: tokens.surface,
+      borderRadius: proRadius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      padding: proSpace.lg,
+    },
+    aiIconWrap: {
+      width: 34,
+      height: 34,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: withAlpha(tokens.accent, 0.12),
+    },
+    aiCopy: {
+      flex: 1,
+      minWidth: 0,
+      gap: 1,
+    },
+    aiTitle: {
+      ...proType.body,
+      color: tokens.foreground,
+      fontWeight: '700',
+    },
+    aiSubtitle: {
+      ...proType.caption,
+      color: tokens.muted,
+    },
+    scheduleBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+      minHeight: proForm.actionMinHeight,
+      borderRadius: proForm.chipRadius,
+      marginHorizontal: proSpace.lg,
+    },
+    scheduleBtnText: {
+      ...proType.body,
+      fontWeight: '800',
+    },
+    modalRoot: {
+      flex: 1,
+      paddingTop: proSpace.xl,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: proSpace.lg,
+      paddingBottom: proSpace.md,
+    },
+    modalTitle: {
+      ...proType.h3,
+      color: tokens.foreground,
+    },
+    libraryFilters: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      paddingHorizontal: proSpace.lg,
+      paddingBottom: proSpace.md,
+    },
+    libraryChip: {
+      paddingHorizontal: proSpace.md,
+      paddingVertical: 6,
+      borderRadius: proForm.chipRadius,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      backgroundColor: tokens.surface,
+    },
+    libraryChipText: {
+      ...proType.caption,
+      fontWeight: '700',
+    },
+    libraryList: {
+      paddingHorizontal: proSpace.lg,
+      paddingBottom: proSpace.xl,
+      gap: proSpace.sm,
+    },
+    libraryCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: proSpace.md,
+      backgroundColor: tokens.surface,
+      borderRadius: proRadius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      padding: proSpace.md,
+    },
+    libraryCopy: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    libraryName: {
+      ...proType.caption,
+      color: tokens.foreground,
+      fontWeight: '700',
+    },
+    libraryMeta: {
+      ...proType.caption,
+      color: tokens.muted,
+    },
+    aiBody: {
+      flex: 1,
+      paddingHorizontal: proSpace.lg,
+      gap: proSpace.md,
+    },
+    aiSuggestions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    aiInput: {
+      minHeight: 88,
+      borderRadius: proRadius.md,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      backgroundColor: tokens.surface,
+      color: tokens.foreground,
+      padding: proSpace.md,
+      textAlignVertical: 'top',
+      ...proType.body,
+    },
+    aiErrorText: {
+      ...proType.caption,
+      color: proSemantic.danger,
+    },
+    aiSourceText: {
+      ...proType.caption,
+      color: tokens.muted,
+    },
+    aiGenerateBtn: {
+      marginHorizontal: 0,
+      alignSelf: 'stretch',
+    },
+  });
 
-  /* AI Generator Card */
-  aiGeneratorCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
-    marginBottom: 14,
-  },
-  aiGenHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  aiGenTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  aiGenTitle: {
-    color: '#0F172A',
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  aiGenBody: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  aiGenDesc: {
-    color: '#64748B',
-    fontSize: 11,
-    fontFamily: '-apple-system',
-    marginBottom: 8,
-  },
-  aiSuggestionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 10,
-  },
-  aiSugChip: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  aiSugChipText: {
-    color: '#0284C7',
-    fontSize: 10.5,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  promptInput: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    color: '#0F172A',
-    fontSize: 12,
-    fontFamily: '-apple-system',
-  },
-  generateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  generateBtnLoading: {
-    opacity: 0.7,
-  },
-  generateBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-
-  /* Filter Row */
-  filterRow: {
-    flexDirection: 'row',
-    marginBottom: 14,
-  },
-  filterPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginRight: 6,
-  },
-  filterPillActive: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
-  },
-  filterPillText: {
-    color: '#64748B',
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  filterPillTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-
-  /* Timeline */
-  timelineHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  timelineHeader: {
-    color: '#0F172A',
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  addManualBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  addManualText: {
-    color: '#0F172A',
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-
-  /* Exercise Card */
-  exerciseCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  exerciseTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-  },
-  exerciseIndexBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  exerciseIndexText: {
-    color: '#0F172A',
-    fontSize: 11,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  exerciseMainInfo: {
-    flex: 1,
-  },
-  exerciseName: {
-    color: '#0F172A',
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-    marginBottom: 2,
-  },
-  exerciseTags: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  exerciseDuration: {
-    color: '#64748B',
-    fontSize: 10.5,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  tagDot: {
-    color: '#CBD5E1',
-    fontSize: 9,
-  },
-  exercisePlayers: {
-    color: '#64748B',
-    fontSize: 10.5,
-    fontFamily: '-apple-system',
-  },
-  exerciseIntensity: {
-    fontSize: 10.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  expandedSection: {
-    padding: 14,
-    paddingTop: 0,
-    borderTopWidth: 1,
-    borderTopColor: '#F8FAFC',
-  },
-  objectiveBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
-  },
-  objectiveLabel: {
-    color: '#64748B',
-    fontSize: 10.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-    marginBottom: 2,
-  },
-  objectiveText: {
-    color: '#0F172A',
-    fontSize: 11.5,
-    lineHeight: 16,
-    fontFamily: '-apple-system',
-  },
-  diagramContainer: {
-    alignItems: 'center',
-    backgroundColor: '#0a3d1a',
-    borderRadius: 12,
-    padding: 8,
-    marginBottom: 10,
-  },
-
-  /* Controls Panel */
-  controlsPanel: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  panelTitle: {
-    color: '#0F172A',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  steppersRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 8,
-  },
-  stepperBlock: {
-    flex: 1,
-  },
-  stepperLabel: {
-    color: '#64748B',
-    fontSize: 10,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-    marginBottom: 3,
-  },
-  stepperControl: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  stepperBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperVal: {
-    color: '#0F172A',
-    fontSize: 11.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  controlRow: {
-    marginBottom: 8,
-  },
-  controlLabel: {
-    color: '#64748B',
-    fontSize: 10,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-    marginBottom: 3,
-  },
-  segmentedRow: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 2,
-    gap: 2,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  segmentBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 5,
-    borderRadius: 6,
-  },
-  segmentBtnActive: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-  },
-  segmentText: {
-    color: '#64748B',
-    fontSize: 10.5,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  schemaScroll: {
-    flexDirection: 'row',
-  },
-  schemaChip: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginRight: 6,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  schemaChipActive: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
-  },
-  schemaChipText: {
-    color: '#64748B',
-    fontSize: 10,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  schemaChipTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 4,
-  },
-  deleteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-  },
-  deleteBtnText: {
-    color: '#EF4444',
-    fontSize: 10.5,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  instructionsBox: {
-    marginTop: 6,
-  },
-  instructionsLabel: {
-    color: '#64748B',
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-    marginBottom: 2,
-  },
-  instructionsText: {
-    color: '#334155',
-    fontSize: 11,
-    lineHeight: 16,
-    fontFamily: '-apple-system',
-  },
-
-  /* Modal Library */
-  modalRoot: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    paddingTop: 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  modalTitle: {
-    color: '#0F172A',
-    fontSize: 17,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  modalSubtitle: {
-    color: '#64748B',
-    fontSize: 11.5,
-    fontFamily: '-apple-system',
-    marginTop: 1,
-  },
-  modalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalFilterRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  modalListContent: {
-    padding: 16,
-    paddingBottom: 40,
-    gap: 12,
-  },
-  libraryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
-  },
-  libraryCardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  libraryThemeBadge: {
-    backgroundColor: '#E0F2FE',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  libraryThemeBadgeText: {
-    color: '#0284C7',
-    fontSize: 9.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  libraryDuration: {
-    color: '#64748B',
-    fontSize: 10.5,
-    fontWeight: '600',
-    fontFamily: '-apple-system',
-  },
-  libraryCardName: {
-    color: '#0F172A',
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-    marginBottom: 4,
-  },
-  libraryCardObjective: {
-    color: '#475569',
-    fontSize: 11.5,
-    lineHeight: 16,
-    fontFamily: '-apple-system',
-    marginBottom: 10,
-  },
-  libraryDiagramWrapper: {
-    alignItems: 'center',
-    backgroundColor: '#0a3d1a',
-    borderRadius: 10,
-    padding: 6,
-    marginBottom: 12,
-  },
-  addFromLibraryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0F172A',
-    borderRadius: 10,
-    paddingVertical: 10,
-    gap: 6,
-  },
-  addFromLibraryBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-});
+export default CoachTrainingPlannerScreen;

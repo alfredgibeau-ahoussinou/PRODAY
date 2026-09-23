@@ -37,8 +37,8 @@ export const MessagesTabRail: React.FC<MessagesTabRailProps> = ({
   const badgeBg = coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent;
   const badgeTextColor = joueur ? '#000000' : colors.brandInverse;
 
-  const trackBg = coach ? coachTokens.surface : joueur ? '#14141A' : colors.surfaceMuted;
-  const trackBorder = coach ? 'transparent' : joueur ? '#22222E' : colors.border;
+  const trackBg = coach ? coachTokens.surface : joueur ? colors.surface : colors.surfaceMuted;
+  const trackBorder = coach ? 'transparent' : joueur ? colors.borderStrong : colors.border;
   const onBg = coach ? coachTokens.elevated : joueur ? '#1C1D26' : colors.surface;
   const onBorder = coach ? 'transparent' : joueur ? '#2A2A38' : colors.border;
   const onColor = coach ? coachTokens.foreground : joueur ? '#FFFFFF' : colors.text;

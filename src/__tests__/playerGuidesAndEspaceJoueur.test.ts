@@ -128,7 +128,7 @@ describe('Espace Joueur Refactor & Interactive Guides Suite', () => {
       expect(element.type).toBe(PlayerStatsScreen);
     });
 
-    it('builds certified passport data with QR code and coach verification', () => {
+    it('builds passport data from provided values only (never self-certified)', () => {
       const passport = playerPassportService.buildPassport({
         playerId: 'p-1',
         fullName: 'Kylian Perez',
@@ -142,11 +142,12 @@ describe('Espace Joueur Refactor & Interactive Guides Suite', () => {
         assists: 8,
         averageRating: 7.9,
       });
-      expect(passport.coachVerified).toBe(true);
+      // Aucune auto-certification client : la vérification sera serveur.
+      expect(passport.coachVerified).toBe(false);
       expect(passport.licenseNumber).toBe('FFF-75928103');
       expect(passport.averageRating).toBe(7.9);
       const qrUrl = playerPassportService.getPassportQrUrl(passport);
-      expect(qrUrl).toContain('proday.app/scout/verify');
+      expect(qrUrl).toContain('proday.app/player/p-1');
     });
   });
 

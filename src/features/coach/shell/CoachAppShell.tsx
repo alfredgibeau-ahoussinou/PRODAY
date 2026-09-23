@@ -1,19 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { PushScreenTransition } from '../../../components/motion';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import {
   PaneTransition,
   useShellNavDirection,
 } from '../../../motion';
 import { StatusBar } from 'expo-status-bar';
-import { ProDayBottomTabBar } from '../../../components/navigation/ProDayBottomTabBar';
-import { ProDayMenuScreen } from '../../../screens/menu/ProDayMenuScreen';
-import { CoachShellNavProvider } from './CoachShellNavContext';
+import { CoachSidebar } from './CoachSidebar';
+import { CoachTabBar } from './CoachTabBar';
+import { CoachShellNavProvider, type CoachNavOptions } from './CoachShellNavContext';
 import { CoachLockedPane } from './CoachLockedPane';
 import { openCoachHelpChatbot } from './coachHelpOpen';
 import {
@@ -21,7 +21,9 @@ import {
   coachNavFromTab,
   COACH_PRIMARY_NAV_IDS,
   COACH_SECONDARY_NAV_IDS,
+  resolveCoachFallbackNav,
   resolveCoachNavOnTabSync,
+  resolveEventHubFallback,
   tabFromCoachNav,
   type CoachNavItemId,
 } from '../navigation/coachNavConfig';
@@ -47,11 +49,11 @@ import {
   CoachWorkloadHealthScreen,
   CoachVideoHubScreen,
   CoachScoutingGrowthScreen,
-  CoachMessagingScreen,
+  CoachRsvpReminderLogScreen,
 } from '../../../screens/coach';
 import { CoachPortalScreen } from '../../../screens/coach/CoachPortalScreen';
-import { CoachMesVideosScreen } from '../../../screens/coach/CoachMesVideosScreen';
-import { CoachDynamicTacticsScreenV4 } from '../../../screens/coach/CoachDynamicTacticsScreenV4';
+import { CoachCalendarScreen } from '../../../screens/coach/CoachCalendarScreen';
+import { CoachAiHubScreen } from '../../../screens/coach/CoachAiHubScreen';
 import { SmartTacticsPortalScreen } from '../../../screens/smartTactics/SmartTacticsPortalScreen';
 import { TeamManagementScreen } from '../../../screens/TeamManagementScreen';
 import { MessagesScreen } from '../../../screens/MessagesScreen';
@@ -103,7 +105,8 @@ type Props = {
 };
 
 /**
- * Shell Pôle Coach — 5 onglets (Accueil, Équipe, IA, Menu, Profil).
+ * Shell Pôle Coach — 4 onglets (Accueil, Calendrier, Équipe, Menu), README §0.2.
+ * L’IA, la messagerie et le profil restent accessibles depuis Menu ou le header.
  */
 export function CoachAppShell({ activeTab, onTabChange }: Props) {
   return (
@@ -168,10 +171,82 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   );
 
   const [navId, setNavId] = useState<CoachNavItemId>('today');
+  const [history, setHistory] = useState<CoachNavItemId[]>([]);
   const [eventHubOverlay, setEventHubOverlay] = useState<{
     eventId: string;
     hubChapter?: MatchHubChapterId;
   } | null>(null);
+
+  const requestNav = useCallback(
+    (id: CoachNavItemId, options?: CoachNavOptions) => {
+      setEventHubOverlay(null);
+      const next = canonicalizeCoachNav(id);
+      const current = canonicalizeCoachNav(navId);
+
+      if (options?.clearHistory) {
+        setHistory([]);
+      } else if (options?.replace) {
+        // do not append to history
+      } else if (next !== current) {
+        setHistory((prev) => [...prev.slice(-29), current]);
+      }
+
+      noteNav(next);
+      setNavId(next);
+      const nextTab = tabFromCoachNav(next);
+      if (nextTab !== activeTab) {
+        onTabChange(nextTab);
+      }
+    },
+    [navId, noteNav, activeTab, onTabChange],
+  );
+
+  const hasFallback =
+    canonicalizeCoachNav(resolveCoachFallbackNav(navId)) !== canonicalizeCoachNav(navId);
+  const canGoBack = Boolean(eventHubOverlay) || history.length > 0 || hasFallback;
+
+  const goBack = useCallback(() => {
+    if (eventHubOverlay) {
+      const isMatch = Boolean(eventHubOverlay.hubChapter);
+      setEventHubOverlay(null);
+      if (navId !== 'calendrier' && navId !== 'match_center') {
+        const fallbackTarget = resolveEventHubFallback(isMatch);
+        const next = canonicalizeCoachNav(fallbackTarget);
+        noteNav(next);
+        setNavId(next);
+        const nextTab = tabFromCoachNav(next);
+        if (nextTab !== activeTab) {
+          onTabChange(nextTab);
+        }
+      }
+      return;
+    }
+
+    if (history.length > 0) {
+      const previous = history[history.length - 1];
+      setHistory((prev) => prev.slice(0, -1));
+      const next = canonicalizeCoachNav(previous);
+      noteNav(next);
+      setNavId(next);
+      const nextTab = tabFromCoachNav(next);
+      if (nextTab !== activeTab) {
+        onTabChange(nextTab);
+      }
+      return;
+    }
+
+    // Fallback logique en l'absence d'historique
+    const fallback = resolveCoachFallbackNav(navId);
+    if (fallback && canonicalizeCoachNav(fallback) !== canonicalizeCoachNav(navId)) {
+      const next = canonicalizeCoachNav(fallback);
+      noteNav(next);
+      setNavId(next);
+      const nextTab = tabFromCoachNav(next);
+      if (nextTab !== activeTab) {
+        onTabChange(nextTab);
+      }
+    }
+  }, [eventHubOverlay, history, navId, noteNav, activeTab, onTabChange]);
 
   const syncMatchCenterNav = useCallback(() => {
     setNavId((prev) =>
@@ -241,23 +316,15 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   const coachName = profile?.display_name ?? 'Coach';
   const resolved = findInCoachNavCatalog(catalog, navId);
 
-  const onSelect = (id: CoachNavItemId) => {
-    setEventHubOverlay(null);
-    const next = canonicalizeCoachNav(id);
-    noteNav(next);
-    setNavId(next);
-    const nextTab = tabFromCoachNav(next);
-    if (nextTab !== activeTab) {
-      onTabChange(nextTab);
-    }
-  };
+  const onSelect = requestNav;
 
   const onOpenHelp = () => {
     openCoachHelpChatbot();
   };
 
   const onSignOut = () => {
-    Alert.alert('Se déconnecter', 'Quitter la session coach ?', [
+    // prodayAlert : window.confirm sur web (R-03 — Alert.alert y est silencieux).
+    prodayAlert.alert('Se déconnecter', 'Quitter la session coach ?', [
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Se déconnecter',
@@ -295,18 +362,19 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
       wrapCoachPane(navId, renderCoachPane(navId, profile, toolItems, onSelect))
     );
 
-  const coachBottomBarTab = useMemo((): MainTabId => {
-    const canonical = canonicalizeCoachNav(navId);
-    if (canonical === 'plus') return 'plus';
-    if (canonical === 'equipe' || canonical === 'effectif' || canonical === 'gestion') return 'recrutement';
-    if (canonical === 'planning' || canonical === 'entrainements' || canonical === 'matchs' || canonical === 'match_center') return 'matchs';
-    return 'home';
-  }, [navId]);
-
   return (
-    <CoachShellNavProvider requestNav={onSelect} openHelp={onOpenHelp} signOut={onSignOut}>
+    <CoachShellNavProvider
+      history={history}
+      canGoBack={canGoBack}
+      goBack={goBack}
+      requestNav={requestNav}
+      openHelp={onOpenHelp}
+      signOut={onSignOut}
+    >
       <StatusBar style={tokens.isLight ? 'dark' : 'light'} />
-      <View style={[styles.root, styles.rootColumn]}>
+      <View style={[styles.root, !wide && styles.rootColumn]}>
+        {wide ? <CoachSidebar {...sidebarProps} /> : null}
+
         <View style={styles.pane}>
           <PaneTransition sectionKey={navId} direction={direction} context="tab">
             {React.isValidElement(content) ? content : null}
@@ -319,7 +387,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
               <CoachEventHubRouter
                 eventId={eventHubOverlay.eventId}
                 initialChapter={eventHubOverlay.hubChapter ?? 'apercu'}
-                onBack={() => setEventHubOverlay(null)}
+                onBack={goBack}
                 onOpenCarpool={() => {
                   setEventHubOverlay(null);
                   openCarpool({
@@ -332,21 +400,9 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
           </PushScreenTransition>
         </View>
 
-        <ProDayBottomTabBar
-          activeTab={coachBottomBarTab}
-          onTabPress={(tab) => {
-            onTabChange(tab);
-            if (tab === 'home') onSelect('today');
-            else if (tab === 'matchs') onSelect('planning');
-            else if (tab === 'recrutement') onSelect('equipe');
-            else if (tab === 'plus') onSelect('plus');
-            else {
-              const cNav = coachNavFromTab(tab);
-              onSelect(cNav);
-            }
-          }}
-          unreadCount={0}
-        />
+        {!wide ? (
+          <CoachTabBar items={primaryItems} activeId={navId} onSelect={onSelect} />
+        ) : null}
       </View>
     </CoachShellNavProvider>
   );
@@ -368,30 +424,36 @@ function renderCoachPane(
   onSelect: (id: CoachNavItemId) => void,
 ) {
   if (navId === 'smart_tactics') {
-    return <CoachDynamicTacticsScreenV4 />;
+    return <CoachTacticalBoardScreen />;
   }
   switch (canonicalizeCoachNav(navId)) {
     case 'today':
     case 'pitch':
       return <CoachHomeScreen onNavigate={(id) => onSelect(id as CoachNavItemId)} />;
+    case 'calendrier':
+      return <CoachCalendarScreen />;
     case 'plus':
-      return <ProDayMenuScreen />;
+      return <CoachMenuPane items={toolItems} />;
     case 'equipe':
     case 'effectif':
-      return <CoachSquadScreen />;
     case 'joueurs':
-      return <CoachScoutingGrowthScreen />;
+      return <CoachSquadScreen />;
     case 'entrainements':
     case 'planning':
       return <CoachTrainingPlannerScreen />;
     case 'forme':
       return <CoachWorkloadHealthScreen />;
     case 'com_staff':
-      return <CoachMessagingScreen />;
+      /** Messagerie partagée (DM + groupes) — le système réel, variante coach. */
+      return <MessagesScreen />;
+    case 'rsvp_log':
+      return <CoachRsvpReminderLogScreen />;
     case 'coach_ia':
-      return <CoachTwinMatchLabScreen />;
+    case 'copilot_chat':
+      // Chat Copilote conversationnel ChatGPT-like avec historique, multi-lignes et contexte réel d'équipe
+      return <CoachAiHubScreen initialPage="chat" />;
     case 'smart_tactics':
-      return <CoachDynamicTacticsScreenV4 />;
+      return <CoachTacticalBoardScreen />;
     case 'mes_videos':
       return <CoachVideoHubScreen />;
     case 'gestion':

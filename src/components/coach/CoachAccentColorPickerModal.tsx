@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { withAlpha } from '../../utils/coachTeamTheme';
 import { Dimensions, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
-import { CoachText } from './coachPortalUi';
+import { CoachText } from './CoachText';
 import { CoachAccentColorAssistant } from './CoachAccentColorAssistant';
 import { CoachAccentColorBoard } from './CoachAccentColorBoard';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
@@ -63,7 +64,8 @@ export function CoachAccentColorPickerModal({
             <CoachText variant="section" style={styles.title}>
               {t('coach.portal.theme.pickColor')}
             </CoachText>
-            <Pressable onPress={handleClose} hitSlop={12} accessibilityRole="button">
+            <Pressable onPress={handleClose} hitSlop={12} accessibilityRole="button"
+              accessibilityLabel="Fermer">
               <Icon name="close" size={22} color={tokens.muted} />
             </Pressable>
           </View>
@@ -134,7 +136,7 @@ function createStyles(tokens: CoachThemeTokens, sheetMode: boolean) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.65)',
+      backgroundColor: 'withAlpha(tokens.bg, 0.65)',
       justifyContent: sheetMode ? 'flex-end' : 'center',
       alignItems: sheetMode ? undefined : 'center',
       paddingHorizontal: sheetMode ? 0 : spacing.xl,

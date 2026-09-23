@@ -20,7 +20,9 @@ import { ProDayText } from '../../../components/ui/ProDayText';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import { APPLE_TYPOGRAPHY } from '../../../theme/appleTypography';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
+import { ClubPill } from './clubUi';
 import { PdfImportModal } from '../../../components/pdf/PdfImportModal';
+import { CLUB_TOKENS } from '../theme/clubTokens';
 
 export type CategoryBracket =
   | 'all'
@@ -76,26 +78,6 @@ export type FffSurclassementRecord = {
   fffValidationNumber: string;
 };
 
-export const DEMO_SURCLASSEMENTS: FffSurclassementRecord[] = [
-  {
-    id: 'sur-1',
-    playerName: 'Lucas Moreau (2010)',
-    originalCategory: 'U15',
-    targetCategory: 'U17 R2',
-    medicalCertDate: '12/08/2026',
-    status: 'valid',
-    fffValidationNumber: 'SUR-FFF-92-0482',
-  },
-  {
-    id: 'sur-2',
-    playerName: 'Noah Vidal (2009)',
-    originalCategory: 'U17',
-    targetCategory: 'Seniors R1',
-    medicalCertDate: '28/08/2026',
-    status: 'valid',
-    fffValidationNumber: 'SUR-FFF-92-0511',
-  },
-];
 
 export const CATEGORY_BRACKETS: { id: CategoryBracket; label: string }[] = [
   { id: 'all', label: 'Toutes les équipes' },
@@ -105,98 +87,6 @@ export const CATEGORY_BRACKETS: { id: CategoryBracket; label: string }[] = [
   { id: 'veterans', label: 'Vétérans & Loisirs' },
 ];
 
-export const DEMO_TEAMS_HIERARCHY: ClubTeamHierarchyItem[] = [
-  {
-    teamId: 'team-1',
-    name: 'Seniors R1 (Équipe Fanion)',
-    bracket: 'seniors',
-    category: 'Seniors Masculin',
-    genderLabel: 'Masculin',
-    licensedCount: 24,
-    coachNames: ['Marc Lefevre (Entraîneur)'],
-    rankingPreview: '1er (R1 Poule B)',
-    surclassesCount: 1,
-    attendanceRate: 94,
-  },
-  {
-    teamId: 'team-2',
-    name: 'Seniors B (D1)',
-    bracket: 'seniors',
-    category: 'Seniors Réserve',
-    genderLabel: 'Masculin',
-    licensedCount: 22,
-    coachNames: ['David Rossi'],
-    rankingPreview: '4e (Départemental 1)',
-    attendanceRate: 91,
-  },
-  {
-    teamId: 'team-3',
-    name: 'U17 Régional 2',
-    bracket: 'formation',
-    category: 'U17 R2',
-    genderLabel: 'Masculin',
-    licensedCount: 20,
-    coachNames: ['Karim Ziani'],
-    rankingPreview: '2e (U17 R2)',
-    surclassesCount: 1,
-    attendanceRate: 95,
-  },
-  {
-    teamId: 'team-4',
-    name: 'U15 Régional 2',
-    bracket: 'formation',
-    category: 'U15 R2',
-    genderLabel: 'Masculin',
-    licensedCount: 18,
-    coachNames: ['Alexandre Petit'],
-    rankingPreview: '3e (U15 R2)',
-    attendanceRate: 92,
-  },
-  {
-    teamId: 'team-5',
-    name: 'U13 Pôle Espoir',
-    bracket: 'ecole_de_foot',
-    category: 'U13 Région',
-    genderLabel: 'Mixte',
-    licensedCount: 16,
-    coachNames: ['Lucas Bernard'],
-    rankingPreview: 'Plateau Critérium',
-    attendanceRate: 96,
-  },
-  {
-    teamId: 'team-6',
-    name: 'U11 A & B',
-    bracket: 'ecole_de_foot',
-    category: 'U11 Secteur',
-    genderLabel: 'Mixte',
-    licensedCount: 26,
-    coachNames: ['Sébastien Roux'],
-    rankingPreview: 'Rassemblements 92',
-    attendanceRate: 93,
-  },
-  {
-    teamId: 'team-7',
-    name: 'U9 / U7 Découverte',
-    bracket: 'ecole_de_foot',
-    category: 'Éveil Football',
-    genderLabel: 'Mixte',
-    licensedCount: 38,
-    coachNames: ['Thomas Martin', 'Clémentine Blanc'],
-    rankingPreview: 'Plateaux Festi-Foot',
-    attendanceRate: 89,
-  },
-  {
-    teamId: 'team-8',
-    name: 'Vétérans +35',
-    bracket: 'veterans',
-    category: 'Vétérans D2',
-    genderLabel: 'Masculin',
-    licensedCount: 19,
-    coachNames: [],
-    rankingPreview: 'Championnat Dimanche Matin',
-    attendanceRate: 85,
-  },
-];
 
 type Props = {
   teams?: ClubTeamHierarchyItem[];
@@ -207,7 +97,7 @@ type Props = {
 };
 
 export function ClubTeamsHierarchy({
-  teams = DEMO_TEAMS_HIERARCHY,
+  teams = [],
   selectedBracket: controlledBracket,
   onSelectBracket: controlledOnSelectBracket,
   onSelectTeam = () => {},
@@ -217,7 +107,8 @@ export function ClubTeamsHierarchy({
   const [internalBracket, setInternalBracket] = useState<CategoryBracket>('all');
   const [surclassementOpen, setSurclassementOpen] = useState(false);
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
-  const [activeRecords] = useState<FffSurclassementRecord[]>(DEMO_SURCLASSEMENTS);
+  // Dossiers de surclassement : uniquement des données réelles injectées ; aucun dossier fictif.
+  const [activeRecords] = useState<FffSurclassementRecord[]>([]);
 
   const selectedBracket = controlledBracket ?? internalBracket;
   const onSelectBracket = controlledOnSelectBracket ?? setInternalBracket;
@@ -323,26 +214,12 @@ export function ClubTeamsHierarchy({
         {CATEGORY_BRACKETS.map((bracket) => {
           const active = selectedBracket === bracket.id;
           return (
-            <PressableSpring
+            <ClubPill
               key={bracket.id}
+              label={bracket.label}
+              active={active}
               onPress={() => onSelectBracket(bracket.id)}
-              style={[
-                styles.bracketPill,
-                active
-                  ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
-                  : { backgroundColor: tokens.surface, borderColor: tokens.border },
-              ]}
-              scaleTo={0.96}
-            >
-              <ProDayText
-                style={[
-                  styles.bracketPillText,
-                  active ? { color: '#000000', fontWeight: '700' } : { color: tokens.muted },
-                ]}
-              >
-                {bracket.label}
-              </ProDayText>
-            </PressableSpring>
+            />
           );
         })}
       </ScrollView>
@@ -391,7 +268,7 @@ export function ClubTeamsHierarchy({
                 </View>
 
                 {/* Bloc Coach Référent & Taux de Présence */}
-                <View style={[styles.teamMetaGrid, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                <View style={[styles.teamMetaGrid, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border }]}>
                   <View style={styles.teamMetaCol}>
                     <View style={styles.metaLabelRow}>
                       <Icon name="school" size={13} color={hasCoach ? tokens.accent : tokens.warning} />
@@ -487,7 +364,7 @@ export function ClubTeamsHierarchy({
       >
         <View style={styles.modalOverlay}>
           <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-          <View style={[styles.modalBox, { backgroundColor: '#12151C', borderColor: tokens.border }]}>
+          <View style={[styles.modalBox, { backgroundColor: CLUB_TOKENS.surface, borderColor: tokens.border }]}>
             <View style={styles.modalHeader}>
               <View>
                 <ProDayText style={[styles.modalTitle, { color: tokens.foreground }]}>
@@ -513,7 +390,7 @@ export function ClubTeamsHierarchy({
               {activeRecords.map((rec) => (
                 <View
                   key={rec.id}
-                  style={[styles.recordRow, { backgroundColor: '#181C26', borderColor: tokens.border }]}
+                  style={[styles.recordRow, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border }]}
                 >
                   <View style={styles.recordTop}>
                     <ProDayText style={[styles.recordName, { color: tokens.foreground }]}>
@@ -557,7 +434,7 @@ export function ClubTeamsHierarchy({
       <PdfImportModal
         visible={pdfModalOpen}
         onClose={() => setPdfModalOpen(false)}
-        onImportToSquad={(players) => {
+        onImportToSquad={(players: any[]) => {
           Alert.alert(
             'Importation FFF réussie',
             `${players.length} licencié(s) FFF détecté(s) et intégrés dans les effectifs du club avec succès.`
@@ -667,15 +544,6 @@ const styles = StyleSheet.create({
   pillsScroll: {
     gap: 8,
     paddingBottom: 4,
-  },
-  bracketPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  bracketPillText: {
-    ...APPLE_TYPOGRAPHY.footnote,
   },
   cardsList: {
     gap: 12,

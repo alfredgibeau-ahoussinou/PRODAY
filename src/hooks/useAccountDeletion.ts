@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Alert } from 'react-native';
+import { prodayAlert } from '../utils/prodayAlert';
 import { useAuth } from '../context/AuthContext';
 import { prodayHaptics } from '../utils/prodayHaptics';
 
@@ -9,7 +9,7 @@ export function useAccountDeletion() {
 
   const confirmDeleteAccount = useCallback(() => {
     prodayHaptics.warning();
-    Alert.alert(
+    prodayAlert.alert(
       'Supprimer mon compte ?',
       'Cette action est irréversible. Votre profil, vos statistiques, vos messages, vos photos et toutes vos données personnelles associées à ProDay seront définitivement supprimés.',
       [
@@ -21,14 +21,14 @@ export function useAccountDeletion() {
             setDeleting(true);
             try {
               await deleteAccount();
-              Alert.alert(
+              prodayAlert.alert(
                 'Compte supprimé',
                 'Votre compte et toutes vos données personnelles ont été supprimés avec succès.',
               );
             } catch (err: unknown) {
               const message =
                 err instanceof Error ? err.message : 'Impossible de supprimer votre compte. Veuillez réessayer.';
-              Alert.alert('Erreur', message);
+              prodayAlert.alert('Erreur', message);
             } finally {
               setDeleting(false);
             }

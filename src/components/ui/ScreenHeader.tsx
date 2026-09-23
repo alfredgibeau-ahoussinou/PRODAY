@@ -201,10 +201,13 @@ function createStyles(c: AppColors) {
   },
   side: { width: 44, alignItems: 'center', justifyContent: 'center' },
   backBtn: {
+    // §5.1 — bouton retour squircle 40×40, radius 12, bordure border.
     width: 40,
     height: 40,
-    borderRadius: radius.pill,
+    borderRadius: 12,
     backgroundColor: c.brandSoft,
+    borderWidth: 1,
+    borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
   },

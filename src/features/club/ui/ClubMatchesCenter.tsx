@@ -18,9 +18,11 @@ import { Icon } from '../../../components/ui/Icon';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import { useClubShellNav } from '../shell/ClubShellNavContext';
-import { buildCertifiedSeedLeague } from '../../../services/frenchFootballStandings.service';
+import type { LeagueStandingRow } from '../../../components/matchs/EliteLeagueStandings';
 import { APPLE_TYPOGRAPHY } from '../../../theme/appleTypography';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
+import { ClubPill } from './clubUi';
+import { CLUB_TOKENS } from '../theme/clubTokens';
 
 export type MatchCategoryType = 'all' | 'fff' | 'friendly' | 'cup' | 'plateau';
 
@@ -51,83 +53,6 @@ export type LeaderboardPlayer = {
   matches: number;
 };
 
-export const DEMO_FIXTURES: FixtureItem[] = [
-  {
-    id: 'fix-1',
-    type: 'fff',
-    typeLabel: 'Championnat R1',
-    homeTeam: 'ProDay FC (Seniors A)',
-    awayTeam: 'RC France Colombes',
-    dateStr: 'Samedi 12 Sept.',
-    timeStr: '18:00',
-    venue: 'Stade Municipal · Terrain d’Honneur',
-    isHome: true,
-    status: 'upcoming',
-    competition: 'Régional 1 - Poule B',
-    refereeAssigned: true,
-    convocationsSent: true,
-  },
-  {
-    id: 'fix-2',
-    type: 'fff',
-    typeLabel: 'Championnat U17',
-    homeTeam: 'FC Versailles 78',
-    awayTeam: 'ProDay FC (U17 R2)',
-    dateStr: 'Dimanche 13 Sept.',
-    timeStr: '13:30',
-    venue: 'Stade Montbauron · Terrain Synthétique',
-    isHome: false,
-    status: 'upcoming',
-    competition: 'U17 Régional 2',
-    refereeAssigned: true,
-    convocationsSent: true,
-  },
-  {
-    id: 'fix-3',
-    type: 'friendly',
-    typeLabel: 'Match Amical',
-    homeTeam: 'ProDay FC (U15)',
-    awayTeam: 'AC Boulogne-Billancourt',
-    dateStr: 'Mercredi 16 Sept.',
-    timeStr: '16:00',
-    venue: 'Complexe Sportif ProDay · Synthétique A',
-    isHome: true,
-    status: 'upcoming',
-    competition: 'Préparation mi-saison',
-    refereeAssigned: false,
-    convocationsSent: false,
-  },
-  {
-    id: 'fix-4',
-    type: 'plateau',
-    typeLabel: 'Plateau U9',
-    homeTeam: 'Plateau Inter-Clubs (4 équipes)',
-    awayTeam: 'Puteaux, Nanterre, ProDay FC',
-    dateStr: 'Samedi 19 Sept.',
-    timeStr: '10:00',
-    venue: 'Stade Municipal · Terrains Réduits',
-    isHome: true,
-    status: 'upcoming',
-    competition: 'Rassemblement District 92',
-    refereeAssigned: false,
-    convocationsSent: true,
-  },
-];
-
-export const DEMO_TOP_SCORERS: LeaderboardPlayer[] = [
-  { rank: 1, name: 'Lucas Moreau', team: 'U17 R2', goals: 9, matches: 6 },
-  { rank: 2, name: 'Yanis Benali', team: 'Seniors R1', goals: 7, matches: 5 },
-  { rank: 3, name: 'Adam Touré', team: 'U15 R2', goals: 6, matches: 6 },
-  { rank: 4, name: 'Enzo Vallet', team: 'Seniors B', goals: 4, matches: 4 },
-];
-
-export const DEMO_STANDINGS_PREVIEW = [
-  { rank: 1, team: 'ProDay FC (Seniors)', pts: 15, j: 5, diff: '+8' },
-  { rank: 2, team: 'RC France', pts: 12, j: 5, diff: '+5' },
-  { rank: 3, team: 'US Torcy', pts: 10, j: 5, diff: '+2' },
-  { rank: 4, team: 'CS Meaux', pts: 7, j: 5, diff: '-1' },
-];
-
 export type FriendlyStatusV4 = 'brouillon' | 'proposition' | 'confirme' | 'reporte' | 'termine';
 export type FriendlyTerritory =
   | 'Métropole'
@@ -153,81 +78,10 @@ export type FriendlyMatchV4 = {
   notes?: string;
 };
 
-export const DEMO_FRIENDLY_MATCHES_V4: FriendlyMatchV4[] = [
-  {
-    id: 'fr-1',
-    opponentClub: 'FC Courbevoie',
-    category: 'Seniors R1',
-    territory: 'Métropole',
-    dateStr: 'Mercredi 16 Sept.',
-    timeStr: '19:30',
-    venue: 'Complexe ProDay · Synthétique A',
-    status: 'confirme',
-    homeOrAway: 'Domicile',
-    format: '2x45 min',
-    refereeType: 'Arbitrage officiel désigné',
-    notes: 'Match de préparation rythme compétition.',
-  },
-  {
-    id: 'fr-2',
-    opponentClub: 'AC Boulogne-Billancourt',
-    category: 'U17 R2',
-    territory: 'Métropole',
-    dateStr: 'Samedi 19 Sept.',
-    timeStr: '15:00',
-    venue: 'Stade Le Gallo · Terrain 2',
-    status: 'proposition',
-    homeOrAway: 'Extérieur',
-    format: '2x40 min',
-    refereeType: 'Arbitrage club bénévole',
-    notes: 'Proposition transmise, attente accord ACBB.',
-  },
-  {
-    id: 'fr-3',
-    opponentClub: 'CS Moulien',
-    category: 'U15 Elite',
-    territory: 'Guadeloupe (971)',
-    dateStr: 'Mardi 27 Oct.',
-    timeStr: '17:00',
-    venue: 'Stade Jacques Ponrémy · Le Moule',
-    status: 'confirme',
-    homeOrAway: 'Extérieur',
-    format: '3x30 min (pédagogique)',
-    refereeType: 'Arbitrage partagé',
-    notes: 'Tournée d’échange inter-clubs Outre-Mer.',
-  },
-  {
-    id: 'fr-4',
-    opponentClub: 'Saint-Denis FC',
-    category: 'U13 Pôle Espoir',
-    territory: 'La Réunion (974)',
-    dateStr: 'Samedi 31 Oct.',
-    timeStr: '16:00',
-    venue: 'Stade Jean Ivoula',
-    status: 'brouillon',
-    homeOrAway: 'Extérieur',
-    format: '2x30 min',
-    refereeType: 'Arbitrage club bénévole',
-    notes: 'Projet de stage vacances Toussaint à finaliser.',
-  },
-  {
-    id: 'fr-5',
-    opponentClub: 'US Créteil Lusitanos',
-    category: 'U15 D1',
-    territory: 'Métropole',
-    dateStr: 'Mercredi 9 Sept.',
-    timeStr: '14:30',
-    venue: 'Parc des Sports · Synthétique',
-    status: 'reporte',
-    homeOrAway: 'Extérieur',
-    format: '2x40 min',
-    refereeType: 'Arbitrage club bénévole',
-    notes: 'Reporté pour arrêté municipal canicule.',
-  },
-];
 
 type Props = {
   fixtures?: FixtureItem[];
+  topScorers?: LeaderboardPlayer[];
   onSelectFixture?: (fixtureId: string) => void;
 };
 
@@ -262,26 +116,26 @@ export function getFriendlyStatusColor(st: FriendlyStatusV4): { bg: string; text
 }
 
 export function ClubMatchesCenter({
-  fixtures = DEMO_FIXTURES,
+  fixtures = [],
+  topScorers = [],
   onSelectFixture,
 }: Props) {
   const { tokens } = useClubTheme();
   const shellNav = useClubShellNav();
-  const poolStandings = useMemo(() => {
-    return buildCertifiedSeedLeague('r1_idf_b').standings;
-  }, []);
+  // Classement réel de la compétition du club ; aucun championnat fictif n'est dérivé d'une seed.
+  const poolStandings = useMemo<LeagueStandingRow[]>(() => [], []);
   const [filter, setFilter] = useState<MatchCategoryType>('all');
   const [activeTab, setActiveTab] = useState<'fixtures' | 'friendly' | 'matrix' | 'scorers'>('fixtures');
   const [friendlyModalOpen, setFriendlyModalOpen] = useState(false);
 
   // Live Score outdoor state (Page 15)
-  const [liveHomeScore, setLiveHomeScore] = useState(2);
-  const [liveAwayScore, setLiveAwayScore] = useState(1);
-  const [liveMinute, setLiveMinute] = useState(64);
-  const [liveStatus, setLiveStatus] = useState<'1ère MT' | 'Mi-temps' | '2ème MT' | 'Terminé'>('2ème MT');
+  const [liveHomeScore, setLiveHomeScore] = useState(0);
+  const [liveAwayScore, setLiveAwayScore] = useState(0);
+  const [liveMinute, setLiveMinute] = useState(0);
+  const [liveStatus, setLiveStatus] = useState<'1ère MT' | 'Mi-temps' | '2ème MT' | 'Terminé'>('1ère MT');
 
   // Friendly matches state (Page 16)
-  const [friendlyMatchesList, setFriendlyMatchesList] = useState<FriendlyMatchV4[]>(DEMO_FRIENDLY_MATCHES_V4);
+  const [friendlyMatchesList, setFriendlyMatchesList] = useState<FriendlyMatchV4[]>([]);
   const [friendlyStatusFilter, setFriendlyStatusFilter] = useState<'all' | FriendlyStatusV4>('all');
   const [friendlyCategory, setFriendlyCategory] = useState('U17 R2');
   const [friendlyOpponent, setFriendlyOpponent] = useState('');
@@ -324,8 +178,8 @@ export function ClubMatchesCenter({
     };
     setFriendlyMatchesList((prev) => [newMatch, ...prev]);
     Alert.alert(
-      'Match amical enregistré',
-      `Match contre ${friendlyOpponent.trim()} (${friendlyTerritory}) enregistré avec le statut : ${getFriendlyStatusLabel(friendlyInitialStatus)}.`,
+      'Aperçu local',
+      `Ce match contre ${friendlyOpponent.trim()} (${friendlyTerritory}) n’est pas encore persisté. Créez une invitation réelle depuis « Matchs amicaux » (Menu → Sport) — le parcours Firestore accepte/ refuse/ contre-propose y est branché.`,
     );
     setFriendlyOpponent('');
     setFriendlyModalOpen(false);
@@ -420,77 +274,21 @@ export function ClubMatchesCenter({
       {/* VUE 1 : FIXTURES & DIRECT (PAGE 15 SPÉCIFICATIONS V4) */}
       {activeTab === 'fixtures' ? (
         <>
-          {/* SECTION SCORE EN DIRECT & BORD DE TOUCHE EN PLEIN AIR */}
+          {/* SECTION CAPTURE VIVE — honnête : aucune diffusion en cours n'est inventée.
+              La saisie manuelle bord de touche (page 15) reste toujours disponible. */}
           <View style={[styles.liveOutdoorCard, { backgroundColor: tokens.surface, borderColor: `${tokens.accent}50` }]}>
             <View style={styles.liveHeaderRow}>
-              <View style={[styles.liveBadge, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: '#EF4444' }]}>
-                <View style={styles.liveDot} />
-                <ProDayText style={styles.liveBadgeText}>
-                  DIRECT · DIFFUSION TEMPS RÉEL
+              <View style={[styles.liveBadge, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}>
+                <Icon name="flash" size={13} color={tokens.accent} />
+                <ProDayText style={[styles.liveBadgeText, { color: tokens.accent }]}>
+                  SAISIE LIVE — BORD DE TOUCHE
                 </ProDayText>
               </View>
-              <ProDayText style={[styles.liveTimerText, { color: tokens.accent }]}>
-                {liveStatus} · {liveMinute}'
-              </ProDayText>
             </View>
 
-            {/* Score Extérieur Très Gros Chiffres pour Plein Air */}
-            <View style={styles.outdoorScoreBoard}>
-              <View style={styles.outdoorTeamCol}>
-                <ProDayText style={[styles.outdoorTeamName, { color: tokens.foreground }]} numberOfLines={1}>
-                  ProDay FC (Seniors)
-                </ProDayText>
-                <ProDayText style={[styles.outdoorScoreNum, { color: tokens.accent }]}>
-                  {liveHomeScore}
-                </ProDayText>
-                <View style={styles.touchlineBtnRow}>
-                  <TouchableOpacity
-                    onPress={() => setLiveHomeScore((s) => Math.max(0, s - 1))}
-                    style={[styles.touchlineBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
-                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                  >
-                    <ProDayText style={[styles.touchlineBtnText, { color: tokens.foreground }]}>−</ProDayText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setLiveHomeScore((s) => s + 1)}
-                    style={[styles.touchlineBtn, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}
-                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                  >
-                    <ProDayText style={[styles.touchlineBtnText, { color: tokens.accent }]}>+1</ProDayText>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={styles.outdoorSepCol}>
-                <ProDayText style={[styles.outdoorSepText, { color: tokens.muted }]}>:</ProDayText>
-                <ProDayText style={[styles.outdoorDaylightTag, { color: tokens.muted }]}>EXTÉRIEUR</ProDayText>
-              </View>
-
-              <View style={styles.outdoorTeamCol}>
-                <ProDayText style={[styles.outdoorTeamName, { color: tokens.foreground }]} numberOfLines={1}>
-                  RC France
-                </ProDayText>
-                <ProDayText style={[styles.outdoorScoreNum, { color: tokens.foreground }]}>
-                  {liveAwayScore}
-                </ProDayText>
-                <View style={styles.touchlineBtnRow}>
-                  <TouchableOpacity
-                    onPress={() => setLiveAwayScore((s) => Math.max(0, s - 1))}
-                    style={[styles.touchlineBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
-                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                  >
-                    <ProDayText style={[styles.touchlineBtnText, { color: tokens.foreground }]}>−</ProDayText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setLiveAwayScore((s) => s + 1)}
-                    style={[styles.touchlineBtn, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}
-                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                  >
-                    <ProDayText style={[styles.touchlineBtnText, { color: tokens.accent }]}>+1</ProDayText>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
+            <ProDayText style={[styles.liveHintText, { color: tokens.muted }]}>
+              Aucune diffusion en cours. Le score saisi ici est local à cet écran : ouvrez le hub d’un match pour enregistrer un score réel en base.
+            </ProDayText>
 
             {/* Secours bord de touche & statut diffusion */}
             <View style={[styles.touchlineFooter, { borderTopColor: tokens.border }]}>
@@ -501,7 +299,7 @@ export function ClubMatchesCenter({
                 </ProDayText>
               </View>
               <PressableSpring
-                onPress={() => onSelectFixture?.('fix-1')}
+                onPress={() => onSelectFixture?.(filteredFixtures[0]?.id ?? '')}
                 style={[styles.liveHubBtn, { backgroundColor: tokens.accent }]}
                 scaleTo={0.96}
               >
@@ -528,32 +326,29 @@ export function ClubMatchesCenter({
             ).map((p) => {
               const active = filter === p.id;
               return (
-                <PressableSpring
+                <ClubPill
                   key={p.id}
+                  label={p.label}
+                  active={active}
                   onPress={() => setFilter(p.id)}
-                  style={[
-                    styles.filterPill,
-                    active
-                      ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
-                      : { backgroundColor: tokens.surface, borderColor: tokens.border },
-                  ]}
-                  scaleTo={0.96}
-                >
-                  <ProDayText
-                    style={[
-                      styles.filterPillText,
-                      active ? { color: '#000000', fontWeight: '700' } : { color: tokens.muted },
-                    ]}
-                  >
-                    {p.label}
-                  </ProDayText>
-                </PressableSpring>
+                />
               );
             })}
           </ScrollView>
 
           {/* Liste des Cartes de Matchs */}
           <View style={styles.fixturesList}>
+            {filteredFixtures.length === 0 ? (
+              <View style={[styles.emptyStateCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+                <Icon name="calendar" size={22} color={tokens.muted} />
+                <ProDayText style={[styles.emptyStateTitle, { color: tokens.foreground }]}>
+                  Aucun match programmé
+                </ProDayText>
+                <ProDayText style={[styles.emptyStateBody, { color: tokens.muted }]}>
+                  Les rencontres du club apparaissent ici dès qu’elles sont créées dans le calendrier — aucune donnée de démonstration n’est affichée.
+                </ProDayText>
+              </View>
+            ) : null}
             {filteredFixtures.map((fixture) => (
               <PressableSpring
                 key={fixture.id}
@@ -709,26 +504,12 @@ export function ClubMatchesCenter({
             ].map((st) => {
               const active = friendlyStatusFilter === st.id;
               return (
-                <PressableSpring
+                <ClubPill
                   key={st.id}
+                  label={st.label}
+                  active={active}
                   onPress={() => setFriendlyStatusFilter(st.id as any)}
-                  style={[
-                    styles.filterPill,
-                    active
-                      ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
-                      : { backgroundColor: tokens.surface, borderColor: tokens.border },
-                  ]}
-                  scaleTo={0.96}
-                >
-                  <ProDayText
-                    style={[
-                      styles.filterPillText,
-                      active ? { color: '#000000', fontWeight: '700' } : { color: tokens.muted },
-                    ]}
-                  >
-                    {st.label}
-                  </ProDayText>
-                </PressableSpring>
+                />
               );
             })}
           </ScrollView>
@@ -818,10 +599,10 @@ export function ClubMatchesCenter({
           <View style={styles.matrixHeader}>
             <View>
               <ProDayText style={[styles.matrixTitle, { color: tokens.foreground }]}>
-                Régional 1 · Poule B (FFF)
+                Classement de la compétition du club
               </ProDayText>
               <ProDayText style={[styles.matrixUpdated, { color: tokens.accent, marginTop: 2 }]}>
-                Synchro Officielle FFF · FC ProDay 1er
+                Source officielle à confirmer — aucun championnat fictif
               </ProDayText>
             </View>
 
@@ -845,7 +626,7 @@ export function ClubMatchesCenter({
           </View>
 
           {poolStandings.map((row) => {
-            const isProDay = row.isMyTeam || row.name.toLowerCase().includes('proday');
+            const isProDay = row.isMyTeam === true;
             return (
               <View
                 key={row.team_id || row.rank}
@@ -899,6 +680,12 @@ export function ClubMatchesCenter({
             );
           })}
 
+          {poolStandings.length === 0 ? (
+            <ProDayText style={[styles.matrixUpdated, { color: tokens.muted, paddingVertical: 12, textAlign: 'center' }]}>
+              Aucun classement officiel relié au club. Le classement de la compétition du club apparaît ici une fois la source FFF confirmée — aucun championnat fictif n’est affiché.
+            </ProDayText>
+          ) : null}
+
           {/* CTA vers toutes les ligues */}
           <TouchableOpacity
             onPress={() => shellNav?.requestNav('standings')}
@@ -931,7 +718,12 @@ export function ClubMatchesCenter({
             </ProDayText>
           </View>
 
-          {DEMO_TOP_SCORERS.map((s) => (
+          {topScorers.length === 0 ? (
+            <ProDayText style={[styles.matrixUpdated, { color: tokens.muted, paddingVertical: 12 }]}>
+              Aucun buteur enregistré pour le club : les classements individuels apparaissent dès que des buts sont saisis sur des matchs réels.
+            </ProDayText>
+          ) : null}
+          {topScorers.map((s) => (
             <View key={s.rank} style={[styles.scorerRow, { borderBottomColor: tokens.border }]}>
               <View style={styles.scorerRankBox}>
                 <ProDayText style={[styles.scorerRankNum, { color: tokens.accent }]}>
@@ -964,7 +756,7 @@ export function ClubMatchesCenter({
       >
         <View style={styles.modalOverlay}>
           <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-          <View style={[styles.modalBox, { backgroundColor: '#12151C', borderColor: tokens.border }]}>
+          <View style={[styles.modalBox, { backgroundColor: CLUB_TOKENS.surface, borderColor: tokens.border }]}>
             <View style={styles.modalHeader}>
               <View>
                 <ProDayText style={[styles.modalTitle, { color: tokens.foreground }]}>
@@ -989,7 +781,7 @@ export function ClubMatchesCenter({
                   placeholderTextColor="#6B7280"
                   value={friendlyOpponent}
                   onChangeText={setFriendlyOpponent}
-                  style={[styles.formInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
+                  style={[styles.formInput, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border, color: tokens.foreground }]}
                 />
               </View>
 
@@ -999,25 +791,12 @@ export function ClubMatchesCenter({
                 </ProDayText>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
                   {(['Métropole', 'Guadeloupe (971)', 'Martinique (972)', 'Guyane (973)', 'La Réunion (974)', 'Mayotte (976)'] as FriendlyTerritory[]).map((terr) => (
-                    <TouchableOpacity
+                    <ClubPill
                       key={terr}
+                      label={terr}
+                      active={friendlyTerritory === terr}
                       onPress={() => setFriendlyTerritory(terr)}
-                      style={[
-                        styles.territorySelectPill,
-                        friendlyTerritory === terr
-                          ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
-                          : { backgroundColor: '#181C26', borderColor: tokens.border },
-                      ]}
-                    >
-                      <ProDayText
-                        style={[
-                          styles.territorySelectText,
-                          friendlyTerritory === terr ? { color: '#000000', fontWeight: '700' } : { color: tokens.muted },
-                        ]}
-                      >
-                        {terr}
-                      </ProDayText>
-                    </TouchableOpacity>
+                    />
                   ))}
                 </ScrollView>
               </View>
@@ -1029,7 +808,7 @@ export function ClubMatchesCenter({
                 <TextInput
                   value={friendlyCategory}
                   onChangeText={setFriendlyCategory}
-                  style={[styles.formInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
+                  style={[styles.formInput, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border, color: tokens.foreground }]}
                 />
               </View>
 
@@ -1040,7 +819,7 @@ export function ClubMatchesCenter({
                 <TextInput
                   value={friendlyDate}
                   onChangeText={setFriendlyDate}
-                  style={[styles.formInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
+                  style={[styles.formInput, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border, color: tokens.foreground }]}
                 />
               </View>
 
@@ -1051,7 +830,7 @@ export function ClubMatchesCenter({
                 <TextInput
                   value={friendlyVenue}
                   onChangeText={setFriendlyVenue}
-                  style={[styles.formInput, { backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
+                  style={[styles.formInput, { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border, color: tokens.foreground }]}
                 />
               </View>
 
@@ -1063,12 +842,12 @@ export function ClubMatchesCenter({
                   <TextInput
                     value={friendlyFormat}
                     onChangeText={setFriendlyFormat}
-                    style={[styles.formInput, { flex: 1, backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
+                    style={[styles.formInput, { flex: 1, backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border, color: tokens.foreground }]}
                   />
                   <TextInput
                     value={friendlyReferee}
                     onChangeText={setFriendlyReferee}
-                    style={[styles.formInput, { flex: 1, backgroundColor: '#181C26', borderColor: tokens.border, color: tokens.foreground }]}
+                    style={[styles.formInput, { flex: 1, backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border, color: tokens.foreground }]}
                   />
                 </View>
               </View>
@@ -1079,26 +858,13 @@ export function ClubMatchesCenter({
                 </ProDayText>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   {(['brouillon', 'proposition', 'confirme'] as FriendlyStatusV4[]).map((st) => (
-                    <TouchableOpacity
-                      key={st}
-                      onPress={() => setFriendlyInitialStatus(st)}
-                      style={[
-                        styles.territorySelectPill,
-                        friendlyInitialStatus === st
-                          ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
-                          : { backgroundColor: '#181C26', borderColor: tokens.border },
-                        { flex: 1, alignItems: 'center' },
-                      ]}
-                    >
-                      <ProDayText
-                        style={[
-                          styles.territorySelectText,
-                          friendlyInitialStatus === st ? { color: '#000000', fontWeight: '700' } : { color: tokens.muted },
-                        ]}
-                      >
-                        {getFriendlyStatusLabel(st)}
-                      </ProDayText>
-                    </TouchableOpacity>
+                    <View key={st} style={{ flex: 1 }}>
+                      <ClubPill
+                        label={getFriendlyStatusLabel(st)}
+                        active={friendlyInitialStatus === st}
+                        onPress={() => setFriendlyInitialStatus(st)}
+                      />
+                    </View>
                   ))}
                 </View>
               </View>
@@ -1173,15 +939,6 @@ const styles = StyleSheet.create({
   pillsScroll: {
     gap: 8,
     paddingBottom: 4,
-  },
-  filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  filterPillText: {
-    ...APPLE_TYPOGRAPHY.footnote,
   },
   fixturesList: {
     gap: 12,
@@ -1538,6 +1295,28 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1,
   },
+  liveHintText: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    lineHeight: 17,
+  },
+  emptyStateCard: {
+    alignItems: 'center',
+    gap: 8,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  emptyStateTitle: {
+    ...APPLE_TYPOGRAPHY.subheadline,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  emptyStateBody: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    textAlign: 'center',
+    lineHeight: 17,
+    maxWidth: 420,
+  },
   touchlineFooter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1648,14 +1427,5 @@ const styles = StyleSheet.create({
   quickStatusText: {
     fontSize: 11,
     fontWeight: '700',
-  },
-  territorySelectPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  territorySelectText: {
-    ...APPLE_TYPOGRAPHY.caption1,
   },
 });

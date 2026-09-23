@@ -14,10 +14,11 @@ import { useClubTheme } from './ClubThemeContext';
 import { useClubShellNav } from './ClubShellNavContext';
 import { LegalDocumentModal } from '../../../components/legal/LegalDocumentModal';
 import type { ClubNavResolvedItem } from '../navigation/resolveClubNavAccess';
-import type { ClubNavItemId } from '../navigation/clubNavConfig';
+import { CLUB_TOOL_GROUPS, type ClubNavItemId } from '../navigation/clubNavConfig';
+import { ClubActionRow, ClubListGroup } from '../ui/clubUi';
 import { TAB_BAR_CONTENT_INSET } from '../../../navigation/tabBarLayout';
 import { spacing } from '../../../theme/designTokens';
-import { clubChrome } from '../theme/clubDesignSystem';
+import { clubChrome, clubForm, clubSpace } from '../theme/clubDesignSystem';
 
 type Props = {
   /** Liste d'outils résolus (deep link Menu / plus). */
@@ -137,6 +138,12 @@ export const CLUB_MENU_ITEMS: ClubMenuItemDef[] = [
     icon: 'car',
   },
   {
+    id: 'club',
+    label: 'Identité du club',
+    subtitle: 'Couleurs, logo, saison & réglages',
+    icon: 'business',
+  },
+  {
     id: 'pack',
     label: 'Pack Club & Options',
     subtitle: 'Formules, options & services',
@@ -223,8 +230,15 @@ export function ClubMenuPane({ items = [] }: Props) {
           Pilotez équipes, matchs, entraînements, effectifs, finances, vidéo IA et direction sans chercher dans l’accueil.
         </ProDayText>
 
+        {/* Une seule recherche pour tout le pôle : celle du shell Club (CA-07/CA-10). */}
         <GlobalSearchBar
-          onPress={() => setSearchOpen(true)}
+          onPress={() => {
+            if (shellNav?.openSearch) {
+              shellNav.openSearch();
+              return;
+            }
+            setSearchOpen(true);
+          }}
           accent={clubAccent}
           style={styles.searchBarWrap}
         />
@@ -261,61 +275,40 @@ export function ClubMenuPane({ items = [] }: Props) {
           </PressableSpring>
         ) : null}
 
-        {/* 2. Grille de Cartes Premium 2 Colonnes */}
-        <View style={styles.grid}>
-          {menuList.map((item) => (
-            <PressableSpring
-              key={item.id}
-              style={[styles.tile, item.locked && styles.tileLocked]}
-              onPress={() => handleSelect(item.id, item.locked)}
-              scaleTo={0.97}
-              haptic={!item.locked}
-              testID={`club-menu-${item.id}`}
-            >
-              <View style={styles.tileTop}>
-                <View
-                  style={[
-                    styles.iconWrap,
-                    {
-                      backgroundColor: `${clubAccent}14`,
-                      borderColor: `${clubAccent}33`,
-                    },
-                  ]}
-                >
-                  <Icon
-                    name={item.icon}
-                    size={22}
-                    color={item.locked ? tokens.muted : clubAccent}
-                    variant="outline"
+        {/*
+         * 2. Modules groupés — forme reprise de la référence Fitness Park :
+         * libellé de section en majuscules, puis un encart arrondi unique par
+         * groupe, lignes à icône contour + libellé + chevron et filets en retrait.
+         * Les destinations du dock (Accueil, Calendrier, Équipes, Menu) ne sont
+         * pas répétées ici.
+         */}
+        {CLUB_TOOL_GROUPS.map((group) => {
+          const rows = group.ids
+            .map((id) => menuList.find((entry) => entry.id === id))
+            .filter((entry): entry is (typeof menuList)[number] => Boolean(entry));
+          if (rows.length === 0) return null;
+          return (
+            <View key={group.title} style={styles.groupSection}>
+              <ProDayText variant="caption" style={styles.groupLabel}>
+                {group.title.toUpperCase()}
+              </ProDayText>
+              <ClubListGroup>
+                {rows.map((item) => (
+                  <ClubActionRow
+                    key={item.id}
+                    icon={item.icon}
+                    label={item.label}
+                    hint={item.subtitle}
+                    onPress={() => shellNav?.requestNav(item.id)}
+                    trailing={
+                      item.locked ? <Icon name="lock" size={16} color={tokens.muted} /> : undefined
+                    }
                   />
-                </View>
-
-                {item.aiBadge ? (
-                  <View style={[styles.aiBadge, { backgroundColor: `${clubAccent}26` }]}>
-                    <ProDayText variant="caption" style={[styles.aiBadgeText, { color: clubAccent }]}>
-                      IA
-                    </ProDayText>
-                  </View>
-                ) : item.locked ? (
-                  <View style={styles.lockedBadge}>
-                    <Icon name="lock" size={12} color={tokens.muted} />
-                  </View>
-                ) : null}
-              </View>
-
-              <View style={styles.tileBottom}>
-                <ProDayText variant="section" style={styles.tileLabel}>
-                  {item.label}
-                </ProDayText>
-                {item.subtitle ? (
-                  <ProDayText variant="caption" style={styles.tileSub} numberOfLines={2}>
-                    {item.subtitle}
-                  </ProDayText>
-                ) : null}
-              </View>
-            </PressableSpring>
-          ))}
-        </View>
+                ))}
+              </ClubListGroup>
+            </View>
+          );
+        })}
 
         {/* 3. Section Compte & Déconnexion */}
         <ShellAccountSection
@@ -323,26 +316,16 @@ export function ClubMenuPane({ items = [] }: Props) {
             foreground: tokens.foreground,
             muted: tokens.muted,
             faint: tokens.muted,
-            surface: '#14141A',
-            border: '#22222E',
+            surface: tokens.surface,
+            border: tokens.borderStrong,
             destructive: '#DC2626',
             iconBg: `${clubAccent}15`,
           }}
           links={[
-            {
-              key: 'club',
-              label: 'Profil club',
-              hint: 'Identité, logos & coordonnées',
-              icon: 'person',
-              onPress: () => shellNav?.requestNav('club'),
-            },
-            {
-              key: 'permissions',
-              label: 'Rôles & Permissions',
-              hint: 'Admins, coachs, dirigeants',
-              icon: 'shield',
-              onPress: () => shellNav?.requestNav('permissions'),
-            },
+            // « Profil club » et « Rôles & Permissions » sont **volontairement absents** :
+            // ces deux destinations existent déjà comme lignes de menu (« Identité du
+            // club », « Rôles & Permissions »). Deux entrées pour une seule page, sous
+            // deux libellés différents, rendaient la navigation ambiguë.
             {
               key: 'cgu',
               label: 'Conditions Générales (CGU)',
@@ -364,11 +347,12 @@ export function ClubMenuPane({ items = [] }: Props) {
         />
       </ScrollView>
 
-      {/* Recherche Globale Overlay */}
+      {/* Recherche Globale Overlay — repli si le shell n'en fournit pas (CA-10). */}
       <GlobalSearchModal
         visible={searchOpen}
         onClose={() => setSearchOpen(false)}
         accent={clubAccent}
+        clubId={null}
       />
 
       <LegalDocumentModal
@@ -492,6 +476,18 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 11,
   },
+  /** Section de modules — libellé en majuscules + encart groupé (référence). */
+  groupSection: {
+    gap: clubSpace.sm,
+    marginBottom: clubForm.groupGap,
+  },
+  groupLabel: {
+    color: 'rgba(255, 255, 255, 0.62)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.4,
+    marginLeft: clubSpace.xs,
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -499,7 +495,8 @@ const styles = StyleSheet.create({
   },
   tile: {
     width: '48.5%',
-    backgroundColor: 'rgba(18, 18, 24, 0.72)',
+    // Surface mesurée `#191E23` (D-011), translucide sur le contenu.
+    backgroundColor: 'rgba(25, 30, 35, 0.72)',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',

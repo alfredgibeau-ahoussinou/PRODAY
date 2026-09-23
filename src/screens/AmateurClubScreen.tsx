@@ -23,6 +23,7 @@ import { prodayHaptics } from '../utils/prodayHaptics';
 import { fffScraperService, type MyFffTeamLink } from '../services/fffScraper.service';
 import { frenchFootballStandingsService } from '../services/frenchFootballStandings.service';
 
+import { colors } from '../theme/designTokens';
 type Overlay = 'join' | 'announcements' | 'roster' | null;
 
 export const AmateurClubScreen: React.FC = () => {
@@ -460,7 +461,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   teamHeroCard: {
-    backgroundColor: '#14141A',
+    backgroundColor: colors.surface,
     borderWidth: 1.2,
     borderRadius: 20,
     padding: 18,
@@ -519,7 +520,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#0E0E14',
+    backgroundColor: colors.backgroundAlt,
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
@@ -565,7 +566,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   sectionCard: {
-    backgroundColor: '#14141A',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: 18,
@@ -599,7 +600,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   noClubCard: {
-    backgroundColor: '#14141A',
+    backgroundColor: colors.surface,
     borderWidth: 1.2,
     borderRadius: 20,
     padding: 24,
@@ -652,7 +653,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   rosterCard: {
-    backgroundColor: '#0E0E14',
+    backgroundColor: colors.backgroundAlt,
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
@@ -686,7 +687,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#0E0E14',
+    backgroundColor: colors.backgroundAlt,
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 14,
@@ -722,7 +723,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#0E0E14',
+    backgroundColor: colors.backgroundAlt,
     padding: 14,
     borderRadius: 12,
     borderWidth: 1,
@@ -738,7 +739,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   annCard: {
-    backgroundColor: '#0E0E14',
+    backgroundColor: colors.backgroundAlt,
     padding: 12,
     borderRadius: 12,
     gap: 6,

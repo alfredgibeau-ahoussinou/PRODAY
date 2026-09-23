@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -8,6 +7,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import {
   AdminAvatarMark,
   AdminBadge,
@@ -21,7 +21,7 @@ import {
   AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { adminService } from '../../../services/admin.service';
 import { useAuth } from '../../../context/AuthContext';
@@ -33,7 +33,7 @@ type StandingMeta = Awaited<ReturnType<typeof adminService.listLeagueStandingsMe
 type StandingDetail = NonNullable<Awaited<ReturnType<typeof adminService.getLeagueStandingDetail>>>;
 
 export function AdminStandingsPane() {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const { firebaseUser, profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,9 +92,9 @@ export function AdminStandingsPane() {
           });
           setLastMsg(typeof result === 'object' ? JSON.stringify(result).slice(0, 160) : 'OK');
           await load();
-          Alert.alert('Sync OK', 'Snapshots classements mis à jour.');
+          prodayAlert.alert('Sync OK', 'Snapshots classements mis à jour.');
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         } finally {
           setBusy(null);
         }
@@ -109,7 +109,7 @@ export function AdminStandingsPane() {
       setSelected(detail);
       setEditTeamId(null);
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
     } finally {
       setBusy(null);
     }
@@ -163,9 +163,9 @@ export function AdminStandingsPane() {
           setSelected(detail);
           setEditTeamId(null);
           await load();
-          Alert.alert('Override OK', 'Classement mis à jour.');
+          prodayAlert.alert('Override OK', 'Classement mis à jour.');
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         } finally {
           setBusy(null);
         }
@@ -179,14 +179,19 @@ export function AdminStandingsPane() {
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader
-          title="Tableaux classements"
-          subtitle="Monitor · force-sync · ajustement manuel (R1, R2, nationaux)"
+          title="Classements FFF"
+          subtitle={`${meta.length} ligues & championnats · Supervision et ajustement manuel`}
+          right={
+            <AdminButton
+              label={busy === 'sync' ? 'Sync en cours…' : '⚡ Forcer Sync FFF'}
+              variant="primary"
+              compact
+              disabled={!!busy}
+              onPress={syncAll}
+            />
+          }
         />
-        <View style={styles.actions}>
-          <AdminButton label={busy === 'sync' ? '…' : 'Force sync'} disabled={!!busy} onPress={syncAll} />
-          <AdminBadge label={`${meta.length} ligues`} tone="info" />
-        </View>
-        <AdminSearchField value={q} onChangeText={setQ} placeholder="Ligues, saison, source…" />
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="Rechercher une ligue, division, saison…" />
         {lastMsg ? (
           <AdminText variant="caption" color={t.faint}>
             {lastMsg}
@@ -247,7 +252,7 @@ export function AdminStandingsPane() {
                 <Pressable onPress={() => startEdit(row.team_id)}>
                   <AdminCard
                     style={
-                      editTeamId === row.team_id ? { borderColor: ADMIN_TOKENS.accent } : undefined
+                      editTeamId === row.team_id ? { borderColor: t.accentHot } : undefined
                     }
                   >
                     <View style={styles.row}>

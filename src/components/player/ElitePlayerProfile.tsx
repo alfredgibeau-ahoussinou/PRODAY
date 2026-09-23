@@ -64,26 +64,13 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
 
   const p = player.profile;
   const stats = p.season_stats;
-  const isDemo = player.email?.includes('demo') || player.display_name?.includes('Demo');
   const cardData = useMemo(() => {
     const base = userToProDayCard(player);
-    if (isDemo) {
-      return {
-        ...base,
-        matches: 18,
-        goals: 10,
-        assists: 5,
-        overall: 89,
-        formPct: 87,
-        clubName: p.club_id || 'FC ProDay',
-        primaryPosition: p.position || 'MC',
-      };
-    }
     return {
       ...base,
-      clubName: p.club_id || 'FC ProDay',
+      clubName: p.club_id || 'Mon équipe',
     };
-  }, [player, isDemo, p.club_id, p.position]);
+  }, [player, p.club_id]);
 
   // Statut présence
   const myRsvp = useMemo(() => {
@@ -144,7 +131,9 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
                   onBack();
                 }}
                 style={styles.backBtn}
-              >
+
+                accessibilityRole="button"
+                accessibilityLabel="Retour">
                 <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
               </TouchableOpacity>
             ) : null}
@@ -250,7 +239,9 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
                       myRsvp === 'yes' ? styles.btnPrimary : styles.btnOutline,
                       { flex: 1 },
                     ]}
-                  >
+
+                    accessibilityRole="button"
+                    accessibilityLabel="Valider">
                     <Ionicons
                       name="checkmark-circle"
                       size={18}
@@ -275,7 +266,9 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
                       myRsvp === 'no' ? styles.btnDanger : styles.btnOutline,
                       { flex: 1 },
                     ]}
-                  >
+
+                    accessibilityRole="button"
+                    accessibilityLabel="Fermer">
                     <Ionicons
                       name="close-circle"
                       size={18}

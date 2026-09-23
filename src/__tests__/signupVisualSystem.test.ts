@@ -1,39 +1,37 @@
-import { PRODAY_POLE_ACCENTS } from '../theme/prodayBrand';
 import {
+  ATHLETIC_PALETTE,
   SIGNUP_POLE_ACCENT_MAP,
   brandVariantForSignupRole,
   resolveSignupVisual,
 } from '../screens/signup/signupVisualSystem';
 
-describe('Signup visual system — accents officiels pôles', () => {
-  it('mappe chaque rôle foot sur PRODAY_POLE_ACCENTS (pas d’or forcé joueur)', () => {
-    expect(resolveSignupVisual({ role: 'player' }).accent).toBe(PRODAY_POLE_ACCENTS.player);
-    expect(resolveSignupVisual({ role: 'coach' }).accent).toBe(PRODAY_POLE_ACCENTS.coach);
-    expect(resolveSignupVisual({ role: 'club' }).accent).toBe(PRODAY_POLE_ACCENTS.club);
-    expect(resolveSignupVisual({ role: 'parent' }).accent).toBe(PRODAY_POLE_ACCENTS.parent);
-    expect(resolveSignupVisual({ role: 'sponsor' }).accent).toBe(PRODAY_POLE_ACCENTS.sponsor);
-    expect(resolveSignupVisual({ role: 'supporter' }).accent).toBe(PRODAY_POLE_ACCENTS.supporter);
+describe('Signup visual system — accents Electric Athletic', () => {
+  it('mappe chaque rôle foot sur la palette Electric Athletic', () => {
+    expect(resolveSignupVisual({ role: 'player' }).accent).toBe(ATHLETIC_PALETTE.electricMint);
+    expect(resolveSignupVisual({ role: 'coach' }).accent).toBe(ATHLETIC_PALETTE.iceCyan);
+    expect(resolveSignupVisual({ role: 'club' }).accent).toBe(ATHLETIC_PALETTE.amberSunset);
+    expect(resolveSignupVisual({ role: 'parent' }).accent).toBe(ATHLETIC_PALETTE.electricMint);
+    expect(resolveSignupVisual({ role: 'sponsor' }).accent).toBe(ATHLETIC_PALETTE.amberSunset);
+    expect(resolveSignupVisual({ role: 'supporter' }).accent).toBe(ATHLETIC_PALETTE.iceCyan);
   });
 
-  it('expose le même mapping que la planche brand', () => {
-    expect(SIGNUP_POLE_ACCENT_MAP.player).toBe('#FFFFFF');
-    expect(SIGNUP_POLE_ACCENT_MAP.coach).toBe('#C5A059');
-    expect(SIGNUP_POLE_ACCENT_MAP.club).toBe('#10B981');
-    expect(SIGNUP_POLE_ACCENT_MAP.parent).toBe('#8CC63F');
+  it('expose le même mapping que SIGNUP_POLE_ACCENT_MAP', () => {
+    expect(SIGNUP_POLE_ACCENT_MAP.player).toBe(ATHLETIC_PALETTE.electricMint);
+    expect(SIGNUP_POLE_ACCENT_MAP.coach).toBe(ATHLETIC_PALETTE.iceCyan);
+    expect(SIGNUP_POLE_ACCENT_MAP.club).toBe(ATHLETIC_PALETTE.amberSunset);
+    expect(SIGNUP_POLE_ACCENT_MAP.parent).toBe(ATHLETIC_PALETTE.electricMint);
   });
 
-  it('donne un chrome shell (wash + surfaces charcoal) par pôle', () => {
+  it('donne un chrome shell (wash + surfaces dark athletic) par pôle', () => {
     const club = resolveSignupVisual({ role: 'club' });
-    expect(club.bg).toBe('#000000');
+    expect(club.bg).toBe(ATHLETIC_PALETTE.bg);
     expect(club.poleLabel).toBe('CLUB');
-    expect(club.washTop).toContain('16, 185, 129');
-    expect(club.onAccent).toBe('#FFFFFF');
+    expect(club.onAccent).toBe(ATHLETIC_PALETTE.onAmber);
 
     const player = resolveSignupVisual({ role: 'player' });
+    expect(player.bg).toBe(ATHLETIC_PALETTE.bg);
     expect(player.poleLabel).toBe('JOUEUR');
-    expect(player.onAccent).toBe('#000000');
-    // Focus lisible (pas blanc pur sur chrome fin)
-    expect(player.focus).toBe('#E8D5A3');
+    expect(player.onAccent).toBe(ATHLETIC_PALETTE.onMint);
   });
 
   it('mappe les variantes brand correctement', () => {
@@ -44,8 +42,8 @@ describe('Signup visual system — accents officiels pôles', () => {
   });
 
   it('résout le pôle carousel vers le bon accent', () => {
-    expect(resolveSignupVisual({ pole: 'joueur' }).accent).toBe(PRODAY_POLE_ACCENTS.player);
-    expect(resolveSignupVisual({ pole: 'coach' }).accent).toBe(PRODAY_POLE_ACCENTS.coach);
-    expect(resolveSignupVisual({ pole: 'pro_club' }).accent).toBe(PRODAY_POLE_ACCENTS.club);
+    expect(resolveSignupVisual({ pole: 'joueur' }).accent).toBe(ATHLETIC_PALETTE.electricMint);
+    expect(resolveSignupVisual({ pole: 'coach' }).accent).toBe(ATHLETIC_PALETTE.iceCyan);
+    expect(resolveSignupVisual({ pole: 'pro_club' }).accent).toBe(ATHLETIC_PALETTE.amberSunset);
   });
 });

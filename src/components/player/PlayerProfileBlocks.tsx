@@ -93,10 +93,10 @@ export const PlayerProfileBlocks: React.FC<PlayerProfileBlocksProps> = ({
               </ProDayText>
               {editable ? (
                 <View style={styles.blockActions}>
-                  <Pressable onPress={() => moveBlock(block.id, -1)} hitSlop={8}>
+                  <Pressable onPress={() => moveBlock(block.id, -1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Remonter la section">
                     <Icon name="chevron-up" size={16} color={colors.textMuted} />
                   </Pressable>
-                  <Pressable onPress={() => moveBlock(block.id, 1)} hitSlop={8}>
+                  <Pressable onPress={() => moveBlock(block.id, 1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Descendre la section">
                     <Icon name="chevron-down" size={16} color={colors.textMuted} />
                   </Pressable>
                 </View>

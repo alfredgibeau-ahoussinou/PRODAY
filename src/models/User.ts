@@ -160,6 +160,8 @@ export interface User {
   other_contact?: string;
   avatar_url?: string;
   role: UserRole;
+  /** Multi-rôles : ensemble des rôles attribués à l’utilisateur (ex. coach + player, parent + player). */
+  roles?: UserRole[];
 
   /** Privilèges Super Admin (Pôle Administrateur) */
   is_admin?: boolean;
@@ -403,4 +405,17 @@ export function getVerificationBadge(user: User): {
     default:
       return { label: 'Non vérifié', color: 'gray' };
   }
+}
+
+/**
+ * Retourne la liste dédupliquée des rôles d’un utilisateur (multi-rôles).
+ */
+export function getUserRoles(user: Pick<User, 'role'> & { roles?: UserRole[] | null }): UserRole[] {
+  if (Array.isArray(user.roles) && user.roles.length > 0) {
+    const list = user.roles.filter(Boolean);
+    if (list.length > 0) {
+      return Array.from(new Set(list));
+    }
+  }
+  return user.role ? [user.role] : ['player'];
 }

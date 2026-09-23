@@ -38,6 +38,7 @@ import {
   JoueurMatchSkinProvider,
 } from '../components/matchs/matchCenterUi';
 import { JoueurScreenChrome } from '../components/joueur/JoueurScreenChrome';
+import { VeoMatchAssociateModal } from '../components/video/VeoMatchAssociateModal';
 
 interface MatchEventHubScreenProps {
   eventId: string;
@@ -67,6 +68,7 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
   const [chapter, setChapter] = useState<MatchHubChapterId>(initialChapter);
   const [rsvpBusy, setRsvpBusy] = useState(false);
   const [supporterFollow, setSupporterFollow] = useState<SupporterFollowContext | null>(null);
+  const [associateVeoOpen, setAssociateVeoOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -234,6 +236,7 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
             rsvpBusy={rsvpBusy}
             onOpenLineup={() => setChapter('composition')}
             onOpenLive={() => setChapter('live')}
+            onAssociateVeo={event.club_id ? () => setAssociateVeoOpen(true) : undefined}
           />
         </ScrollView>
       ),
@@ -338,6 +341,18 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
         />
       ) : null}
     </PushScreenTransition>
+    {associateVeoOpen && event?.club_id ? (
+      <VeoMatchAssociateModal
+        visible
+        clubId={event.club_id}
+        createdByUid={profile?.uid ?? ''}
+        eventId={event.id}
+        eventTitle={event.title}
+        scheduledAt={event.starts_at}
+        onClose={() => setAssociateVeoOpen(false)}
+        onSuccess={() => void load()}
+      />
+    ) : null}
     </>
   );
 };

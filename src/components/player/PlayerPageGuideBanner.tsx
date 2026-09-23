@@ -4,11 +4,12 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { APPLE_FONT_STACK } from '../../theme/appleTypography';
 
 interface PlayerPageGuideBannerProps {
   pageKey: string;
@@ -64,7 +65,7 @@ export const PlayerPageGuideBanner: React.FC<PlayerPageGuideBannerProps> = ({
         activeOpacity={0.8}
       >
         <View style={styles.iconBox}>
-          <Ionicons name="help-circle" size={18} color="#30D158" />
+          <Ionicons name="help-circle" size={18} color={PLAYER_DARK.accent} />
         </View>
 
         <View style={styles.textCol}>
@@ -78,7 +79,7 @@ export const PlayerPageGuideBanner: React.FC<PlayerPageGuideBannerProps> = ({
         <View style={styles.actionRow}>
           <View style={styles.actionBtn}>
             <Text style={styles.actionBtnText}>Voir</Text>
-            <Ionicons name="chevron-forward" size={12} color="#30D158" />
+            <Ionicons name="chevron-forward" size={12} color={PLAYER_DARK.accent} />
           </View>
         </View>
       </TouchableOpacity>
@@ -88,8 +89,10 @@ export const PlayerPageGuideBanner: React.FC<PlayerPageGuideBannerProps> = ({
         onPress={handleDismiss}
         activeOpacity={0.7}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <Ionicons name="close" size={15} color="#64748B" />
+
+        accessibilityRole="button"
+        accessibilityLabel="Fermer">
+        <Ionicons name="close" size={15} color={PLAYER_DARK.textDim} />
       </TouchableOpacity>
     </View>
   );
@@ -99,10 +102,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#12121A',
+    backgroundColor: PLAYER_DARK.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.2)',
+    borderColor: PLAYER_DARK.accentSoft,
     paddingVertical: 9,
     paddingHorizontal: 12,
     marginBottom: 14,
@@ -117,7 +120,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    backgroundColor: PLAYER_DARK.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -128,22 +131,22 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   badgeText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 9,
     fontWeight: '800',
-    color: '#30D158',
+    color: PLAYER_DARK.accent,
     letterSpacing: 0.5,
   },
   titleText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 12,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: PLAYER_DARK.text,
   },
   subText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 10.5,
-    color: '#94A3B8',
+    color: PLAYER_DARK.textMuted,
     marginTop: 1,
   },
   actionRow: {
@@ -155,16 +158,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+    backgroundColor: PLAYER_DARK.accentSoft,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
   actionBtnText: {
-    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontFamily: APPLE_FONT_STACK.system,
     fontSize: 11,
     fontWeight: '700',
-    color: '#30D158',
+    color: PLAYER_DARK.accent,
   },
   closeBtn: {
     padding: 4,

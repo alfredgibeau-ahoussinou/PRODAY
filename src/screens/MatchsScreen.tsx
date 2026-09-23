@@ -16,7 +16,7 @@ import { trackV3Event } from '../core/analytics/v3Events';
 import { flushBrainState } from '../services/brainState.service';
 import { teamEventsService } from '../services/teamEvents.service';
 import type { RsvpStatus } from '../models/TeamEvent';
-import { MatchHomeScreen } from '../components/matchs/MatchHomeScreen';
+import { PlayerCalendarScreen } from './player/PlayerCalendarScreen';
 import type { MatchChapterId } from '../content/matchChapters';
 import type { SeasonCalendarItem } from '../utils/seasonCalendar';
 import { ProposeMatchScreen } from './ProposeMatchScreen';
@@ -401,92 +401,7 @@ export const MatchsScreen: React.FC<{
 
   return (
     <>
-      <MatchHomeScreen
-        profile={profile}
-        items={items}
-        teamEvents={events}
-        matches={matches}
-        tournaments={tournaments}
-        loadingTournaments={loadingTournaments}
-        competitions={competitions}
-        competitionSeasons={competitionSeasons}
-        competitionFixtures={competitionFixtures}
-        loadingCompetitions={loadingCompetitions}
-        pendingConvocations={pendingConvocations}
-        myUpcomingEvents={myUpcomingEvents}
-        nextItem={nextItem}
-        loadingCalendar={loadingCalendar}
-        loadingMatches={loadingMatches}
-        canManageEvents={canManageConvocations}
-        canManageTournaments={canManageTournaments}
-        myClubId={myClubId}
-        initialChapter={initialChapter}
-        embeddedInShell={embeddedInShell}
-        rsvpBusy={rsvpBusy}
-        canAccept={canAcceptForClub}
-        intelligence={intelligence}
-        getMatchIaScore={getMatchIaScore}
-        getMatchHealthWarning={getMatchHealthWarning}
-        onPropose={() => {
-          if (!requireAuth(t('matchs.auth.propose'))) return;
-          setView('propose');
-        }}
-        onSearch={() => {
-          if (!requireAuth(t('matchs.auth.search'))) return;
-          setView('search');
-        }}
-        onOrganize={() => {
-          if (!requireAuth(t('matchs.auth.organize'))) return;
-          setView('organize');
-        }}
-        onCreateEvent={() => {
-          if (!requireAuth(t('matchs.auth.createEvent'))) return;
-          setView('create_event');
-        }}
-        onOpenTournament={(id) => {
-          if (!requireAuth(t('matchs.auth.tournament'))) return;
-          setSelectedTournamentId(id);
-          setView('tournament_detail');
-        }}
-        onCreateTournament={() => {
-          if (!requireAuth(t('matchs.auth.createTournament'))) return;
-          setView('create_tournament');
-        }}
-        onOpenCompetitionSeason={(id) => {
-          if (!requireAuth('Connectez-vous pour voir la compétition')) return;
-          setSelectedSeasonId(id);
-          setView('competition_dashboard');
-        }}
-        onOpenCompetitionFixture={(id) => {
-          if (!requireAuth('Connectez-vous pour voir le match')) return;
-          setSelectedFixtureId(id);
-          setView('competition_fixture');
-        }}
-        onOrganizeCompetition={() => {
-          if (!requireAuth('Connectez-vous pour organiser')) return;
-          setView('competition_organize');
-        }}
-        onOpenCalendarItem={openCalendarItem}
-        onOpenEvent={(id, hubChapter) => openEvent(id, hubChapter ?? 'apercu')}
-        onRsvp={handleRsvp}
-        onAcceptMatch={(m) =>
-          guardAcceptMatch(m, () =>
-            acceptMatch(m, () => {
-              recordMatchJoin();
-              refreshMatches();
-            })
-          )
-        }
-        onCancelMatch={(m) => cancelMatch(m, refreshMatches)}
-        onMarkPlayed={(m) =>
-          markPlayed(m, refreshMatches, () => navActions.openProfile())
-        }
-        fromCache={fromCache}
-        onRefresh={refreshAll}
-        onOpenCarpoolForEvent={(eventId) =>
-          navActions.openCarpool({ chapter: 'reserver', eventId })
-        }
-      />
+      <PlayerCalendarScreen />
       <PushScreenTransition active={view !== 'home'}>{subView}</PushScreenTransition>
     </>
   );

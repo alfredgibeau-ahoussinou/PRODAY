@@ -9,7 +9,7 @@ import {
   ADMIN_NAV_ITEMS,
   type AdminNavSectionId,
 } from '../navigation/adminNavConfig';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, type AdminThemeTokens } from '../theme/adminTokens';
 import { adminChrome, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 
 type Props = {
@@ -60,8 +60,8 @@ export function OpsDeskRail({
 }: Props) {
   const insets = useSafeAreaInsets();
   const resolvedTop = Math.max(topInset ?? 0, insets.top);
-  const t = ADMIN_TOKENS;
-  const styles = useMemo(() => createStyles(), []);
+  const t = useAdminTokens();
+  const styles = useMemo(() => createStyles(t), [t]);
   const counts = {
     queue: queueCount,
     claims: claimsCount,
@@ -98,29 +98,31 @@ export function OpsDeskRail({
         style={styles.cmd}
         accessibilityLabel="Recherche commande"
       >
-        <Icon name="search" size={14} color={t.signal} />
-        <AdminText variant="caption" color="rgba(244,246,248,0.55)" style={{ flex: 1 }}>
-          Rechercher
+        <Icon name="search" size={16} color={t.signal} />
+        <AdminText variant="caption" color="rgba(244,246,248,0.7)" style={{ flex: 1 }}>
+          Recherche · ⌘K
         </AdminText>
-        <AdminText variant="mono" color={t.signal}>
-          ⌘K
-        </AdminText>
+        <View style={styles.cmdKey}>
+          <AdminText variant="mono" color={t.signal} style={{ fontSize: 9 }}>
+            TAB
+          </AdminText>
+        </View>
       </Pressable>
 
       <ScrollView
         style={{ flex: 1 }}
+        contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 16, gap: 16 }}
       >
         {ADMIN_NAV_GROUPS.map((group) => {
           const items = ADMIN_NAV_ITEMS.filter((n) => n.group === group.id);
           if (!items.length) return null;
           return (
-            <View key={group.id} style={{ gap: 3 }}>
+            <View key={group.id} style={styles.group}>
               <AdminText
                 variant="label"
-                color="rgba(244,246,248,0.35)"
-                style={{ paddingHorizontal: 10, marginBottom: 4 }}
+                color="rgba(244,246,248,0.4)"
+                style={styles.groupLabel}
               >
                 {group.label}
               </AdminText>
@@ -137,8 +139,8 @@ export function OpsDeskRail({
                     style={[
                       styles.item,
                       active && {
-                        backgroundColor: 'rgba(232,184,74,0.16)',
-                        borderColor: t.signal,
+                        backgroundColor: t.accentSoft,
+                        borderColor: t.accentHot,
                       },
                     ]}
                   >
@@ -149,8 +151,8 @@ export function OpsDeskRail({
                     />
                     <AdminText
                       variant="nav"
-                      color={active ? t.railInk : 'rgba(244,246,248,0.68)'}
-                      style={{ flex: 1 }}
+                      color={active ? t.railInk : 'rgba(244,246,248,0.85)'}
+                      style={{ flex: 1, fontWeight: active ? '700' : '500' }}
                       numberOfLines={1}
                     >
                       {item.label}
@@ -159,8 +161,8 @@ export function OpsDeskRail({
                       <View style={styles.badge}>
                         <AdminText
                           variant="label"
-                          color="#0B0D12"
-                          style={{ letterSpacing: 0, fontSize: 9 }}
+                          color="#FFFFFF"
+                          style={{ letterSpacing: 0, fontSize: 9, fontWeight: '800' }}
                         >
                           {badge > 99 ? '99+' : String(badge)}
                         </AdminText>
@@ -177,13 +179,13 @@ export function OpsDeskRail({
       {onSignOut ? (
         <Pressable
           onPress={onSignOut}
+          style={styles.signOut}
           accessibilityRole="button"
           accessibilityLabel="Déconnexion"
           testID="admin-sign-out"
-          style={styles.signOut}
         >
-          <Icon name="log-out" size={16} color="#F87171" />
-          <AdminText variant="nav" color="#F87171" numberOfLines={1}>
+          <Icon name="log-out" size={18} color={t.danger} />
+          <AdminText variant="nav" color={t.danger} style={{ flex: 1, fontWeight: '600' }}>
             Déconnexion
           </AdminText>
         </Pressable>
@@ -192,8 +194,7 @@ export function OpsDeskRail({
   );
 }
 
-function createStyles() {
-  const t = ADMIN_TOKENS;
+function createStyles(t: AdminThemeTokens) {
   return StyleSheet.create({
     root: {
       backgroundColor: t.sidebarBg,
@@ -201,6 +202,7 @@ function createStyles() {
       borderRightColor: t.borderStrong,
       paddingHorizontal: 12,
       gap: adminSpace.md,
+      ...(t.glassBackdrop as any),
     },
     brand: {
       flexDirection: 'row',
@@ -217,16 +219,37 @@ function createStyles() {
       paddingVertical: 10,
       borderRadius: adminRadius.sm,
       borderWidth: 1,
-      borderColor: 'rgba(244,246,248,0.14)',
+      borderColor: t.border,
       backgroundColor: 'rgba(255,255,255,0.04)',
+    },
+    cmdKey: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: adminRadius.xs,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: t.border,
+    },
+    list: {
+      gap: 14,
+      paddingBottom: 24,
+    },
+    group: {
+      gap: 2,
+    },
+    groupLabel: {
+      paddingHorizontal: 8,
+      marginBottom: 4,
+      letterSpacing: 1.2,
+      fontSize: 10,
     },
     item: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      paddingVertical: 10,
+      paddingVertical: 9,
       paddingHorizontal: 10,
-      minHeight: 42,
+      minHeight: 38,
       borderRadius: adminRadius.sm,
       borderWidth: 1,
       borderColor: 'transparent',
@@ -234,23 +257,23 @@ function createStyles() {
     badge: {
       minWidth: 20,
       height: 20,
-      borderRadius: 4,
+      borderRadius: adminRadius.pill,
       backgroundColor: t.signal,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 5,
+      paddingHorizontal: 6,
     },
     signOut: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      paddingVertical: 12,
+      paddingVertical: 10,
       paddingHorizontal: 10,
-      minHeight: 44,
+      minHeight: 40,
       borderRadius: adminRadius.sm,
       borderWidth: 1,
-      borderColor: 'rgba(248,113,113,0.28)',
-      backgroundColor: 'rgba(248,113,113,0.08)',
+      borderColor: t.dangerSoft,
+      backgroundColor: t.dangerSoft,
     },
   });
 }

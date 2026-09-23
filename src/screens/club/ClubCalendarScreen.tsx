@@ -1,83 +1,90 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import {
   ClubChapterScroll,
-  ClubEmptyState,
   ClubLoading,
-  ClubSegmentedControl,
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
-import { ClubCalendarAgendaRow, ClubCalendarHero } from '../../features/club/ui/ClubCalendarChrome';
-import {
-  buildClubCalendarItemModel,
-  filterClubCalendarEvents,
-  resolveClubCalendarHero,
-  resolveClubCalendarSubtitle,
-  type ClubCalendarRange,
-} from '../../features/club/ui/clubCalendarModel';
+import { CalendarMonthGrid } from '../../features/calendar/CalendarMonthGrid';
 import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import { detectPitchConflicts } from '../../features/club/ui/clubFacilitiesModel';
+import { isCoachMatchEvent, isCoachTrainingEvent, type TeamEvent } from '../../models/TeamEvent';
 import { MatchEventHubScreen } from '../MatchEventHubScreen';
 import { TeamEventDetailScreen } from '../TeamEventDetailScreen';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
 
 /**
- * Calendrier Club — Jour / Semaine / Mois, hero prochain RDV, taps Matchs / séances / détail.
+ * Calendrier Club — Grille mensuelle interactive, agenda liste, hero et raccourcis.
+ *
+ * `initialEventId` permet d'arriver depuis la recherche avec l'événement trouvé déjà ouvert.
  */
-export function ClubCalendarScreen() {
+export function ClubCalendarScreen({
+  initialEventId = null,
+}: {
+  initialEventId?: string | null;
+} = {}) {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
-  const [range, setRange] = useState<ClubCalendarRange>('week');
   const [detailEventId, setDetailEventId] = useState<string | null>(null);
   const [detailKind, setDetailKind] = useState<'match' | 'training' | null>(null);
+  /** Résultat de recherche introuvable dans le périmètre chargé (supprimé ou accès modifié). */
+  const [unavailableResult, setUnavailableResult] = useState(false);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
-
-  const items = useMemo(
-    () => filterClubCalendarEvents(ws.events, range),
-    [ws.events, range],
-  );
-  const heroEvent = useMemo(() => resolveClubCalendarHero(items), [items]);
-  const heroModel = useMemo(
-    () => (heroEvent ? buildClubCalendarItemModel(heroEvent) : null),
-    [heroEvent],
-  );
-  const listModels = useMemo(
-    () =>
-      items
-        .filter((e) => e.id !== heroEvent?.id)
-        .map(buildClubCalendarItemModel),
-    [items, heroEvent?.id],
-  );
-  const subtitle = useMemo(
-    () => resolveClubCalendarSubtitle(range, items.length),
-    [range, items.length],
-  );
 
   const pitchConflicts = useMemo(
     () => detectPitchConflicts(ws.events),
     [ws.events],
   );
 
+  /**
+   * Consomme la demande venue de la recherche, **une seule fois** : sans ce garde, fermer le
+   * détail le rouvrirait au rendu suivant.
+   */
+  const consumedSeedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!initialEventId || ws.loading) return;
+    if (consumedSeedRef.current === initialEventId) return;
+    consumedSeedRef.current = initialEventId;
+
+    const event = ws.events.find((e) => e.id === initialEventId);
+    if (!event) {
+      setUnavailableResult(true);
+      return;
+    }
+    if (isCoachMatchEvent(event)) {
+      setDetailKind('match');
+      setDetailEventId(event.id);
+      return;
+    }
+    if (isCoachTrainingEvent(event)) {
+      setDetailKind('training');
+      setDetailEventId(event.id);
+      return;
+    }
+    openList('events');
+  }, [initialEventId, ws.loading, ws.events]);
+
   const openList = (nav: 'matches' | 'trainings' | 'events') => {
     shellNav?.requestNav(nav);
   };
 
-  const openDetail = (model: ReturnType<typeof buildClubCalendarItemModel>) => {
-    if (model.isMatch) {
+  const openDetail = (event: TeamEvent | any) => {
+    const rawId = event.id || event.team_event_id;
+    if (isCoachMatchEvent(event)) {
       setDetailKind('match');
-      setDetailEventId(model.id);
+      setDetailEventId(rawId);
       return;
     }
-    if (model.isTraining) {
+    if (isCoachTrainingEvent(event)) {
       setDetailKind('training');
-      setDetailEventId(model.id);
+      setDetailEventId(rawId);
       return;
     }
     openList('events');
@@ -88,18 +95,12 @@ export function ClubCalendarScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubBrandHeader title="Calendrier" subtitle={subtitle} />
-
-        <ClubSegmentedControl
-          options={[
-            { id: 'day' as const, label: 'Jour' },
-            { id: 'week' as const, label: 'Semaine' },
-            { id: 'month' as const, label: 'Mois' },
-          ]}
-          value={range}
-          onChange={setRange}
+        <ClubBrandHeader
+          title="Calendrier"
+          subtitle={`${ws.events.length} événements autorisés`}
         />
 
+        {/* Raccourcis rapides Club */}
         <View style={styles.shortcutRow}>
           <PressableSpring
             onPress={() => openList('matches')}
@@ -136,6 +137,46 @@ export function ClubCalendarScreen() {
           </PressableSpring>
         </View>
 
+        {unavailableResult ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              marginHorizontal: 16,
+              marginBottom: 12,
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: 'rgba(148, 163, 184, 0.12)',
+              borderWidth: 1,
+              borderColor: 'rgba(148, 163, 184, 0.3)',
+            }}
+          >
+            <Icon name="alert-circle" size={20} color="#94A3B8" />
+            <View style={{ flex: 1 }}>
+              <ClubText variant="section" style={{ fontSize: 13, fontWeight: '800' }}>
+                Résultat indisponible
+              </ClubText>
+              <ClubText variant="caption" muted style={{ marginTop: 2 }}>
+                Cet événement ne figure plus dans le calendrier autorisé : il a peut-être été
+                supprimé ou vos droits ont changé.
+              </ClubText>
+              {shellNav?.openSearch ? (
+                <PressableSpring
+                  onPress={() => shellNav.openSearch?.()}
+                  scaleTo={0.97}
+                  haptic
+                  style={{ marginTop: 8, alignSelf: 'flex-start' }}
+                >
+                  <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+                    Relancer la recherche
+                  </ClubText>
+                </PressableSpring>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
         {pitchConflicts.length > 0 ? (
           <View
             style={{
@@ -163,45 +204,14 @@ export function ClubCalendarScreen() {
           </View>
         ) : null}
 
-        {items.length === 0 ? (
-          <ClubEmptyState
-            title="Rien sur cette période"
-            body="Créez un match, un entraînement ou un événement pour remplir le calendrier."
-            actionLabel="Créer"
-            onAction={() => shellNav?.openCreate?.()}
-            icon="calendar"
-          />
-        ) : (
-          <View style={styles.list}>
-            {heroModel ? (
-              <ClubCalendarHero
-                model={heroModel}
-                onOpen={() => openDetail(heroModel)}
-                onOpenList={() => openList(heroModel.nav)}
-              />
-            ) : null}
-
-            {listModels.length > 0 ? (
-              <View style={styles.sectionHead}>
-                <ClubText variant="label" muted style={styles.sectionLabel}>
-                  Agenda
-                </ClubText>
-                <ClubText variant="caption" muted>
-                  {listModels.length}
-                </ClubText>
-              </View>
-            ) : null}
-
-            {listModels.map((model, index) => (
-              <ClubCalendarAgendaRow
-                key={model.id}
-                model={model}
-                index={index}
-                onPress={() => openDetail(model)}
-              />
-            ))}
-          </View>
-        )}
+        {/* Grille Mensuelle & Liste Interactive */}
+        <CalendarMonthGrid
+          events={ws.events}
+          onSelectEvent={openDetail}
+          defaultViewMode="month"
+          tokens={tokens}
+          emptyMessage="Aucun événement planifié pour ce club"
+        />
       </ClubChapterScroll>
 
       <PushScreenTransition active={detailEventId != null} backgroundColor={tokens.bg}>
@@ -236,6 +246,7 @@ const createStyles = (tokens: ClubThemeTokens) =>
     shortcutRow: {
       flexDirection: 'row',
       gap: clubSpace.sm,
+      marginBottom: 12,
     },
     shortcut: {
       flex: 1,
@@ -252,17 +263,5 @@ const createStyles = (tokens: ClubThemeTokens) =>
     shortcutLabel: {
       color: tokens.foreground,
       fontWeight: '700',
-    },
-    list: { gap: clubSpace.md },
-    sectionHead: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: clubSpace.sm,
-      marginTop: clubSpace.xs,
-    },
-    sectionLabel: {
-      letterSpacing: 1.05,
-      opacity: 0.92,
     },
   });

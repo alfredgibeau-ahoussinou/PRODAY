@@ -4,7 +4,7 @@ import { PressableSpring } from '../motion/PressableSpring';
 import type { MessageThread } from '../../lib/firestoreMappers';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { colors as designColors, spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
@@ -456,9 +456,9 @@ function createStyles(
     },
     joueurCard: {
       borderRadius: 18,
-      backgroundColor: '#14141A',
+      backgroundColor: designColors.surface,
       borderWidth: 1,
-      borderColor: '#22222E',
+      borderColor: designColors.borderStrong,
       overflow: 'hidden',
       marginBottom: spacing.sm,
     },

@@ -2,7 +2,8 @@ import type { MainTabId } from '../navigation/mainTabConfig';
 import type { JoueurAgeGroup } from '../utils/joueurExperienceTheme';
 
 /**
- * Labels dock joueur — 4 onglets : Parcours · Matchs · Saison · Profil.
+ * Labels dock joueur — refonte Player §4 : Accueil · Calendrier · Ma Carte · Menu.
+ * Le dock impose 4 destinations ; « Saison » reste ouvert depuis le Menu.
  */
 export function getJoueurGameTabLabel(
   tab: MainTabId,
@@ -13,15 +14,15 @@ export function getJoueurGameTabLabel(
 
   switch (tab) {
     case 'home':
-      return youth ? 'JOUER' : teen ? 'PARCOURS' : 'ACCUEIL';
+      return youth ? 'JOUER' : teen ? 'ACCUEIL' : 'Accueil';
     case 'matchs':
-      return youth ? 'MATCH' : teen ? 'MATCHS' : 'MATCHS';
+      return youth ? 'MATCH' : 'Calendrier';
     case 'feed':
-      return youth ? 'SAISON' : teen ? 'SAISON' : 'SAISON';
+      return youth ? 'SAISON' : 'Ma Carte';
     case 'progression':
-      return youth ? 'NIVEAU' : teen ? 'PROGRESS' : 'PROGRESSION';
+      return youth ? 'NIVEAU' : teen ? 'PROGRESS' : 'Ma Saison';
     case 'profil':
-      return youth ? 'MOI' : teen ? 'CARTE' : 'PROFIL';
+      return youth ? 'MOI' : teen ? 'CARTE' : 'Ma Carte';
     case 'recrutement':
       return youth ? 'ÉQUIPE' : teen ? 'GROUPE' : 'ÉQUIPE';
     case 'messages':
@@ -37,7 +38,7 @@ export function getJoueurGameTabLabel(
     case 'famille':
       return 'FAMILLE';
     case 'plus':
-      return youth ? 'PLUS' : teen ? 'MENU' : 'PLUS';
+      return youth ? 'PLUS' : 'Menu';
     default: {
       const _exhaustive: never = tab;
       return String(_exhaustive);

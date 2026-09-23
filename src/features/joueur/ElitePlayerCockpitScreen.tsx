@@ -62,10 +62,8 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
   const clubId = profile.profile?.club_id;
   const { items: calendarItems } = useSeasonCalendar(profile.uid, clubId);
 
-  // Détection du prochain match réel ou compte démo
+  // Détection du prochain match réel — aucune donnée de démonstration (DATA-01)
   const nextMatch = useMemo(() => {
-    const isDemo = profile.email?.includes('demo') || profile.display_name?.includes('Demo');
-    
     // Si compte réel avec événements programmés
     const realUpcoming = calendarItems.find(
       (item) => item.kind === 'friendly_match' || item.kind === 'competition_fixture' || item.kind === 'team_event'
@@ -78,23 +76,9 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
         title: realUpcoming.title || 'Match de Championnat',
         opponent: realUpcoming.subtitle || 'Adversaire officiel',
         location: realUpcoming.city ? `Stade (${realUpcoming.city})` : 'Terrain d’honneur',
-        dateStr: realUpcoming.starts_at ? new Date(realUpcoming.starts_at).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Ce week-end',
-        timeStr: realUpcoming.starts_at ? new Date(realUpcoming.starts_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '15:00',
+        dateStr: realUpcoming.starts_at ? new Date(realUpcoming.starts_at).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Date à confirmer',
+        timeStr: realUpcoming.starts_at ? new Date(realUpcoming.starts_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '',
         isReal: true,
-      };
-    }
-
-    // Si compte démo : données riches
-    if (isDemo) {
-      return {
-        id: 'demo-match-1',
-        teamEventId: undefined,
-        title: 'Régional 3 · Journée 14',
-        opponent: 'US Créteil',
-        location: 'Stade Municipal (Terrain Honneur)',
-        dateStr: 'Dimanche 15 mars',
-        timeStr: '15:00',
-        isReal: false,
       };
     }
 
@@ -102,27 +86,14 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
     return null;
   }, [calendarItems, profile]);
 
-  // Carte ProDay officielle (design intact bouclier ProDay)
-  const isDemo = profile.email?.includes('demo') || profile.display_name?.includes('Demo');
+  // Carte ProDay officielle — dérivée uniquement du profil réel
   const cardData = useMemo(() => {
     const base = userToProDayCard(profile);
-    if (isDemo) {
-      return {
-        ...base,
-        matches: 18,
-        goals: 10,
-        assists: 5,
-        overall: 89,
-        formPct: 87,
-        clubName: profile.profile?.club_id || 'FC ProDay',
-        primaryPosition: profile.profile?.position || 'MC',
-      };
-    }
     return {
       ...base,
-      clubName: profile.profile?.club_id || 'FC ProDay',
+      clubName: profile.profile?.club_id || 'Mon équipe',
     };
-  }, [profile, isDemo]);
+  }, [profile]);
 
   // Gestion réponse convocation
   const handleRsvp = async (status: 'present' | 'absent') => {
@@ -258,7 +229,7 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
           <View style={styles.matchTeamsRow}>
             <View style={styles.teamCol}>
               <ProDayText style={styles.teamNameMain}>
-                {profile.profile?.club_id || (isDemo ? 'FC ProDay' : 'Mon Équipe')}
+                {profile.profile?.club_id || 'Mon équipe'}
               </ProDayText>
               <ProDayText style={styles.teamSubRole}>Domicile</ProDayText>
             </View>
@@ -507,7 +478,7 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
 
             <View style={styles.metricCard}>
               <ProDayText style={[styles.metricValue, { color: accent }]}>
-                {profile.email?.includes('demo') ? '92%' : '100%'}
+                {'—'}
               </ProDayText>
               <ProDayText style={styles.metricLabel}>PRÉSENCE</ProDayText>
             </View>
@@ -520,35 +491,7 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
               <ProDayText style={styles.sectionTitle}>Dernières Rencontres Disputées</ProDayText>
             </View>
 
-            {isDemo ? (
-              <View style={styles.matchHistoryList}>
-                <View style={styles.historyRow}>
-                  <View style={[styles.resultPill, { backgroundColor: 'rgba(0, 230, 118, 0.15)' }]}>
-                    <ProDayText style={{ color: ELITE_COLORS.pitchGreen, fontWeight: '800', fontSize: 12 }}>V</ProDayText>
-                  </View>
-                  <View style={styles.historyCenter}>
-                    <ProDayText style={styles.historyMatch}>vs FC Asnières (3 - 1)</ProDayText>
-                    <ProDayText style={styles.historyDetail}>Titulaire · 90 min · 1 But</ProDayText>
-                  </View>
-                  <View style={styles.historyBadge}>
-                    <ProDayText style={styles.historyNote}>7.8 / 10</ProDayText>
-                  </View>
-                </View>
-
-                <View style={styles.historyRow}>
-                  <View style={[styles.resultPill, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
-                    <ProDayText style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 }}>N</ProDayText>
-                  </View>
-                  <View style={styles.historyCenter}>
-                    <ProDayText style={styles.historyMatch}>vs Red Star (2 - 2)</ProDayText>
-                    <ProDayText style={styles.historyDetail}>Titulaire · 85 min · 1 Passe décisive</ProDayText>
-                  </View>
-                  <View style={styles.historyBadge}>
-                    <ProDayText style={styles.historyNote}>7.1 / 10</ProDayText>
-                  </View>
-                </View>
-              </View>
-            ) : (
+            {(
               <View style={styles.noHistoryBox}>
                 <ProDayGlyph name="calendar" size={24} color={ELITE_COLORS.titanium} />
                 <ProDayText style={styles.noHistoryTitle}>Aucune rencontre archivée</ProDayText>

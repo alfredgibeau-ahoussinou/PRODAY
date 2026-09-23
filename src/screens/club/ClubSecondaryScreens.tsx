@@ -340,7 +340,9 @@ export function ClubLicensesScreen() {
               borderRadius: 12,
             }}
             onPress={() => setImportModalOpen(true)}
-          >
+
+            accessibilityRole="button"
+            accessibilityLabel="Importer">
             <Icon name="cloud-upload" size={16} color="#000" />
             <ClubText variant="section" style={{ fontSize: 13, color: '#000', fontWeight: '800' }}>
               Importer Footclubs (CSV)
@@ -361,7 +363,9 @@ export function ClubLicensesScreen() {
               borderColor: 'rgba(255,255,255,0.12)',
             }}
             onPress={handleExportCsv}
-          >
+
+            accessibilityRole="button"
+            accessibilityLabel="Télécharger">
             <Icon name="download" size={16} color={tokens.foreground} />
             <ClubText variant="section" style={{ fontSize: 13, fontWeight: '700' }}>
               Exporter
@@ -503,7 +507,9 @@ export function ClubLicensesScreen() {
               <ClubText variant="title" style={{ fontSize: 18, fontWeight: '800' }}>
                 Importer depuis Footclubs (FFF)
               </ClubText>
-              <TouchableOpacity onPress={() => setImportModalOpen(false)}>
+              <TouchableOpacity onPress={() => setImportModalOpen(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Fermer">
                 <Icon name="close" size={20} color={tokens.foreground} />
               </TouchableOpacity>
             </View>

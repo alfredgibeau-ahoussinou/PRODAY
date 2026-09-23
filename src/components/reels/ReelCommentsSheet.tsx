@@ -123,7 +123,9 @@ export const ReelCommentsSheet: React.FC<ReelCommentsSheetProps> = ({
                       : ''}
                 </ProDayText>
               </View>
-              <Pressable onPress={onClose} hitSlop={12}>
+              <Pressable onPress={onClose} hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Fermer">
                 <Icon name="close" size={22} color={reelsTheme.color.textDim} />
               </Pressable>
             </View>

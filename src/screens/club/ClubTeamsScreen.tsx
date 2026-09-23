@@ -24,7 +24,13 @@ import type { IconName } from '../../components/ui/iconNames';
 import { teamsService } from '../../services/teams.service';
 import { ClubTeamSpaceScreen } from './ClubTeamSpaceScreen';
 import { ClubTeamsHierarchy, type CategoryBracketId } from '../../features/club/ui/ClubTeamsHierarchy';
-import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { type ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import {
+  clubForm,
+  clubRadius,
+  clubSpace,
+  clubSurfaceCard,
+} from '../../features/club/theme/clubDesignSystem';
 import { ProDayText } from '../../components/ui/ProDayText';
 
 type CategoryFilter = 'all' | 'jeunes' | 'formation' | 'seniors';
@@ -235,7 +241,7 @@ export function ClubTeamsScreen() {
                 Nouvelle Équipe
               </ProDayText>
               <PressableSpring onPress={() => setShowCreate(false)}>
-                <Icon name="close" size={20} color="#8E8E9F" />
+                <Icon name="close" size={20} color={tokens.muted} />
               </PressableSpring>
             </View>
 
@@ -315,7 +321,7 @@ export function ClubTeamsScreen() {
               <TextInput
                 style={styles.modalInput}
                 placeholder="Ex: U17 Régional 1, U15 D1..."
-                placeholderTextColor="#6B6B7F"
+                placeholderTextColor={tokens.muted}
                 value={teamName}
                 onChangeText={setTeamName}
               />
@@ -329,7 +335,7 @@ export function ClubTeamsScreen() {
               style={styles.modalSubmitBtn}
             >
               {creating ? (
-                <ActivityIndicator size="small" color="#000000" />
+                <ActivityIndicator size="small" color={tokens.onAccent} />
               ) : (
                 <ProDayText variant="caption" style={styles.modalSubmitText}>
                   Créer l'équipe
@@ -343,36 +349,36 @@ export function ClubTeamsScreen() {
   );
 }
 
-const createStyles = (_tokens: ClubThemeTokens) =>
+const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: '#09090D' },
+    // Le canvas est peint par le shell : l'écran reste transparent.
+    root: { flex: 1, backgroundColor: 'transparent' },
     topActionsRow: {
       flexDirection: 'row',
       justifyContent: 'flex-end',
-      paddingHorizontal: 16,
-      marginBottom: 8,
+      paddingHorizontal: clubSpace.lg,
+      marginBottom: clubSpace.sm,
     },
     newTeamBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
-      backgroundColor: '#FFFFFF',
-      paddingHorizontal: 12,
+      gap: clubSpace.xs,
+      backgroundColor: tokens.accent,
+      paddingHorizontal: clubSpace.md,
       paddingVertical: 7,
-      borderRadius: 8,
+      borderRadius: clubRadius.pill,
     },
     newTeamBtnText: {
-      color: '#000000',
+      color: tokens.onAccent,
       fontSize: 12,
       fontWeight: '800',
     },
     structureAuditCard: {
-      marginHorizontal: 16,
-      marginBottom: 14,
-      backgroundColor: '#141418',
-      borderRadius: 16,
+      marginHorizontal: clubSpace.lg,
+      marginBottom: clubSpace.md,
+      ...clubSurfaceCard(tokens),
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
       padding: 16,
       gap: 12,
       overflow: 'hidden',
@@ -386,32 +392,32 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 6,
+      backgroundColor: tokens.elevated,
+      paddingHorizontal: clubSpace.sm,
+      paddingVertical: clubSpace.xs,
+      borderRadius: clubForm.badgeRadius,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
     },
     auditBadgeText: {
-      color: '#D1D5DB',
+      color: tokens.muted,
       fontSize: 10,
       fontWeight: '900',
       letterSpacing: 0.6,
     },
     auditHeaderSub: {
-      color: '#8E8E9F',
+      color: tokens.muted,
       fontSize: 11,
     },
     kpiRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#0E0E14',
-      borderRadius: 12,
+      backgroundColor: tokens.bgElevated,
+      borderRadius: clubRadius.sm,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.06)',
-      paddingVertical: 10,
-      paddingHorizontal: 12,
+      borderColor: tokens.border,
+      paddingVertical: clubSpace.sm + clubSpace.xxs,
+      paddingHorizontal: clubSpace.md,
     },
     kpiBox: {
       flex: 1,
@@ -421,25 +427,25 @@ const createStyles = (_tokens: ClubThemeTokens) =>
     kpiDivider: {
       width: 1,
       height: 24,
-      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+      backgroundColor: tokens.borderStrong,
     },
     kpiLabel: {
-      color: '#8E8E9F',
+      color: tokens.muted,
       fontSize: 10,
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.4,
     },
     kpiValue: {
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontSize: 14,
       fontWeight: '800',
     },
     kpiWarn: {
-      color: '#F59E0B',
+      color: tokens.warning,
     },
     kpiGood: {
-      color: '#10B981',
+      color: tokens.success,
     },
     chipsRow: {
       flexDirection: 'row',
@@ -450,15 +456,15 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      backgroundColor: '#181820',
+      backgroundColor: tokens.elevated,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
       paddingHorizontal: 9,
       paddingVertical: 6,
     },
     chipBtnText: {
-      color: '#D1D5DB',
+      color: tokens.muted,
       fontSize: 11,
       fontWeight: '600',
     },
@@ -467,12 +473,12 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       alignItems: 'center',
       justifyContent: 'center',
       gap: 7,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: tokens.accent,
       borderRadius: 12,
       paddingVertical: 10,
     },
     auditActionBtnText: {
-      color: '#000000',
+      color: tokens.onAccent,
       fontSize: 12,
       fontWeight: '800',
     },
@@ -480,22 +486,22 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      backgroundColor: 'rgba(16, 185, 129, 0.12)',
-      borderRadius: 10,
+      backgroundColor: tokens.successSoft,
+      borderRadius: clubRadius.xs,
       borderWidth: 1,
-      borderColor: 'rgba(16, 185, 129, 0.3)',
+      borderColor: tokens.success,
       padding: 10,
     },
     aiTipIcon: {
       width: 24,
       height: 24,
-      borderRadius: 6,
-      backgroundColor: 'rgba(16, 185, 129, 0.2)',
+      borderRadius: clubForm.badgeRadius,
+      backgroundColor: tokens.successSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
     aiTipText: {
-      color: '#D1FAE5',
+      color: tokens.success,
       fontSize: 11,
       flex: 1,
       lineHeight: 15,
@@ -503,50 +509,50 @@ const createStyles = (_tokens: ClubThemeTokens) =>
     searchBar: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      marginHorizontal: 16,
-      marginBottom: 10,
-      backgroundColor: '#141418',
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
-      paddingHorizontal: 12,
-      height: 44,
+      gap: clubSpace.sm,
+      marginHorizontal: clubSpace.lg,
+      marginBottom: clubSpace.md,
+      backgroundColor: tokens.elevated,
+      borderRadius: clubForm.fieldRadius,
+      borderWidth: 0,
+      paddingHorizontal: clubSpace.md,
+      height: clubForm.fieldHeight,
     },
     searchInput: {
       flex: 1,
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontSize: 13,
     },
     filtersWrapper: {
       flexDirection: 'row',
-      gap: 6,
-      paddingHorizontal: 16,
-      marginBottom: 12,
+      gap: clubForm.chipGap,
+      paddingHorizontal: clubSpace.lg,
+      marginBottom: clubSpace.md,
       flexWrap: 'wrap',
     },
     filterPill: {
       paddingHorizontal: 12,
       paddingVertical: 7,
       borderRadius: 10,
-      backgroundColor: '#141418',
+      backgroundColor: tokens.surface,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
       minHeight: 36,
       justifyContent: 'center',
       alignItems: 'center',
     },
+    // Sélection = fond d'accent + contour d'accent (convention de la référence).
     filterPillActive: {
-      backgroundColor: 'rgba(255, 255, 255, 0.14)',
-      borderColor: 'rgba(255, 255, 255, 0.25)',
+      backgroundColor: tokens.accentSoft,
+      borderColor: tokens.accent,
     },
     filterPillText: {
-      color: '#8E8E9F',
+      color: tokens.muted,
       fontSize: 12,
       fontWeight: '600',
     },
     filterPillTextActive: {
-      color: '#FFFFFF',
+      color: tokens.accent,
       fontWeight: '800',
     },
     warnBanner: {
@@ -555,17 +561,17 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       gap: 12,
       marginHorizontal: 16,
       marginBottom: 12,
-      backgroundColor: 'rgba(245, 158, 11, 0.08)',
-      borderRadius: 14,
+      backgroundColor: tokens.warningSoft,
+      borderRadius: clubRadius.md,
       borderWidth: 1,
-      borderColor: 'rgba(245, 158, 11, 0.3)',
+      borderColor: tokens.warning,
       padding: 12,
     },
     warnIconWrap: {
       width: 32,
       height: 32,
-      borderRadius: 8,
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+      borderRadius: clubForm.badgeRadius,
+      backgroundColor: tokens.warningSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -574,17 +580,17 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       gap: 1,
     },
     warnTitle: {
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontSize: 13,
       fontWeight: '700',
     },
     warnSub: {
-      color: '#F59E0B',
+      color: tokens.warning,
       fontSize: 11,
     },
     teamsSection: {
-      paddingHorizontal: 16,
-      gap: 10,
+      paddingHorizontal: clubSpace.lg,
+      gap: clubSpace.md,
     },
     sectionTitleRow: {
       flexDirection: 'row',
@@ -592,7 +598,7 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       justifyContent: 'space-between',
     },
     sectionTitle: {
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontSize: 15,
       fontWeight: '800',
     },
@@ -600,10 +606,10 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       gap: 10,
     },
     emptyCard: {
-      backgroundColor: '#141418',
+      backgroundColor: tokens.surface,
       borderRadius: 18,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
       padding: 24,
       alignItems: 'center',
       gap: 10,
@@ -612,17 +618,17 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       width: 48,
       height: 48,
       borderRadius: 14,
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      backgroundColor: tokens.elevated,
       alignItems: 'center',
       justifyContent: 'center',
     },
     emptyTitle: {
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontSize: 15,
       fontWeight: '800',
     },
     emptySub: {
-      color: '#8B8B9A',
+      color: tokens.muted,
       fontSize: 12,
       textAlign: 'center',
       lineHeight: 16,
@@ -631,27 +637,28 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: tokens.accent,
       paddingHorizontal: 14,
       paddingVertical: 9,
       borderRadius: 10,
       marginTop: 6,
     },
     emptyActionText: {
-      color: '#000000',
+      color: tokens.onAccent,
       fontSize: 12,
       fontWeight: '800',
     },
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      backgroundColor: tokens.scrim,
       justifyContent: 'flex-end',
     },
     modalContent: {
-      backgroundColor: '#141418',
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      padding: 20,
+      backgroundColor: tokens.surface,
+      paddingTop: clubSpace.xs,
+      borderTopLeftRadius: clubRadius.xl,
+      borderTopRightRadius: clubRadius.xl,
+      padding: clubSpace.lg + clubSpace.xs,
       gap: 14,
     },
     modalHeader: {
@@ -660,7 +667,7 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       justifyContent: 'space-between',
     },
     modalTitle: {
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontSize: 18,
       fontWeight: '800',
     },
@@ -668,7 +675,7 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       gap: 6,
     },
     inputLabel: {
-      color: '#8E8E9F',
+      color: tokens.muted,
       fontSize: 12,
       fontWeight: '700',
     },
@@ -681,21 +688,21 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       paddingHorizontal: 12,
       paddingVertical: 7,
       borderRadius: 8,
-      backgroundColor: '#141418',
+      backgroundColor: tokens.surface,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
     },
     catChipActive: {
-      backgroundColor: 'rgba(255, 255, 255, 0.16)',
-      borderColor: 'rgba(255, 255, 255, 0.3)',
+      backgroundColor: tokens.accentSoft,
+      borderColor: tokens.accent,
     },
     catChipText: {
-      color: '#8E8E9F',
+      color: tokens.muted,
       fontSize: 12,
       fontWeight: '700',
     },
     catChipTextActive: {
-      color: '#FFFFFF',
+      color: tokens.accent,
     },
     genderRow: {
       flexDirection: 'row',
@@ -706,41 +713,42 @@ const createStyles = (_tokens: ClubThemeTokens) =>
       paddingVertical: 9,
       borderRadius: 8,
       alignItems: 'center',
-      backgroundColor: '#141418',
+      backgroundColor: tokens.surface,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: tokens.border,
     },
+    // Le bleu codé en dur sortait de la palette du pôle : sélection à l'accent.
     genderBtnActive: {
-      backgroundColor: 'rgba(59, 130, 246, 0.2)',
-      borderColor: '#3B82F6',
+      backgroundColor: tokens.accentSoft,
+      borderColor: tokens.accent,
     },
     genderBtnText: {
-      color: '#8E8E9F',
+      color: tokens.muted,
       fontSize: 12,
       fontWeight: '700',
     },
     genderBtnTextActive: {
-      color: '#3B82F6',
+      color: tokens.accent,
     },
     modalInput: {
-      backgroundColor: '#0E0E14',
+      backgroundColor: tokens.bgElevated,
       borderRadius: 10,
       borderWidth: 1,
-      borderColor: '#222230',
+      borderColor: tokens.borderStrong,
       paddingHorizontal: 12,
       paddingVertical: 10,
-      color: '#FFFFFF',
+      color: tokens.foreground,
       fontSize: 14,
     },
     modalSubmitBtn: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: tokens.accent,
       borderRadius: 12,
       paddingVertical: 12,
       alignItems: 'center',
       marginTop: 6,
     },
     modalSubmitText: {
-      color: '#000000',
+      color: tokens.onAccent,
       fontSize: 13,
       fontWeight: '800',
     },

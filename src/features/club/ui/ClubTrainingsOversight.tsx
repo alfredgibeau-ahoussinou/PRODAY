@@ -3,7 +3,7 @@
  * Dashboard Directeur Technique, assiduité séances & assignation exercices aux coachs.
  * Design System Apple Obsidian Glass · Zéro émoji unicode.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -49,103 +49,6 @@ export type PedagogicalDrill = {
   objective: string;
 };
 
-export const DEMO_SESSIONS_CHECKIN: SessionCheckInItem[] = [
-  {
-    sessionId: 'chk-1',
-    teamName: 'Seniors R1',
-    category: 'Seniors',
-    coachName: 'Marc Lefevre',
-    timeRange: '19:30 - 21:00',
-    pitchName: 'Synthétique A',
-    status: 'in_progress',
-    totalInvited: 22,
-    presentsCount: 19,
-    absentsCount: 2,
-    injuredCount: 1,
-    validationStatus: 'pending',
-    dtComment: 'Très bon engagement au pressing haut. Veiller à doser l’effort des latéraux avant le match de dimanche.',
-    dtCommentAuthor: 'Directeur Technique (DT)',
-    dtCommentDate: 'Aujourd’hui 20:15',
-  },
-  {
-    sessionId: 'chk-2',
-    teamName: 'U17 R2',
-    category: 'Formation',
-    coachName: 'Karim Ziani',
-    timeRange: '19:00 - 20:30',
-    pitchName: 'Synthétique A',
-    status: 'completed',
-    totalInvited: 20,
-    presentsCount: 18,
-    absentsCount: 1,
-    injuredCount: 1,
-    validationStatus: 'validated',
-    dtComment: 'Séance conforme au plan de formation. Les circuits de relance axiaux progressent bien.',
-    dtCommentAuthor: 'Directeur Technique (DT)',
-    dtCommentDate: 'Aujourd’hui 20:35',
-  },
-  {
-    sessionId: 'chk-3',
-    teamName: 'U15 R2',
-    category: 'Formation',
-    coachName: 'Alexandre Petit',
-    timeRange: '17:30 - 19:00',
-    pitchName: 'Synthétique B',
-    status: 'completed',
-    totalInvited: 18,
-    presentsCount: 16,
-    absentsCount: 2,
-    injuredCount: 0,
-    validationStatus: 'validated',
-    dtComment: 'Pointage assiduité complet. Relancer les 2 absents pour la convocation du week-end.',
-    dtCommentAuthor: 'Directeur Technique (DT)',
-    dtCommentDate: 'Aujourd’hui 19:10',
-  },
-  {
-    sessionId: 'chk-4',
-    teamName: 'U13 Pôle Espoir',
-    category: 'Pré-formation',
-    coachName: 'Lucas Bernard',
-    timeRange: '17:30 - 19:00',
-    pitchName: 'Synthétique A',
-    status: 'completed',
-    totalInvited: 16,
-    presentsCount: 15,
-    absentsCount: 1,
-    injuredCount: 0,
-    validationStatus: 'validated',
-  },
-];
-
-export const DEMO_DRILLS_LIBRARY: PedagogicalDrill[] = [
-  {
-    id: 'dr-1',
-    title: 'Conservation sous pressing & Sortie de balle',
-    category: 'Formation (U14-U18) & Seniors',
-    durationMin: 20,
-    intensity: 'Haute',
-    focus: 'Jeu de transition & Déplacements axiaux',
-    objective: 'Trouver le joueur libre entre les lignes sous pression active.',
-  },
-  {
-    id: 'dr-2',
-    title: 'Attaque placée contre Bloc Bas 4-4-2',
-    category: 'Seniors',
-    durationMin: 25,
-    intensity: 'Haute',
-    focus: 'Animation Défensive/Offensive',
-    objective: 'Fixer dans la largeur pour trouver le milieu intercalé.',
-  },
-  {
-    id: 'dr-3',
-    title: 'Parcours Motricité & Dribbles U11',
-    category: 'École de foot (U9-U11)',
-    durationMin: 15,
-    intensity: 'Modérée',
-    focus: 'Coordination',
-    objective: 'Appuis dynamiques, feinte de corps et conduite deux pieds.',
-  },
-];
 
 type Props = {
   sessions?: SessionCheckInItem[];
@@ -154,12 +57,17 @@ type Props = {
 };
 
 export function ClubTrainingsOversight({
-  sessions = DEMO_SESSIONS_CHECKIN,
-  drills = DEMO_DRILLS_LIBRARY,
+  sessions = [],
+  drills = [],
 }: Props) {
   const { tokens } = useClubTheme();
   const [activeTab, setActiveTab] = useState<'checkin' | 'library'>('checkin');
   const [sessionList, setSessionList] = useState<SessionCheckInItem[]>(sessions);
+
+  // Les séances proviennent du service réel : on resynchronise quand la prop change.
+  useEffect(() => {
+    setSessionList(sessions);
+  }, [sessions]);
   const [editingSession, setEditingSession] = useState<SessionCheckInItem | null>(null);
   const [dtDraftComment, setDtDraftComment] = useState('');
 
@@ -182,8 +90,8 @@ export function ClubTrainingsOversight({
 
   const handleAssignToCoach = (drill: PedagogicalDrill) => {
     Alert.alert(
-      'Exercice assigné',
-      `L'exercice "${drill.title}" a été poussé sur l'Espace Coach de l'ensemble des éducateurs concernés (${drill.category}).`,
+      'Assignation indisponible',
+      `La diffusion de l'exercice "${drill.title}" vers les Espace Coach n'est pas encore connectée à un service. Aucune notification n'a été envoyée.`,
     );
   };
 
@@ -394,6 +302,17 @@ export function ClubTrainingsOversight({
       {/* VUE 2 : BIBLIOTHÈQUE PÉDAGOGIQUE (EXERCICES RTJ) */}
       {activeTab === 'library' ? (
         <View style={styles.drillsList}>
+          {drills.length === 0 ? (
+            <View style={[styles.drillCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+              <Icon name="school" size={22} color={tokens.muted} />
+              <ProDayText style={[styles.drillTitle, { color: tokens.foreground }]}>
+                Bibliothèque d'exercices vide
+              </ProDayText>
+              <ProDayText style={[styles.drillObj, { color: tokens.muted }]}>
+                Aucun exercice persisté pour le club. La bibliothèque se remplira depuis les séances réelles — aucune donnée de démonstration n'est affichée.
+              </ProDayText>
+            </View>
+          ) : null}
           {drills.map((drill) => (
             <View
               key={drill.id}
@@ -452,7 +371,9 @@ export function ClubTrainingsOversight({
                   {editingSession?.teamName} · Éducateur {editingSession?.coachName}
                 </ProDayText>
               </View>
-              <TouchableOpacity onPress={() => setEditingSession(null)}>
+              <TouchableOpacity onPress={() => setEditingSession(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Fermer">
                 <Icon name="close" size={20} color={tokens.muted} />
               </TouchableOpacity>
             </View>
@@ -487,7 +408,10 @@ export function ClubTrainingsOversight({
                     ),
                   );
                   setEditingSession(null);
-                  Alert.alert('Commentaire DT enregistré', 'L’observation interne a été enregistrée sur la séance.');
+                  Alert.alert(
+                    'Aperçu local',
+                    'Le commentaire DT est affiché sur cette séance mais n\u2019est pas encore persisté en base : aucune sauvegarde réelle n\u2019a eu lieu.',
+                  );
                 }}
                 style={[styles.modalSaveBtn, { backgroundColor: tokens.accent }]}
                 scaleTo={0.97}

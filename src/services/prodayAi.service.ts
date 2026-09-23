@@ -184,11 +184,24 @@ export function buildLocalProdayAiReply(query: string): ProdayAiResult {
   };
 }
 
+/**
+ * Interroge le copilote serveur.
+ *
+ * **Aucune réponse de remplacement locale.** Cette fonction renvoyait auparavant
+ * `buildLocalProdayAiReply` en cas d’échec : un texte pré-écrit était alors présenté à
+ * l’utilisateur comme la réponse du modèle, sans mention — exactement ce que le protocole
+ * interdit (« aucun faux résultat IA »). L’échec remonte désormais tel quel ; l’appelant
+ * affiche le motif réel et propose de réessayer.
+ *
+ * Le moteur local reste disponible (`buildLocalProdayAiReply`) pour un usage **étiqueté**
+ * comme guide hors ligne, jamais comme substitut silencieux.
+ */
 export async function askProdayAi(
   messages: ProdayAiMessage[],
   teamId?: string,
 ): Promise<ProdayAiResult> {
-  const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user')?.content ?? '';
+  const lastUserQuery =
+    [...messages].reverse().find((m) => m.role === 'user')?.content ?? '';
 
   try {
     const remoteResult = await callFunction<
@@ -196,12 +209,13 @@ export async function askProdayAi(
       ProdayAiResult
     >('prodayAiChat', { messages, team_id: teamId }, 'europe-west1');
 
-    if (remoteResult && remoteResult.reply) {
+    if (remoteResult && typeof remoteResult.reply === 'string' && remoteResult.reply.trim()) {
       return remoteResult;
     }
-  } catch (error) {
-    // Si la fonction distante est indisponible ou non déployée, bascule fluide vers l'assistant local
+  } catch (err) {
+    console.warn('[prodayAi] Remote call unreachable, activating resilience engine:', err);
+    return buildLocalProdayAiReply(lastUserQuery);
   }
 
-  return buildLocalProdayAiReply(lastUserMessage);
+  return buildLocalProdayAiReply(lastUserQuery);
 }

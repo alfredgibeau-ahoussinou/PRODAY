@@ -24,6 +24,9 @@ import type {
   RsvpStatus,
   AttendanceMark,
   PlayerMatchSheetStat,
+  EvaluationSource,
+  EvaluationStatus,
+  PlayerStatAuditEntry,
   TeamEventType,
   EventLineup,
   LiveMatchAction,
@@ -310,6 +313,22 @@ export const teamEventsService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
+    if (input.friendly_match_id) {
+      try {
+        const q = query(
+          collection(database, COL),
+          where('friendly_match_id', '==', input.friendly_match_id),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          return snap.docs[0].id;
+        }
+      } catch {
+        // anti-doublon best-effort
+      }
+    }
+
     let targetClubId = input.club_id && input.club_id !== 'club_default' ? input.club_id : null;
     if (!targetClubId && input.organizer_uid) {
       try {
@@ -354,6 +373,16 @@ export const teamEventsService = {
       max_participants: input.max_participants ?? null,
       categories: input.categories ?? [],
       reminder_hours_before: input.reminder_hours_before ?? 24,
+      live_state: input.live_state ?? (input.event_type === 'friendly' ? {
+        status: 'scheduled',
+        home_score: 0,
+        away_score: 0,
+        opponent_name: 'Adversaire',
+        home_label: input.club_name ?? input.organizer_name ?? 'Domicile',
+      } : null),
+      carpool_slots: input.carpool_slots ?? [],
+      transport_plan: input.transport_plan ?? null,
+      lineup: input.lineup ?? null,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     });
@@ -436,9 +465,16 @@ export const teamEventsService = {
     await updateDoc(doc(database, COL, eventId), payload);
     if (status === 'yes') {
       const updated = { ...event, rsvps: { ...event.rsvps, [uid]: status } };
-      const { teamChatService } = await import('./teamChat.service');
-      await teamChatService.ensureTeamThread(updated);
-      await syncPlayerActivityFromEvent(updated, uid);
+      try {
+        const { teamChatService } = await import('./teamChat.service');
+        await teamChatService.ensureTeamThread(updated);
+        await syncPlayerActivityFromEvent(updated, uid);
+      } catch (error) {
+        // Le RSVP est enregistré côté Firestore : les effets secondaires ne
+        // doivent pas le faire passer pour un échec (faux négatif → le joueur
+        // re-répond). La création du fil reste possible côté staff.
+        console.warn('[teamEvents] RSVP side effects skipped:', error);
+      }
     }
   },
 
@@ -511,8 +547,12 @@ export const teamEventsService = {
           ? { ...event.rsvp_notes, [uid]: reason.trim() }
           : event.rsvp_notes,
       };
-      await (await import('./teamChat.service')).teamChatService.ensureTeamThread(updated);
-      await syncPlayerActivityFromEvent(updated, uid);
+      try {
+        await (await import('./teamChat.service')).teamChatService.ensureTeamThread(updated);
+        await syncPlayerActivityFromEvent(updated, uid);
+      } catch (error) {
+        console.warn('[teamEvents] RSVP side effects skipped:', error);
+      }
     }
   },
 
@@ -823,6 +863,104 @@ export const teamEventsService = {
     throw new Error('Type d’événement non pris en charge.');
   },
 
+  /**
+   * Staff — annule une séance ou un match avec motif. L'événement est conservé
+   * (historique + notifications) et marqué `live_state.status = 'cancelled'`.
+   * Les convoqués reçoivent une notification staff réelle.
+   */
+  async cancelSession(eventId: string, actor: TeamEventActor, reason?: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+
+    const prev = event.live_state ?? { home_score: 0, away_score: 0 };
+    await updateDoc(doc(database, COL, eventId), {
+      live_state: {
+        ...prev,
+        status: 'cancelled',
+        home_score: prev.home_score ?? 0,
+        away_score: prev.away_score ?? 0,
+        cancel_reason: reason?.trim() || null,
+      },
+      updated_at: serverTimestamp(),
+    });
+
+    const title = 'Séance annulée';
+    const body = `${event.title}${event.starts_at ? ` · ${event.starts_at.toLocaleDateString('fr-FR')}` : ''} — ${reason?.trim() || 'annulée par le staff'}`;
+    await scheduleProdayLocalNotification({
+      identifier: `cancelled-${eventId}`,
+      title,
+      body,
+      data: { type: 'session_cancelled', eventId, homeTab: 'convocations' },
+    });
+    if (event.club_id) {
+      const recipients = [...new Set([...event.invitee_uids, event.organizer_uid])]
+        .filter((uid) => uid !== actor.user.uid);
+      if (recipients.length > 0) {
+        await staffNotificationsService.notifyRecipients({
+          recipient_uids: recipients,
+          type: 'generic',
+          title,
+          body,
+          event_id: eventId,
+          club_id: event.club_id,
+        });
+      }
+    }
+  },
+
+  /** Staff — rétablit une séance annulée dans le planning. */
+  async restoreCancelledSession(eventId: string, actor: TeamEventActor): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+    if (event.live_state?.status !== 'cancelled') {
+      throw new Error('Cette séance n’est pas annulée.');
+    }
+    await updateDoc(doc(database, COL, eventId), {
+      live_state: null,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Staff — reporte une séance : décale début/fin, notifie les convoqués. */
+  async postponeSession(eventId: string, newStartsAt: Date, actor: TeamEventActor): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+
+    const shiftMs = newStartsAt.getTime() - event.starts_at.getTime();
+    const nextEnd = event.ends_at
+      ? Timestamp.fromDate(new Date(event.ends_at.getTime() + shiftMs))
+      : null;
+    await updateDoc(doc(database, COL, eventId), {
+      starts_at: Timestamp.fromDate(newStartsAt),
+      ends_at: nextEnd,
+      updated_at: serverTimestamp(),
+    });
+
+    if (event.club_id) {
+      const recipients = [...new Set([...event.invitee_uids, event.organizer_uid])]
+        .filter((uid) => uid !== actor.user.uid);
+      if (recipients.length > 0) {
+        await staffNotificationsService.notifyRecipients({
+          recipient_uids: recipients,
+          type: 'generic',
+          title: 'Séance reportée',
+          body: `${event.title} est reportée au ${newStartsAt.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.`,
+          event_id: eventId,
+          club_id: event.club_id,
+        });
+      }
+    }
+  },
+
   async updateEventTasks(
     eventId: string,
     tasks: EventTask[],
@@ -936,14 +1074,111 @@ export const teamEventsService = {
       uid,
       player_name: patch.player_name ?? 'Joueur',
     };
+
+    const source: EvaluationSource =
+      patch.source ??
+      (current.source === 'ai_generated' ? 'coach_reviewed' : (current.source ?? 'manual'));
+    const status: EvaluationStatus = patch.status ?? current.status ?? 'published';
+
+    const nowIso = new Date().toISOString();
+    const action =
+      patch.source === 'ai_generated'
+        ? 'ai_generated'
+        : current.source === 'ai_generated'
+          ? 'coach_reviewed'
+          : patch.rating !== undefined && patch.goals === undefined && patch.assists === undefined
+            ? 'edit_rating'
+            : 'edit_stats';
+
+    const auditEntry: PlayerStatAuditEntry = {
+      id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      author_uid: actor.user.uid,
+      author_name: actor.user.display_name ?? 'Staff',
+      timestamp: nowIso,
+      action,
+      summary: patch.rating_explanation
+        ? `Saisie/mise à jour : "${patch.rating_explanation}"`
+        : 'Mise à jour des statistiques et notation.',
+      changes: Object.keys(patch).map((k) => ({
+        field: k,
+        old_value: (current as unknown as Record<string, unknown>)[k],
+        new_value: (patch as unknown as Record<string, unknown>)[k],
+      })),
+    };
+
     const next: PlayerMatchSheetStat = {
       ...current,
       ...patch,
       uid,
       player_name: patch.player_name ?? current.player_name,
+      source,
+      status,
+      author_uid: actor.user.uid,
+      author_name: actor.user.display_name ?? 'Staff',
+      evaluated_at: nowIso,
+      history: [...(current.history ?? []), auditEntry],
     };
+
     await updateDoc(doc(database, COL, eventId), {
       [`player_match_stats.${uid}`]: next,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  async batchUpdatePlayerMatchStats(
+    eventId: string,
+    statsMap: Record<string, PlayerMatchSheetStat>,
+    actor: TeamEventActor,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+
+    const merged = { ...(event.player_match_stats ?? {}), ...statsMap };
+    await updateDoc(doc(database, COL, eventId), {
+      player_match_stats: merged,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  async publishMatchStatsAndRatings(
+    eventId: string,
+    actor: TeamEventActor,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+
+    const stats = { ...(event.player_match_stats ?? {}) };
+    const nowIso = new Date().toISOString();
+
+    Object.keys(stats).forEach((uid) => {
+      const s = stats[uid];
+      const auditEntry: PlayerStatAuditEntry = {
+        id: `audit_pub_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        author_uid: actor.user.uid,
+        author_name: actor.user.display_name ?? 'Coach',
+        timestamp: nowIso,
+        action: 'published',
+        summary: 'Publication officielle des notes et statistiques pour le joueur et le club.',
+      };
+      stats[uid] = {
+        ...s,
+        status: 'published',
+        source: s.source === 'ai_generated' ? 'coach_reviewed' : (s.source ?? 'manual'),
+        author_uid: actor.user.uid,
+        author_name: actor.user.display_name ?? 'Coach',
+        evaluated_at: nowIso,
+        history: [...(s.history ?? []), auditEntry],
+      };
+    });
+
+    await updateDoc(doc(database, COL, eventId), {
+      player_match_stats: stats,
       updated_at: serverTimestamp(),
     });
   },

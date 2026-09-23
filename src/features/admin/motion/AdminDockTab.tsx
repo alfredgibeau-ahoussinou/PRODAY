@@ -13,8 +13,8 @@ import {
 } from '../../../motion';
 import { Icon } from '../../../components/ui/Icon';
 import type { IconName } from '../../../components/ui/iconNames';
-import { AdminText } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { AdminText } from '../ui/AdminText';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminChrome, adminLayout } from '../theme/adminDesignSystem';
 
 type Props = {
@@ -29,7 +29,7 @@ type Props = {
  * Item dock admin — indicateur pill animé (ProDayMotionSystem) + micro scale.
  */
 export function AdminDockTab({ label, icon, active, onPress, style }: Props) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const reduced = useReducedMotion();
   const press = useSharedValue(1);
 
@@ -88,5 +88,6 @@ const styles = StyleSheet.create({
 
 /** Indicateur sous-ligne animé (sidebar / filtres). */
 export function AdminTabUnderline({ active }: { active: boolean }) {
-  return <TabUnderline active={active} color={ADMIN_TOKENS.accent} />;
+  const t = useAdminTokens();
+  return <TabUnderline active={active} color={t.accentHot} />;
 }

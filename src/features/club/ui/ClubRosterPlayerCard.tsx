@@ -3,6 +3,10 @@ import { AnimatedEntrance } from '../../../components/motion';
 import { ClubPlayerCard } from './ClubPlayerCard';
 import type { User } from '../../../models/User';
 import type { Membership } from '../../../models/Membership';
+import {
+  membershipStatusLabel,
+  membershipStatusTone,
+} from './clubPlayersModel';
 
 type Props = {
   player: User;
@@ -12,25 +16,6 @@ type Props = {
   index?: number;
   onPress?: () => void;
 };
-
-function membershipTone(
-  status: Membership['status'] | undefined,
-): 'ok' | 'warn' | 'alert' | 'neutral' {
-  if (status === 'active') return 'ok';
-  if (status === 'pending') return 'warn';
-  if (status === 'suspended' || status === 'rejected') return 'alert';
-  return 'neutral';
-}
-
-function membershipLabel(status: Membership['status'] | undefined, hasLicense: boolean): string {
-  if (status === 'pending') return 'Adhésion en attente';
-  if (status === 'suspended') return 'Suspendu';
-  if (status === 'rejected') return 'Refusé';
-  if (status === 'left') return 'Parti';
-  if (status === 'active' && hasLicense) return 'Licencié';
-  if (status === 'active') return 'Actif';
-  return 'Profil club';
-}
 
 /**
  * Carte effectif Club — identité maillot/crest (pas le bouclier pôle Joueur).
@@ -69,8 +54,9 @@ export function ClubRosterPlayerCard({
         jerseyNumber={player.profile?.jersey_number}
         photoUrl={player.avatar_url}
         teamOrClub={teamName || clubName || undefined}
-        statusLabel={membershipLabel(status, hasLicense)}
-        statusTone={membershipTone(status)}
+        /** Libellé et teinte viennent du modèle partagé, pas d'une copie locale. */
+        statusLabel={membershipStatusLabel(status, hasLicense)}
+        statusTone={membershipStatusTone(status)}
         metaLabel={metaParts.join(' · ') || undefined}
         stats={stats}
         onPress={onPress}

@@ -6,15 +6,14 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableSpring } from '../motion';
-import { ProDayText } from '../ui/ProDayText';
 import { useAuth } from '../../context/AuthContext';
 import {
   sendPlayerCoachMessage,
@@ -22,18 +21,27 @@ import {
   type PlayerCoachAiMessage,
 } from '../../services/playerCoachAi.service';
 import { stripDashTypography } from '../../utils/stripDashTypography';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { CLUB_TOKENS } from '../../features/club/theme/clubTokens';
+import { PRODAY_POLE_ACCENTS } from '../../theme/prodayBrand';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { isHomeTrainingIntent, type PlayerNavigateTab } from '../../utils/playerCoachIntent';
 import { usePlayerTheme } from '../../context/PlayerThemeContext';
-import { teamEventsService } from '../../services/teamEvents.service';
-import { careerPreferencesService } from '../../services/careerPreferences.service';
+import {
+  playerColors,
+  playerType,
+  playerForm,
+  playerCard,
+  PLAYER_SURFACE_TOKENS,
+} from '../../theme/playerDesignSystem';
 
 type Bubble = PlayerCoachAiMessage & { id: string; timestamp?: string };
 
 type PromptSuggestion = {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
+  tag: string;
   title: string;
   subtitle: string;
   prompt: string;
@@ -43,28 +51,28 @@ export const POST_SESSION_DRILLS = [
   {
     id: 'drill-1',
     icon: 'flash-outline' as const,
-    accent: '#30D158',
+    accent: CLUB_TOKENS.success,
     title: 'Appuis & Vivacité',
     duration: '15 min',
-    focus: 'Explosivité · Changement d’angle',
+    focus: 'Explosivité & Changements',
     prompt: 'Détaille-moi le protocole complet de l’exercice post-séance Appuis Courts & Vivacité (15 min) adapté à mon poste.',
   },
   {
     id: 'drill-2',
     icon: 'football-outline' as const,
-    accent: '#0A84FF',
+    accent: playerColors.accentAlt,
     title: 'Finition 1-Touch',
     duration: '20 min',
-    focus: 'Précision · Cadrage rapide',
+    focus: 'Précision & Cadrage rapide',
     prompt: 'Détaille-moi le protocole complet de l’exercice post-séance Finition 1-Touch & Cadrage (20 min) adapté à mon poste.',
   },
   {
     id: 'drill-3',
     icon: 'shield-checkmark-outline' as const,
-    accent: '#FFD700',
-    title: 'Prévention Ischios',
+    accent: CLUB_TOKENS.secondary,
+    title: 'Gainage & Ischios',
     duration: '10 min',
-    focus: 'Récupération · Mobilité',
+    focus: 'Prévention & Mobilité',
     prompt: 'Détaille-moi le protocole complet de l’exercice post-séance Gainage & Prévention Ischios (10 min).',
   },
 ];
@@ -73,6 +81,7 @@ export const PROMPT_SUGGESTIONS: PromptSuggestion[] = [
   {
     id: 'post_session',
     icon: 'flame-outline',
+    tag: 'RÉCUPÉRATION',
     title: 'Recommandations post-séance',
     subtitle: 'Exercices personnalisés suite à ta dernière séance / match',
     prompt: 'Analyse mes dernières séances et recommande-moi 3 exercices personnalisés post-séance adaptés à mon profil et mon poste.',
@@ -80,6 +89,7 @@ export const PROMPT_SUGGESTIONS: PromptSuggestion[] = [
   {
     id: 'tactics',
     icon: 'compass-outline',
+    tag: 'TACTIQUE',
     title: 'Plan de match & Déplacements',
     subtitle: 'Placement entre les lignes, appels et orientation',
     prompt: 'Donne-moi les consignes tactiques et déplacements clés pour exceller à mon poste.',
@@ -87,6 +97,7 @@ export const PROMPT_SUGGESTIONS: PromptSuggestion[] = [
   {
     id: 'drills',
     icon: 'flash-outline',
+    tag: 'SÉANCE',
     title: 'Créer une séance 20 min',
     subtitle: 'Drill technique et explosivité sans matériel',
     prompt: 'Génère-moi une séance d’entraînement individuel de 20 minutes intense au ballon.',
@@ -94,6 +105,7 @@ export const PROMPT_SUGGESTIONS: PromptSuggestion[] = [
   {
     id: 'weak_foot',
     icon: 'football-outline',
+    tag: 'TECHNIQUE',
     title: 'Perfectionner mon pied faible',
     subtitle: 'Prises de balle, passes et frappes cadrées',
     prompt: 'Quels sont les meilleurs exercices pour progresser rapidement sur mon mauvais pied ?',
@@ -101,6 +113,7 @@ export const PROMPT_SUGGESTIONS: PromptSuggestion[] = [
   {
     id: 'recovery',
     icon: 'battery-charging-outline',
+    tag: 'FORME',
     title: 'Routine d’avant-match & Récupération',
     subtitle: 'Activation musculaire, sommeil et concentration',
     prompt: 'Quelle routine physique et mentale adopter dans les 24h avant une rencontre officielle ?',
@@ -114,50 +127,16 @@ type Props = {
   initialPrompt?: string;
 };
 
-function navigateTab(nav: ReturnType<typeof useTabNavigationActions>, tab: PlayerNavigateTab) {
-  switch (tab) {
-    case 'home':
-      nav.setActiveTab('home');
-      break;
-    case 'matchs':
-      nav.setActiveTab('matchs');
-      break;
-    case 'feed':
-      nav.setActiveTab('feed');
-      break;
-    case 'profil':
-      nav.setActiveTab('profil');
-      break;
-    case 'plus':
-      nav.setActiveTab('plus');
-      break;
-    case 'messages':
-      nav.setActiveTab('messages');
-      break;
-    case 'train_ai':
-      nav.openDashboard('train_ai');
-      break;
-    case 'train_coach':
-      nav.openDashboard('train_coach');
-      break;
-    default:
-      break;
-  }
-}
-
-/**
- * Interface Conversationnelle Style ChatGPT / Google Gemini
- */
 export function PlayerCoachAiChat({ compact = false, initialPrompt }: Props) {
   const { profile } = useAuth();
   const insets = useSafeAreaInsets();
   const nav = useTabNavigationActions();
   const { colors: playerTheme, clubColors } = usePlayerTheme();
-  const teamColor = clubColors?.primary || playerTheme.accent || '#00E676';
+  const teamColor = clubColors?.primary || playerTheme.accent || playerColors.accent;
 
   const firstName = profile?.display_name?.split(' ')[0] || 'Joueur';
   const position = profile?.profile?.position || 'Attaquant';
-  const clubName = profile?.profile?.club_id || 'FC ProDay';
+  const clubName = profile?.profile?.club_id || 'Mon équipe';
 
   const [messages, setMessages] = useState<Bubble[]>([]);
   const [draft, setDraft] = useState('');
@@ -220,7 +199,7 @@ export function PlayerCoachAiChat({ compact = false, initialPrompt }: Props) {
         setTrainingCta(true);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Connexion à Gemini indisponible.');
+      setError(e instanceof Error ? e.message : 'Connexion à l\'assistant IA indisponible.');
     } finally {
       setSending(false);
     }
@@ -247,41 +226,44 @@ export function PlayerCoachAiChat({ compact = false, initialPrompt }: Props) {
         showsVerticalScrollIndicator={false}
       >
         {!hasUserMessages ? (
-          /* Zéro-State : Écran d'accueil Style Google Gemini */
-          <View style={styles.geminiWelcomeContainer}>
-            <View style={styles.sparkleHeroWrap}>
-              <LinearGradient
-                colors={[`${teamColor}33`, 'transparent']}
-                style={styles.sparkleHalo}
-                pointerEvents="none"
-              />
-              <View style={[styles.sparkleCircle, { borderColor: `${teamColor}44` }]}>
-                <Ionicons name="sparkles" size={28} color={teamColor} />
+          /* Zéro-State : Écran d'accueil Style Apple ProDay */
+          <View style={styles.welcomeContainer}>
+            {/* Header épuré */}
+            <View style={styles.heroHeader}>
+              <View style={styles.sparkleCircle}>
+                <Ionicons name="sparkles" size={24} color={playerColors.accent} />
+              </View>
+              <View style={styles.welcomeTextGroup}>
+                <Text style={styles.greetingTitle}>Bonjour, {firstName}</Text>
+                <Text style={styles.greetingSub}>Comment puis-je t'aider aujourd'hui ?</Text>
+              </View>
+              <View style={styles.statusRow}>
+                <View style={styles.liveDotWrap}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.statusText}>Conseiller disponible</Text>
+                </View>
+                <View style={styles.securityRow}>
+                  <Ionicons name="shield-checkmark-outline" size={12} color={playerColors.textDim} />
+                  <Text style={styles.securityText}>Analyse IA · Recommandations personnalisées</Text>
+                </View>
               </View>
             </View>
 
-            <View style={styles.welcomeTextGroup}>
-              <ProDayText style={styles.geminiGreeting}>
-                Bonjour, {firstName}
-              </ProDayText>
-              <ProDayText style={styles.geminiQuestion}>
-                Comment puis-je t'aider aujourd'hui ?
-              </ProDayText>
-            </View>
-
-            {/* Bannière Recommandations Post-Séance (Inspiration Fitness Park / Haute Performance) */}
-            <View style={styles.postSessionBanner}>
-              <View style={styles.postSessionHeader}>
-                <View style={styles.postSessionTag}>
-                  <Ionicons name="flame" size={13} color="#FF9F0A" />
-                  <ProDayText style={styles.postSessionTagText}>POST-SÉANCE · RECOMMANDATIONS IA</ProDayText>
+            {/* Carte Recommandations Post-Séance (Style ProDay / Coach) */}
+            <View style={[styles.postSessionCard, playerCard(PLAYER_SURFACE_TOKENS)]}>
+              <View style={styles.postSessionHeaderRow}>
+                <View style={styles.tagBadge}>
+                  <Ionicons name="flame" size={13} color={CLUB_TOKENS.warning} />
+                  <Text style={styles.tagBadgeText}>POST-SÉANCE · RECOMMANDATIONS</Text>
                 </View>
-                <View style={[styles.badgePill, { backgroundColor: `${teamColor}22`, borderColor: `${teamColor}55` }]}>
-                  <ProDayText style={[styles.badgePillText, { color: teamColor }]}>SUR MESURE</ProDayText>
+                <View style={styles.surMesurePill}>
+                  <Text style={styles.surMesurePillText}>SUR MESURE</Text>
                 </View>
               </View>
-              <ProDayText style={styles.postSessionTitle}>Exercices recommandés suite à ta séance</ProDayText>
-              <ProDayText style={styles.postSessionSub}>Ciblés selon ton profil et validés pour booster ta récupération et tes points clés.</ProDayText>
+              <Text style={styles.cardTitle}>Exercices recommandés suite à ta séance</Text>
+              <Text style={styles.cardSub}>
+                Ciblés selon ton profil et validés pour booster ta récupération et tes points clés.
+              </Text>
 
               <View style={styles.drillsRow}>
                 {POST_SESSION_DRILLS.map((drill) => (
@@ -292,43 +274,55 @@ export function PlayerCoachAiChat({ compact = false, initialPrompt }: Props) {
                     haptic
                     style={styles.drillItemCard}
                   >
-                    <View style={styles.drillIconRow}>
+                    <View style={styles.drillHeader}>
                       <Ionicons name={drill.icon} size={15} color={drill.accent} />
-                      <ProDayText style={[styles.drillTime, { color: drill.accent }]}>{drill.duration}</ProDayText>
+                      <Text style={[styles.drillDuration, { color: drill.accent }]}>
+                        {drill.duration}
+                      </Text>
                     </View>
-                    <ProDayText style={styles.drillTitle} numberOfLines={1}>{drill.title}</ProDayText>
-                    <ProDayText style={styles.drillFocus} numberOfLines={1}>{drill.focus}</ProDayText>
+                    <Text style={styles.drillTitle} numberOfLines={1}>
+                      {drill.title}
+                    </Text>
+                    <Text style={styles.drillFocus} numberOfLines={1}>
+                      {drill.focus}
+                    </Text>
                   </PressableSpring>
                 ))}
               </View>
             </View>
 
-            {/* Cartes de suggestions minimalistes façon ChatGPT */}
-            <View style={styles.suggestionsGrid}>
-              {PROMPT_SUGGESTIONS.map((sug) => (
-                <PressableSpring
-                  key={sug.id}
-                  onPress={() => send(sug.prompt)}
-                  scaleTo={0.97}
-                  haptic
-                  style={styles.suggestionCard}
-                >
-                  <View style={styles.suggestionCardTop}>
-                    <Ionicons name={sug.icon} size={18} color={teamColor} />
-                    <Ionicons name="arrow-forward" size={14} color="#52525B" />
-                  </View>
-                  <ProDayText style={styles.suggestionTitle}>
-                    {sug.title}
-                  </ProDayText>
-                  <ProDayText style={styles.suggestionSub} numberOfLines={2}>
-                    {sug.subtitle}
-                  </ProDayText>
-                </PressableSpring>
-              ))}
+            {/* Suggestions de Thèmes (Apple Inset Grouped) */}
+            <View style={styles.suggestionsContainer}>
+              <Text style={styles.sectionHeaderTitle}>THÈMES D'ACCOMPAGNEMENT</Text>
+              <View style={styles.suggestionsList}>
+                {PROMPT_SUGGESTIONS.map((sug) => (
+                  <PressableSpring
+                    key={sug.id}
+                    onPress={() => send(sug.prompt)}
+                    scaleTo={0.98}
+                    haptic
+                    style={[styles.suggestionItem, playerCard(PLAYER_SURFACE_TOKENS)]}
+                  >
+                    <View style={styles.suggestionIconBox}>
+                      <Ionicons name={sug.icon} size={18} color={playerColors.accent} />
+                    </View>
+                    <View style={styles.suggestionTextCol}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={styles.suggestionTag}>{sug.tag}</Text>
+                      </View>
+                      <Text style={styles.suggestionTitle}>{sug.title}</Text>
+                      <Text style={styles.suggestionSub} numberOfLines={1}>
+                        {sug.subtitle}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={playerColors.textMuted} />
+                  </PressableSpring>
+                ))}
+              </View>
             </View>
           </View>
         ) : (
-          /* Fil de discussion ChatGPT / Gemini */
+          /* Fil de discussion Apple Native */
           messages.map((m) => {
             const isUser = m.role === 'user';
             return (
@@ -338,51 +332,59 @@ export function PlayerCoachAiChat({ compact = false, initialPrompt }: Props) {
               >
                 {!isUser ? (
                   <View style={styles.assistantHeaderRow}>
-                    <View style={[styles.assistantAvatar, { backgroundColor: `${teamColor}20` }]}>
-                      <Ionicons name="sparkles" size={12} color={teamColor} />
+                    <View style={styles.assistantAvatar}>
+                      <Ionicons name="sparkles" size={11} color={playerColors.accent} />
                     </View>
-                    <ProDayText style={styles.assistantName}>Gemini</ProDayText>
+                    <Text style={styles.assistantName}>Conseiller ProDay</Text>
                   </View>
                 ) : null}
 
-                <View style={isUser ? [styles.userBubble, { backgroundColor: '#21222C' }] : styles.assistantTextWrap}>
-                  <ProDayText style={isUser ? styles.userText : styles.assistantText}>
+                <View
+                  style={
+                    isUser
+                      ? styles.userBubble
+                      : [styles.assistantBubble, playerCard(PLAYER_SURFACE_TOKENS)]
+                  }
+                >
+                  <Text style={isUser ? styles.userText : styles.assistantText}>
                     {m.content}
-                  </ProDayText>
+                  </Text>
                 </View>
               </View>
             );
           })
         )}
 
-        {/* Indicateur de génération Gemini */}
+        {/* Indicateur de génération */}
         {sending ? (
           <View style={[styles.messageBlock, styles.assistantBlock]}>
             <View style={styles.assistantHeaderRow}>
-              <View style={[styles.assistantAvatar, { backgroundColor: `${teamColor}20` }]}>
-                <Ionicons name="sparkles" size={12} color={teamColor} />
+              <View style={styles.assistantAvatar}>
+                <Ionicons name="sparkles" size={11} color={playerColors.accent} />
               </View>
-              <ProDayText style={styles.assistantName}>Gemini</ProDayText>
+              <Text style={styles.assistantName}>Conseiller ProDay</Text>
             </View>
-            <View style={styles.loadingRow}>
-              <ActivityIndicator size="small" color={teamColor} />
-              <ProDayText style={styles.loadingText}>
-                Génération en cours...
-              </ProDayText>
+            <View style={[styles.assistantBubble, styles.loadingBubble, playerCard(PLAYER_SURFACE_TOKENS)]}>
+              <View style={styles.loadingRow}>
+                <ActivityIndicator size="small" color={playerColors.accent} />
+                <Text style={styles.loadingText}>
+                  Le Conseiller analyse ta demande...
+                </Text>
+              </View>
             </View>
           </View>
         ) : null}
 
         {error ? (
           <View style={styles.errorBanner}>
-            <Ionicons name="alert-circle-outline" size={16} color="#F87171" />
-            <ProDayText style={styles.errorText}>{error}</ProDayText>
+            <Ionicons name="alert-circle-outline" size={16} color={CLUB_TOKENS.danger} />
+            <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : null}
 
         {trainingCta ? (
           <PressableSpring
-            style={[styles.trainingCtaBtn, { backgroundColor: teamColor }]}
+            style={styles.trainingCtaBtn}
             onPress={() => {
               joueurGamePress();
               nav.openDashboard('train_ai');
@@ -390,21 +392,21 @@ export function PlayerCoachAiChat({ compact = false, initialPrompt }: Props) {
             scaleTo={0.96}
             haptic
           >
-            <Ionicons name="play" size={16} color="#000000" />
-            <ProDayText style={styles.trainingCtaText}>
+            <Ionicons name="play" size={16} color={playerColors.bg} />
+            <Text style={styles.trainingCtaText}>
               Lancer cet entraînement
-            </ProDayText>
+            </Text>
           </PressableSpring>
         ) : null}
       </ScrollView>
 
-      {/* Composer Flottant Style Gemini / ChatGPT iOS */}
-      <View style={[styles.composerContainer, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+      {/* Composer Flottant Apple */}
+      <View style={[styles.composerContainer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <View style={styles.composerCapsule}>
           <TextInput
             style={styles.composerInput}
-            placeholder="Demande à Gemini..."
-            placeholderTextColor="#71717A"
+            placeholder="Poser une question au conseiller..."
+            placeholderTextColor={playerColors.textMuted}
             value={draft}
             onChangeText={setDraft}
             onSubmitEditing={() => send(draft)}
@@ -417,17 +419,20 @@ export function PlayerCoachAiChat({ compact = false, initialPrompt }: Props) {
             style={[
               styles.sendButton,
               draft.trim()
-                ? { backgroundColor: teamColor }
-                : { backgroundColor: 'rgba(255, 255, 255, 0.08)' },
+                ? { backgroundColor: playerColors.accent }
+                : { backgroundColor: playerColors.surfaceRaised },
             ]}
             onPress={() => send(draft)}
             disabled={!draft.trim() || sending}
             activeOpacity={0.8}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Envoyer"
           >
             <Ionicons
               name="arrow-up"
               size={18}
-              color={draft.trim() ? '#000000' : '#71717A'}
+              color={draft.trim() ? playerColors.bg : playerColors.textMuted}
             />
           </TouchableOpacity>
         </View>
@@ -440,7 +445,7 @@ function createStyles(teamColor: string) {
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: '#000000',
+      backgroundColor: playerColors.bg,
     },
     compactRoot: {
       minHeight: 320,
@@ -449,170 +454,206 @@ function createStyles(teamColor: string) {
       flex: 1,
     },
     threadPad: {
-      paddingHorizontal: 16,
-      paddingTop: 16,
-      paddingBottom: 24,
-      gap: 20,
+      paddingHorizontal: playerForm.space.lg,
+      paddingTop: playerForm.space.lg,
+      paddingBottom: playerForm.space.xl,
+      gap: playerForm.space.lg,
     },
     emptyPad: {
       flexGrow: 1,
-      justifyContent: 'center',
     },
 
-    /* Accueil Style Gemini */
-    geminiWelcomeContainer: {
-      paddingVertical: 20,
-      gap: 24,
+    /* Accueil Style Apple */
+    welcomeContainer: {
+      paddingVertical: playerForm.space.sm,
+      gap: playerForm.space.lg,
     },
-    sparkleHeroWrap: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: 70,
-    },
-    sparkleHalo: {
-      position: 'absolute',
-      width: 120,
-      height: 120,
-      borderRadius: 60,
+    heroHeader: {
+      alignItems: 'flex-start',
+      gap: playerForm.space.sm,
     },
     sparkleCircle: {
-      width: 54,
-      height: 54,
-      borderRadius: 27,
-      backgroundColor: '#111218',
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: playerColors.accentSoft,
       borderWidth: 1,
+      borderColor: playerColors.border,
       alignItems: 'center',
       justifyContent: 'center',
+      marginBottom: 2,
     },
     welcomeTextGroup: {
+      gap: 2,
+    },
+    greetingTitle: {
+      ...playerType.title,
+      color: playerColors.text,
+    },
+    greetingSub: {
+      ...playerType.subheadline,
+      color: playerColors.textMuted,
+    },
+    statusRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: playerForm.space.md,
+      marginTop: 2,
+      flexWrap: 'wrap',
+    },
+    liveDotWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    liveDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 3.5,
+      backgroundColor: CLUB_TOKENS.secondary,
+    },
+    statusText: {
+      ...playerType.caption,
+      fontWeight: '700',
+      color: CLUB_TOKENS.secondary,
+    },
+    securityRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
       gap: 4,
     },
-    geminiGreeting: {
-      fontSize: 26,
-      fontWeight: '900',
-      color: '#FFFFFF',
-      letterSpacing: -0.5,
-    },
-    geminiQuestion: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#71717A',
-      letterSpacing: -0.3,
+    securityText: {
+      ...playerType.caption,
+      color: playerColors.textDim,
     },
 
-    /* Bannière Post-Séance */
-    postSessionBanner: {
-      width: '100%',
-      backgroundColor: '#12141D',
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
-      padding: 12,
-      marginBottom: 16,
+    /* Carte Post-Séance */
+    postSessionCard: {
+      padding: playerForm.cardPaddingH,
     },
-    postSessionHeader: {
+    postSessionHeaderRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 6,
+      marginBottom: playerForm.space.sm,
     },
-    postSessionTag: {
+    tagBadge: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
     },
-    postSessionTagText: {
-      fontSize: 10,
+    tagBadgeText: {
+      ...playerType.micro,
       fontWeight: '800',
-      color: '#FF9F0A',
-      letterSpacing: 0.6,
-    },
-    badgePill: {
-      paddingHorizontal: 7,
-      paddingVertical: 2,
-      borderRadius: 6,
-      borderWidth: 1,
-    },
-    badgePillText: {
-      fontSize: 9,
-      fontWeight: '900',
+      color: CLUB_TOKENS.warning,
       letterSpacing: 0.5,
     },
-    postSessionTitle: {
-      fontSize: 13,
-      fontWeight: '800',
-      color: '#FFFFFF',
-      marginBottom: 3,
+    surMesurePill: {
+      backgroundColor: playerColors.accentSoft,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: playerForm.fieldRadius - 10,
     },
-    postSessionSub: {
-      fontSize: 11,
-      color: '#94A3B8',
-      lineHeight: 15,
-      marginBottom: 10,
+    surMesurePillText: {
+      ...playerType.micro,
+      fontWeight: '800',
+      color: playerColors.accent,
+      letterSpacing: 0.5,
+    },
+    cardTitle: {
+      ...playerType.headline,
+      color: playerColors.text,
+      marginBottom: 2,
+    },
+    cardSub: {
+      ...playerType.caption,
+      color: playerColors.textMuted,
+      lineHeight: 18,
+      marginBottom: playerForm.space.md,
     },
     drillsRow: {
       flexDirection: 'row',
-      gap: 8,
+      gap: playerForm.kpiGap,
     },
     drillItemCard: {
       flex: 1,
-      backgroundColor: '#191C28',
-      borderRadius: 12,
+      backgroundColor: playerColors.surfaceRaised,
+      borderRadius: playerForm.fieldRadius,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.06)',
-      padding: 8,
+      borderColor: playerColors.border,
+      padding: playerForm.space.sm,
       gap: 3,
     },
-    drillIconRow: {
+    drillHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       marginBottom: 2,
     },
-    drillTime: {
-      fontSize: 10,
+    drillDuration: {
+      ...playerType.micro,
       fontWeight: '800',
     },
     drillTitle: {
-      fontSize: 11,
+      ...playerType.caption,
       fontWeight: '700',
-      color: '#FFFFFF',
+      color: playerColors.text,
     },
     drillFocus: {
-      fontSize: 8,
-      color: '#8E8E9F',
+      ...playerType.micro,
+      color: playerColors.textDim,
     },
 
-    /* Grille de suggestions */
-    suggestionsGrid: {
-      gap: 10,
+    /* Suggestions Thématiques */
+    suggestionsContainer: {
+      gap: playerForm.space.sm,
     },
-    suggestionCard: {
-      backgroundColor: '#0E0F15',
-      borderRadius: 16,
-      padding: 14,
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
-      gap: 4,
+    sectionHeaderTitle: {
+      ...playerType.micro,
+      fontWeight: '800',
+      color: playerColors.textDim,
+      letterSpacing: 0.5,
+      marginLeft: 2,
     },
-    suggestionCardTop: {
+    suggestionsList: {
+      gap: playerForm.space.sm,
+    },
+    suggestionItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 4,
+      paddingHorizontal: playerForm.cardPaddingH,
+      paddingVertical: playerForm.cardPaddingV - 2,
+      gap: playerForm.space.md,
+    },
+    suggestionIconBox: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: playerColors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    suggestionTextCol: {
+      flex: 1,
+      minWidth: 0,
+      gap: 1,
+    },
+    suggestionTag: {
+      ...playerType.micro,
+      fontWeight: '800',
+      color: playerColors.accent,
+      letterSpacing: 0.5,
     },
     suggestionTitle: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: '#FFFFFF',
+      ...playerType.headline,
+      color: playerColors.text,
     },
     suggestionSub: {
-      fontSize: 12,
-      color: '#71717A',
-      lineHeight: 16,
+      ...playerType.caption,
+      color: playerColors.textMuted,
     },
 
-    /* Messages Style ChatGPT / Gemini */
+    /* Messages Style Apple */
     messageBlock: {
       width: '100%',
     },
@@ -621,21 +662,22 @@ function createStyles(teamColor: string) {
     },
     userBubble: {
       maxWidth: '85%',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: 20,
+      paddingHorizontal: playerForm.space.lg,
+      paddingVertical: playerForm.space.md,
+      borderRadius: playerForm.fieldRadius,
       borderBottomRightRadius: 4,
+      backgroundColor: playerColors.accentSoft,
+      borderWidth: 1,
+      borderColor: playerColors.accent,
     },
     userText: {
-      color: '#FFFFFF',
-      fontSize: 15,
-      lineHeight: 22,
-      fontWeight: '500',
+      ...playerType.callout,
+      color: playerColors.text,
     },
 
     assistantBlock: {
       alignItems: 'flex-start',
-      gap: 8,
+      gap: 6,
     },
     assistantHeaderRow: {
       flexDirection: 'row',
@@ -646,52 +688,58 @@ function createStyles(teamColor: string) {
       width: 20,
       height: 20,
       borderRadius: 10,
+      backgroundColor: playerColors.accentSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
     assistantName: {
-      fontSize: 12,
+      ...playerType.caption,
       fontWeight: '700',
-      color: '#A1A1AA',
+      color: playerColors.textMuted,
     },
-    assistantTextWrap: {
+    assistantBubble: {
       width: '100%',
-      paddingLeft: 2,
+      paddingHorizontal: playerForm.cardPaddingH,
+      paddingVertical: playerForm.cardPaddingV,
+      borderRadius: playerForm.cardRadius,
+      borderTopLeftRadius: 4,
+    },
+    loadingBubble: {
+      width: 'auto',
+      alignSelf: 'flex-start',
     },
     assistantText: {
-      color: '#ECECF1',
-      fontSize: 15,
-      lineHeight: 24,
-      fontWeight: '400',
-      letterSpacing: 0.1,
+      ...playerType.callout,
+      color: playerColors.text,
+      lineHeight: 22,
     },
 
-    /* Indicateur de chargement */
+    /* Chargement & Erreur */
     loadingRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      paddingVertical: 4,
+      paddingVertical: 2,
     },
     loadingText: {
-      color: '#71717A',
-      fontSize: 13,
+      ...playerType.caption,
+      color: playerColors.textMuted,
       fontStyle: 'italic',
     },
-
     errorBanner: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      backgroundColor: 'rgba(239, 68, 68, 0.12)',
-      padding: 12,
-      borderRadius: 12,
+      backgroundColor: CLUB_TOKENS.dangerSoft,
+      padding: playerForm.space.md,
+      borderRadius: playerForm.fieldRadius,
       borderWidth: 1,
-      borderColor: 'rgba(239, 68, 68, 0.3)',
+      borderColor: CLUB_TOKENS.danger,
     },
     errorText: {
-      color: '#F87171',
-      fontSize: 13,
+      ...playerType.caption,
+      color: CLUB_TOKENS.danger,
+      flex: 1,
     },
 
     trainingCtaBtn: {
@@ -701,45 +749,46 @@ function createStyles(teamColor: string) {
       gap: 8,
       paddingVertical: 12,
       paddingHorizontal: 20,
-      borderRadius: 24,
+      borderRadius: playerForm.actionRadius,
+      backgroundColor: playerColors.accent,
       alignSelf: 'flex-start',
-      marginTop: 8,
+      marginTop: 4,
     },
     trainingCtaText: {
-      color: '#000000',
+      ...playerType.callout,
       fontWeight: '800',
-      fontSize: 13,
+      color: playerColors.bg,
     },
 
     /* Composer Capsule Flottante */
     composerContainer: {
-      paddingHorizontal: 16,
-      paddingTop: 8,
-      backgroundColor: '#000000',
+      paddingHorizontal: playerForm.space.lg,
+      paddingTop: playerForm.space.sm,
+      backgroundColor: playerColors.bg,
     },
     composerCapsule: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#16171E',
-      borderRadius: 28,
-      paddingLeft: 16,
+      backgroundColor: playerColors.surfaceRaised,
+      borderRadius: playerForm.actionRadius,
+      paddingLeft: playerForm.space.lg,
       paddingRight: 6,
       paddingVertical: 6,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.1)',
-      minHeight: 50,
+      borderColor: playerColors.border,
+      minHeight: playerForm.actionMinHeight,
     },
     composerInput: {
       flex: 1,
-      color: '#FFFFFF',
-      fontSize: 15,
+      color: playerColors.text,
+      ...playerType.callout,
       paddingVertical: 6,
       maxHeight: 120,
     },
     sendButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 38,
+      height: 38,
+      borderRadius: 19,
       alignItems: 'center',
       justifyContent: 'center',
     },

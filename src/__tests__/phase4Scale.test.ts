@@ -62,6 +62,18 @@ describe('Phase 4. Brain persistence + charge moteurs', () => {
     expect(restored?.lastAction).toBe('join_match');
   });
 
+  it('omet last_action quand aucune action reelle : Firestore refuse undefined', () => {
+    const doc = toFirestoreDoc({
+      version: 1,
+      health: baseHealth,
+      progression: baseProgression,
+      lastAction: undefined,
+    });
+
+    expect('last_action' in doc).toBe(false);
+    expect(fromFirestoreDoc(doc)?.lastAction).toBeUndefined();
+  });
+
   it('fusionne la progression persistée si XP supérieur', () => {
     const computed: GamificationState = {
       ...baseProgression,

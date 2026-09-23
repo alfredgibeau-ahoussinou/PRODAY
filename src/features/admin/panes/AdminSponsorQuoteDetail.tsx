@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Switch,
   View,
 } from 'react-native';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import {
   AdminBadge,
   AdminButton,
@@ -15,7 +15,7 @@ import {
   AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminSpace } from '../theme/adminDesignSystem';
 import { confirmAdminAction } from '../utils/confirmAdminAction';
 import { adminAuditService } from '../../../services/adminAudit.service';
@@ -103,7 +103,7 @@ export function AdminSponsorQuoteDetail({
   actorEmail,
   initialTab,
 }: Props) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const [tab, setTab] = useState<TabId>(
     initialTab ?? (quote.has_uploaded_docs ? 'docs' : 'resume'),
   );
@@ -132,7 +132,7 @@ export function AdminSponsorQuoteDetail({
       setDocuments(desk.documents);
       setEvents(desk.events);
     } catch (e) {
-      Alert.alert('Desk', getCallableErrorMessage(e));
+      prodayAlert.alert('Desk', getCallableErrorMessage(e));
     } finally {
       setDeskLoading(false);
     }
@@ -173,7 +173,7 @@ export function AdminSponsorQuoteDetail({
 
   const downloadDoc = async (d: SponsorQuoteDocumentRequest) => {
     if (!d.file_url) {
-      Alert.alert('Télécharger', 'Aucun fichier disponible pour ce document.');
+      prodayAlert.alert('Télécharger', 'Aucun fichier disponible pour ce document.');
       return;
     }
     const inferredExt = (() => {
@@ -192,7 +192,7 @@ export function AdminSponsorQuoteDetail({
     try {
       const res = await downloadRemoteFile(d.file_url, fileName);
       if (!res.ok) {
-        Alert.alert('Télécharger', res.error);
+        prodayAlert.alert('Télécharger', res.error);
       }
     } finally {
       setDownloadingId(null);
@@ -214,7 +214,7 @@ export function AdminSponsorQuoteDetail({
             allowResend: quote.status === 'sent',
           });
           if (!res.success || !res.emailSent) {
-            Alert.alert('Envoi échoué', res.emailError ?? 'E-mail non envoyé');
+            prodayAlert.alert('Envoi échoué', res.emailError ?? 'E-mail non envoyé');
             return;
           }
           await adminAuditService.log({
@@ -227,9 +227,9 @@ export function AdminSponsorQuoteDetail({
           });
           await onRefresh();
           await loadDesk();
-          Alert.alert('Envoyé', 'Le devis a été envoyé par e-mail.');
+          prodayAlert.alert('Envoyé', 'Le devis a été envoyé par e-mail.');
         } catch (e) {
-          Alert.alert('Erreur', getCallableErrorMessage(e));
+          prodayAlert.alert('Erreur', getCallableErrorMessage(e));
         } finally {
           setBusy(false);
         }
@@ -240,7 +240,7 @@ export function AdminSponsorQuoteDetail({
   const runSendMessage = () => {
     const body = messageBody.trim();
     if (!body) {
-      Alert.alert('Message', 'Saisissez un message.');
+      prodayAlert.alert('Message', 'Saisissez un message.');
       return;
     }
     confirmAdminAction(
@@ -256,7 +256,7 @@ export function AdminSponsorQuoteDetail({
             sendEmail,
           });
           if (!res.success) {
-            Alert.alert('Échec', res.emailError ?? 'Message non enregistré');
+            prodayAlert.alert('Échec', res.emailError ?? 'Message non enregistré');
             return;
           }
           await adminAuditService.log({
@@ -272,7 +272,7 @@ export function AdminSponsorQuoteDetail({
           setMessageBody('');
           await onRefresh();
           await loadDesk();
-          Alert.alert(
+          prodayAlert.alert(
             'OK',
             sendEmail
               ? res.emailSent
@@ -281,7 +281,7 @@ export function AdminSponsorQuoteDetail({
               : 'Note enregistrée.',
           );
         } catch (e) {
-          Alert.alert('Erreur', getCallableErrorMessage(e));
+          prodayAlert.alert('Erreur', getCallableErrorMessage(e));
         } finally {
           setBusy(false);
         }
@@ -295,7 +295,7 @@ export function AdminSponsorQuoteDetail({
       .map((s) => s.trim())
       .filter(Boolean);
     if (selectedDocs.length === 0 && customs.length === 0) {
-      Alert.alert('Documents', 'Sélectionnez au moins un type.');
+      prodayAlert.alert('Documents', 'Sélectionnez au moins un type.');
       return;
     }
     confirmAdminAction(
@@ -312,7 +312,7 @@ export function AdminSponsorQuoteDetail({
             sendEmail: true,
           });
           if (!res.success) {
-            Alert.alert('Échec', res.emailError ?? 'Demande non enregistrée');
+            prodayAlert.alert('Échec', res.emailError ?? 'Demande non enregistrée');
             return;
           }
           await adminAuditService.log({
@@ -327,14 +327,14 @@ export function AdminSponsorQuoteDetail({
           setDocsNote('');
           await onRefresh();
           await loadDesk();
-          Alert.alert(
+          prodayAlert.alert(
             'Demandé',
             res.emailSent
               ? `${res.requestedIds.length} document(s) — e-mail envoyé.`
               : `${res.requestedIds.length} document(s) — ${res.emailError ?? 'e-mail non envoyé'}`,
           );
         } catch (e) {
-          Alert.alert('Erreur', getCallableErrorMessage(e));
+          prodayAlert.alert('Erreur', getCallableErrorMessage(e));
         } finally {
           setBusy(false);
         }
@@ -361,7 +361,7 @@ export function AdminSponsorQuoteDetail({
           await onRefresh();
           onClose();
         } catch (e) {
-          Alert.alert('Erreur', getCallableErrorMessage(e));
+          prodayAlert.alert('Erreur', getCallableErrorMessage(e));
         } finally {
           setBusy(false);
         }

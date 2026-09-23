@@ -51,23 +51,22 @@ describe('frenchFootballStandingsService', () => {
   });
 
   describe('getLeagueStandings', () => {
-    it('renvoie une promesse (cloud-first)', async () => {
+    it('renvoie un shell vide sans Firestore (aucun classement figé)', async () => {
       const data = await frenchFootballStandingsService.getLeagueStandings('d1_d92');
       expect(data.id).toBe('d1_d92');
       expect(data.districtCode).toBe('92');
-      // Side client non connecté à Firestore → shell vide pour saison en cours
       expect(data.season).toBe('2026-2027');
-      expect(Array.isArray(data.standings)).toBe(true);
-      expect(typeof data.officialFffCertified).toBe('boolean');
+      expect(data.standings).toEqual([]);
+      expect(data.officialFffCertified).toBe(false);
       expect(data.name).toContain('Départemental 1 · District 92');
     });
 
-    it('fournit un shell pour une ligue inconnue', async () => {
+    it('fournit un shell honnête pour une ligue inconnue', async () => {
       const fallback = await frenchFootballStandingsService.getLeagueStandings('inconnu_xyz');
       expect(fallback.id).toBe('inconnu_xyz');
-      expect(Array.isArray(fallback.standings)).toBe(true);
-      expect(typeof fallback.officialFffCertified).toBe('boolean');
-      expect(fallback.name).toContain('Championnat FFF');
+      expect(fallback.standings).toEqual([]);
+      expect(fallback.officialFffCertified).toBe(false);
+      expect(fallback.name).toContain('Compétition inconnu_xyz');
     });
   });
 
@@ -91,15 +90,14 @@ describe('frenchFootballStandingsService', () => {
   });
 
   describe('fetchLiveStandings', () => {
-    it('effectue la synchronisation et renvoie cloud-first (shell si offline)', async () => {
+    it('effectue la synchronisation et renvoie un shell vide honnête si hors ligne', async () => {
       const live = await frenchFootballStandingsService.fetchLiveStandings('d1_d92');
       expect(live).toBeDefined();
       expect(live.id).toBe('d1_d92');
-      // Sans Firestore, le fallback local renvoie un shell vide (pas de seeds 2024/2025)
       expect(live.season).toBe('2026-2027');
-      expect(Array.isArray(live.standings)).toBe(true);
-      expect(typeof live.source).toBe('string');
-      expect(typeof live.officialFffCertified).toBe('boolean');
+      expect(live.standings).toEqual([]);
+      expect(live.source).toBe('no_source');
+      expect(live.officialFffCertified).toBe(false);
     });
   });
 });

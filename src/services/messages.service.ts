@@ -39,6 +39,7 @@ import { needsOnboardingDocumentUpload } from '../utils/onboardingGate';
 import { callFunction } from '../lib/firebaseFunctions';
 import { getErrorCode } from '../utils/errors';
 import type { MessageRequestStatus } from '../models/MessageRequest';
+import type { GroupThreadPayload } from '../features/messaging/groupDraft';
 
 const SPONSOR_MESSAGE_FUNCTIONS_REGION = 'europe-west1';
 
@@ -315,9 +316,139 @@ export const messagesService = {
 
   getOtherParticipantId(threadId: string, currentUid: string): string | null {
     if (threadId.startsWith('team__')) return 'group';
+    // Les groupes créés depuis la messagerie utilisent un identifiant propre (`grp_…`) :
+    // sans ce cas, un fil de groupe serait traité comme un dialogue direct et l'écran de
+    // conversation chercherait un destinataire unique inexistant.
+    if (threadId.startsWith('grp_')) return 'group';
     const parts = threadId.split('__');
     if (parts.length !== 2) return null;
     return parts[0] === currentUid ? parts[1] : parts[0];
+  },
+
+  /* ---------------------------------------------------------------- *
+   * Groupes
+   * ---------------------------------------------------------------- */
+
+  /**
+   * Crée un groupe.
+   *
+   * Le document est **construit hors de l'écran** (`buildGroupThreadPayload`) : l'écran ne
+   * décide ni des participants, ni des non-lus, ni des administrateurs. L'écriture est faite en
+   * une seule opération `setDoc` : soit le groupe existe entièrement, soit il n'existe pas —
+   * il n'y a donc pas de groupe à moitié créé à nettoyer après un échec.
+   */
+  async createGroupThread(payload: GroupThreadPayload): Promise<string> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    if (!payload.participant_ids.includes(payload.created_by)) {
+      throw new Error('Le créateur doit faire partie du groupe.');
+    }
+
+    try {
+      const ref = doc(database, 'message_threads', payload.id);
+      const existing = await getDoc(ref);
+      if (existing.exists()) {
+        throw new Error('Un groupe portant cet identifiant existe déjà.');
+      }
+      await setDoc(ref, {
+        is_group: true,
+        thread_kind: payload.thread_kind,
+        thread_title: payload.thread_title,
+        group_avatar_url: payload.group_avatar_url,
+        created_by: payload.created_by,
+        participant_ids: payload.participant_ids,
+        participant_names: payload.participant_names,
+        participant_roles: payload.participant_roles,
+        contains_minor: payload.contains_minor,
+        admin_uids: payload.admin_uids,
+        last_message: payload.last_message,
+        unread_by: payload.unread_by,
+        updated_at: serverTimestamp(),
+      });
+      return payload.id;
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error('Création du groupe impossible. Réessayez.');
+    }
+  },
+
+  /** Détails éditables du groupe (nom, image). Réservé aux administrateurs côté règles. */
+  async updateGroupDetails(
+    threadId: string,
+    updates: { name?: string; avatarUrl?: string | null },
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const patch: Record<string, unknown> = { updated_at: serverTimestamp() };
+    if (updates.name !== undefined) patch.thread_title = updates.name.trim();
+    if (updates.avatarUrl !== undefined) {
+      patch.group_avatar_url = updates.avatarUrl?.trim() ? updates.avatarUrl.trim() : null;
+    }
+    try {
+      await updateDoc(doc(database, 'message_threads', threadId), patch);
+    } catch {
+      throw new Error('Modification du groupe refusée ou impossible.');
+    }
+  },
+
+  /** Ajoute un membre et enregistre son rôle réel (pour la catégorisation à l'affichage). */
+  async addGroupMember(
+    threadId: string,
+    member: { uid: string; displayName: string; role: UserRole },
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    try {
+      await updateDoc(doc(database, 'message_threads', threadId), {
+        participant_ids: arrayUnion(member.uid),
+        [`participant_names.${member.uid}`]: member.displayName,
+        [`participant_roles.${member.uid}`]: member.role,
+        unread_by: arrayUnion(member.uid),
+        updated_at: serverTimestamp(),
+      });
+    } catch {
+      throw new Error('Ajout du membre refusé ou impossible.');
+    }
+  },
+
+  async removeGroupMember(threadId: string, uid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    try {
+      await updateDoc(doc(database, 'message_threads', threadId), {
+        participant_ids: arrayRemove(uid),
+        unread_by: arrayRemove(uid),
+        admin_uids: arrayRemove(uid),
+        updated_at: serverTimestamp(),
+      });
+    } catch {
+      throw new Error('Retrait du membre refusé ou impossible.');
+    }
+  },
+
+  async promoteGroupAdmin(threadId: string, uid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'message_threads', threadId), {
+      admin_uids: arrayUnion(uid),
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Lit l'état de gestion d'un groupe : sert à appliquer `evaluateGroupMembershipAction`. */
+  async getGroupMembership(
+    threadId: string,
+  ): Promise<{ participantIds: string[]; adminUids: string[]; createdBy: string } | null> {
+    const database = getDb();
+    if (!database) return null;
+    const snap = await getDoc(doc(database, 'message_threads', threadId));
+    if (!snap.exists()) return null;
+    const data = snap.data() as Record<string, unknown>;
+    return {
+      participantIds: (data.participant_ids as string[]) ?? [],
+      adminUids: (data.admin_uids as string[]) ?? [],
+      createdBy: String(data.created_by ?? ''),
+    };
   },
 
   async sendGroupMessage(threadId: string, senderUid: string, body: string, sender?: User): Promise<void> {

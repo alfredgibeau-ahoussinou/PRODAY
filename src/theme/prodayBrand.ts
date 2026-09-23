@@ -8,14 +8,14 @@ export const PRODAY_TAGLINE = 'CONNECTER. PROGRESSER. RÉVÉLER.';
 export const PRODAY_MASTER = {
   /** Or / champagne — CTA master (pas bleu). */
   gold: '#C5A059',
-  goldBright: '#E8D5A3',
+  goldBright: '#E8B923',
   goldDeep: '#9A7B2F',
   black: '#000000',
   white: '#FFFFFF',
   gray: '#A3A3A3',
   grayMuted: '#737373',
-  surface: '#141414',
-  surfaceAlt: '#0A0A0A',
+  surface: '#121218',
+  surfaceAlt: '#0A0A0F',
 } as const;
 
 /** Accents officiels par pôle (planche brand). */
@@ -24,8 +24,14 @@ export const PRODAY_POLE_ACCENTS = {
   player: '#FFFFFF',
   joueur: '#FFFFFF',
   coach: '#C5A059',
-  /** Émeraude football — distinct du lime Parent (#8CC63F). */
-  club: '#10B981',
+  /**
+   * Or de la charte de référence (captures du 15/09/2026) — **valeur mesurée au
+   * pixel**, identique à l'octet dans les quatre captures fournies :
+   * `rgb(248, 213, 72)` = `#F8D548`. Le contenu posé dessus est **noir**
+   * (`#000000`, 20–29 % des pixels du FAB central) : un libellé blanc sur cet or
+   * serait illisible (D-011).
+   */
+  club: '#F8D548',
   president: '#C5A059',
   parent: '#8CC63F',
   supporter: '#06B6D4',
@@ -79,6 +85,13 @@ export function poleOnAccent(variant: ProDayBrandVariant = 'master'): string {
     case 'president':
     case 'events':
     case 'evenements':
+      return PRODAY_MASTER.black;
+    /**
+     * Pôle Club : l'or `#F8D548` est **clair** — un libellé blanc dessus tombe
+     * autour de 1,4:1 de contraste. La référence y pose du noir (mesuré : 20 à
+     * 29 % des pixels du FAB central sont `#000000`), soit ~15:1. D-011.
+     */
+    case 'club':
       return PRODAY_MASTER.black;
     default:
       return PRODAY_MASTER.white;

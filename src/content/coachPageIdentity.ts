@@ -13,11 +13,11 @@ export const COACH_SITE = {
   glow: poleAccentSoft('coach', 0.28),
   bg: '#000000',
   band: '#000000',
-  surface: '#1C1C1E',
-  elevated: '#2C2C2E',
-  border: 'rgba(255, 255, 255, 0.12)',
+  surface: '#121218',
+  elevated: '#1A1A24',
+  border: 'rgba(255, 255, 255, 0.14)',
   foreground: '#FFFFFF',
-  muted: 'rgba(235, 235, 245, 0.58)',
+  muted: '#8B8B9A',
   pitchDeep: '#0a3d1a',
   pitch: '#14532d',
   pitchLight: '#166534',
@@ -65,12 +65,28 @@ export const COACH_LOCKED_IDENTITY: CoachPageIdentity = page({
 });
 
 export const COACH_PAGE_IDENTITIES: Record<CoachNavItemId, CoachPageIdentity> = {
+  copilot_chat: page({
+    id: 'copilot_chat',
+    eyebrow: 'Copilote',
+    title: 'Chat Copilote IA',
+    support: 'Conversation enregistrée par compte et par club, réponses générées côté serveur.',
+    icon: 'chat',
+    motif: 'none',
+  }),
   today: page({
     id: 'today',
     eyebrow: 'Briefing',
     title: 'Accueil',
     support: 'Jour J — match ou séance, pointage et hubs.',
     icon: 'home',
+    motif: 'none',
+  }),
+  calendrier: page({
+    id: 'calendrier',
+    eyebrow: 'Calendrier',
+    title: 'Calendrier',
+    support: 'Événements autorisés, convocations et séances.',
+    icon: 'calendar',
     motif: 'none',
   }),
   equipe: page({
@@ -191,6 +207,14 @@ export const COACH_PAGE_IDENTITIES: Record<CoachNavItemId, CoachPageIdentity> = 
     title: 'Communauté',
     support: 'Salons équipe · messagerie, mercato, trajets',
     icon: 'chat',
+    motif: 'none',
+  }),
+  rsvp_log: page({
+    id: 'rsvp_log',
+    eyebrow: 'Relances',
+    title: 'Historique des relances',
+    support: 'Traces des relances envoyées : qui, quand, pour qui.',
+    icon: 'notifications',
     motif: 'none',
   }),
   carpool: page({

@@ -2,6 +2,7 @@ import {
   cameraConnectHonestMessage,
   coachVideoEmptyLibraryBody,
   coachVideoLockReason,
+  coachVideoMissingSourceAlert,
   smartTacticsVideoHonestAlert,
 } from '../utils/coachVideoHonesty';
 
@@ -20,5 +21,10 @@ describe('coachVideoHonesty', () => {
 
   it('refuse les highlights inventés dans le message Smart Tactics', () => {
     expect(smartTacticsVideoHonestAlert()).toMatch(/aucun highlight inventé/i);
+  });
+
+  it('refuse toute lecture sans fichier réel associé', () => {
+    expect(coachVideoMissingSourceAlert()).toMatch(/aucun fichier vidéo associé/i);
+    expect(coachVideoMissingSourceAlert()).toMatch(/aucune vidéo de démonstration/i);
   });
 });

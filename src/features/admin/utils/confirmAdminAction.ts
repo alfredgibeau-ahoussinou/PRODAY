@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import { prodayAlert } from '../../../utils/prodayAlert';
 
 /** Confirmation admin pour actions sensibles. */
 export function confirmAdminAction(
@@ -7,16 +7,17 @@ export function confirmAdminAction(
   onConfirm: () => void | Promise<void>,
   destructive = false,
 ): void {
-  Alert.alert(title, message, [
+  prodayAlert.alert(title, message, [
     { text: 'Annuler', style: 'cancel' },
     {
       text: 'Confirmer',
       style: destructive ? 'destructive' : 'default',
       onPress: () => {
         void Promise.resolve(onConfirm()).catch((e) => {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         });
       },
     },
   ]);
 }
+

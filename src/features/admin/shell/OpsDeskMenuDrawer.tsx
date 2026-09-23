@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../../components/ui/Icon';
-import { AdminText } from '../ui/adminUi';
+import { AdminAppearanceSelector, AdminText } from '../ui/adminUi';
 import {
   ADMIN_NAV_GROUPS,
   ADMIN_NAV_ITEMS,
   type AdminNavSectionId,
 } from '../navigation/adminNavConfig';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminRadius, adminSpace } from '../theme/adminDesignSystem';
 
 type Props = {
@@ -60,8 +60,9 @@ export function OpsDeskMenuDrawer({
   verificationsCount = 0,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const resolvedTop = Math.max(topInset ?? 0, insets.top);
-  const t = ADMIN_TOKENS;
+  const minIos = Platform.OS === 'ios' ? 52 : 0;
+  const resolvedTop = Math.max(topInset ?? 0, insets.top, minIos);
+  const t = useAdminTokens();
   const counts = useMemo(
     () => ({
       queue: queueCount,
@@ -129,83 +130,84 @@ export function OpsDeskMenuDrawer({
                   const active = activeId === item.id;
                   const badge = badgeFor(item.badgeKey, counts);
                   return (
-                    <Pressable
-                      key={item.id}
-                      onPress={() => {
-                        onSelect(item.id);
-                        onClose();
-                      }}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: active }}
-                      testID={`admin-nav-${item.id}`}
-                      style={[
-                        styles.item,
-                        active && {
-                          backgroundColor: 'rgba(232,184,74,0.16)',
-                          borderColor: t.signal,
-                        },
-                      ]}
-                    >
-                      <Icon
-                        name={item.icon}
-                        size={18}
-                        color={active ? t.signal : 'rgba(244,246,248,0.55)'}
-                      />
-                      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                        <AdminText
-                          variant="nav"
-                          color={active ? t.railInk : 'rgba(244,246,248,0.85)'}
-                          numberOfLines={1}
-                        >
-                          {item.label}
-                        </AdminText>
-                        {item.hint ? (
-                          <AdminText variant="mono" color={t.faint} numberOfLines={1}>
-                            {item.hint}
-                          </AdminText>
-                        ) : null}
-                      </View>
-                      {badge > 0 ? (
-                        <View style={styles.badge}>
+                      <Pressable
+                        key={item.id}
+                        onPress={() => {
+                          onSelect(item.id);
+                          onClose();
+                        }}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        testID={`admin-nav-${item.id}`}
+                        style={[
+                          styles.item,
+                          active && {
+                            backgroundColor: t.accentSoft,
+                            borderColor: t.accentHot,
+                          },
+                        ]}
+                      >
+                        <Icon
+                          name={item.icon}
+                          size={18}
+                          color={active ? t.signal : 'rgba(244,246,248,0.55)'}
+                        />
+                        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                           <AdminText
-                            variant="label"
-                            color="#0B0D12"
-                            style={{ letterSpacing: 0, fontSize: 9 }}
+                            variant="nav"
+                            color={active ? t.railInk : 'rgba(244,246,248,0.85)'}
+                            style={{ fontWeight: active ? '700' : '500' }}
+                            numberOfLines={1}
                           >
-                            {badge > 99 ? '99+' : String(badge)}
+                            {item.label}
                           </AdminText>
+                          {item.hint ? (
+                            <AdminText variant="mono" color={t.faint} numberOfLines={1}>
+                              {item.hint}
+                            </AdminText>
+                          ) : null}
                         </View>
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            );
-          })}
+                        {badge > 0 ? (
+                          <View style={styles.badge}>
+                            <AdminText
+                              variant="label"
+                              color="#FFFFFF"
+                              style={{ letterSpacing: 0, fontSize: 9, fontWeight: '800' }}
+                            >
+                              {badge > 99 ? '99+' : String(badge)}
+                            </AdminText>
+                          </View>
+                        ) : null}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              );
+            })}
 
-          {onSignOut ? (
-            <View style={styles.accountGroup}>
-              <AdminText
-                variant="label"
-                color="rgba(244,246,248,0.4)"
-                style={styles.groupLabel}
-              >
-                Compte
-              </AdminText>
-              <Pressable
-                onPress={onSignOut}
-                accessibilityRole="button"
-                accessibilityLabel="Déconnexion"
-                testID="admin-sign-out"
-                style={styles.signOutItem}
-              >
-                <Icon name="log-out" size={18} color="#F87171" />
-                <AdminText variant="nav" color="#F87171" style={{ flex: 1 }}>
-                  Déconnexion
-                </AdminText>
-              </Pressable>
+            <View style={{ marginTop: 8 }}>
+              <AdminAppearanceSelector compact />
             </View>
-          ) : null}
+
+            {onSignOut ? (
+              <View style={styles.accountGroup}>
+                <Pressable
+                  onPress={() => {
+                    onClose();
+                    onSignOut();
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Déconnexion"
+                  testID="admin-sign-out"
+                  style={styles.signOutItem}
+                >
+                  <Icon name="log-out" size={18} color={t.danger} />
+                  <AdminText variant="nav" color={t.danger} style={{ flex: 1, fontWeight: '600' }}>
+                    Déconnexion
+                  </AdminText>
+                </Pressable>
+              </View>
+            ) : null}
         </ScrollView>
       </View>
     </Modal>

@@ -1,33 +1,44 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { ProDayText } from '../../../components/ui/ProDayText';
-import { Icon } from '../../../components/ui/Icon';
 import { PressableSpring } from '../../../components/motion';
-import { AuthButton } from './AuthButton';
+import { AuthSocialButtons } from '../../../components/auth/AuthSocialButtons';
 import type { SignupVisualChrome } from '../../../screens/signup/signupVisualSystem';
+import { colors, radius, spacing } from '../../../theme/designTokens';
 
 type AuthGatePanelProps = {
   visual: SignupVisualChrome;
   title: string;
   subtitle: string;
-  createLabel: string;
-  loginLabel: string;
-  onCreate: () => void;
+  onCreateWithEmail: () => void;
+  onPhoneAuth: () => void;
   onLogin: () => void;
+  onSocialSuccess: () => void | Promise<void>;
+  onNeedsProfile: (prefill: { email: string; displayName?: string }) => void;
+  onError: (msg: string) => void;
+  disabled?: boolean;
 };
 
 /**
- * Gate Créer / Se connecter — composition shell (wash + badge pôle + CTAs).
+ * Gate Créer un compte — Options claires et directes :
+ * 1. Continuer avec Google
+ * 2. Continuer avec Apple
+ * 3. Continuer avec l'email
+ * 4. Continuer avec le téléphone
  */
 export const AuthGatePanel: React.FC<AuthGatePanelProps> = ({
   visual,
   title,
   subtitle,
-  createLabel,
-  loginLabel,
-  onCreate,
+  onCreateWithEmail,
+  onPhoneAuth,
   onLogin,
+  onSocialSuccess,
+  onNeedsProfile,
+  onError,
+  disabled = false,
 }) => (
   <View style={styles.root}>
     <LinearGradient
@@ -50,32 +61,52 @@ export const AuthGatePanel: React.FC<AuthGatePanelProps> = ({
       {subtitle}
     </ProDayText>
 
-    <AuthButton
-      label={createLabel}
-      onPress={onCreate}
-      accent={visual.accent}
-      onAccent={visual.onAccent}
-    />
+    {/* Primary Auth Choices */}
+    <View style={styles.actionsGroup}>
+      {/* Social Providers (Google & Apple) */}
+      <AuthSocialButtons
+        disabled={disabled}
+        onSuccess={onSocialSuccess}
+        onNeedsProfile={onNeedsProfile}
+        onError={onError}
+      />
 
-    <PressableSpring
-      onPress={onLogin}
-      style={[
-        styles.loginChoice,
-        {
-          borderColor: visual.borderStrong,
-          backgroundColor: visual.elevated,
-        },
-      ]}
-      scaleTo={0.98}
-      haptic
-      accessibilityRole="button"
-      accessibilityLabel={loginLabel}
-    >
-      <Icon name="person" size={18} color={visual.text} />
-      <ProDayText variant="section" style={[styles.loginChoiceLabel, { color: visual.text }]}>
-        {loginLabel}
-      </ProDayText>
-    </PressableSpring>
+      {/* Email Registration */}
+      <PressableSpring
+        onPress={onCreateWithEmail}
+        style={[styles.actionBtn, styles.btnEmail]}
+        disabled={disabled}
+        scaleTo={0.97}
+        haptic
+        accessibilityRole="button"
+        accessibilityLabel="Continuer avec l'email"
+      >
+        <Ionicons name="mail" size={20} color="#000000" />
+        <Text style={styles.btnEmailText}>Continuer avec l’email</Text>
+      </PressableSpring>
+
+      {/* Phone Registration */}
+      <PressableSpring
+        onPress={onPhoneAuth}
+        style={[styles.actionBtn, styles.btnPhone]}
+        disabled={disabled}
+        scaleTo={0.97}
+        haptic
+        accessibilityRole="button"
+        accessibilityLabel="Continuer avec le téléphone"
+      >
+        <Ionicons name="call-outline" size={19} color="#FFFFFF" />
+        <Text style={styles.btnPhoneText}>Continuer avec le téléphone</Text>
+      </PressableSpring>
+    </View>
+
+    {/* Switch to Login */}
+    <View style={styles.switchRow}>
+      <Text style={styles.switchLeading}>Vous avez déjà un compte ?</Text>
+      <PressableSpring onPress={onLogin} scaleTo={0.96} haptic hitSlop={8}>
+        <Text style={[styles.switchLink, { color: visual.focus }]}>Se connecter</Text>
+      </PressableSpring>
+    </View>
   </View>
 );
 
@@ -84,7 +115,7 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 16,
+    borderRadius: radius.xxl,
   },
   wash: {
     ...StyleSheet.absoluteFillObject,
@@ -95,11 +126,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
     borderWidth: 1,
-    marginBottom: 22,
+    marginBottom: spacing.md,
   },
   poleDot: {
     width: 8,
@@ -109,37 +140,67 @@ const styles = StyleSheet.create({
   poleLabel: {
     fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 1.6,
+    letterSpacing: 1.2,
   },
   title: {
-    fontSize: 30,
+    fontSize: 26,
     fontWeight: '800',
-    letterSpacing: -0.7,
-    marginBottom: 10,
+    letterSpacing: -0.6,
+    marginBottom: 6,
     textAlign: 'center',
-    lineHeight: 36,
+    lineHeight: 32,
   },
   sub: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: '400',
-    marginBottom: 28,
+    marginBottom: spacing.lg,
     textAlign: 'center',
   },
-  loginChoice: {
-    marginTop: 12,
-    minHeight: 52,
-    borderRadius: 16,
-    borderWidth: 1,
+  actionsGroup: {
+    gap: 10,
+    marginBottom: spacing.lg,
+  },
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    paddingHorizontal: 20,
+    borderRadius: 26,
+    paddingVertical: 13,
+    minHeight: 50,
   },
-  loginChoiceLabel: {
-    fontSize: 15,
+  btnEmail: {
+    backgroundColor: colors.accent,
+  },
+  btnEmailText: {
+    color: '#000000',
+    fontSize: 14,
     fontWeight: '700',
-    letterSpacing: 0.2,
+  },
+  btnPhone: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+  },
+  btnPhoneText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.xs,
+  },
+  switchLeading: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  switchLink: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

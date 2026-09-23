@@ -14,4 +14,4 @@ export * from './CoachMatchEventHub';
 export * from './CoachTrainingEventHub';
 export * from './CoachDetectionEventHub';
 export * from './CoachMesVideosScreen';
-export * from './CoachMessagingScreen';
+export * from './CoachRsvpReminderLogScreen';

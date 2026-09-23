@@ -8,6 +8,7 @@ import Animated, {
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { prodayMotion } from '../tokens';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { sanitizeHostChildren } from '../sanitizeHostChildren';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -58,7 +59,7 @@ export function PressableScale({
       }}
       {...rest}
     >
-      {children}
+      {sanitizeHostChildren(children)}
     </AnimatedPressable>
   );
 }

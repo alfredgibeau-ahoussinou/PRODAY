@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { Icon } from '../../../components/ui/Icon';
 import { PressableSpring, AnimatedEntrance } from '../../../components/motion';
 import { colors, radius, spacing } from '../../../theme/designTokens';
+import {
+  encouragementsService,
+  type Encouragement,
+} from '../../../services/encouragements.service';
+import { useSessionProfile } from '../../../hooks/useSessionProfile';
+import { useAuth } from '../../../context/AuthContext';
 
 export interface EncouragementMessage {
   id: string;
@@ -15,71 +27,68 @@ export interface EncouragementMessage {
   hasClapped?: boolean;
 }
 
-const INITIAL_ENCOURAGEMENTS: EncouragementMessage[] = [
-  {
-    id: 'enc-1',
-    authorName: 'Alexandre M.',
-    authorRole: 'Supporter fidèle',
-    clubOrTeam: 'Seniors 1 · FC Grand Ouest',
-    text: 'Allez les gars ! Tout le club est derrière vous pour le match de coupe ce week-end ! 💪🔴🔵',
-    claps: 24,
-    createdAt: 'Il y a 10 min',
-  },
-  {
-    id: 'enc-2',
-    authorName: 'Sophie & Famille',
-    authorRole: 'Parent U15',
-    clubOrTeam: 'U15 A',
-    text: 'Bravo pour la combativité aux entraînements cette semaine. Faites-vous plaisir sur le terrain ! ⚽🔥',
-    claps: 18,
-    createdAt: 'Il y a 45 min',
-  },
-  {
-    id: 'enc-3',
-    authorName: 'Kop Tribune Nord',
-    authorRole: 'Groupe supporters',
-    clubOrTeam: 'Club omnisports',
-    text: '90 minutes pour tout donner, fierté et passion ! Allez le club ! 📣🙌',
-    claps: 42,
-    createdAt: 'Il y a 2 h',
-  },
-];
+export function SupporterEncouragementFeed({ clubId }: { clubId?: string }) {
+  const profile = useSessionProfile();
+  const { firebaseUser } = useAuth();
+  const currentUid = profile?.uid || firebaseUser?.uid || '';
 
-export function SupporterEncouragementFeed() {
-  const [messages, setMessages] = useState<EncouragementMessage[]>(INITIAL_ENCOURAGEMENTS);
+  const [messages, setMessages] = useState<EncouragementMessage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
-  const [selectedTeam] = useState('Équipe Première');
+  const [selectedTeam] = useState('Tous les clubs');
 
-  const handleSend = () => {
+  const loadEncouragements = useCallback(async () => {
+    try {
+      const items = await encouragementsService.list(clubId);
+      const mapped: EncouragementMessage[] = items.map((item) => ({
+        id: item.id,
+        authorName: item.authorName,
+        authorRole: item.authorRole,
+        clubOrTeam: item.clubOrTeam,
+        text: item.text,
+        claps: item.claps,
+        createdAt: new Date(item.createdAt).toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        hasClapped: currentUid ? item.clappedByUids.includes(currentUid) : false,
+      }));
+      setMessages(mapped);
+    } catch {
+      setMessages([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [clubId, currentUid]);
+
+  useEffect(() => {
+    void loadEncouragements();
+  }, [loadEncouragements]);
+
+  const handleSend = async () => {
     if (!draft.trim()) return;
-    const newMsg: EncouragementMessage = {
-      id: `enc-${Date.now()}`,
-      authorName: 'Moi (Supporter)',
-      authorRole: 'Supporter',
-      clubOrTeam: selectedTeam,
-      text: draft.trim(),
-      claps: 1,
-      createdAt: 'À l’instant',
-      hasClapped: true,
-    };
-    setMessages([newMsg, ...messages]);
+    const author = profile?.display_name || firebaseUser?.displayName || 'Supporter';
+    const textToSend = draft.trim();
     setDraft('');
+
+    await encouragementsService.post({
+      uid: currentUid,
+      authorName: author,
+      authorRole: 'Supporter',
+      clubId,
+      clubOrTeam: selectedTeam,
+      text: textToSend,
+    });
+
+    await loadEncouragements();
   };
 
-  const handleClap = (id: string) => {
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id === id) {
-          const nextClapped = !msg.hasClapped;
-          return {
-            ...msg,
-            hasClapped: nextClapped,
-            claps: msg.claps + (nextClapped ? 1 : -1),
-          };
-        }
-        return msg;
-      }),
-    );
+  const handleClap = async (id: string) => {
+    if (!currentUid) return;
+    await encouragementsService.clap(id, currentUid);
+    await loadEncouragements();
   };
 
   return (
@@ -112,7 +121,7 @@ export function SupporterEncouragementFeed() {
             <Text style={styles.teamTagLabel}>{selectedTeam}</Text>
           </View>
           <PressableSpring
-            onPress={handleSend}
+            onPress={() => void handleSend()}
             disabled={!draft.trim()}
             scaleTo={0.96}
             haptic
@@ -125,47 +134,62 @@ export function SupporterEncouragementFeed() {
       </View>
 
       {/* Feed List */}
-      <View style={styles.feedList}>
-        {messages.map((item, index) => (
-          <AnimatedEntrance key={item.id} kind="fadeUp" index={index} delayStep={24}>
-            <View style={styles.card}>
-              <View style={styles.cardTop}>
-                <View style={styles.authorAvatar}>
-                  <Text style={styles.avatarLetter}>{item.authorName.charAt(0)}</Text>
+      {loading ? (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator color={colors.brand} size="small" />
+        </View>
+      ) : messages.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Icon name="heart-outline" size={28} color={colors.textMuted} />
+          <Text style={styles.emptyText}>
+            Soyez le premier à encourager votre club !
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.feedList}>
+          {messages.map((item, index) => (
+            <AnimatedEntrance key={item.id} kind="fadeUp" index={index} delayStep={24}>
+              <View style={styles.card}>
+                <View style={styles.cardTop}>
+                  <View style={styles.authorAvatar}>
+                    <Text style={styles.avatarLetter}>
+                      {item.authorName.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.authorMeta}>
+                    <Text style={styles.authorName}>{item.authorName}</Text>
+                    <Text style={styles.cardContext}>
+                      {item.clubOrTeam} · {item.createdAt}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.authorMeta}>
-                  <Text style={styles.authorName}>{item.authorName}</Text>
-                  <Text style={styles.cardContext}>
-                    {item.clubOrTeam} · {item.createdAt}
-                  </Text>
-                </View>
-              </View>
 
-              <Text style={styles.cardBody}>{item.text}</Text>
+                <Text style={styles.cardBody}>{item.text}</Text>
 
-              <View style={styles.cardBottom}>
-                <PressableSpring
-                  onPress={() => handleClap(item.id)}
-                  scaleTo={0.94}
-                  haptic
-                  style={[styles.clapBtn, item.hasClapped && styles.clapBtnActive]}
-                >
-                  <Icon
-                    name={item.hasClapped ? 'heart' : 'heart-outline'}
-                    size={14}
-                    color={item.hasClapped ? colors.brand : colors.textMuted}
-                  />
-                  <Text
-                    style={[styles.clapCount, item.hasClapped && styles.clapCountActive]}
+                <View style={styles.cardBottom}>
+                  <PressableSpring
+                    onPress={() => void handleClap(item.id)}
+                    scaleTo={0.94}
+                    haptic
+                    style={[styles.clapBtn, item.hasClapped && styles.clapBtnActive]}
                   >
-                    {item.claps}
-                  </Text>
-                </PressableSpring>
+                    <Icon
+                      name={item.hasClapped ? 'heart' : 'heart-outline'}
+                      size={14}
+                      color={item.hasClapped ? colors.brand : colors.textMuted}
+                    />
+                    <Text
+                      style={[styles.clapCount, item.hasClapped && styles.clapCountActive]}
+                    >
+                      {item.claps}
+                    </Text>
+                  </PressableSpring>
+                </View>
               </View>
-            </View>
-          </AnimatedEntrance>
-        ))}
-      </View>
+            </AnimatedEntrance>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -244,6 +268,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: radius.pill,
+    minHeight: 32,
   },
   sendBtnDisabled: {
     opacity: 0.4,
@@ -252,6 +277,17 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 12,
     fontWeight: '800',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xl,
+    gap: spacing.sm,
+  },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    textAlign: 'center',
   },
   feedList: {
     gap: spacing.sm,
@@ -311,10 +347,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: radius.pill,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    minHeight: 32,
   },
   clapBtnActive: {
     backgroundColor: 'rgba(234, 179, 8, 0.15)',

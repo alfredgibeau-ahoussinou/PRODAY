@@ -30,6 +30,8 @@ export type ProdayNotificationData = {
     | 'internal_move'
     | 'player_late'
     | 'parent_pickup_late'
+    | 'session_cancelled'
+    | 'session_postponed'
     | 'coach_session_request';
   guardianEmail?: string;
   eventId?: string;
@@ -338,10 +340,6 @@ async function syncEngagementReminders(
   return ids;
 }
 
-async function syncMedicalAppointmentReminders(_profile: User): Promise<string[]> {
-  return [];
-}
-
 /** Planifie rappels convocation, alertes covoiturage et matchs proches (local). */
 export async function syncProdayLocalNotifications(
   profile: User | null | undefined,
@@ -358,8 +356,7 @@ export async function syncProdayLocalNotifications(
   const engagementIds = engagement
     ? await syncEngagementReminders(profile, engagement)
     : [];
-  const medicalIds = await syncMedicalAppointmentReminders(profile);
-  await saveScheduledIds([...scheduled, ...engagementIds, ...medicalIds]);
+  await saveScheduledIds([...scheduled, ...engagementIds]);
 
   await syncCarpoolAlerts(profile, events);
   await syncNearbyFriendlyMatches(profile, matches);

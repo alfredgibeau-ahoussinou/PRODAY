@@ -19,9 +19,17 @@ import {
   type GlobalSearchPageTarget,
   type GlobalSearchPlayerItem,
   type GlobalSearchClubItem,
+  type GlobalSearchTeamItem,
+  type GlobalSearchEventItem,
   type SearchResultCategory,
 } from '../../services/globalSearch.service';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
+import { useTabNavigation } from '../../context/TabNavigationContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useIsAdmin } from '../../hooks/useIsAdmin';
+import { resolvePlayerSearchScope } from '../../utils/playerSearchScope';
+import { countReachableResults } from '../../features/search/resultAvailability';
+import { openContactConversation } from '../../utils/openContactConversation';
 import { ELITE_COLORS, ELITE_RADIUS } from '../../theme/prodayEliteTheme';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { PressableSpring } from '../motion';
@@ -33,18 +41,38 @@ interface GlobalSearchModalProps {
   onClose: () => void;
   accent?: string;
   initialQuery?: string;
+  /**
+   * Périmètre club autorisé. Fourni par le pôle Club : il active la recherche
+   * d'équipes et d'événements **du club uniquement**. Absent ⇒ ces catégories
+   * ne sont ni proposées ni recherchées.
+   */
+  clubId?: string | null;
+  /** Ouvre une équipe trouvée (pôle Club). */
+  onOpenTeam?: (team: GlobalSearchTeamItem) => void;
+  /** Ouvre un événement trouvé. Par défaut : ouverture de l'événement. */
+  onOpenEvent?: (item: GlobalSearchEventItem) => void;
 }
 
 const { width: WINDOW_WIDTH } = Dimensions.get('window');
+
+/** Références stables : évitent de recréer un tableau à chaque rendu. */
+const NO_TEAMS: GlobalSearchTeamItem[] = [];
+const NO_EVENTS: GlobalSearchEventItem[] = [];
 
 export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   visible,
   onClose,
   accent = ELITE_COLORS.pitchGreen,
   initialQuery = '',
+  clubId = null,
+  onOpenTeam,
+  onOpenEvent,
 }) => {
   const insets = useSafeAreaInsets();
   const nav = useTabNavigationActions();
+  const tabNav = useTabNavigation();
+  const profile = useSessionProfile();
+  const { isAdmin } = useIsAdmin();
 
   const [query, setQuery] = useState(initialQuery);
   const [activeCategory, setActiveCategory] = useState<SearchResultCategory>('all');
@@ -53,6 +81,36 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   const [pagesResults, setPagesResults] = useState<GlobalSearchPageTarget[]>([]);
   const [playersResults, setPlayersResults] = useState<GlobalSearchPlayerItem[]>([]);
   const [clubsResults, setClubsResults] = useState<GlobalSearchClubItem[]>([]);
+  const [teamsResults, setTeamsResults] = useState<GlobalSearchTeamItem[]>([]);
+  const [eventsResults, setEventsResults] = useState<GlobalSearchEventItem[]>([]);
+
+  /** Équipes et événements ne sont proposés que dans un périmètre club autorisé. */
+  const clubScoped = Boolean(clubId);
+
+  /**
+   * Une destination sans gestionnaire ne doit pas figurer dans les résultats :
+   * une ligne cliquable qui ne mène nulle part est précisément ce que l'exigence
+   * interdit. On filtre donc **avant** le rendu et le comptage, pas au clic.
+   */
+  const openableTeams = onOpenTeam ? teamsResults : NO_TEAMS;
+  const openableEvents = onOpenEvent ? eventsResults : NO_EVENTS;
+
+  /**
+   * Périmètre autorisé de la recherche de personnes (CA-12). Sans club
+   * résolvable, le périmètre est « aucun » : la recherche ne renvoie jamais
+   * l'annuaire global par défaut.
+   */
+  const playerScope = useMemo(
+    () =>
+      resolvePlayerSearchScope({
+        viewerUid: profile?.uid,
+        role: profile?.role,
+        email: profile?.email,
+        isPlatformAdmin: isAdmin,
+        clubId: clubId ?? profile?.profile?.club_id ?? null,
+      }),
+    [profile?.uid, profile?.role, profile?.email, profile?.profile?.club_id, isAdmin, clubId],
+  );
 
   // Aperçu fiche joueur
   const [selectedPlayer, setSelectedPlayer] = useState<User | null>(null);
@@ -72,12 +130,16 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
           query,
           category: activeCategory,
           limit: 20,
+          clubId,
+          scope: playerScope,
         });
 
         if (isMounted) {
           setPagesResults(res.pages);
           setPlayersResults(res.players);
           setClubsResults(res.clubs);
+          setTeamsResults(res.teams);
+          setEventsResults(res.events);
         }
       } catch (err) {
         console.warn('[GlobalSearchModal] Erreur de recherche:', err);
@@ -93,7 +155,10 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [visible, query, activeCategory]);
+    // `clubId` et `playerScope` font partie des entrées de la requête : les omettre
+    // laissait une recherche fondée sur un périmètre périmé après un changement de
+    // club ou de rôle, alors que le service, lui, applique le nouveau périmètre.
+  }, [visible, query, activeCategory, clubId, playerScope]);
 
   // Réinitialisation à la fermeture
   const handleClose = useCallback(() => {
@@ -140,8 +205,15 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
     setSelectedClub(item.club);
   }, []);
 
-  // Total de résultats
-  const totalCount = pagesResults.length + playersResults.length + clubsResults.length;
+  // Total de résultats — les catégories réellement ouvrables, sans quoi le compteur
+  // annoncerait des résultats que l'utilisateur ne peut pas atteindre.
+  const totalCount = countReachableResults([
+    { results: pagesResults, handler: handleSelectPage },
+    { results: playersResults, handler: handleSelectPlayer },
+    { results: clubsResults, handler: handleSelectClub },
+    { results: teamsResults, handler: onOpenTeam },
+    { results: eventsResults, handler: onOpenEvent },
+  ]);
 
   const popularShortcuts = useMemo(
     () => [
@@ -216,6 +288,12 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                   { key: 'all', label: 'Tout' },
                   { key: 'pages', label: 'Pages' },
                   { key: 'players', label: 'Joueurs' },
+                  ...(clubScoped
+                    ? [
+                        { key: 'teams' as const, label: 'Équipes' },
+                        { key: 'events' as const, label: 'Événements' },
+                      ]
+                    : []),
                   { key: 'clubs', label: 'Clubs' },
                 ] as const
               ).map((cat) => {
@@ -339,7 +417,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
               {playersResults.length > 0 && (
                 <View style={styles.resultGroup}>
                   <View style={styles.groupHeaderRow}>
-                    <Ionicons name="people-outline" size={14} color={ELITE_COLORS.pitchGreen} />
+                    <Ionicons name="people-outline" size={14} color={accent} />
                     <Text style={styles.groupHeaderText}>
                       JOUEURS ({playersResults.length})
                     </Text>
@@ -352,8 +430,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                       style={styles.resultItem}
                       scaleTo={0.98}
                     >
-                      <View style={[styles.itemIconWrap, { backgroundColor: `${ELITE_COLORS.pitchGreen}20` }]}>
-                        <Ionicons name="person" size={16} color={ELITE_COLORS.pitchGreen} />
+                      <View style={[styles.itemIconWrap, { backgroundColor: `${accent}20` }]}>
+                        <Ionicons name="person" size={16} color={accent} />
                       </View>
 
                       <View style={styles.itemDetails}>
@@ -369,13 +447,111 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                         </View>
                       ) : null}
 
-                      <View style={[styles.badgePill, { backgroundColor: `${ELITE_COLORS.pitchGreen}20` }]}>
-                        <Text style={[styles.badgePillText, { color: ELITE_COLORS.pitchGreen }]}>
+                      <View style={[styles.badgePill, { backgroundColor: `${accent}20` }]}>
+                        <Text style={[styles.badgePillText, { color: accent }]}>
                           {playerItem.badge}
                         </Text>
                       </View>
 
                       <Ionicons name="chevron-forward" size={16} color="#475569" />
+                    </PressableSpring>
+                  ))}
+                </View>
+              )}
+
+              {/* RÉSULTATS ÉQUIPES (périmètre club) */}
+              {openableTeams.length > 0 && (
+                <View style={styles.resultGroup}>
+                  <View style={styles.groupHeaderRow}>
+                    <Ionicons name="people-outline" size={14} color={accent} />
+                    <Text style={styles.groupHeaderText}>
+                      ÉQUIPES ({openableTeams.length})
+                    </Text>
+                  </View>
+
+                  {openableTeams.map((teamItem) => (
+                    <PressableSpring
+                      key={teamItem.id}
+                      onPress={() => {
+                        if (!onOpenTeam) return;
+                        prodayHaptics.confirm();
+                        handleClose();
+                        onOpenTeam(teamItem);
+                      }}
+                      style={styles.resultItem}
+                      scaleTo={0.98}
+                      disabled={!onOpenTeam}
+                    >
+                      <View style={[styles.itemIconWrap, { backgroundColor: `${accent}20` }]}>
+                        <Ionicons name="people" size={16} color={accent} />
+                      </View>
+
+                      <View style={styles.itemDetails}>
+                        <Text style={styles.itemTitle}>{teamItem.title}</Text>
+                        <Text style={styles.itemSubtitle} numberOfLines={1}>
+                          {teamItem.subtitle}
+                        </Text>
+                      </View>
+
+                      <View style={[styles.badgePill, { backgroundColor: `${accent}20` }]}>
+                        <Text style={[styles.badgePillText, { color: accent }]}>
+                          {teamItem.badge}
+                        </Text>
+                      </View>
+
+                      {onOpenTeam ? (
+                        <Ionicons name="chevron-forward" size={16} color="#475569" />
+                      ) : null}
+                    </PressableSpring>
+                  ))}
+                </View>
+              )}
+
+              {/* RÉSULTATS ÉVÉNEMENTS (périmètre club) */}
+              {openableEvents.length > 0 && (
+                <View style={styles.resultGroup}>
+                  <View style={styles.groupHeaderRow}>
+                    <Ionicons name="calendar-outline" size={14} color={accent} />
+                    <Text style={styles.groupHeaderText}>
+                      ÉVÉNEMENTS ({openableEvents.length})
+                    </Text>
+                  </View>
+
+                  {openableEvents.map((eventItem) => (
+                    <PressableSpring
+                      key={eventItem.id}
+                      onPress={() => {
+                        if (!onOpenEvent) return;
+                        prodayHaptics.confirm();
+                        handleClose();
+                        onOpenEvent(eventItem);
+                      }}
+                      style={styles.resultItem}
+                      scaleTo={0.98}
+                      disabled={!onOpenEvent}
+                    >
+                      <View style={[styles.itemIconWrap, { backgroundColor: `${accent}20` }]}>
+                        <Ionicons name="calendar" size={16} color={accent} />
+                      </View>
+
+                      <View style={styles.itemDetails}>
+                        <Text style={styles.itemTitle} numberOfLines={1}>
+                          {eventItem.title}
+                        </Text>
+                        <Text style={styles.itemSubtitle} numberOfLines={1}>
+                          {eventItem.subtitle}
+                        </Text>
+                      </View>
+
+                      <View style={[styles.badgePill, { backgroundColor: `${accent}20` }]}>
+                        <Text style={[styles.badgePillText, { color: accent }]}>
+                          {eventItem.badge}
+                        </Text>
+                      </View>
+
+                      {onOpenEvent ? (
+                        <Ionicons name="chevron-forward" size={16} color="#475569" />
+                      ) : null}
                     </PressableSpring>
                   ))}
                 </View>
@@ -455,7 +631,10 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                         {selectedPlayer.profile?.position || 'Joueur'} · {selectedPlayer.profile?.club_id || 'Club'}
                       </Text>
                       {selectedPlayer.city ? (
-                        <Text style={styles.detailPlayerCity}>📍 {selectedPlayer.city}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                          <Ionicons name="location-outline" size={12} color="#94A3B8" />
+                          <Text style={styles.detailPlayerCity}>{selectedPlayer.city}</Text>
+                        </View>
                       ) : null}
                     </View>
                   </View>
@@ -470,7 +649,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                       <Text style={styles.detailStatLbl}>ÂGE</Text>
                     </View>
                     <View style={styles.detailStatBox}>
-                      <Text style={styles.detailStatVal}>{selectedPlayer.profile?.level || 'Élite'}</Text>
+                      <Text style={styles.detailStatVal}>{selectedPlayer.profile?.level || '—'}</Text>
                       <Text style={styles.detailStatLbl}>NIVEAU</Text>
                     </View>
                   </View>
@@ -478,10 +657,20 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                   <View style={styles.detailActionsRow}>
                     <TouchableOpacity
                       onPress={() => {
+                        if (!profile) return;
                         prodayHaptics.confirm();
+                        const target = selectedPlayer;
                         setSelectedPlayer(null);
                         handleClose();
                         nav.setActiveTab('messages');
+                        // Reprend le fil existant ou en crée un seul (jamais de doublon),
+                        // après contrôle des droits de messagerie.
+                        void openContactConversation(
+                          profile,
+                          target,
+                          target.display_name,
+                          tabNav.openChat,
+                        );
                       }}
                       style={[styles.detailPrimaryBtn, { backgroundColor: accent }]}
                     >

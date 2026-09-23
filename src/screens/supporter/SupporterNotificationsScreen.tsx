@@ -1,6 +1,7 @@
 import React from 'react';
-import { SupporterPlaceholderScreen } from './SupporterPlaceholderScreen';
+import { NotificationsScreen } from '../NotificationsScreen';
 
-export const SupporterNotificationsScreen: React.FC = () => (
-  <SupporterPlaceholderScreen title="Notifications" />
-);
+/** Écran de notifications du pôle Supporter. */
+export const SupporterNotificationsScreen: React.FC = () => {
+  return <NotificationsScreen />;
+};

@@ -1,5 +1,6 @@
 import React from 'react';
 import Svg, { Circle, Path, Rect, Polygon, G } from 'react-native-svg';
+import { colors } from '../../theme/designTokens';
 
 const GOLD = '#FAFAFA';
 
@@ -490,7 +491,7 @@ export function TacticalPitchBallHero({
       {/* Ballon officiel au centre */}
       <G transform="translate(140, 50)">
         {/* Ombre / Fond ballon */}
-        <Circle cx={0} cy={0} r={17} fill="#14141A" stroke={color} strokeWidth={1.8} />
+        <Circle cx={0} cy={0} r={17} fill={colors.surface} stroke={color} strokeWidth={1.8} />
 
         {/* Pentagone central */}
         <Polygon

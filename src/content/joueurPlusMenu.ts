@@ -126,8 +126,8 @@ export function buildJoueurPlusMenuItems({
     },
     {
       id: 'progression',
-      label: getJoueurGameTabLabel('progression', ageGroup),
-      subtitle: 'XP, niveau & défis',
+      label: 'Ma Saison',
+      subtitle: 'Matchs, feuilles de match & progression',
       icon: 'stats-chart' as IconName,
       action: { kind: 'tab', tab: 'progression' },
       visible: has('progression'),

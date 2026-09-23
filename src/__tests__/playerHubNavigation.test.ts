@@ -11,34 +11,33 @@ import type { MainTabId } from '../navigation/mainTabConfig';
 const PLAYER_DOCK = new Set<MainTabId>(AMATEUR_PLAYER_SHELL_TABS);
 
 describe('player hub navigation', () => {
-  it('définit 5 onglets shell joueur amateur', () => {
+  it('définit 4 onglets shell joueur amateur (refonte Player §4)', () => {
     expect(AMATEUR_PLAYER_SHELL_TABS).toEqual([
       'home',
       'matchs',
-      'feed',
       'profil',
       'plus',
     ]);
   });
 
-  it('met équipe et secondaires en overflow amateur', () => {
+  it('met Saison, équipe et secondaires en overflow amateur — accessibles depuis le Menu', () => {
     expect(AMATEUR_PLAYER_OVERFLOW_TABS).toEqual(
-      expect.arrayContaining(['progression', 'recrutement', 'reels', 'messages', 'covoiturage', 'shop']),
+      expect.arrayContaining(['feed', 'progression', 'recrutement', 'reels', 'messages', 'covoiturage', 'shop']),
     );
   });
 
-  it('définit 5 onglets shell joueur pro', () => {
+  it('définit 4 onglets shell joueur pro (même dock qu’amateur)', () => {
     expect(PRO_PLAYER_SHELL_TABS).toEqual([
       'home',
       'matchs',
-      'feed',
       'profil',
       'plus',
     ]);
     expect(PRO_PLAYER_OVERFLOW_TABS).toContain('recrutement');
+    expect(PRO_PLAYER_OVERFLOW_TABS).toContain('feed');
   });
 
-  it('aligne le rail mobile joueur sur les 5 onglets', () => {
+  it('aligne le rail mobile joueur sur les 4 onglets', () => {
     const rail = getMobileRailLayout('amateur', 'player');
     expect(rail.flat).toEqual(AMATEUR_PLAYER_SHELL_TABS);
   });

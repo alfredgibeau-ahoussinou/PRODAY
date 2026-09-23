@@ -7,6 +7,7 @@ import {
   getMessagesThreadFilters,
 } from '../../i18n/localizedChapters';
 import { SearchBar } from '../ui/SearchBar';
+import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
@@ -26,6 +27,8 @@ export interface MessagesInboxHeaderProps {
   unreadCount?: number;
   loading: boolean;
   variant?: 'default' | 'coach' | 'joueur';
+  /** Ouvre la création de groupe. Absent ⇒ le bouton n'est pas rendu. */
+  onCreateGroup?: () => void;
 }
 
 export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
@@ -37,6 +40,7 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
   unreadCount = 0,
   loading,
   variant,
+  onCreateGroup,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
@@ -74,7 +78,7 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
         onChangeText={onSearchChange}
         embedded
         palette={{
-          surface: '#141418',
+          surface: colors.surface,
           border: 'rgba(255, 255, 255, 0.08)',
           text: '#FFFFFF',
           textMuted: '#8E8E9F',
@@ -86,6 +90,35 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filters}
       >
+        {onCreateGroup ? (
+          <PressableSpring
+            onPress={onCreateGroup}
+            scaleTo={0.95}
+            haptic
+            accessibilityLabel="Nouveau groupe"
+            style={[
+              styles.chip,
+              {
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: coach ? coachTokens.surface : joueur ? JOUEUR_SURFACES.chip : colors.surface,
+                borderColor: coach ? coachTokens.border : joueur ? joueurTheme.border : colors.border,
+              },
+            ]}
+          >
+            <Icon name="add" size={14} color={coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent} />
+            <Text
+              style={[
+                styles.chipText,
+                { color: coach ? coachTokens.foreground : joueur ? joueurTheme.ink : colors.text },
+              ]}
+            >
+              Groupe
+            </Text>
+          </PressableSpring>
+        ) : null}
+
         {threadFilters.map((opt) => {
           const on = opt.id === threadFilter;
           return (
@@ -100,7 +133,7 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                       : joueur
                         ? joueurTheme.accent
                         : '#FFFFFF'
-                    : '#141418',
+                    : colors.surface,
                   borderColor: on
                     ? coach
                       ? coachTokens.accent

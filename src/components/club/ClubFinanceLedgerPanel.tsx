@@ -28,26 +28,41 @@ import {
   ClubFinanceLedgerRow,
   ClubFinanceSoldeHero,
 } from '../../features/club/ui/ClubFinanceChrome';
+import { ClubFinancePlanPanel } from '../../features/club/ui/ClubFinancePlanPanel';
 import {
+  buildClubFinanceCategoryBreakdown,
   buildClubFinanceLedgerRow,
   buildCotisationCoverage,
   clubFinanceHonestyNote,
+  clubFinanceOutstandingPrerequisites,
+  clubFinancePaymentProvenanceNote,
+  CLUB_FINANCE_PERIOD_DEFINITION,
+  CLUB_FINANCE_PERIOD_LABELS,
   defaultCotisationLabel,
-  exportClubLedgerToCsv,
+  filterClubFinanceByPeriod,
   filterClubFinanceEntries,
   formatClubFinanceEur,
   matchMemberFromName,
   resolveClubFinanceSubtitle,
   type ClubFinanceLedgerFilter,
+  type ClubFinancePeriod,
 } from '../../features/club/ui/clubFinanceModel';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubRadius, clubShadow, clubSpace } from '../../features/club/theme/clubDesignSystem';
 import {
   CLUB_FINANCE_CATEGORY_SUGGESTIONS,
+  CLUB_FINANCE_PAYMENT_METHODS,
+  CLUB_FINANCE_PAYMENT_METHOD_LABELS,
   CLUB_FINANCE_TYPE_LABELS,
+  isClubFinanceIncomeType,
   type ClubFinanceEntry,
   type ClubFinanceEntryType,
+  type ClubFinancePaymentMethod,
 } from '../../models/ClubFinanceEntry';
+import type { ClubFee } from '../../models/ClubFee';
+import { clubFeesService } from '../../services/clubFees.service';
+import { clubSeasonLabelForDate } from '../../utils/clubSeason';
+import { humanizeClubFinanceWriteError } from '../../features/club/ui/clubFeeModel';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 
@@ -56,13 +71,6 @@ const TYPE_OPTIONS: { id: ClubFinanceEntryType; label: string }[] = [
   { id: 'depense', label: 'Dépense' },
   { id: 'recette', label: 'Recette' },
   { id: 'autre', label: 'Autre' },
-];
-
-export const PAYMENT_METHODS = [
-  { id: 'especes', label: 'Espèces' },
-  { id: 'cheque', label: 'Chèque' },
-  { id: 'virement', label: 'Virement' },
-  { id: 'cb', label: 'Carte Bancaire' },
 ];
 
 const FILTER_OPTIONS: { id: ClubFinanceLedgerFilter; label: string }[] = [
@@ -95,9 +103,31 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Licence');
   const [memberName, setMemberName] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'especes' | 'cheque' | 'virement' | 'cb'>('especes');
   const [dateStr, setDateStr] = useState(() => new Date().toISOString().slice(0, 10));
   const [ledgerFilter, setLedgerFilter] = useState<ClubFinanceLedgerFilter>('all');
+  const [period, setPeriod] = useState<ClubFinancePeriod>('all');
+  const [paymentMethod, setPaymentMethod] = useState<ClubFinancePaymentMethod | null>(null);
+  const [feeId, setFeeId] = useState<string | null>(null);
+  const [feeOptions, setFeeOptions] = useState<ClubFee[]>([]);
+  const [feesLoading, setFeesLoading] = useState(false);
+
+  /**
+   * Échéances de la saison en cours, chargées **à l'ouverture du formulaire** : c'est le
+   * seul moment où le rattachement est décidé. Les charger en permanence coûterait une
+   * lecture à chaque affichage du registre pour une donnée utilisée rarement.
+   */
+  const loadFeeOptions = useCallback(() => {
+    if (!clubId) {
+      setFeeOptions([]);
+      return;
+    }
+    setFeesLoading(true);
+    void clubFeesService
+      .listByClub(clubId, clubSeasonLabelForDate(new Date()))
+      .then(setFeeOptions)
+      .catch(() => setFeeOptions([]))
+      .finally(() => setFeesLoading(false));
+  }, [clubId]);
 
   const players = useMemo(
     () =>
@@ -111,6 +141,28 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
   const coverage = useMemo(
     () => buildCotisationCoverage({ playerMembers: players, entries }),
     [players, entries],
+  );
+
+  /**
+   * Période appliquée aux **totaux et à la ventilation**. Les écritures annulées ou supprimées
+   * sont écartées à la source : un solde qui les inclurait ne serait pas réconciliable avec le registre.
+   */
+  const periodEntries = useMemo(
+    () => filterClubFinanceByPeriod(entries, period),
+    [entries, period],
+  );
+  const periodTotals = useMemo(() => {
+    let income = 0;
+    let expense = 0;
+    for (const e of periodEntries) {
+      if (isClubFinanceIncomeType(e.type)) income += e.amount_eur;
+      else expense += e.amount_eur;
+    }
+    return { income, expense, net: income - expense };
+  }, [periodEntries]);
+  const breakdown = useMemo(
+    () => buildClubFinanceCategoryBreakdown(periodEntries),
+    [periodEntries],
   );
 
   const filteredEntries = useMemo(
@@ -128,58 +180,25 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
     return resolveClubFinanceSubtitle(totals);
   }, [coverage.summary, totals]);
 
-  const handleRelanceCotisations = useCallback(() => {
-    const count = coverage.unrecorded.length;
-    if (count === 0) return;
-    Alert.alert(
-      'Relance des cotisations',
-      `Envoyer un rappel de règlement par notification et message aux ${count} adhérents sans cotisation enregistrée ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Envoyer les relances',
-          style: 'default',
-          onPress: () => {
-            Alert.alert('Relances transmises', `${count} rappels de cotisation ont été envoyés aux adhérents.`);
-          },
-        },
-      ],
-    );
-  }, [coverage.unrecorded.length]);
-
-  const handleExportCsv = useCallback(() => {
-    if (entries.length === 0) {
-      Alert.alert('Grand livre vide', 'Aucune écriture financière à exporter.');
-      return;
-    }
-    try {
-      const csv = exportClubLedgerToCsv(entries);
-      Alert.alert(
-        'Export comptable (CSV)',
-        `${entries.length} écritures exportées avec succès au format standard expert-comptable.`,
-      );
-    } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur lors de l’export.');
-    }
-  }, [entries]);
-
   const resetForm = useCallback(() => {
     setType('cotisation');
     setLabel('');
     setAmount('');
     setCategory('Licence');
     setMemberName('');
-    setPaymentMethod('especes');
     setDateStr(new Date().toISOString().slice(0, 10));
+    setPaymentMethod(null);
+    setFeeId(null);
   }, []);
 
   const openForm = useCallback(
     (preset?: ClubFinanceEntryType) => {
       resetForm();
       if (preset) setType(preset);
+      loadFeeOptions();
       setFormOpen(true);
     },
-    [resetForm],
+    [loadFeeOptions, resetForm],
   );
 
   const openCotisationForMember = useCallback(
@@ -188,10 +207,26 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
       setType('cotisation');
       setMemberName(name);
       setLabel(defaultCotisationLabel(name));
+      loadFeeOptions();
       setFormOpen(true);
     },
-    [resetForm],
+    [loadFeeOptions, resetForm],
   );
+
+  /**
+   * Échéances qui concernent l'adhérent saisi. Le rapprochement se fait sur l'UID quand
+   * l'adhérent existe, sinon sur le nom — un encaissement ne doit pas être rattaché à
+   * l'échéance d'un homonyme par simple ressemblance de chaîne.
+   */
+  const matchingFees = useMemo(() => {
+    const matched = memberName.trim() ? matchMemberFromName(memberName, players) : null;
+    const query = memberName.trim().toLowerCase();
+    return feeOptions.filter((fee) => {
+      if (matched) return fee.member_uid === matched.uid;
+      if (!query) return false;
+      return (fee.member_name ?? '').trim().toLowerCase() === query;
+    });
+  }, [feeOptions, memberName, players]);
 
   const submit = useCallback(async () => {
     if (!clubId || !profile?.uid) {
@@ -219,27 +254,32 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
       type === 'cotisation' && memberName.trim()
         ? matchMemberFromName(memberName, players)
         : null;
-    const methodObj = PAYMENT_METHODS.find((p) => p.id === paymentMethod);
-    const finalLabel = methodObj ? `${resolvedLabel} [${methodObj.label}]` : resolvedLabel;
     setSaving(true);
     try {
       await create({
         club_id: clubId,
         type,
         amount_eur: amountEur,
-        label: finalLabel,
+        label: resolvedLabel,
         category: category.trim() || 'Divers',
         entry_date: entryDate,
         created_by_uid: profile.uid,
         created_by_name: profile.display_name,
         member_uid: matched?.uid ?? null,
         member_name: memberName.trim() || matched?.display_name || null,
+        payment_method: paymentMethod,
+        fee_id: type === 'cotisation' ? feeId : null,
       });
       setFormOpen(false);
       resetForm();
-      Alert.alert('Enregistré', `${CLUB_FINANCE_TYPE_LABELS[type]} ajoutée au ledger.`);
+      Alert.alert(
+        'Enregistré',
+        feeId
+          ? `${CLUB_FINANCE_TYPE_LABELS[type]} ajoutée au ledger et rattachée à l’échéance.`
+          : `${CLUB_FINANCE_TYPE_LABELS[type]} ajoutée au ledger.`,
+      );
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Enregistrement impossible.');
+      Alert.alert('Refusé', humanizeClubFinanceWriteError(e));
     } finally {
       setSaving(false);
     }
@@ -249,6 +289,7 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
     clubId,
     create,
     dateStr,
+    feeId,
     label,
     memberName,
     paymentMethod,
@@ -318,8 +359,104 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
           unrecorded={coverage.unrecorded}
           onAddCotisation={() => openForm('cotisation')}
           onOpenPlayers={() => shellNav?.requestNav('players')}
-          onRelanceCotisations={handleRelanceCotisations}
         />
+
+        {/* Ce qui est dû (échéances) et ce qui est prévu (budget) — séparé du registre. */}
+        <ClubFinancePlanPanel clubId={clubId} entries={entries} />
+
+        {/* Période appliquée aux totaux — l'intervalle est écrit sous les puces. */}
+        <View style={styles.periodPills}>
+          {(Object.keys(CLUB_FINANCE_PERIOD_LABELS) as ClubFinancePeriod[]).map((p) => {
+            const isActive = p === period;
+            return (
+              <PressableSpring
+                key={p}
+                onPress={() => setPeriod(p)}
+                scaleTo={0.97}
+                haptic
+                style={[
+                  styles.periodPill,
+                  { borderColor: tokens.border },
+                  isActive ? { backgroundColor: tokens.accentSoft, borderColor: tokens.accent } : null,
+                ]}
+                accessibilityLabel={`Période ${CLUB_FINANCE_PERIOD_LABELS[p]}`}
+              >
+                <ClubText
+                  variant="caption"
+                  style={{ color: isActive ? tokens.accent : tokens.muted, fontWeight: '700' }}
+                >
+                  {CLUB_FINANCE_PERIOD_LABELS[p]}
+                </ClubText>
+              </PressableSpring>
+            );
+          })}
+        </View>
+        <ClubText variant="caption" muted style={styles.periodNote}>
+          {CLUB_FINANCE_PERIOD_DEFINITION}
+        </ClubText>
+
+        <View style={[styles.breakdownCard, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}> {
+          /* Ventilation calculée depuis les seules écritures de la période. */
+        }
+          <ClubText variant="label" muted>
+            Ventilation par catégorie
+          </ClubText>
+          {breakdown.length === 0 ? (
+            <ClubText variant="caption" muted style={styles.breakdownEmpty}>
+              Aucune écriture sur cette période.
+            </ClubText>
+          ) : (
+            breakdown.map((row) => (
+              <View key={row.category} style={[styles.breakdownRow, { borderColor: tokens.border }]}>
+                <View style={styles.breakdownLabel}>
+                  <ClubText variant="caption" numberOfLines={1}>
+                    {row.category}
+                  </ClubText>
+                  <ClubText variant="caption" muted>
+                    {row.count} écriture{row.count > 1 ? 's' : ''} · {formatClubFinanceEur(row.incomeEur)} en entrée · {formatClubFinanceEur(row.expenseEur)} en sortie
+                  </ClubText>
+                </View>
+                <ClubText
+                  variant="caption"
+                  style={{ color: row.netEur >= 0 ? tokens.pitch : tokens.danger, fontWeight: '800' }}
+                >
+                  {row.netEur >= 0 ? '+' : ''}
+                  {formatClubFinanceEur(row.netEur)}
+                </ClubText>
+              </View>
+            ))
+          )}
+          <View style={[styles.breakdownTotal, { borderColor: tokens.borderStrong }]}>
+            <ClubText variant="caption" muted>
+              Net de la période
+            </ClubText>
+            <ClubText
+              variant="body"
+              style={{
+                color: periodTotals.net >= 0 ? tokens.pitch : tokens.danger,
+                fontWeight: '800',
+              }}
+            >
+              {periodTotals.net >= 0 ? '+' : ''}
+              {formatClubFinanceEur(periodTotals.net)}
+            </ClubText>
+          </View>
+        </View>
+
+        {/* Deux limites du modèle, dites telles quelles : elles ne sont pas masquées par un chiffre. */}
+        <View style={[styles.limitCard, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>{
+          /* Aucune intégration bancaire : les écritures sont saisies à la main. */
+        }
+          <Icon name="alert-circle" size={16} color={tokens.muted} />
+          <View style={styles.limitBody}>
+            <ClubText variant="caption" muted>
+              {clubFinancePaymentProvenanceNote()}
+            </ClubText>
+            <ClubText variant="caption" muted style={styles.limitSecond}>
+              {clubFinanceOutstandingPrerequisites()}
+            </ClubText>
+          </View>
+        </View>
 
         <View style={styles.quickAdd}>
           <PressableSpring
@@ -368,19 +505,9 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
             <ClubText variant="label" muted style={styles.sectionLabel}>
               Ledger
             </ClubText>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <ClubText variant="caption" muted>
-                {filteredEntries.length}
-              </ClubText>
-              {entries.length > 0 ? (
-                <PressableSpring onPress={handleExportCsv} scaleTo={0.96} haptic style={styles.exportChip}>
-                  <Icon name="document-text" size={13} color={tokens.accent} />
-                  <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
-                    Export CSV
-                  </ClubText>
-                </PressableSpring>
-              ) : null}
-            </View>
+            <ClubText variant="caption" muted>
+              {filteredEntries.length}
+            </ClubText>
           </View>
 
           {filteredEntries.length === 0 ? (
@@ -566,28 +693,6 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
           ))}
         </View>
         <ClubText variant="caption" muted style={styles.fieldLabel}>
-          Mode de règlement (espèces, chèque...)
-        </ClubText>
-        <View style={styles.chips}>
-          {PAYMENT_METHODS.map((m) => (
-            <Pressable
-              key={m.id}
-              onPress={() => setPaymentMethod(m.id as any)}
-              style={[styles.chip, paymentMethod === m.id && styles.chipOn]}
-            >
-              <ClubText
-                variant="caption"
-                style={{
-                  color: paymentMethod === m.id ? tokens.onAccent : tokens.foreground,
-                  fontWeight: '600',
-                }}
-              >
-                {m.label}
-              </ClubText>
-            </Pressable>
-          ))}
-        </View>
-        <ClubText variant="caption" muted style={styles.fieldLabel}>
           Date (AAAA-MM-JJ)
         </ClubText>
         <TextInput
@@ -598,10 +703,86 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
           placeholderTextColor={tokens.muted}
           style={styles.input}
         />
+        {/* Moyen de paiement — facultatif, jamais déduit. « Non renseigné » est un état valide. */}
+        <ClubText variant="caption" muted style={styles.fieldLabel}>
+          Moyen de paiement
+        </ClubText>
+        <View style={styles.chips}>
+          {(Object.keys(CLUB_FINANCE_PAYMENT_METHOD_LABELS) as ClubFinancePaymentMethod[]).map(
+            (m) => {
+              const isOn = paymentMethod === m;
+              return (
+                <Pressable
+                  key={m}
+                  onPress={() => setPaymentMethod(isOn ? null : m)}
+                  style={[styles.chip, isOn && styles.chipOn]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Moyen de paiement ${CLUB_FINANCE_PAYMENT_METHOD_LABELS[m]}`}
+                >
+                  <ClubText
+                    variant="caption"
+                    style={{
+                      color: isOn ? tokens.onAccent : tokens.foreground,
+                      fontWeight: '600',
+                    }}
+                  >
+                    {CLUB_FINANCE_PAYMENT_METHOD_LABELS[m]}
+                  </ClubText>
+                </Pressable>
+              );
+            },
+          )}
+        </View>
+        <ClubText variant="caption" muted>
+          {paymentMethod
+            ? clubFinancePaymentProvenanceNote()
+            : 'Aucun moyen renseigné — « Non renseigné » reste un état valide, jamais remplacé par un défaut.'}
+        </ClubText>
+
+        {/* Rattachement à une échéance — c'est ce qui réduit un reste dû. */}
         {type === 'cotisation' ? (
-          <ClubText variant="caption" muted style={{ marginTop: clubSpace.sm }}>
-            {clubFinanceHonestyNote()}
-          </ClubText>
+          <>
+            <ClubText variant="caption" muted style={styles.fieldLabel}>
+              Échéance réglée
+            </ClubText>
+            {feesLoading ? (
+              <ActivityIndicator color={tokens.accent} />
+            ) : matchingFees.length > 0 ? (
+              <View style={styles.chips}>
+                {matchingFees.map((fee) => {
+                  const isOn = feeId === fee.id;
+                  return (
+                    <Pressable
+                      key={fee.id}
+                      onPress={() => setFeeId(isOn ? null : fee.id)}
+                      style={[styles.chip, isOn && styles.chipOn]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Rattacher à l’échéance ${fee.category} du ${fee.due_date.toLocaleDateString('fr-FR')}`}
+                    >
+                      <ClubText
+                        variant="caption"
+                        style={{
+                          color: isOn ? tokens.onAccent : tokens.foreground,
+                          fontWeight: '600',
+                        }}
+                      >
+                        {`${fee.category} · ${formatClubFinanceEur(fee.amount_due_eur - fee.discount_eur)} · ${fee.due_date.toLocaleDateString('fr-FR')}`}
+                      </ClubText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : (
+              <ClubText variant="caption" muted>
+                {memberName.trim()
+                  ? 'Aucune échéance enregistrée pour cet adhérent sur la saison en cours : l’encaissement sera enregistré sans être rattaché, et n’éteindra aucun reste dû.'
+                  : 'Choisissez l’adhérent pour voir ses échéances.'}
+              </ClubText>
+            )}
+            <ClubText variant="caption" muted style={{ marginTop: clubSpace.xs }}>
+              {clubFinanceHonestyNote()}
+            </ClubText>
+          </>
         ) : null}
         <View style={styles.formActions}>
           <ClubButton
@@ -624,6 +805,59 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
+    periodPills: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: clubSpace.sm,
+      paddingHorizontal: clubSpace.lg,
+      marginBottom: clubSpace.sm,
+    },
+    periodPill: {
+      paddingHorizontal: clubSpace.md,
+      paddingVertical: clubSpace.sm,
+      borderRadius: clubRadius.pill,
+      borderWidth: 1,
+    },
+    periodNote: {
+      paddingHorizontal: clubSpace.lg,
+      marginBottom: clubSpace.md,
+    },
+    breakdownCard: {
+      marginHorizontal: clubSpace.lg,
+      marginBottom: clubSpace.md,
+      padding: clubSpace.lg,
+      borderRadius: clubRadius.md,
+      borderWidth: 1,
+      gap: clubSpace.sm,
+    },
+    breakdownEmpty: { paddingVertical: clubSpace.sm },
+    breakdownRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.md,
+      paddingVertical: clubSpace.sm,
+      borderTopWidth: 1,
+    },
+    breakdownLabel: { flex: 1, gap: 2 },
+    breakdownTotal: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: clubSpace.md,
+      borderTopWidth: 1,
+    },
+    limitCard: {
+      flexDirection: 'row',
+      gap: clubSpace.md,
+      marginHorizontal: clubSpace.lg,
+      marginBottom: clubSpace.md,
+      padding: clubSpace.md,
+      borderRadius: clubRadius.md,
+      borderWidth: 1,
+    },
+    limitBody: { flex: 1, gap: clubSpace.sm },
+    limitSecond: { lineHeight: 16 },
     root: { flex: 1, backgroundColor: 'transparent' },
     quickAdd: {
       flexDirection: 'row',
@@ -655,17 +889,6 @@ const createStyles = (tokens: ClubThemeTokens) =>
     sectionLabel: {
       letterSpacing: 1.05,
       opacity: 0.92,
-    },
-    exportChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: clubRadius.pill,
-      borderWidth: 1,
-      borderColor: tokens.accent,
-      backgroundColor: tokens.accentSoft,
     },
     list: { gap: clubSpace.sm },
     footer: {

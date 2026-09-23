@@ -1,4 +1,9 @@
 import React, { useMemo } from 'react';
+import { PRO_DATA_VIOLET, proSemantic } from '../../theme/professionalDesign';
+import { withAlpha } from '../../utils/coachTeamTheme';
+import { COACH_SITE } from '../../content/coachPageIdentity';
+
+const tokens = COACH_SITE;
 import { StyleSheet, View } from 'react-native';
 import { CoachSectionCard, CoachText } from './coachPortalUi';
 import { useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
@@ -28,15 +33,15 @@ export function CoachPlayerAiPanel(props: Props) {
 
   const loadStatus = useMemo(() => {
     if (!wellness) return null;
-    if (wellness.injured) return { label: 'Blessé', color: '#EF4444', icon: 'medkit' as const };
-    if (wellness.suspended) return { label: 'Suspendu', color: '#6B7280', icon: 'close-circle' as const };
+    if (wellness.injured) return { label: 'Blessé', color: proSemantic.danger, icon: 'medkit' as const };
+    if (wellness.suspended) return { label: 'Suspendu', color: tokens.muted, icon: 'close-circle' as const };
     if ((wellness.fatigue ?? 0) >= 7 || (wellness.pain ?? 0) >= 5) {
-      return { label: 'Vigilance charge', color: 'rgba(255, 255, 255, 0.7)', icon: 'warning' as const };
+      return { label: 'Vigilance charge', color: withAlpha('FFFFFF', 0.7), icon: 'warning' as const };
     }
     if ((wellness.recovery ?? 10) >= 7 && (wellness.fatigue ?? 0) <= 4) {
-      return { label: 'Pleine forme', color: '#10B981', icon: 'checkmark-circle' as const };
+      return { label: 'Pleine forme', color: proSemantic.success, icon: 'checkmark-circle' as const };
     }
-    return { label: 'Disponible', color: '#3B82F6', icon: 'fitness' as const };
+    return { label: 'Disponible', color: proSemantic.info, icon: 'fitness' as const };
   }, [wellness]);
 
   if (props.compact) {
@@ -101,7 +106,7 @@ export function CoachPlayerAiPanel(props: Props) {
             {typeof wellness.pain === 'number' && wellness.pain > 0 ? (
               <View style={styles.chargeMetric}>
                 <CoachText variant="caption" muted>Douleur</CoachText>
-                <CoachText variant="caption" style={{ fontWeight: '700', color: wellness.pain >= 5 ? '#EF4444' : undefined }}>
+                <CoachText variant="caption" style={{ fontWeight: '700', color: wellness.pain >= 5 ? proSemantic.danger : undefined }}>
                   {wellness.pain}/10
                 </CoachText>
               </View>

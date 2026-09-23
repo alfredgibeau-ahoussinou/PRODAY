@@ -1,274 +1,274 @@
 import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Icon } from '../ui/Icon';
+import { PressableSpring } from '../motion/PressableSpring';
 import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-} from 'react-native';
-import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import { CoachFutPlayerCard, FutPlayer } from './CoachFutPlayerCard';
+  COACH_COMPONENT_FALLBACK,
+  type CoachComponentTokens,
+} from '../../features/coach/theme/coachPitchTokens';
+import { availabilityTone } from './CoachFutPlayerCard';
+import { availabilityLabel, type SquadPlayer } from '../../utils/coachSquadRoster';
+import { proCard, proRadius, proSpace, proType } from '../../theme/professionalDesign';
 
 interface CoachBenchDrawerProps {
-  subs: FutPlayer[];
-  unselected: FutPlayer[];
+  subs: SquadPlayer[];
+  unselected: SquadPlayer[];
   selectedStarterId: string | null;
   selectedBenchId: string | null;
-  onSelectBenchPlayer: (player: FutPlayer) => void;
+  onSelectBenchPlayer: (player: SquadPlayer) => void;
+  /** Ouvrir la fiche complète depuis le banc. */
+  onOpenPlayer?: (player: SquadPlayer) => void;
+  tokens?: CoachComponentTokens;
 }
 
+type BenchTab = 'subs' | 'unavailable';
+
+/**
+ * Banc des remplaçants — **liste verticale lisible**, pas un carrousel.
+ *
+ * Le banc est un espace à part du terrain (exigence du brief) : une seule
+ * carte, un seul sélecteur (disponibles / indisponibles), des lignes de hauteur
+ * identique. Les indisponibles restent visibles mais ne sont plus confondus
+ * avec les remplaçants valides.
+ */
 export const CoachBenchDrawer: React.FC<CoachBenchDrawerProps> = ({
   subs,
   unselected,
   selectedStarterId,
   selectedBenchId,
   onSelectBenchPlayer,
+  onOpenPlayer,
+  tokens = COACH_COMPONENT_FALLBACK,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [filterTab, setFilterTab] = useState<'subs' | 'reserves'>('subs');
+  const [tab, setTab] = useState<BenchTab>('subs');
 
-  const displayList = filterTab === 'subs' ? subs : unselected;
+  const list = tab === 'subs' ? subs : unselected;
+  const awaitingSwap = selectedStarterId !== null;
 
   return (
-    <View style={styles.container}>
-      {/* Drawer Header with Collapse Toggle */}
-      <TouchableOpacity
-        activeOpacity={0.8}
-        style={styles.headerBar}
-        onPress={() => setIsExpanded((prev) => !prev)}
-      >
-        <View style={styles.headerLeft}>
-          <View style={styles.benchIconBadge}>
-            <MaterialCommunityIcons name="seat-passenger" size={14} color="#C5A059" />
-          </View>
-          <View>
-            <View style={styles.titleRow}>
-              <Text style={styles.headerTitle}>Banc & Remplaçants</Text>
-              <View style={styles.countBadge}>
-                <Text style={styles.countText}>{subs.length}</Text>
-              </View>
-            </View>
-            <Text style={styles.headerSubtitle}>
-              {selectedStarterId
-                ? 'Sélectionnez un remplaçant pour l’associer au titulaire'
-                : 'Glissez ou touchez un joueur pour permuter'}
-            </Text>
-          </View>
+    <View style={[proCard(tokens), styles.card]}>
+      <View style={styles.header}>
+        <View style={styles.headerText}>
+          <Text style={[styles.title, { color: tokens.foreground }]}>Banc</Text>
+          <Text style={[styles.caption, { color: tokens.muted }]} numberOfLines={2}>
+            {awaitingSwap
+              ? 'Touchez un remplaçant pour le faire entrer à la place du titulaire sélectionné.'
+              : 'Touchez un joueur pour ouvrir sa fiche ou l’aligner.'}
+          </Text>
         </View>
-
-        <View style={styles.headerRight}>
-          <Feather
-            name={isExpanded ? 'chevron-down' : 'chevron-up'}
-            size={18}
-            color="#8B8B9A"
-          />
+        <View style={[styles.count, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
+          <Text style={[styles.countText, { color: tokens.foreground }]}>{subs.length}</Text>
         </View>
-      </TouchableOpacity>
+      </View>
 
-      {/* Expanded Content Tray */}
-      {isExpanded && (
-        <View style={styles.bodyTray}>
-          {/* Filter Pills */}
-          <View style={styles.filterPillsRow}>
-            <TouchableOpacity
-              style={[styles.filterPill, filterTab === 'subs' && styles.filterPillActive]}
-              onPress={() => setFilterTab('subs')}
-            >
-              <Text
+      <View style={[styles.segment, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
+        <BenchTabButton
+          label={`Disponibles ${subs.length}`}
+          active={tab === 'subs'}
+          tokens={tokens}
+          onPress={() => setTab('subs')}
+        />
+        <BenchTabButton
+          label={`Indisponibles ${unselected.length}`}
+          active={tab === 'unavailable'}
+          tokens={tokens}
+          onPress={() => setTab('unavailable')}
+        />
+      </View>
+
+      {list.length === 0 ? (
+        <Text style={[styles.empty, { color: tokens.muted }]}>
+          {tab === 'subs' ? 'Aucun remplaçant disponible.' : 'Aucun joueur indisponible.'}
+        </Text>
+      ) : (
+        <View>
+          {list.map((player, index) => {
+            const selected = selectedBenchId === player.id;
+            const tone = availabilityTone(player.availability);
+            return (
+              <PressableSpring
+                key={player.id}
+                onPress={() => onSelectBenchPlayer(player)}
+                onLongPress={
+                  onOpenPlayer
+                    ? () => {
+                        onOpenPlayer(player);
+                      }
+                    : undefined
+                }
+                scaleTo={0.98}
+                accessibilityRole="button"
+                accessibilityLabel={`${player.name}${player.num != null ? ` (n° ${player.num})` : ''}, ${availabilityLabel(
+                  player.availability,
+                )}`}
                 style={[
-                  styles.filterPillText,
-                  filterTab === 'subs' && styles.filterPillTextActive,
+                  styles.row,
+                  index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tokens.border },
+                  selected && { backgroundColor: tokens.soft },
                 ]}
               >
-                Remplaçants disponibles ({subs.length})
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.filterPill, filterTab === 'reserves' && styles.filterPillActive]}
-              onPress={() => setFilterTab('reserves')}
-            >
-              <Text
-                style={[
-                  styles.filterPillText,
-                  filterTab === 'reserves' && styles.filterPillTextActive,
-                ]}
-              >
-                Réserves & Infirmerie ({unselected.length})
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Horizontal Scroll of Compact FUT Cards */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.cardsScroll}
-          >
-            {displayList.map((player) => {
-              const isSelected = selectedBenchId === player.id;
-              const isCandidateTarget = selectedStarterId !== null;
-
-              return (
-                <View key={player.id} style={styles.cardItemWrap}>
-                  <CoachFutPlayerCard
-                    player={player}
-                    size="bench"
-                    isSelected={isSelected}
-                    isTarget={isCandidateTarget}
-                    onPress={() => onSelectBenchPlayer(player)}
-                  />
-                  <View style={styles.benchStatusBadge}>
-                    <Text
-                      style={[
-                        styles.benchStatusText,
-                        player.rsvp === 'present' && { color: '#30D158' },
-                        player.rsvp === 'pending' && { color: '#FF9F0A' },
-                        player.rsvp === 'injured' && { color: '#BF5AF2' },
-                      ]}
-                    >
-                      {player.rsvp === 'present'
-                        ? 'Dispo'
-                        : player.rsvp === 'injured'
-                        ? 'Blessé'
-                        : 'Attente'}
-                    </Text>
-                  </View>
+                <View
+                  style={[
+                    styles.rowAvatar,
+                    {
+                      borderColor: selected ? tokens.accent : tokens.border,
+                      backgroundColor: tokens.elevated,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.rowNumber, { color: tokens.foreground }]}>{player.num ?? '—'}</Text>
                 </View>
-              );
-            })}
-          </ScrollView>
+
+                <View style={styles.rowBody}>
+                  <Text style={[styles.rowName, { color: tokens.foreground }]} numberOfLines={1}>
+                    {player.name}
+                  </Text>
+                  <Text style={[styles.rowMeta, { color: tokens.muted }]} numberOfLines={1}>
+                    {player.pos ?? 'Poste non renseigné'} · {availabilityLabel(player.availability)}
+                  </Text>
+                </View>
+
+                <View style={[styles.dot, { backgroundColor: tone }]} />
+                <Icon name="chevron-forward" size={16} color={tokens.muted} />
+              </PressableSpring>
+            );
+          })}
         </View>
       )}
     </View>
   );
 };
 
+function BenchTabButton({
+  label,
+  active,
+  tokens = COACH_COMPONENT_FALLBACK,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  tokens?: CoachComponentTokens;
+  onPress: () => void;
+}) {
+  return (
+    <PressableSpring
+      onPress={onPress}
+      scaleTo={0.97}
+      haptic
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      style={[
+        styles.segmentBtn,
+        active && { backgroundColor: tokens.surface, borderColor: tokens.accent },
+      ]}
+    >
+      <Text
+        style={[
+          styles.segmentText,
+          { color: active ? tokens.accent : tokens.muted, fontWeight: active ? '700' : '600' },
+        ]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+    </PressableSpring>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#141418',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    marginTop: 12,
+  card: {
+    gap: proSpace.md,
     overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    paddingBottom: proSpace.sm,
   },
-  headerBar: {
+  header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: '#181820',
+    alignItems: 'flex-start',
+    gap: proSpace.sm,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  headerText: {
     flex: 1,
+    minWidth: 0,
+    gap: 2,
   },
-  benchIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: 'rgba(197, 160, 89, 0.15)',
+  title: {
+    ...proType.h3,
+  },
+  caption: {
+    ...proType.caption,
+  },
+  count: {
+    minWidth: 30,
+    height: 30,
+    borderRadius: proRadius.pill,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: proSpace.sm,
+  },
+  countText: {
+    ...proType.caption,
+    fontWeight: '800',
+  },
+  segment: {
+    flexDirection: 'row',
+    borderRadius: proRadius.pill,
+    borderWidth: 1,
+    padding: 3,
+    gap: 3,
+  },
+  segmentBtn: {
+    flex: 1,
+    minHeight: 36,
+    borderRadius: proRadius.pill,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: proSpace.sm,
+  },
+  segmentText: {
+    ...proType.caption,
+  },
+  empty: {
+    ...proType.caption,
+    paddingVertical: proSpace.lg,
+    textAlign: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: proSpace.md,
+    minHeight: 56,
+    paddingHorizontal: proSpace.sm,
+  },
+  rowAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: proRadius.pill,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 13,
+  rowNumber: {
+    ...proType.caption,
     fontWeight: '800',
-    fontFamily: '-apple-system',
   },
-  countBadge: {
-    backgroundColor: '#C5A059',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+  rowBody: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
   },
-  countText: {
-    color: '#000000',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  headerSubtitle: {
-    color: '#8B8B9A',
-    fontSize: 10,
-    fontFamily: '-apple-system',
-    marginTop: 1,
-  },
-  headerRight: {
-    paddingLeft: 8,
-  },
-  bodyTray: {
-    paddingVertical: 10,
-    backgroundColor: '#141418',
-  },
-  filterPillsRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 14,
-    gap: 8,
-    marginBottom: 10,
-  },
-  filterPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: '#1C1C24',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  filterPillActive: {
-    backgroundColor: 'rgba(197, 160, 89, 0.2)',
-    borderColor: '#C5A059',
-  },
-  filterPillText: {
-    color: '#8B8B9A',
-    fontSize: 10.5,
+  rowName: {
+    ...proType.body,
     fontWeight: '600',
-    fontFamily: '-apple-system',
   },
-  filterPillTextActive: {
-    color: '#C5A059',
-    fontWeight: '700',
+  rowMeta: {
+    ...proType.caption,
   },
-  cardsScroll: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    gap: 12,
-  },
-  cardItemWrap: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  benchStatusBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  benchStatusText: {
-    fontSize: 8.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: proRadius.pill,
   },
 });

@@ -1,19 +1,19 @@
 import type { MainTabId } from '../mainTabConfig';
 
 /**
- * Pôle joueur — 5 onglets dock : Accueil · Matchs · Saison · Profil · Plus.
- * Secondaires (équipe, reels, messages, covoit, shop…) via hub Plus.
+ * Pôle joueur — dock 4 onglets : Accueil · Calendrier · Ma Carte · Menu.
+ * « Saison » reste ouverte depuis le hub Menu.
  */
 
 export const AMATEUR_PLAYER_SHELL_TABS: MainTabId[] = [
   'home',
   'matchs',
-  'feed',
   'profil',
   'plus',
 ];
 
 export const AMATEUR_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'feed',
   'progression',
   'recrutement',
   'reels',
@@ -78,12 +78,12 @@ export const PRO_CLUB_OVERFLOW_TABS: MainTabId[] = ['covoiturage', 'shop'];
 export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
   'home',
   'matchs',
-  'feed',
   'profil',
   'plus',
 ];
 
 export const PRO_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'feed',
   'progression',
   'recrutement',
   'reels',

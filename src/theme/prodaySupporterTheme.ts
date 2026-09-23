@@ -17,12 +17,12 @@ export const supporterColorOverrides = {
   inkMuted: '#A3A3A3',
   inkFaint: '#737373',
   background: '#000000',
-  backgroundAlt: '#0A0A0A',
-  surface: '#141414',
-  surfaceMuted: '#1A1A1A',
+  backgroundAlt: '#0A0A0F',
+  surface: '#121218',
+  surfaceMuted: '#1A1A24',
   surfaceInverse: '#FAFAFA',
   heroMuted: 'rgba(255, 255, 255, 0.72)',
-  border: 'rgba(255, 255, 255, 0.1)',
+  border: 'rgba(255, 255, 255, 0.08)',
   borderStrong: poleAccentSoft('supporter', 0.55),
   borderMedium: poleAccentSoft('supporter', 0.28),
   text: '#FAFAFA',
@@ -32,8 +32,8 @@ export const supporterColorOverrides = {
   tone2: A,
   tone3: '#22D3EE',
   tone4: '#67E8F9',
-  navy: '#0A0A0A',
-  navySoft: '#171717',
+  navy: '#0A0A0F',
+  navySoft: '#121218',
   blueBright: '#22D3EE',
   bluePrimary: A,
   blueCyan: '#22D3EE',
@@ -45,8 +45,8 @@ export const supporterColorOverrides = {
 
 export const supporterGradients = {
   hero: ['#000000', '#083344'] as const,
-  heroDark: ['#000000', '#0A0A0A'] as const,
-  card: ['#1A1A1A', '#0A0A0A'] as const,
+  heroDark: ['#000000', '#0A0A0F'] as const,
+  card: ['#1A1A24', '#0A0A0F'] as const,
   cta: ['#0E7490', A] as const,
 };
 

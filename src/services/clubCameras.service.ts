@@ -4,12 +4,14 @@ import {
   addDoc,
   getDocs,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
   limit,
   serverTimestamp,
   Timestamp,
+  type QueryConstraint,
 } from 'firebase/firestore';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
@@ -82,6 +84,8 @@ function videoFromDoc(id: string, data: Record<string, unknown>): ClubMatchVideo
     vendor: data.vendor as ClubMatchVideo['vendor'],
     source: (data.source as ClubMatchVideo['source']) ?? 'import',
     status: (data.status as ClubMatchVideo['status']) ?? 'ready',
+    source_verified: Boolean(data.source_verified),
+    kind: data.kind as ClubMatchVideo['kind'],
     team_id: data.team_id ? String(data.team_id) : undefined,
     team_label: data.team_label ? String(data.team_label) : undefined,
     event_id: data.event_id ? String(data.event_id) : undefined,
@@ -133,24 +137,43 @@ export const clubCamerasService = {
     }
   },
 
-  async listMatchVideos(clubId: string): Promise<ClubMatchVideo[]> {
+  async listMatchVideos(
+    clubId: string,
+    audience?: 'coaches' | 'players' | 'parents' | 'staff',
+  ): Promise<ClubMatchVideo[]> {
     if (!isFirebaseConfigured()) return [];
     const database = getDb();
     if (!database) return [];
     try {
-      const q = query(
-        collection(database, 'club_match_videos'),
+      const constraints: QueryConstraint[] = [
         where('club_id', '==', clubId),
         orderBy('created_at', 'desc'),
         limit(40),
+      ];
+      if (audience && audience !== 'staff') {
+        constraints.splice(1, 0, where('share_with', 'array-contains', audience));
+      }
+      const q = query(
+        collection(database, 'club_match_videos'),
+        ...constraints,
       );
       const snap = await getDocs(q);
-      return snap.docs.map((d) => videoFromDoc(d.id, d.data() as Record<string, unknown>));
+      return snap.docs
+        .map((d) => videoFromDoc(d.id, d.data() as Record<string, unknown>))
+        .filter((v) =>
+          audience === 'staff' ||
+          !audience ||
+          v.share_with.includes(audience),
+        )
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
     } catch {
       const snap = await getDocs(collection(database, 'club_match_videos'));
       return snap.docs
         .map((d) => videoFromDoc(d.id, d.data() as Record<string, unknown>))
-        .filter((v) => v.club_id === clubId)
+        .filter((v) =>
+          v.club_id === clubId &&
+          (audience === 'staff' || !audience || v.share_with.includes(audience)),
+        )
         .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
     }
   },
@@ -170,6 +193,8 @@ export const clubCamerasService = {
       vendor: input.vendor,
       brand_label: vendorLabel(input.vendor),
       model: input.model?.trim() || defaultModelForVendor(input.vendor),
+      display_name: input.display_name?.trim() ?? null,
+      connection_label: input.connection_label?.trim() ?? null,
       status: 'connected',
       team_id: input.team_id ?? null,
       team_label: input.team_label ?? null,
@@ -179,7 +204,7 @@ export const clubCamerasService = {
       storage_quota_mb: null,
       sync_status: 'ok',
       external_device_id: result.external_device_id ?? null,
-      created_by_uid: input.created_by_uid,
+      created_by_uid: input.created_by_uid || input.club_id,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     });
@@ -389,6 +414,72 @@ export const clubCamerasService = {
       id: ref.id,
       message: `Captation programmée · ${camera.display_name || camera.model}`,
     };
+  },
+
+  /**
+   * Met à jour les métadonnées d'une vidéo (titre, équipe, adversaire, permissions, etc.)
+   * de façon persistante dans Firestore.
+   */
+  async updateMatchVideo(
+    videoId: string,
+    patch: Partial<ClubMatchVideo>,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const updateData: Record<string, unknown> = {
+      updated_at: serverTimestamp(),
+    };
+
+    if (patch.title !== undefined) updateData.title = patch.title.trim();
+    if (patch.opponent !== undefined) updateData.opponent = patch.opponent?.trim() || null;
+    if (patch.team_id !== undefined) updateData.team_id = patch.team_id || null;
+    if (patch.team_label !== undefined) updateData.team_label = patch.team_label?.trim() || null;
+    if (patch.event_id !== undefined) updateData.event_id = patch.event_id || null;
+    if (patch.event_title !== undefined) updateData.event_title = patch.event_title?.trim() || null;
+    if (patch.share_with !== undefined) updateData.share_with = patch.share_with;
+    if (patch.player_uids !== undefined) updateData.player_uids = patch.player_uids;
+    if (patch.ai_ready !== undefined) updateData.ai_ready = patch.ai_ready;
+    if (patch.highlights_ready !== undefined) updateData.highlights_ready = patch.highlights_ready;
+    if (patch.clips !== undefined) updateData.clips = patch.clips;
+    if (patch.status !== undefined) updateData.status = patch.status;
+    if (patch.kind !== undefined) updateData.kind = patch.kind;
+
+    await updateDoc(doc(database, 'club_match_videos', videoId), updateData);
+  },
+
+  /**
+   * Supprime définitivement la référence d'une vidéo et ses clips dans la base ProDay du club.
+   */
+  async deleteMatchVideo(videoId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'club_match_videos', videoId));
+  },
+
+  /**
+   * Bascule le statut d'une captation en archive.
+   */
+  async archiveMatchVideo(videoId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'club_match_videos', videoId), {
+      status: 'archived',
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /**
+   * Clôture un direct live en cours et le rend disponible immédiatement en replay dans la bibliothèque.
+   */
+  async endLiveStream(videoId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'club_match_videos', videoId), {
+      status: 'ready',
+      kind: 'replay',
+      updated_at: serverTimestamp(),
+    });
   },
 };
 

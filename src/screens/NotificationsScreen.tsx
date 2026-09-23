@@ -12,7 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { ProDayText } from '../components/ui/ProDayText';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { prodayHaptics } from '../utils/prodayHaptics';
-import { spacing, radius } from '../theme/designTokens';
+import { colors, spacing, radius } from '../theme/designTokens';
+import { PRO_DATA_VIOLET } from '../theme/professionalDesign';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 export type NotificationCategory =
@@ -62,7 +63,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
         read: readIds.has('notif-1'),
         priority: 'high',
         badgeLabel: 'URGENT · RSVP',
-        badgeColor: '#FF453A',
+        badgeColor: colors.error,
         icon: 'calendar',
         actionLabel: 'Répondre à la convocation',
         contextAction: () => nav.openMatchs({ homeTab: 'convocations' }),
@@ -76,7 +77,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
         read: readIds.has('notif-2'),
         priority: 'high',
         badgeLabel: 'COVOITURAGE',
-        badgeColor: '#30D158',
+        badgeColor: colors.success,
         icon: 'car',
         actionLabel: 'Réserver une place',
         contextAction: () => nav.openCarpool({ chapter: 'reserver' }),
@@ -90,7 +91,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
         read: readIds.has('notif-3'),
         priority: 'medium',
         badgeLabel: 'COACH IA',
-        badgeColor: '#FFD700',
+        badgeColor: colors.bookmark,
         icon: 'sparkles',
         actionLabel: 'Voir les exercices',
         contextAction: () => nav.openDashboard('train_ai'),
@@ -104,7 +105,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
         read: readIds.has('notif-4'),
         priority: 'normal',
         badgeLabel: 'ANNONCE CLUB',
-        badgeColor: '#0A84FF',
+        badgeColor: colors.tone4,
         icon: 'megaphone',
         actionLabel: 'Lire l’annonce',
         contextAction: () => nav.setActiveTab('messages'),
@@ -118,7 +119,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
         read: readIds.has('notif-5'),
         priority: 'normal',
         badgeLabel: 'MERCATO',
-        badgeColor: '#BF5AF2',
+        badgeColor: PRO_DATA_VIOLET,
         icon: 'flash',
         actionLabel: 'Voir l’opportunité',
         contextAction: () => nav.openMercato('detections'),
@@ -163,7 +164,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
         <View style={styles.headerTitleRow}>
           {onBack ? (
             <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.7}>
-              <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+              <Ionicons name="chevron-back" size={20} color={colors.text} />
             </TouchableOpacity>
           ) : null}
           <View>
@@ -183,7 +184,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
 
         {unreadCount > 0 ? (
           <TouchableOpacity onPress={markAllAsRead} style={styles.markReadBtn} activeOpacity={0.8}>
-            <Ionicons name="checkmark-done" size={14} color="#30D158" />
+            <Ionicons name="checkmark-done" size={14} color={colors.success} />
             <ProDayText style={styles.markReadText}>Tout marquer lu</ProDayText>
           </TouchableOpacity>
         ) : null}
@@ -221,7 +222,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
       >
         {filteredAlerts.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Ionicons name="notifications-off-outline" size={36} color="#64748B" />
+            <Ionicons name="notifications-off-outline" size={36} color={colors.textDim} />
             <ProDayText style={styles.emptyTitle}>Aucune notification</ProDayText>
             <ProDayText style={styles.emptySub}>
               Tu es à jour ! Les nouvelles alertes de convocation ou covoiturage apparaîtront ici.
@@ -256,7 +257,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
                 {/* Contextual Action Footer */}
                 <View style={styles.alertFooter}>
                   <ProDayText style={styles.actionCtaText}>{alert.actionLabel}</ProDayText>
-                  <Ionicons name="arrow-forward" size={14} color="#30D158" />
+                  <Ionicons name="arrow-forward" size={14} color={colors.success} />
                 </View>
               </TouchableOpacity>
             );
@@ -270,7 +271,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#090B10',
+    backgroundColor: colors.backgroundAlt,
   },
   header: {
     paddingHorizontal: spacing.lg,
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: colors.border,
   },
   headerTitleRow: {
     flexDirection: 'row',
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -304,13 +305,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: colors.text,
     letterSpacing: -0.4,
   },
   unreadCountPill: {
-    backgroundColor: 'rgba(255, 69, 58, 0.15)',
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: 'rgba(255, 69, 58, 0.4)',
+    borderColor: colors.error,
     borderRadius: 12,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -318,20 +319,20 @@ const styles = StyleSheet.create({
   unreadCountText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#FF453A',
+    color: colors.error,
   },
   headerSub: {
     fontSize: 12,
-    color: '#8E8E9F',
+    color: colors.textMuted,
     marginTop: 2,
   },
   markReadBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    backgroundColor: colors.successBg,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: colors.success,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -339,12 +340,12 @@ const styles = StyleSheet.create({
   markReadText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#30D158',
+    color: colors.success,
   },
   filtersRail: {
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
+    borderBottomColor: colors.border,
   },
   filtersContent: {
     flexDirection: 'row',
@@ -356,21 +357,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: radius.pill,
-    backgroundColor: '#141620',
+    backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: colors.border,
   },
   filterChipActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
+    backgroundColor: colors.brandInverse,
+    borderColor: colors.brandInverse,
   },
   filterChipText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#8E8E9F',
+    color: colors.textMuted,
   },
   filterChipTextActive: {
-    color: '#000000',
+    color: colors.background,
     fontWeight: '900',
   },
   feedScroll: {
@@ -381,16 +382,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   alertCard: {
-    backgroundColor: '#12141D',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: colors.border,
     padding: 14,
     gap: 6,
   },
   alertCardUnread: {
-    backgroundColor: '#161926',
-    borderColor: 'rgba(48, 209, 88, 0.35)',
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.success,
   },
   alertCardHeader: {
     flexDirection: 'row',
@@ -420,22 +421,22 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: '#30D158',
+    backgroundColor: colors.success,
   },
   alertTimestamp: {
     fontSize: 11,
-    color: '#64748B',
+    color: colors.textDim,
     fontWeight: '600',
   },
   alertTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.text,
     marginTop: 2,
   },
   alertBody: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: colors.textMuted,
     lineHeight: 17,
   },
   alertFooter: {
@@ -447,27 +448,27 @@ const styles = StyleSheet.create({
   actionCtaText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#30D158',
+    color: colors.success,
   },
   emptyCard: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 50,
     paddingHorizontal: 24,
-    backgroundColor: '#12141D',
+    backgroundColor: colors.surface,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: colors.border,
     gap: 8,
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.text,
   },
   emptySub: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textDim,
     textAlign: 'center',
     lineHeight: 18,
   },

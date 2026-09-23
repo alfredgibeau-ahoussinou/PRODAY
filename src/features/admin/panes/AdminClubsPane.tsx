@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Image,
   Pressable,
@@ -9,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { prodayAlert } from '../../../utils/prodayAlert';
 import { useAdminData } from '../data/AdminDataContext';
 import {
   AdminAvatarMark,
@@ -24,7 +24,7 @@ import {
   AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
-import { ADMIN_TOKENS } from '../theme/adminTokens';
+import { useAdminTokens, ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { AdminListRow, AdminModalSheet } from '../motion';
 import { adminService } from '../../../services/admin.service';
@@ -42,7 +42,7 @@ type Filter = 'all' | 'verified' | 'unverified' | 'suspended' | 'new';
 export function AdminClubsPane({ focusId }: { focusId?: string }) {
   const data = useAdminData();
   const { firebaseUser, profile } = useAuth();
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [selected, setSelected] = useState<Club | null>(null);
@@ -122,7 +122,7 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
           selection.clear();
           await data.refresh();
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
         } finally {
           setBusy(false);
         }
@@ -137,13 +137,21 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader
-          title="Annuaire clubs"
-          subtitle={`${data.clubs.length} clubs FR · CRUD · logos · données publiques`}
+          title="Clubs"
+          subtitle={`${data.clubs.length} organisations enregistrées · affiliations FFF · effectifs`}
+          right={
+            <AdminButton
+              label="+ Créer un club"
+              variant="primary"
+              compact
+              onPress={() => setCreateOpen(true)}
+            />
+          }
         />
         <AdminSearchField
           value={q}
           onChangeText={setQ}
-          placeholder="Nom, ville, FFF, owner, tag…"
+          placeholder="Nom du club, ville, numéro FFF, owner…"
         />
         <View style={styles.chips}>
           {(
@@ -164,23 +172,25 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
           ))}
         </View>
         <View style={styles.bulkBar}>
-          <AdminButton label="Créer" onPress={() => setCreateOpen(true)} />
           {canBulk ? (
             <>
               <AdminButton
                 label="Tout sel."
                 variant="ghost"
+                compact
                 onPress={() => selection.selectAll(filtered.map((c) => c.id))}
               />
+              <AdminButton label="Vider" variant="ghost" compact onPress={selection.clear} />
               <AdminButton
                 label={`Suspendre (${selection.count})`}
                 variant="danger"
+                compact
                 disabled={!selection.count || busy}
                 onPress={() => bulkSuspend(true)}
               />
             </>
           ) : null}
-          {canExport ? <AdminButton label="CSV" variant="ghost" onPress={exportCsv} /> : null}
+          {canExport ? <AdminButton label="Exporter CSV" variant="ghost" compact onPress={exportCsv} /> : null}
         </View>
       </View>
 
@@ -246,6 +256,7 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
       <AdminModalSheet visible={createOpen} onClose={() => setCreateOpen(false)}>
         <CreateClubForm
           actorUid={firebaseUser?.uid ?? 'admin'}
+          onClose={() => setCreateOpen(false)}
           onDone={async () => {
             setCreateOpen(false);
             await data.refresh();
@@ -258,20 +269,27 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
 
 function CreateClubForm({
   actorUid,
+  onClose,
   onDone,
 }: {
   actorUid: string;
+  onClose: () => void;
   onDone: () => Promise<void>;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [owner, setOwner] = useState(actorUid);
   const [busy, setBusy] = useState(false);
 
   return (
-    <View style={{ padding: adminSpace.lg, gap: 10 }}>
-      <AdminText variant="h2">Nouveau club</AdminText>
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <AdminSheetHeader
+        title="Nouveau Club"
+        subtitle="Créer une fiche club dans le répertoire plateforme"
+        onClose={onClose}
+      />
+      <View style={{ padding: adminSpace.lg, gap: 12 }}>
       <Field label="Nom" value={name} onChange={setName} />
       <Field label="Ville" value={city} onChange={setCity} />
       <Field label="Owner UID" value={owner} onChange={setOwner} />
@@ -290,13 +308,14 @@ function CreateClubForm({
               });
               await onDone();
             } catch (e) {
-              Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+              prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
             } finally {
               setBusy(false);
             }
           })();
         }}
       />
+      </View>
     </View>
   );
 }
@@ -316,7 +335,7 @@ function ClubVisualEditor({
   onClose: () => void;
   onRefresh: () => Promise<void>;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   const data = useAdminData();
   const [name, setName] = useState(club.name);
   const [city, setCity] = useState(club.city);
@@ -351,7 +370,7 @@ function ClubVisualEditor({
       await fn();
       await onRefresh();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+      prodayAlert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
     } finally {
       setBusy(false);
     }
@@ -511,7 +530,7 @@ function Field({
   onChange: (v: string) => void;
   multiline?: boolean;
 }) {
-  const t = ADMIN_TOKENS;
+  const t = useAdminTokens();
   return (
     <View style={{ gap: 4 }}>
       <AdminText variant="label" color={t.faint}>
