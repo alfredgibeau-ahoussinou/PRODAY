@@ -10,6 +10,15 @@
   NEXT_PUBLIC_BETA_APK_URL = "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/proday-beta.apk"
   NEXT_PUBLIC_BETA_TESTFLIGHT_URL = "https://testflight.apple.com/join/zgch5bQd"
 
+[functions]
+  directory = "netlify/functions"
+
+# Vérification e-mail quotidienne (09:00 UTC) — historisée sur
+# /admin/ops/status : rappel de reconnexion Gmail inclus en cas d'échec.
+[[scheduled_functions]]
+  name = "ops-email-health"
+  cron = "0 9 * * *"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 

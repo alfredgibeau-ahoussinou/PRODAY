@@ -1,0 +1,70 @@
+{
+  "pole": "Joueur",
+  "email": "player.demo@proday.app",
+  "password": "ProDayDemo2026!",
+  "poleCta": "Joueur",
+  "shellReadyPattern": "Carrière|Passeport|Bonjour,|Se déconnecter",
+  "loginViewport": { "width": 390, "height": 844 },
+  "mobile": false,
+  "outDir": "/tmp/proday-shots/player-desktop",
+  "postLoginSettleMs": 7000,
+  "freezeMs": 25000,
+  "changeTimeoutMs": 16000,
+  "recoverOnFreeze": false,
+  "steps": [
+    { "id": "accueil", "label": "Accueil joueur — carte de joueur, prochains rendez-vous, quêtes du jour et objectifs de saison", "holdMs": 15000, "actions": [
+      { "type": "dismiss", "pauseAfter": 1500 },
+      { "type": "scroll", "dy": 800, "pauseAfter": 2500 },
+      { "type": "scroll", "dy": 800, "pauseAfter": 2500 },
+      { "type": "scrollToTop", "pauseAfter": 2000 }
+    ]},
+    { "id": "calendrier", "label": "Calendrier joueur — rendez-vous, filtres, convocations, carte et terrains", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Calendrier", "retry": 3, "pauseAfter": 4500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "ma-carte", "label": "Ma Carte — fiche joueur, note globale, statistiques et vitrine", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Ma Carte", "retry": 3, "pauseAfter": 4500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "ma-saison", "label": "Ma Saison — matchs, feuilles de match, classement et progression du joueur", "holdMs": 15000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "data-testid", "value": "plus-menu-progression", "retry": 3, "pauseAfter": 6000 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "equipe", "label": "Équipe — club, groupe et mercato : effectif et équipes du joueur", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "data-testid", "value": "plus-menu-recrutement", "retry": 3, "pauseAfter": 6000 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "vestiaire", "label": "Vestiaire — messagerie d'équipe, convocations et fils de discussion", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "data-testid", "value": "plus-menu-messages", "retry": 3, "pauseAfter": 6000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 }
+    ]},
+    { "id": "trajet", "label": "Trajet — covoiturage et déplacements vers les rencontres", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "data-testid", "value": "plus-menu-covoiturage", "retry": 3, "pauseAfter": 6000 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "mon-compte", "label": "Mon compte — profil joueur, vitrine CV et paramètres", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "data-testid", "value": "plus-menu-settings", "retry": 3, "pauseAfter": 6000 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "coach-ia", "label": "Mon Coach IA — carte présente dans le hub, mais aucun module ne s'ouvre dans cette version : constat conservé tel quel", "holdMs": 16000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "value": "Mon Coach IA", "retry": 3, "pauseAfter": 5000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 },
+      { "type": "key", "key": "Escape", "pauseAfter": 2500 }
+    ]},
+    { "id": "bientot", "label": "Modules annoncés « Bientôt » — Clips et Boutique présents dans le hub mais sans contenu livré", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 350, "pauseAfter": 2500 },
+      { "type": "scroll", "dy": 350, "pauseAfter": 2500 }
+    ]},
+    { "id": "retour-accueil", "label": "Retour à l'accueil joueur — synthèse du parcours", "holdMs": 10000, "actions": [
+      { "type": "aria", "label": "Accueil", "retry": 3, "pauseAfter": 4000 }
+    ]}
+  ]
+}

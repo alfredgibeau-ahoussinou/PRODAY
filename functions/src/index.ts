@@ -6,7 +6,7 @@ import {
   processFffClubRosterDailySync,
   processFffClubRosterForClub,
 } from './fffClubRosterSync';
-import { processFffStandingsDailySync } from './fffStandingsSync';
+import { runLockedFffSync, reserveManualRefresh } from './fffStandingsSync';
 import { adjustLeagueStandingInFirestore } from './adminStandingsOverride';
 import {
   processPublicClubDirectorySync,
@@ -24,8 +24,14 @@ function assertCallableAdmin(context: functions.https.CallableContext): string {
   }
   return context.auth.uid;
 }
+import { searchClubMembersInFirestore } from './clubMemberSearch';
+import {
+  SquadSheetError,
+  extractSquadSheetFromStorage,
+} from './squadSheetExtract';
 import { requestClubMembershipInFirestore } from './requestClubMembership';
 import { sendFcmToUser } from './messaging';
+import { onMembershipActivated } from './membershipBackfill';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
 import { createShopCheckoutSession } from './shopPayments';
 import { createTournamentCheckoutSession } from './tournamentPayments';
@@ -94,11 +100,6 @@ import {
   onMinorUserCreatedProvisionParent,
   provisionParentAccount,
 } from './parentAccount';
-import {
-  onMedicalAppointmentCreated,
-  onMedicalAppointmentUpdated,
-} from './appointmentEmail';
-import { getVisioJoinUrl } from './getVisioJoinUrl';
 import { incrementSubscriptionUsage } from './subscriptionUsage';
 import { sendSponsorClubMessage } from './sendSponsorClubMessage';
 import {
@@ -111,6 +112,23 @@ export { getSensitiveDocumentUrl, onMedicalDocumentWrite } from './privacyDocume
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { createTournamentCheckoutSession };
 export { createCoachSessionCheckoutSession, onCoachSessionBookingUpdated };
+// Veo — échange d'identifiants côté serveur (le client_secret ne quitte jamais
+// l'environnement Cloud Functions), bibliothèque autorisée et URL de lecture.
+/**
+ * Vidéo Veo — état du compte, connexion, identifiants d'application (saisis dans l'app)
+ * et lecture. **Chaque callable déclarée dans `veoApi.ts` doit être exportée ici** : une
+ * fonction absente de ce point d'entrée n'est pas déployée du tout, et l'application
+ * obtiendrait une erreur « fonction introuvable » — vérifié par test.
+ */
+export {
+  veoAccountStatus,
+  veoConnect,
+  veoDisconnect,
+  veoVideosList,
+  veoPlaybackUrl,
+  veoSetApiClient,
+  veoClearApiClient,
+} from './veoApi';
 export { onStaffNotificationCreated };
 export { onPushOutboxCreated };
 export { createSubscriptionCheckoutSession, createBillingPortalSession };
@@ -119,8 +137,6 @@ export { onMinorUserCreatedProvisionParent, provisionParentAccount };
 export { incrementSubscriptionUsage };
 export { sendSponsorClubMessage };
 export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };
-export { onMedicalAppointmentCreated, onMedicalAppointmentUpdated };
-export { getVisioJoinUrl };
 export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
 export { clubAssistantChat };
@@ -136,6 +152,7 @@ export { activateStoreSubscription };
 export { revenueCatWebhook };
 export { claimAgentLaunchSeat };
 export { ensureReferralCode, claimReferralCode };
+export { tournamentExternalInvite } from './tournamentExternalInvites';
 export { onPlatformFeedCreated, onChatMessageCreated };
 export { onRecruitmentPostCreated };
 export { onPlayerAvailabilityChanged };
@@ -316,21 +333,49 @@ export const syncFffClubRosterForClubNow = functions.https.onCall(async (data, c
 
 /**
  * Classements FFF / nationaux (L1, L2, N1, R1/R2 IDF, districts) → fff_league_standings.
+ *
+ * PLANIFICATION : **toutes les 3 heures**, indépendamment de l'ouverture de
+ * l'app (`every 3 hours`, TZ Europe/Paris). Voir docs/FFF_SYNC_3H.md pour les
+ * limites documentées des sources (API-Football payante, DOFA non officielle).
+ *
  * Déployer : firebase deploy --only functions:scheduledFffStandingsSync,functions:syncFffStandingsNow
  */
-export const scheduledFffStandingsSync = functions.pubsub
-  .schedule('every day 04:15')
+export const scheduledFffStandingsSync = functions
+  .runWith({ timeoutSeconds: 540, memory: '512MB', maxInstances: 1 })
+  .pubsub.schedule('every 3 hours')
   .timeZone('Europe/Paris')
   .onRun(async () => {
-    const result = await processFffStandingsDailySync(db);
+    const owner = `scheduled_${Date.now()}`;
+    const result = await runLockedFffSync(db, owner, 'scheduled');
     console.log('[scheduledFffStandingsSync]', result);
     return result;
   });
 
-export const syncFffStandingsNow = functions.https.onCall(async (_data, context) => {
-  assertCallableAdmin(context);
-  return processFffStandingsDailySync(db);
-});
+/**
+ * Rafraîchissement manuel (admin) — rate limité (15 min) et verrouillé :
+ * jamais deux synchronisations en parallèle, jamais de martèlement de la source.
+ */
+export const syncFffStandingsNow = functions
+  .runWith({ timeoutSeconds: 540, memory: '512MB' })
+  .https.onCall(async (_data, context) => {
+    const uid = assertCallableAdmin(context);
+    const slot = await reserveManualRefresh(db, uid);
+    if (!slot.allowed) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted',
+        `Rafraîchissement déjà effectué récemment — réessayez dans ${Math.ceil(slot.retryAfterSeconds / 60)} min.`,
+        { retryAfterSeconds: slot.retryAfterSeconds },
+      );
+    }
+    const result = await runLockedFffSync(db, `manual_${uid}_${Date.now()}`, 'manual');
+    if (result.lockSkipped) {
+      return {
+        ...result,
+        message: 'Une synchronisation est déjà en cours — les données actuelles restent affichées.',
+      };
+    }
+    return result;
+  });
 
 /** Ajustement manuel d’une ligne de classement (admin override). */
 export const adminAdjustLeagueStanding = functions.https.onCall(async (data, context) => {
@@ -389,6 +434,60 @@ export const searchPublicClubs = functions.https.onCall(async (data) => {
   const lim = typeof data?.limit === 'number' ? Math.min(50, data.limit) : 30;
   const clubs = await searchPublicClubsInFirestore(db, queryText, lim);
   return { clubs };
+});
+
+/**
+ * Recherche de personnes bornée au club du demandeur (CA-12).
+ * Le club est résolu côté serveur depuis `users/{uid}` — jamais depuis le client.
+ */
+export const searchClubMembers = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+  }
+  return searchClubMembersInFirestore(db, context.auth.uid, {
+    query: data?.query,
+    limit: data?.limit,
+  });
+});
+
+/**
+ * Feuille d'équipe PDF → tableau importable (pôle Coach).
+ *
+ * Le PDF est déposé par le client dans `squad-sheets/{uid}/` (Storage), converti
+ * ici — `node:zlib` est disponible côté serveur — puis **supprimé** : la feuille
+ * contient des données de mineurs. Périmètre et club résolus côté serveur.
+ */
+export const extractSquadSheetText = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+  }
+  const bucket = admin.storage().bucket();
+  try {
+    return await extractSquadSheetFromStorage({
+      db,
+      callerUid: context.auth.uid,
+      storagePath: data?.storagePath,
+      download: async (path) => {
+        const file = bucket.file(path);
+        const [exists] = await file.exists();
+        if (!exists) return null;
+        const [metadata] = await file.getMetadata();
+        const [bytes] = await file.download();
+        return { bytes, contentType: String(metadata.contentType ?? '') };
+      },
+      remove: async (path) => {
+        await bucket.file(path).delete();
+      },
+    });
+  } catch (error) {
+    if (error instanceof SquadSheetError) {
+      throw new functions.https.HttpsError(error.code, error.message);
+    }
+    throw new functions.https.HttpsError(
+      'internal',
+      error instanceof Error ? error.message : 'Conversion impossible.',
+    );
+  }
 });
 
 /** Claim / liaison club FFF → espace ProDay (pending verification). */
@@ -1287,9 +1386,10 @@ import { runDailyEnterpriseStandingsWorker } from './fffDailyStandingsWorker';
 import { processClubIntegrationSynergy } from './fffIntegrationSynergy';
 
 /**
- * WORKER AUTOMATISÉ QUOTIDIEN — Balayage & mise à jour quotidienne de TOUS les classements FFF
- * (Ligue 1, Ligue 2, N1, N2, R1, R2, R3, District 92, 93, 75, 94...).
- * Exécuté automatiquement chaque jour à 03h00.
+ * SQUELETTE DE DOCUMENTS — crée à 03h00 les documents `fff_league_standings`
+ * manquants pour l'ensemble des championnats suivis (aucune donnée inventée,
+ * aucun horodatage de fraîcheur). La synchronisation des classements est faite
+ * toutes les 3 heures par `scheduledFffStandingsSync`.
  */
 export const processFffEnterpriseDailyStandingsWorker = functions
   .region('europe-west1')
@@ -1297,7 +1397,9 @@ export const processFffEnterpriseDailyStandingsWorker = functions
   .timeZone('Europe/Paris')
   .onRun(async () => {
     const res = await runDailyEnterpriseStandingsWorker(db);
-    console.log(`[FFF Daily Standings Worker] Executed: ${res.leaguesProcessed} leagues processed, ${res.totalRowsUpdated} rows updated.`);
+    console.log(
+      `[FFF Standings Skeleton] ${res.leaguesProcessed} leagues checked, ${res.documentsCreated} documents created, ${res.existingPreserved} preserved.`,
+    );
     return null;
   });
 
@@ -1347,3 +1449,5 @@ export const triggerClubIntegrationSynergy = functions
     const res = await processClubIntegrationSynergy(db, clubId, fffAffiliationNumber);
     return res;
   });
+
+export { onMembershipActivated };

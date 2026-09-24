@@ -1,10 +1,19 @@
 /**
- * PRODAY AUTOMATED DAILY ENTERPRISE STANDINGS WORKER
- * 
- * Worker d'arrière-plan résilient et auto-recouvrable :
- * - S'exécute automatiquement chaque jour (Cron Scheduled Function)
- * - Maintient à jour l'ensemble des championnats de France (L1, L2, N1, N2, R1, R2, R3, Districts 92, 93, 75, 94)
- * - Calcule les métriques, classements, forme récente et synchronise Firestore fff_league_standings
+ * PRODAY — SQUELETTE DE DOCUMENTS DE CLASSEMENTS (worker quotidien)
+ *
+ * CE WORKER NE SYNCHRONISE PLUS AUCUN CLASSEMENT.
+ *
+ * Historiquement il écrivait une date `lastSyncAt` « fraîche » en réutilisant
+ * les lignes déjà stockées (voire un tableau vide) : c'était exactement le
+ * comportement interdit — afficher des données anciennes comme fraîchement
+ * synchronisées. Il ne crée désormais que **les documents manquants** pour
+ * l'ensemble des championnats suivis, avec un état honnête :
+ *   - `standings: []`, `source: 'empty'`, `syncStatus: 'fallback'`
+ *   - `sync_health: 'unavailable'`, aucune `lastSyncAt` inventée
+ *
+ * La synchronisation réelle des classements est assurée toutes les 3 heures par
+ * `scheduledFffStandingsSync` (voir `fffStandingsSync.ts` + docs/FFF_SYNC_3H.md).
+ * Un document existant n'est JAMAIS modifié par ce worker.
  */
 
 import type { Firestore } from 'firebase-admin/firestore';
@@ -13,7 +22,10 @@ import { CERTIFIED_LEAGUE_META, certifiedFallback } from './fffStandingsCertifie
 
 export interface StandingsWorkerResult {
   leaguesProcessed: number;
-  totalRowsUpdated: number;
+  /** Nombre de documents squelettes créés (jamais de document existant touché). */
+  documentsCreated: number;
+  /** Nombre de documents déjà présents, laissés intacts. */
+  existingPreserved: number;
   syncTimestamp: string;
   errors: string[];
 }
@@ -21,14 +33,17 @@ export interface StandingsWorkerResult {
 const ALL_MANAGED_LEAGUE_IDS = Object.keys(CERTIFIED_LEAGUE_META);
 
 /**
- * Worker d'arrière-plan exécutant le balayage quotidien de tous les classements.
+ * Crée les documents manquants de `fff_league_standings` avec un état honnête
+ * (aucune donnée, aucune fausse fraîcheur). Ne touche jamais un document
+ * existant, même vide : seul le sync 3 h en est propriétaire.
  */
 export async function runDailyEnterpriseStandingsWorker(
   db: Firestore,
 ): Promise<StandingsWorkerResult> {
   const result: StandingsWorkerResult = {
     leaguesProcessed: 0,
-    totalRowsUpdated: 0,
+    documentsCreated: 0,
+    existingPreserved: 0,
     syncTimestamp: new Date().toISOString(),
     errors: [],
   };
@@ -38,51 +53,34 @@ export async function runDailyEnterpriseStandingsWorker(
 
   for (const leagueId of ALL_MANAGED_LEAGUE_IDS) {
     try {
-      const meta = CERTIFIED_LEAGUE_META[leagueId];
-      if (!meta) continue;
-
       const fallback = certifiedFallback(leagueId, currentSeason);
       if (!fallback) continue;
 
       const docRef = colRef.doc(leagueId);
       const existingSnap = await docRef.get();
-      const existingData = existingSnap.data() ?? {};
-
-      // Si le document a déjà des données live du jour, conserver la fraîcheur
-      const isAlreadyLiveToday =
-        existingData.syncStatus === 'live' &&
-        existingData.lastSyncAt &&
-        new Date(existingData.lastSyncAt).toDateString() === new Date().toDateString();
-
-      if (isAlreadyLiveToday) {
-        result.leaguesProcessed++;
-        result.totalRowsUpdated += Array.isArray(existingData.standings) ? existingData.standings.length : 0;
+      if (existingSnap.exists) {
+        // Propriété du sync 3 h : on ne réécrit ni les lignes ni les horodatages.
+        result.existingPreserved += 1;
+        result.leaguesProcessed += 1;
         continue;
       }
 
-      // 2. Écriture / Mise à jour des classements avec statut certifié live
-      await docRef.set(
-        {
-          id: leagueId,
-          name: meta.name,
-          category: meta.category,
-          divisionLabel: `${currentSeason} · ${meta.divisionLabelBase}`,
-          season: currentSeason,
-          region: meta.region || 'Île-de-France',
-          districtCode: meta.districtCode || null,
-          standings: Array.isArray(existingData.standings) ? existingData.standings : [],
-          scorers: Array.isArray(existingData.scorers) ? existingData.scorers : [],
-          source: 'fff_enterprise_worker',
-          lastSyncAt: result.syncTimestamp,
-          officialFffCertified: true,
-          syncStatus: existingData.syncStatus || 'live',
-          updated_at: FieldValue.serverTimestamp(),
-        },
-        { merge: true },
-      );
+      await docRef.set({
+        ...fallback,
+        region: CERTIFIED_LEAGUE_META[leagueId]?.region ?? null,
+        districtCode: CERTIFIED_LEAGUE_META[leagueId]?.districtCode ?? null,
+        scorers: [],
+        syncStatus: 'fallback',
+        sync_health: 'unavailable',
+        last_error: 'Aucune synchronisation réussie pour cette compétition.',
+        officialFffCertified: false,
+        next_sync_schedule: 'every 3 hours',
+        created_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
+      });
 
-      result.leaguesProcessed++;
-      result.totalRowsUpdated += Array.isArray(existingData.standings) ? existingData.standings.length : 0;
+      result.documentsCreated += 1;
+      result.leaguesProcessed += 1;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       result.errors.push(`Ligue ${leagueId}: ${msg}`);

@@ -1,0 +1,51 @@
+{
+  "pole": "Parent",
+  "email": "parent.demo@proday.app",
+  "password": "ProDayDemo2026!",
+  "poleCta": "Parent",
+  "shellReadyPattern": "Enfants liés|Sophie Parent|Se déconnecter|Se deconnecter",
+  "mobile": true,
+  "outDir": "/tmp/proday-shots/parent-mobile",
+  "postLoginSettleMs": 7000,
+  "changeTimeoutMs": 14000,
+  "steps": [
+    { "id": "accueil", "label": "Accueil parent (mobile) — enfants liés, bascule de supervision, alertes et invitations", "holdMs": 14000, "actions": [
+      { "type": "scroll", "dy": 600, "pauseAfter": 2500 },
+      { "type": "scroll", "dy": 600, "pauseAfter": 2500 },
+      { "type": "scrollToTop", "pauseAfter": 2000 }
+    ]},
+    { "id": "enfant", "label": "Enfant — fiche de Léo : agenda, convocations et suivi de saison", "holdMs": 14000, "actions": [
+      { "type": "text", "text": "Enfant", "pauseAfter": 3500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "second-enfant", "label": "Second enfant — bascule vers Lucas, le second profil supervisé", "holdMs": 12000, "actions": [
+      { "type": "text", "text": "Lucas Démo", "pauseAfter": 3500 }
+    ]},
+    { "id": "guide", "label": "Guide IA — suggestions pour accompagner l'enfant (conseils personnalisés)", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Guide", "pauseAfter": 3500 }
+    ]},
+    { "id": "menu", "label": "Onglet Menu — hub « Outils famille » : messages, agenda et trajet", "holdMs": 12000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 3500 }
+    ]},
+    { "id": "messages", "label": "Messages — contacts approuvés et conversations de l'enfant", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Messages", "pauseAfter": 3500 }
+    ]},
+    { "id": "agenda", "label": "Agenda — réponse de présence « Je viens / Absent » et signalement de retard", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Agenda", "pauseAfter": 3500 },
+      { "type": "text", "text": "Tout", "pauseAfter": 2500 },
+      { "type": "text", "text": "À venir", "pauseAfter": 2500 }
+    ]},
+    { "id": "trajet", "label": "Trajet — suivi live du covoiturage et partage de position (paysage pour la carte)", "holdMs": 16000, "actions": [
+      { "type": "text", "text": "Trajet", "pauseAfter": 3500 },
+      { "type": "viewport", "width": 844, "height": 390, "pauseAfter": 3000 },
+      { "type": "viewport", "width": 390, "height": 844, "pauseAfter": 1500 }
+    ]},
+    { "id": "profil", "label": "Profil parent — langue de l'application, mot de passe et documents légaux", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Profil", "pauseAfter": 3500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2200 }
+    ]},
+    { "id": "retour-accueil", "label": "Retour à l'accueil parent — synthèse du parcours mobile", "holdMs": 9000, "actions": [
+      { "type": "text", "text": "Accueil", "pauseAfter": 3500 }
+    ]}
+  ]
+}

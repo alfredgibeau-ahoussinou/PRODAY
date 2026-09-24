@@ -1,0 +1,298 @@
+{
+  "pole": "Club",
+  "email": "club.demo@proday.app",
+  "password": "ProDayDemo2026!",
+  "shellReadyPattern": "FC ProDay Démo|MON CLUB|Se déconnecter|Se deconnecter",
+  "mobile": false,
+  "outDir": "/tmp/proday-shots/club-desktop",
+  "postLoginSettleMs": 7000,
+  "steps": [
+    {
+      "id": "accueil",
+      "label": "Accueil club — carte club, recherche globale, prochain rendez-vous, raccourcis et statistiques",
+      "holdMs": 16000,
+      "actions": [
+        {
+          "type": "scroll",
+          "dy": 700,
+          "pauseAfter": 1600
+        },
+        {
+          "type": "scroll",
+          "dy": 700,
+          "pauseAfter": 1600
+        },
+        {
+          "type": "scrollToTop",
+          "pauseAfter": 1200
+        }
+      ]
+    },
+    {
+      "id": "equipes",
+      "label": "Équipes — sélection d'une équipe et effectif",
+      "holdMs": 9000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Équipes",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "joueurs",
+      "label": "Joueurs — annuaire des licenciés",
+      "holdMs": 9000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Joueurs",
+          "pauseAfter": 2000
+        },
+        {
+          "type": "scroll",
+          "dy": 600,
+          "pauseAfter": 1500
+        }
+      ]
+    },
+    {
+      "id": "coaches",
+      "label": "Coach — staff et affectations",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Coach",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "adhesions",
+      "label": "Demandes d'adhésion — affiliations en attente",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Demandes d'adhésion",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "calendrier",
+      "label": "Calendrier — vues jour, semaine, mois",
+      "holdMs": 11000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Calendrier",
+          "pauseAfter": 2500
+        },
+        {
+          "type": "scroll",
+          "dy": 400,
+          "pauseAfter": 1500
+        }
+      ]
+    },
+    {
+      "id": "matchs",
+      "label": "Matchs — convocations et invitations",
+      "holdMs": 9000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Matchs",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "entrainements",
+      "label": "Entraînements — séances et présences",
+      "holdMs": 9000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Entraînements",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "evenements",
+      "label": "Événements — tournois et poules",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Événements",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "classements",
+      "label": "Classements — championnat officiel FFF",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Classements",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "video",
+      "label": "Vidéo & Analyse — Veo, smartphone, clips IA (démonstration)",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Vidéo & Analyse",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "communication",
+      "label": "Communication — canaux équipes, coachs, parents",
+      "holdMs": 9000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Communication",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "covoiturage",
+      "label": "Covoiturage — déplacements et logistique",
+      "holdMs": 9000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Covoiturage",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "copilote",
+      "label": "Copilote Club — assistant IA à confirmation",
+      "holdMs": 9000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Copilote Club",
+          "pauseAfter": 2500
+        }
+      ]
+    },
+    {
+      "id": "notifications",
+      "label": "Notifications — centre d'alertes et préférences",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Notifications",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "club",
+      "label": "Club — identité et réglages",
+      "holdMs": 9000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Club",
+          "pauseAfter": 2500
+        },
+        {
+          "type": "scroll",
+          "dy": 500,
+          "pauseAfter": 1200
+        }
+      ]
+    },
+    {
+      "id": "pack",
+      "label": "Pack Club — offre sur devis",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Pack Club",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "licences",
+      "label": "Licences — documents et licences",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Licences",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "finances",
+      "label": "Finances — grand livre simplifié",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Finances",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "sponsoring",
+      "label": "Sponsoring — partenaires, buvette, médical FFF, équipements",
+      "holdMs": 9000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Sponsoring",
+          "pauseAfter": 2000
+        },
+        {
+          "type": "scroll",
+          "dy": 500,
+          "pauseAfter": 1200
+        }
+      ]
+    },
+    {
+      "id": "permissions",
+      "label": "Permissions — rôles admin, dirigeant, DS, coach",
+      "holdMs": 8000,
+      "actions": [
+        {
+          "type": "aria",
+          "label": "Permissions",
+          "pauseAfter": 2000
+        }
+      ]
+    },
+    {
+      "id": "president-note",
+      "label": "Note — la bascule Pôle Président est disponible sur mobile (Menu) ; desktop = sidebar complète",
+      "holdMs": 6000,
+      "actions": []
+    }
+  ]
+}

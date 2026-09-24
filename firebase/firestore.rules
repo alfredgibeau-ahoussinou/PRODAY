@@ -90,6 +90,29 @@ service cloud.firestore {
         && request.resource.data.participant_ids[0] != request.resource.data.participant_ids[1];
     }
 
+    /**
+     * Groupe : le créateur doit être **dedans** et **administrateur**, sinon n'importe qui
+     * pourrait créer un groupe au nom d'autres membres. Le rôle annoncé n'est pas cru sur
+     * parole — la condition est lue sur le document écrit lui-même.
+     */
+    function isValidGroupThreadCreate() {
+      return request.resource.data.get('is_group', false) == true
+        && request.resource.data.participant_ids.size() >= 3
+        && request.resource.data.participant_ids.size() <= 50
+        && request.resource.data.participant_ids.hasAny([request.auth.uid])
+        && request.resource.data.get('created_by', '') == request.auth.uid
+        && request.resource.data.get('admin_uids', []).hasAny([request.auth.uid]);
+    }
+
+    /**
+     * Administrateur d'un groupe **existant** : lu sur `resource` (l'état enregistré),
+     * jamais sur `request.resource` — sinon un membre s'auto-promouvrait dans la même écriture.
+     */
+    function isGroupAdmin() {
+      return resource.data.get('is_group', false) == true
+        && resource.data.get('admin_uids', []).hasAny([request.auth.uid]);
+    }
+
     function canReadFeedPost() {
       return resource.data.audience == 'all'
         || (resource.data.audience == 'agents'
@@ -373,10 +396,13 @@ service cloud.firestore {
         );
     }
 
-    /** Pointage présence / RSVP staff sur team_events (pas live, compo, stats). */
+    /** Pointage présence / RSVP staff sur team_events (pas live, compo, stats).
+     *  `.get(..., null)` : le champ est absent des documents créés avant le
+     *  rapport de match — un accès direct lèverait une erreur de règle et
+     *  bloquerait tout pointage (firestore behaviour: missing key = error). */
     function isTeamEventStaffManageUpdate() {
       return canManageTeamEventDoc()
-        && resource.data.match_report_finalized_at == null
+        && resource.data.get('match_report_finalized_at', null) == null
         && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['attendance_marks', 'rsvps', 'rsvp_notes', 'invitee_uids', 'updated_at']);
     }
@@ -666,8 +692,8 @@ service cloud.firestore {
           isStaffOrAdmin()
           || isCarpoolCoordinationUpdate()
           || isTeamEventStaffManageUpdate()
-          || (
-            resource.data.match_report_finalized_at == null
+          ||          (
+            resource.data.get('match_report_finalized_at', null) == null
             && (
               resource.data.organizer_uid == request.auth.uid
               || (
@@ -885,6 +911,103 @@ service cloud.firestore {
     }
 
     /**
+     * Périmètre **financier** du club. Volontairement plus étroit que `isClubStaffForClub` :
+     * un coach rattaché au club n'a pas à lire le registre financier ni les cotisations
+     * nominatives des adhérents. Seul le rôle `club` (ou le compte propriétaire du document
+     * club) y accède — même logique que `match /clubs/{clubId}` en écriture.
+     *
+     * Un coach qui consulte une séance ne doit pas hériter des montants dus par les familles.
+     */
+    function canManageClubFinance(clubId) {
+      return isSignedIn()
+        && clubId is string
+        && (
+          request.auth.uid == clubId
+          || (
+            userDoc(request.auth.uid).data.get('role', '') == 'club'
+            && userDoc(request.auth.uid).data.get('profile', {}).get('club_id', '') == clubId
+          )
+        );
+    }
+
+    /** Saison au format AAAA-AAAA, années consécutives. */
+    function validClubSeason(season) {
+      return season is string
+        && season.matches('^[0-9]{4}-[0-9]{4}$')
+        && int(season.split('-')[1]) == int(season.split('-')[0]) + 1;
+    }
+
+    /**
+     * Moyen de paiement : absent, `null` (non renseigné), ou l'une des valeurs qu'un club
+     * encaisse réellement. Une valeur inconnue est refusée plutôt que rangée sous « autre ».
+     */
+    function validFinancePaymentMethod() {
+      return !('payment_method' in request.resource.data)
+        || request.resource.data.payment_method == null
+        || request.resource.data.payment_method in ['cash', 'cheque', 'transfer', 'card', 'other'];
+    }
+
+    /**
+     * Rattachement à une échéance : une écriture ne peut régler qu'une échéance du **même
+     * club** (le préfixe d'identifiant d'échéance est le club). Sinon un club pourrait
+     * éteindre le dû d'un autre en forgeant un `fee_id`.
+     */
+    function validFinanceFeeLink() {
+      return !('fee_id' in request.resource.data)
+        || request.resource.data.fee_id == null
+        || (
+          request.resource.data.fee_id is string
+          && request.resource.data.fee_id.split('__')[0] == request.resource.data.club_id
+        );
+    }
+
+    /** Justificatif : un nom, et une URL https (aucun lien relatif ni schéma inattendu). */
+    function validFinanceReceipt() {
+      return !('receipt' in request.resource.data)
+        || request.resource.data.receipt == null
+        || (
+          request.resource.data.receipt is map
+          && request.resource.data.receipt.name is string
+          && request.resource.data.receipt.url is string
+          && request.resource.data.receipt.url.matches('^https://.*')
+        );
+    }
+
+    /**
+     * Validité commune d'une échéance de cotisation, indépendamment du préfixe d'identifiant.
+     * La remise ne peut pas dépasser le montant dû : sinon le « net dû » deviendrait
+     * négatif et viendrait réduire le total des impayés.
+     */
+    function validClubFeeTerms() {
+      let d = request.resource.data;
+      return d.amount_due_eur is number
+        && d.amount_due_eur > 0
+        && d.discount_eur is number
+        && d.discount_eur >= 0
+        && d.discount_eur <= d.amount_due_eur
+        && d.due_date is timestamp
+        && d.label is string
+        && d.label.size() > 0
+        && d.category is string
+        && (d.get('member_uid', null) is string || d.get('member_name', null) is string);
+    }
+
+    /** Validité commune d'une ligne budgétaire (montants prévus positifs ou nuls). */
+    function validClubBudgetLine(lineId) {
+      let d = request.resource.data;
+      return d.club_id is string
+        && lineId.split('__')[0] == d.club_id
+        && validClubSeason(d.season)
+        && lineId.split('__')[1] == d.season
+        && d.category is string
+        && d.category.size() > 0
+        && d.planned_income_eur is number
+        && d.planned_income_eur >= 0
+        && d.planned_expense_eur is number
+        && d.planned_expense_eur >= 0;
+    }
+
+    /**
      * Cache effectif FootClubs indexé par n° d’affiliation FFF.
      * Lecture publique (inscription) — écriture staff club / admin / Functions.
      * Pas de données inventées : uniquement imports FootClubs republishés.
@@ -1018,10 +1141,19 @@ service cloud.firestore {
         || (isSignedIn() && (isThreadParticipant() || isParentOfThreadParticipant()));
       allow create: if isSignedIn()
         && canSendMessage()
-        && isValidThreadCreate();
+        && (isValidThreadCreate() || isValidGroupThreadCreate());
+      /**
+       * Les participants modifient le fil (dernier message, non-lus, détails).
+       * Seul un administrateur du groupe peut toucher `participant_ids`, et il doit
+       * rester membre : on ne se retire pas soi-même en gérant les autres.
+       */
       allow update: if isSignedIn()
         && (isThreadParticipant() || isParentOfThreadParticipant())
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participant_ids']);
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participant_ids'])
+          || (isGroupAdmin()
+              && request.resource.data.participant_ids.hasAny([request.auth.uid]))
+        );
       allow delete: if isAdmin();
     }
 
@@ -1713,23 +1845,89 @@ service cloud.firestore {
      */
     match /club_finance_entries/{id} {
       allow read: if isAdmin()
-        || (isSignedIn() && isClubStaffForClub(resource.data.club_id));
+        || (isSignedIn() && canManageClubFinance(resource.data.club_id));
       allow create: if isAdmin()
         || (isSignedIn()
-            && isClubStaffForClub(request.resource.data.club_id)
-            && request.resource.data.created_by_uid == request.auth.uid
             && request.resource.data.club_id is string
+            && canManageClubFinance(request.resource.data.club_id)
+            && request.resource.data.created_by_uid == request.auth.uid
             && request.resource.data.type in ['cotisation', 'depense', 'recette', 'autre']
             && request.resource.data.amount_eur is number
             && request.resource.data.amount_eur > 0
             && request.resource.data.label is string
+            && request.resource.data.status == 'active'
+            // Aucun paiement « vérifié par un prestataire » ne peut être déclaré côté client.
+            && request.resource.data.payment_provenance == 'manual'
+            && validFinancePaymentMethod()
+            && validFinanceFeeLink()
+            && validFinanceReceipt());
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && canManageClubFinance(resource.data.club_id)
+            && request.resource.data.club_id == resource.data.club_id
+            && request.resource.data.created_by_uid == resource.data.created_by_uid
+            && request.resource.data.get('payment_provenance', 'manual') == 'manual'
+            && validFinancePaymentMethod()
+            && validFinanceFeeLink()
+            && validFinanceReceipt());
+      allow delete: if isAdmin();
+    }
+
+    /**
+     * Échéances de cotisation — **ce qui est dû**, par saison et par adhérent.
+     *
+     * L'identifiant est déterministe (`club__saison__portée__catégorie`) : les règles
+     * vérifient que le préfixe est bien le club et la saison déclarée. C'est ce qui empêche
+     * qu'un identifiant mal formé crée deux échéances pour le même adhérent — donc un dû
+     * compté deux fois.
+     */
+    match /club_fees/{feeId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && canManageClubFinance(resource.data.club_id));
+      allow create: if isAdmin()
+        || (isSignedIn()
+            && canManageClubFinance(request.resource.data.club_id)
+            && request.resource.data.created_by_uid == request.auth.uid
+            && feeId.split('__')[0] == request.resource.data.club_id
+            && validClubSeason(request.resource.data.season)
+            && feeId.split('__')[1] == request.resource.data.season
+            && validClubFeeTerms()
+            && request.resource.data.get('created_by_name', null) is string
             && request.resource.data.status == 'active');
       allow update: if isAdmin()
         || (isSignedIn()
-            && isClubStaffForClub(resource.data.club_id)
+            && canManageClubFinance(resource.data.club_id)
             && request.resource.data.club_id == resource.data.club_id
-            && request.resource.data.created_by_uid == resource.data.created_by_uid);
+            && request.resource.data.season == resource.data.season
+            && request.resource.data.created_by_uid == resource.data.created_by_uid
+            && validClubFeeTerms()
+            && request.resource.data.status in ['active', 'cancelled']);
       allow delete: if isAdmin();
+    }
+
+    /**
+     * Budget du club — le **prévu**, par saison et par catégorie.
+     * Identifiant déterministe `club__saison__catégorie` : corriger un budget le met à jour
+     * au lieu d'ajouter une ligne, ce qui doublerait le prévu.
+     */
+    match /club_budgets/{lineId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && canManageClubFinance(resource.data.club_id));
+      allow create: if isAdmin()
+        || (isSignedIn()
+            && canManageClubFinance(request.resource.data.club_id)
+            && validClubBudgetLine(lineId)
+            && request.resource.data.created_by_uid == request.auth.uid);
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && canManageClubFinance(resource.data.club_id)
+            && validClubBudgetLine(lineId)
+            && request.resource.data.club_id == resource.data.club_id
+            && request.resource.data.season == resource.data.season
+            && request.resource.data.category == resource.data.category
+            && request.resource.data.created_by_uid == resource.data.created_by_uid);
+      allow delete: if isAdmin()
+        || (isSignedIn() && canManageClubFinance(resource.data.club_id));
     }
 
     /** Causeries match */
@@ -1874,5 +2072,17 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
+
+    /**
+     * Identifiants API Veo enregistrés par le club depuis l'application.
+     *
+     * Aucun client n'y accède : seules les Cloud Functions (SDK admin) lisent et écrivent
+     * ce document. Le refus est explicite — la règle par défaut de Firestore est déjà le
+     * refus, mais une future règle générique ne doit pas pouvoir l'ouvrir par accident.
+     */
+    match /veo_api_clients/{clubId} {
+      allow read, write: if false;
+    }
+
   }
 }

@@ -1,0 +1,103 @@
+{
+  "pole": "Coach",
+  "email": "coach.demo@proday.app",
+  "password": "ProDayDemo2026!",
+  "poleCta": "Coach",
+  "shellReadyPattern": "Club affilié|VIGILANCE|Se déconnecter|Se deconnecter",
+  "loginViewport": { "width": 390, "height": 844 },
+  "mobile": false,
+  "outDir": "/tmp/proday-shots/coach-desktop",
+  "postLoginSettleMs": 7000,
+  "freezeMs": 25000,
+  "changeTimeoutMs": 16000,
+  "steps": [
+    { "id": "accueil", "label": "Accueil coach — cockpit du banc : vigilance de charge, prochain événement, raccourcis (tableau tactique, entraînements, scouting vocal)", "holdMs": 15000, "actions": [
+      { "type": "dismiss", "pauseAfter": 1500 },
+      { "type": "scroll", "dy": 800, "pauseAfter": 2500 },
+      { "type": "scroll", "dy": 800, "pauseAfter": 2500 },
+      { "type": "scrollToTop", "pauseAfter": 2000 }
+    ]},
+    { "id": "messagerie", "label": "Messagerie — messagerie interne du staff, ouverte depuis l'en-tête (conversations, groupes, non lus)", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Messagerie", "retry": 3, "pauseAfter": 6000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 }
+    ]},
+    { "id": "calendrier", "label": "Calendrier (barre latérale) — vue du mois avec séances et matchs de l'équipe active", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Calendrier", "retry": 4, "pauseAfter": 6500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "equipe", "label": "Équipe — effectif de l'équipe active, actions d'équipe et accès à la composition", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Équipe", "retry": 3, "pauseAfter": 5000 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "menu", "label": "Menu — hub « Tout ProDay » du pôle Coach : tous les modules du staff en une page", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 5000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 },
+      { "type": "scrollToTop", "pauseAfter": 2000 }
+    ]},
+    { "id": "matchs-live", "label": "Module Matchs & Live — direct, convocations et scores", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Matchs & Live", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "entrainements", "label": "Module Entraînements — séances, exercices d'atelier et présences", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Entraînements", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "effectif", "label": "Module Effectif & Joueurs — fiches joueurs, forme et statistiques individuelles", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Effectif & Joueurs", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "assistant-ia", "label": "Assistant Coach IA — conseils et causeries proposées (résultats de démonstration)", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Assistant Coach IA", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 }
+    ]},
+    { "id": "copilote", "label": "Chat Copilote IA — assistant conversationnel du staff", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Chat Copilote IA", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 }
+    ]},
+    { "id": "videos", "label": "Mes Vidéos — captations, clips et analyse vidéo (démonstration)", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Mes Vidéos", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "forme", "label": "Forme & Charge — suivi physique de l'effectif : charge, alertes et objectifs", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Forme & Charge", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "gestion", "label": "Gestion Équipe — licences, catégories et organisation administrative", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Gestion Équipe", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "historique-relances", "label": "Historique des relances — qui a été relancé, quand et combien de destinataires", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Historique des relances", "retry": 3, "pauseAfter": 5500 }
+    ]},
+    { "id": "covoiturage", "label": "Covoiturage — trajets et véhicules des matchs", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Covoiturage", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 }
+    ]},
+    { "id": "coaching-perso", "label": "Coaching Perso — créneaux ouverts et tarification à l'heure", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "retry": 4, "pauseAfter": 4000 },
+      { "type": "text", "text": "Coaching Perso", "retry": 3, "pauseAfter": 5500 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 }
+    ]},
+    { "id": "composition-tactique", "label": "Composition & tableau tactique — accueil → raccourci « Tableau tactique » → « Composer le onze » : schéma de jeu de l'équipe active", "holdMs": 14000, "actions": [
+      { "type": "text", "text": "Accueil", "retry": 3, "pauseAfter": 4500 },
+      { "type": "text", "text": "Tableau tactique", "retry": 3, "pauseAfter": 6500 },
+      { "type": "text", "text": "Composer le onze", "retry": 3, "pauseAfter": 8000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2500 },
+      { "type": "scrollToTop", "pauseAfter": 2000 }
+    ]},
+    { "id": "retour-accueil", "label": "Retour à l'accueil coach — synthèse du parcours", "holdMs": 10000, "actions": [
+      { "type": "aria", "label": "Accueil", "retry": 3, "pauseAfter": 4000 }
+    ]}
+  ]
+}

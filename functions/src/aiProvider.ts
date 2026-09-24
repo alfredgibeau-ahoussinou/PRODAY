@@ -21,14 +21,32 @@ export interface AiCompletionResult {
   model: string;
 }
 
-export const GEMINI_DEFAULT_MODEL = 'gemini-3.5-flash-lite';
+export const GEMINI_DEFAULT_MODEL = 'gemini-3.6-flash';
 
 export function getGeminiModel(): string {
   return configStr('gemini', 'model', ['GEMINI_MODEL', 'EXPO_PUBLIC_GEMINI_MODEL']) ?? GEMINI_DEFAULT_MODEL;
 }
 
+/**
+ * Clé Gemini, **côté serveur uniquement**.
+ *
+ * `EXPO_PUBLIC_GEMINI_API_KEY` a été retirée de cette liste : accepter un nom préfixé
+ * `EXPO_PUBLIC_` ici revenait à bénir une variable destinée à être inlinée dans le bundle
+ * client. La clé ne doit exister que dans l'environnement d'exécution des fonctions
+ * (voir `D-014`).
+ */
 export function getGeminiApiKey(): string | null {
-  return configStr('gemini', 'api_key', ['GEMINI_API_KEY', 'GOOGLE_AI_API_KEY', 'GOOGLE_API_KEY', 'EXPO_PUBLIC_GEMINI_API_KEY']) ?? null;
+  return configStr('gemini', 'api_key', ['GEMINI_API_KEY', 'GOOGLE_AI_API_KEY', 'GOOGLE_API_KEY']) ?? null;
+}
+
+/**
+ * Signale (sans jamais exposer la valeur) une configuration client dangereuse : une clé
+ * de modèle présente dans une variable `EXPO_PUBLIC_*` est inlinée dans le bundle livré.
+ */
+export function detectLeakedClientKey(): string | null {
+  const leaked = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+  if (!leaked || !leaked.trim()) return null;
+  return 'EXPO_PUBLIC_GEMINI_API_KEY est définie : cette variable est inlinée dans le bundle client. Retirez-la et régénérez la clé (D-014).';
 }
 
 export function getMistralApiKey(): string | null {
@@ -36,8 +54,8 @@ export function getMistralApiKey(): string | null {
 }
 
 /**
- * Appelle l'API Google Gemini (Google AI Studio — 100% Free Tier).
- * Priorité à gemini-3.5-flash-lite (réponse instantanée sans latence de réflexion).
+ * Appelle l'API Google Gemini (Google AI Studio).
+ * Modèles réels avec failover automatique et mitigation 429.
  */
 export async function callGeminiApi(
   apiKey: string,
@@ -48,9 +66,10 @@ export async function callGeminiApi(
   const preferredModel = options?.model ?? getGeminiModel();
   const modelsToTry = [
     preferredModel,
-    'gemini-3.5-flash-lite',
-    'gemini-3.1-flash-lite',
     'gemini-3.6-flash',
+    'gemini-flash-latest',
+    'gemini-2.5-flash-lite',
+    'gemini-flash-lite-latest',
   ].filter((v, i, a) => a.indexOf(v) === i && !!v);
 
   let lastError: Error | null = null;
@@ -87,6 +106,12 @@ export async function callGeminiApi(
       if (!res.ok) {
         const errText = await res.text().catch(() => '');
         console.warn(`[aiProvider] Gemini ${model} HTTP ${res.status}:`, errText.slice(0, 200));
+        
+        // Si 429 Rate Limit, pause courte (800ms) avant d'essayer le modèle suivant
+        if (res.status === 429) {
+          await new Promise((r) => setTimeout(r, 800));
+        }
+        
         lastError = new Error(`Gemini API error (${res.status}): ${errText.slice(0, 150)}`);
         continue;
       }

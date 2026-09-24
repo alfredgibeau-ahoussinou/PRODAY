@@ -1,30 +1,54 @@
 import admin from "firebase-admin";
 import emailjs from "@emailjs/nodejs";
 import { resolve } from "path";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync, existsSync } from "fs";
 
-// Load env
+// Load env : racine .env puis website/.env.local en complément (sans écraser)
 const root = process.cwd();
-try {
-  const envRaw = readFileSync(resolve(root, ".env"), "utf8");
-  for (const line of envRaw.split("\n")) {
-    const l = line.trim();
-    if (l && !l.startsWith("#")) {
-      const eq = l.indexOf("=");
-      if (eq > 0) {
-        process.env[l.slice(0, eq)] = l.slice(eq + 1).replace(/^"|"$/g, "");
+function loadEnvFile(file, override = false) {
+  try {
+    const envRaw = readFileSync(file, "utf8");
+    for (const line of envRaw.split("\n")) {
+      const l = line.trim();
+      if (l && !l.startsWith("#")) {
+        const eq = l.indexOf("=");
+        if (eq > 0) {
+          const key = l.slice(0, eq);
+          if (override || !process.env[key]) {
+            process.env[key] = l.slice(eq + 1).replace(/^"|"$/g, "");
+          }
+        }
       }
     }
-  }
-} catch (e) {}
+  } catch (e) {}
+}
+loadEnvFile(resolve(root, ".env"), true);
+loadEnvFile(resolve(root, "website", ".env.local"));
 
-const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-if (!serviceAccountBase64) {
-  console.error("Missing FIREBASE_SERVICE_ACCOUNT_KEY");
-  process.exit(1);
+/** Convention repo : firebase/*adminsdk*.json (cf. seed-firestore, firebase-health, …). */
+function findServiceAccount() {
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    return process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  }
+  const fixed = resolve(root, "firebase/service-account.json");
+  if (existsSync(fixed)) return fixed;
+  const firebaseDir = resolve(root, "firebase");
+  if (existsSync(firebaseDir)) {
+    const found = readdirSync(firebaseDir).find(
+      (f) => f.includes("adminsdk") && f.endsWith(".json")
+    );
+    if (found) return resolve(firebaseDir, found);
+  }
+  return fixed;
 }
 
-const serviceAccount = JSON.parse(Buffer.from(serviceAccountBase64, "base64").toString("utf8"));
+const saPath = findServiceAccount();
+if (!existsSync(saPath)) {
+  console.error(`Service account introuvable : ${saPath}`);
+  process.exit(1);
+}
+const serviceAccount = JSON.parse(readFileSync(saPath, "utf8"));
+console.log(`Service account : ${saPath}`);
 
 if (!admin.apps.length) {
   admin.initializeApp({

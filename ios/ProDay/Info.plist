@@ -70,9 +70,9 @@
     <key>NSPhotoLibraryUsageDescription</key>
     <string>ProDay accède à vos photos pour votre avatar, votre galerie, vos reels et l’envoi de justificatifs (identité, diplômes).</string>
     <key>NSHealthShareUsageDescription</key>
-    <string>ProDay lit vos pas, sommeil et fréquence cardiaque pour affiner votre état santé sportif.</string>
+    <string>ProDay lit vos pas, votre sommeil et votre fréquence cardiaque pour suivre votre niveau de forme et votre récupération sportive.</string>
     <key>NSHealthUpdateUsageDescription</key>
-    <string>ProDay n'écrit pas de données dans Apple Santé.</string>
+    <string>ProDay synchronise vos données d’entraînement et de récupération sportive avec Apple Santé.</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>RCTNewArchEnabled</key>

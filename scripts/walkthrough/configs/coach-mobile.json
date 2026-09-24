@@ -1,0 +1,80 @@
+{
+  "pole": "Coach",
+  "email": "coach.demo@proday.app",
+  "password": "ProDayDemo2026!",
+  "poleCta": "Coach",
+  "shellReadyPattern": "Club affilié|VIGILANCE|Seniors A|Se déconnecter|Se deconnecter",
+  "mobile": true,
+  "outDir": "/tmp/proday-shots/coach-mobile",
+  "postLoginSettleMs": 7000,
+  "changeTimeoutMs": 14000,
+  "steps": [
+    { "id": "accueil", "label": "Accueil coach (mobile) — briefing du banc, vigilance charge, prochaines échéances et RSVP", "holdMs": 14000, "actions": [
+      { "type": "scroll", "dy": 600, "pauseAfter": 2500 },
+      { "type": "scroll", "dy": 600, "pauseAfter": 2500 },
+      { "type": "scrollToTop", "pauseAfter": 2000 }
+    ]},
+    { "id": "menu", "label": "Onglet Menu — hub « Tout ProDay » du pôle Coach (tous les modules)", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 3500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "matchs-live", "label": "Module Matchs & Live — direct, convocations et scores", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Matchs & Live", "pauseAfter": 3500 }
+    ]},
+    { "id": "entrainements", "label": "Module Entraînements — séances, exercices et présences de l'équipe", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Entraînements", "pauseAfter": 3500 },
+      { "type": "scroll", "dy": 450, "pauseAfter": 2200 }
+    ]},
+    { "id": "effectif", "label": "Module Effectif & Joueurs — fiches, forme et statistiques individuelles", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Effectif & Joueurs", "pauseAfter": 3500 },
+      { "type": "scroll", "dy": 450, "pauseAfter": 2200 }
+    ]},
+    { "id": "assistant-ia", "label": "Assistant Coach IA — conseils et causeries (résultats de démonstration)", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Assistant Coach IA", "pauseAfter": 3500 }
+    ]},
+    { "id": "copilote", "label": "Chat Copilote IA — assistant conversationnel du staff", "holdMs": 12000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Chat Copilote IA", "pauseAfter": 3500 }
+    ]},
+    { "id": "videos", "label": "Mes Vidéos — captations et clips d'analyse (démonstration)", "holdMs": 12000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Mes Vidéos", "pauseAfter": 3500 }
+    ]},
+    { "id": "forme", "label": "Forme & Charge — suivi physique : charge, alertes et objectifs", "holdMs": 13000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Forme & Charge", "pauseAfter": 3500 }
+    ]},
+    { "id": "gestion", "label": "Gestion Équipe — licences, catégories et organisation", "holdMs": 12000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Gestion Équipe", "pauseAfter": 3500 }
+    ]},
+    { "id": "messagerie", "label": "Messagerie — messages directs et groupes staff / parents", "holdMs": 12000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Messagerie", "pauseAfter": 3500 }
+    ]},
+    { "id": "covoiturage", "label": "Covoiturage — trajets et véhicules des matchs", "holdMs": 12000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Covoiturage", "pauseAfter": 3500 }
+    ]},
+    { "id": "coaching-perso", "label": "Coaching Perso — créneaux et tarifs à l'heure", "holdMs": 12000, "actions": [
+      { "type": "text", "text": "Menu", "pauseAfter": 2800 },
+      { "type": "text", "text": "Coaching Perso", "pauseAfter": 3500 }
+    ]},
+    { "id": "tactique", "label": "Composition & tableau tactique — accueil → Tableau tactique → « Composer le onze », puis schéma de jeu affiché en paysage plein écran", "holdMs": 3000, "actions": [
+      { "type": "text", "text": "Accueil", "retry": 3, "pauseAfter": 4000 },
+      { "type": "text", "text": "Tableau tactique", "retry": 3, "pauseAfter": 6500 },
+      { "type": "text", "text": "Composer le onze", "retry": 3, "pauseAfter": 8000 },
+      { "type": "viewport", "width": 844, "height": 390, "pauseAfter": 2500 },
+      { "type": "wait", "pauseAfter": 7000 },
+      { "type": "scroll", "dy": 250, "pauseAfter": 2500 },
+      { "type": "viewport", "width": 390, "height": 844, "pauseAfter": 1500 }
+    ]},
+    { "id": "retour-accueil", "label": "Retour à l'accueil coach — synthèse du parcours mobile", "holdMs": 9000, "actions": [
+      { "type": "text", "text": "Accueil", "pauseAfter": 3500 }
+    ]}
+  ]
+}

@@ -64,6 +64,9 @@ mindmap
 | 🔌 [`API_CONTRACTS.md`](./API_CONTRACTS.md) | Contrats d'API (Cloud Functions & Webhooks) |
 | 🔥 [`FIREBASE_SETUP.md`](./FIREBASE_SETUP.md) | Configuration initiale de Firebase |
 | 🤖 [`AI_SETUP.md`](./AI_SETUP.md) | Configuration de l'Intelligence Artificielle (Séances & Highlights) |
+| ⚽ [`FFF_SYNC_3H.md`](./FFF_SYNC_3H.md) | Synchronisation des classements FFF toutes les 3 h : sources vérifiées, limites documentées, verrou, obsolescence |
+| 🗂 [`proday-club-checklist.md`](./proday-club-checklist.md) | Checklist route par route du pôle Club/Admin : vérifié / à vérifier, défauts corrigés, blocages |
+| 🗂 [`proday-coach-checklist.md`](./proday-coach-checklist.md) | Checklist route par route du pôle Coach : inventaire des destinations, mesures relevées, défauts corrigés et restants |
 | 🛡 [`ADMIN_SETUP.md`](./ADMIN_SETUP.md) | Définition des rôles d'administration |
 | 🔒 [`WEBSITE_SECURITY.md`](./WEBSITE_SECURITY.md) | Sécurité du site web (CSP, Admin PIN, Edge Functions) |
 | 🌐 [`DOMAIN_PRODAY75_FR.md`](./DOMAIN_PRODAY75_FR.md) | Gestion du nom de domaine |

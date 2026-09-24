@@ -30,6 +30,7 @@ export const ACC_DOMAINS: AccNavDomain[] = [
     items: [
       { href: "/admin/platform", label: "Vue globale" },
       { href: "/admin/platform/health", label: "Santé système" },
+      { href: "/admin/ops/status", label: "Statut e-mail & diffusion" },
       { href: "/admin/ops/visites", label: "Activité / trafic" },
       { href: "/admin/ops/analytics", label: "Performance" },
     ],

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   useFonts,
@@ -35,6 +36,10 @@ import {
   shouldInjectShopTab,
 } from './src/navigation/resolveMainTabScreen';
 import { getMobileRailLayout } from './src/navigation/mobileTabConfig';
+import {
+  PORTRAIT_ORIENTATION_LOCK,
+  supportsOrientationLock,
+} from './src/features/video/videoOrientation';
 import {
   getGuestVisibleTabs,
   isGuestTabAllowed,
@@ -137,6 +142,11 @@ import { colors, spacing } from './src/theme/designTokens';
 import { EmailVerificationScreen } from './src/screens/EmailVerificationScreen';
 import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
 import { useAndroidBackHandler } from './src/hooks/useAndroidBackHandler';
+import { useUserMembershipState } from './src/hooks/useUserMembershipState';
+import { MembershipPendingScreen } from './src/screens/membership/MembershipPendingScreen';
+import { NoClubScreen } from './src/screens/membership/NoClubScreen';
+import { MultiClubSelectorScreen } from './src/screens/membership/MultiClubSelectorScreen';
+import { profileService } from './src/services/profile.service';
 import { AdminAppShell, AdminPreviewBanner } from './src/features/admin';
 import { SponsorAppShell } from './src/navigation/SponsorAppShell';
 import { SupporterAppShell } from './src/navigation/SupporterAppShell';
@@ -211,16 +221,28 @@ export default function App() {
     Sora_700Bold,
   });
 
-  const onLayoutRoot = useCallback(() => {
-    if (fontsLoaded) {
-      void SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
+  // Garde-fou Safari mobile / réseau dégradé : ne jamais bloquer sur un écran blanc
+  const [fontTimeout, setFontTimeout] = useState(false);
 
   useEffect(() => {
-    if (!fontsLoaded) return;
+    const timer = setTimeout(() => {
+      setFontTimeout(true);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const ready = fontsLoaded || fontTimeout;
+
+  const onLayoutRoot = useCallback(() => {
+    if (ready) {
+      void SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [ready]);
+
+  useEffect(() => {
+    if (!ready) return;
     void SplashScreen.hideAsync().catch(() => {});
-  }, [fontsLoaded]);
+  }, [ready]);
 
   useEffect(() => {
     const failSafe = setTimeout(() => {
@@ -230,9 +252,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!fontsLoaded) return;
+    if (!ready) return;
     trafficService.recordAppOpenOnce();
-  }, [fontsLoaded]);
+  }, [ready]);
 
   useEffect(() => {
     void import('./src/services/revenueCat.service').then(({ revenueCatService }) => {
@@ -250,7 +272,17 @@ export default function App() {
     return () => sub.remove();
   }, []);
 
-  if (!fontsLoaded) {
+  // Règle produit portrait-first (historique `orientation: 'portrait'`) :
+  // l'orientation natif est désormais « all » pour permettre le paysage du
+  // lecteur plein écran — l'app se verrouille donc elle-même au démarrage.
+  // Le lecteur déverrouille en paysage pendant la lecture (useVideoOrientationLock)
+  // et restitue ce verrou à sa fermeture.
+  useEffect(() => {
+    if (!supportsOrientationLock()) return;
+    void ScreenOrientation.lockAsync(PORTRAIT_ORIENTATION_LOCK);
+  }, []);
+
+  if (!ready) {
     return null;
   }
 
@@ -325,6 +357,23 @@ function AppShell() {
   );
   const [returnTab, setReturnTab] = useState<MainTabId | null>(null);
   const { count: unreadCount, refresh: refreshUnread } = useUnreadMessageCount();
+  const membershipState = useUserMembershipState();
+
+  /** Choix d'espace multi-clubs → persistance profile.club_id + reprise du flux adhésion. */
+  const handleMultiClubChoice = useCallback(
+    async (clubId: string) => {
+      if (!profile) return;
+      try {
+        await profileService.updateProfile(profile.uid, {
+          profile: { club_id: clubId },
+        });
+      } catch {
+        // Le service journalise déjà ; on retombe sur le flux de rafraîchissement.
+      }
+      await refreshProfile();
+    },
+    [profile, refreshProfile],
+  );
   const screenTime = useParentalScreenTime(profile);
   useParentalActivityJournal(profile, activeTab);
   const { locale, localeReady } = useTranslation();
@@ -619,6 +668,54 @@ function AppShell() {
     );
   }
 
+  // Gate d'adhésion club pour Joueur, Coach et Dirigeant
+  if (!authLoading && profile && !shouldUseAdminShell && !previewUserMode) {
+    if (membershipState.loading) {
+      return (
+        <SafeAreaView
+          style={[styles.adminLoader, { backgroundColor: colors.background }]}
+          edges={['top', 'left', 'right', 'bottom']}
+        >
+          <StatusBar style="light" />
+          <ActivityIndicator size="large" color={colors.accent} />
+        </SafeAreaView>
+      );
+    }
+
+    if (
+      membershipState.destination.kind === 'multi_club' &&
+      membershipState.destination.memberships
+    ) {
+      return (
+        <MultiClubSelectorScreen
+          memberships={membershipState.destination.memberships}
+          onClubChosen={handleMultiClubChoice}
+        />
+      );
+    }
+
+    if (
+      membershipState.destination.kind === 'pending_approval' &&
+      membershipState.destination.membership
+    ) {
+      return (
+        <MembershipPendingScreen
+          membership={membershipState.destination.membership}
+          onRefresh={membershipState.refresh}
+        />
+      );
+    }
+
+    if (membershipState.destination.kind === 'no_club') {
+      return (
+        <NoClubScreen
+          latestRejected={membershipState.destination.latestRejected}
+          onMembershipSubmitted={membershipState.refresh}
+        />
+      );
+    }
+  }
+
   const openChat = (threadId: string) => {
     if (isGuest) {
       setPendingAuthIntent('login');
@@ -909,7 +1006,10 @@ const styles = StyleSheet.create({
   screenDesktop: {
     flex: 1,
     width: '100%',
-    alignSelf: 'center',
+    // Dans la rangée `rootDesktop`, l'axe croisé est vertical : `alignSelf: 'center'`
+    // centrait la colonne et réduisait sa hauteur au contenu (0 pour un enfant
+    // flex, d'où un écran vide sur les pôles sans shell à hauteur explicite).
+    alignSelf: 'stretch',
     minWidth: 0,
   },
   adminLoader: {

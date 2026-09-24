@@ -1,0 +1,126 @@
+{
+  "pole": "Club",
+  "email": "club.demo@proday.app",
+  "password": "ProDayDemo2026!",
+  "poleCta": "Club",
+  "shellReadyPattern": "FC ProDay Démo|MON CLUB|Se déconnecter|Se deconnecter",
+  "mobile": true,
+  "outDir": "/tmp/proday-shots/club-mobile",
+  "postLoginSettleMs": 7000,
+  "changeTimeoutMs": 14000,
+  "freezeMs": 18000,
+  "steps": [
+    { "id": "accueil", "label": "Accueil club (mobile) — carte du club, recherche universelle, prochain rendez-vous et modules du club", "holdMs": 13000, "actions": [
+      { "type": "scroll", "dy": 600, "pauseAfter": 2500 },
+      { "type": "scroll", "dy": 600, "pauseAfter": 2500 },
+      { "type": "scrollToTop", "pauseAfter": 2000 }
+    ]},
+    { "id": "creer", "label": "Bouton « + CRÉER » — feuille de création : match, entraînement, joueur, coach, invitation", "holdMs": 12000, "actions": [
+      { "type": "aria", "label": "Créer", "pauseAfter": 3500 },
+      { "type": "scroll", "dy": 200, "pauseAfter": 2000 },
+      { "type": "key", "key": "Escape", "pauseAfter": 1500 },
+      { "type": "coords", "x": 195, "y": 120, "pauseAfter": 2500 }
+    ]},
+    { "id": "calendrier", "label": "Onglet Calendrier — vue jour/semaine/mois des événements du club", "holdMs": 13000, "actions": [
+      { "type": "coords", "x": 195, "y": 120, "pauseAfter": 1500 },
+      { "type": "aria", "label": "Accueil", "pauseAfter": 2500 },
+      { "type": "aria", "label": "Calendrier", "pauseAfter": 3500 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2200 }
+    ]},
+    { "id": "equipes", "label": "Onglet Équipes — équipes rattachées au club et effectifs", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Équipes", "pauseAfter": 3500 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2200 }
+    ]},
+    { "id": "menu", "label": "Onglet Menu — hub « Tout ProDay » : tous les modules du club et bannière Pôle Président", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3500 }
+    ]},
+    { "id": "matchs-live", "label": "Module Matchs & Live — convocations, scores en direct et feuilles de match", "holdMs": 14000, "actions": [
+      { "type": "text", "text": "Matchs & Live", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "evenements", "label": "Module Événements & Tournois — tournois, stages et rassemblements du club", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Événements & Tournois", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 450, "pauseAfter": 2200 }
+    ]},
+    { "id": "classements", "label": "Module Classements FFF — championnat du club et divisions suivies", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Classements FFF", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 450, "pauseAfter": 2200 }
+    ]},
+    { "id": "videos", "label": "Module Vidéo & Analyse IA — Veo, smartphone, smart clipping et tags (démonstration)", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Vidéo & Analyse IA", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 450, "pauseAfter": 2200 }
+    ]},
+    { "id": "videos-paysage", "label": "Analyse vidéo en paysage — lecture plein écran d'un clip (rotation du support)", "holdMs": 16000, "actions": [
+      { "type": "viewport", "width": 844, "height": 390, "pauseAfter": 3000 },
+      { "type": "scroll", "dy": 300, "pauseAfter": 2500 },
+      { "type": "viewport", "width": 390, "height": 844, "pauseAfter": 2000 }
+    ]},
+    { "id": "effectif-licences", "label": "Module Effectif & Licences — annuaire des licenciés, adhésions et statuts", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Effectif & Licences", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "staff-coachs", "label": "Module Staff & Coachs — affectations et encadrement des équipes", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Staff & Coachs", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2200 }
+    ]},
+    { "id": "communication", "label": "Module Communication — canaux officiels, Flash Info et messagerie directe", "holdMs": 14000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Communication", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 450, "pauseAfter": 2200 }
+    ]},
+    { "id": "finances", "label": "Module Finances & Cotisations — trésorerie, adhésions et suivi (données de démonstration)", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Finances & Cotisations", "pauseAfter": 4000 }
+    ]},
+    { "id": "entrainements", "label": "Module Entraînements — séances planifiées, exercices et présences", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Entraînements", "pauseAfter": 4000 }
+    ]},
+    { "id": "covoiturage", "label": "Module Covoiturage & Logistique — déplacements extérieurs, places et itinéraires", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Covoiturage & Logistique", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2000 }
+    ]},
+    { "id": "documents-licences", "label": "Module Documents & Licences — bordereaux FFF et certificats", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Documents & Licences", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2000 }
+    ]},
+    { "id": "sponsoring", "label": "Module Sponsoring & Partenaires — dossiers, mécénat et visibilité", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Sponsoring & Partenaires", "pauseAfter": 4000 }
+    ]},
+    { "id": "permissions", "label": "Module Rôles & Permissions — droits d'accès du staff et des dirigeants", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Rôles & Permissions", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2000 }
+    ]},
+    { "id": "identite", "label": "Module Identité du club — couleurs, logo, saison et réglages", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Identité du club", "pauseAfter": 4000 },
+      { "type": "scroll", "dy": 400, "pauseAfter": 2000 }
+    ]},
+    { "id": "notifications", "label": "Centre de notifications — alertes adhésions, convocations et staff", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2000 },
+      { "type": "text", "text": "Centre de Notifications", "pauseAfter": 4000 }
+    ]},
+    { "id": "copilote", "label": "Module Copilote Club IA — briefings et requêtes assistées (démonstration)", "holdMs": 13000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Copilote Club IA", "pauseAfter": 4000 }
+    ]},
+    { "id": "president", "label": "Pôle Président & Direction — cockpit stratégique du club (bascule depuis le Menu)", "holdMs": 15000, "actions": [
+      { "type": "aria", "label": "Menu", "pauseAfter": 3000 },
+      { "type": "text", "text": "Pôle Président", "pauseAfter": 5000 },
+      { "type": "scroll", "dy": 500, "pauseAfter": 2500 }
+    ]},
+    { "id": "retour-club", "label": "Fin du parcours mobile — le retour à l'accueil club n'a pas pu être déclenché depuis le cockpit Président : constat conservé tel quel", "holdMs": 9000, "actions": [
+      { "type": "aria", "label": "Accueil", "pauseAfter": 3500 }
+    ]}
+  ]
+}

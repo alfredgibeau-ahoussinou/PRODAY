@@ -102,28 +102,42 @@ export const prodayAiChat = onCall(
     });
 
     const systemPrompt = buildSynthesisPrompt(agentResults, role);
-    let aiRes;
+    let reply = '';
+    let usedModel = 'gemini-2.0-flash';
+    let usedProvider: 'gemini' | 'mistral' | 'proday-core' = 'gemini';
+
     try {
-      aiRes = await generateAiChatCompletion({
+      const aiRes = await generateAiChatCompletion({
         systemPrompt,
         messages,
         temperature: 0.5,
       });
+      reply = stripDashTypography(aiRes.text.slice(0, MAX_REPLY_CHARS));
+      usedModel = aiRes.model;
+      usedProvider = aiRes.provider;
     } catch (e: unknown) {
-      console.error('[prodayAiChat] AI error', e);
-      throw new HttpsError(
-        'internal',
-        e instanceof Error ? e.message : 'Le modèle IA a échoué. Réessayez dans un instant.',
-      );
+      console.warn('[prodayAiChat] Fallback to internal agent synthesis:', e);
+      // Synthèse résiliente basée sur les données réelles collectées par les agents
+      const validResults = agentResults.filter((r) => !r.error && r.summary);
+      if (validResults.length > 0) {
+        const summaries = validResults.map((r) => r.summary).join('\n\n');
+        reply = stripDashTypography(
+          `Voici les informations analysées pour votre demande :\n\n${summaries}\n\nN’hésitez pas si vous souhaitez approfondir un point précis.`
+        );
+      } else {
+        reply = stripDashTypography(
+          `J’ai bien pris en compte votre demande. Je peux vous accompagner sur la gestion de vos effectifs, l’organisation des séances et l’analyse tactique. Précisez votre question ou choisissez une consigne.`
+        );
+      }
+      usedModel = 'proday-resilient-core';
+      usedProvider = 'proday-core';
     }
-
-    const reply = stripDashTypography(aiRes.text.slice(0, MAX_REPLY_CHARS));
 
     return {
       reply,
       agents_used: agentNames,
-      model: aiRes.model,
-      provider: aiRes.provider,
+      model: usedModel,
+      provider: usedProvider,
     };
   },
 );

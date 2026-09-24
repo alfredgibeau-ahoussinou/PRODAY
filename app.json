@@ -4,7 +4,7 @@
     "slug": "proday",
     "version": "1.0.10",
     "scheme": "proday",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/branding/proday-app-icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.proday.app",
-      "buildNumber": "19",
+      "buildNumber": "20",
       "associatedDomains": [
         "applinks:proday75.fr",
         "applinks:www.proday75.fr"
@@ -35,8 +35,8 @@
         "NSMicrophoneUsageDescription": "ProDay utilise le micro pour enregistrer vos notes vocales de scouting en direct de match, filmer vos reels et capturer des vidéos sportives.",
         "NSPhotoLibraryUsageDescription": "ProDay accède à vos photos pour votre avatar, votre galerie, vos reels et l’envoi de justificatifs (identité, diplômes).",
         "NSLocationWhenInUseUsageDescription": "ProDay utilise votre position pour les points de rendez-vous covoiturage et pour partager votre position en direct avec les passagers pendant un trajet en cours.",
-        "NSHealthShareUsageDescription": "ProDay lit vos pas, sommeil et fréquence cardiaque pour affiner votre état santé sportif.",
-        "NSHealthUpdateUsageDescription": "ProDay n'écrit pas de données dans Apple Santé."
+        "NSHealthShareUsageDescription": "ProDay lit vos pas, votre sommeil et votre fréquence cardiaque pour suivre votre niveau de forme et votre récupération sportive.",
+        "NSHealthUpdateUsageDescription": "ProDay synchronise vos données d’entraînement et de récupération sportive avec Apple Santé."
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,
@@ -162,19 +162,12 @@
         "backgroundColor": "#000000"
       },
       "package": "com.proday.app",
-      "versionCode": 12,
-      "googleServicesFile": "./google-services.json",
-      "permissions": [
-        "CAMERA",
-        "RECORD_AUDIO",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ]
+      "versionCode": 13,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
+      "output": "single",
       "favicon": "./assets/branding/proday-app-icon.png"
     },
     "plugins": [
@@ -207,6 +200,12 @@
       "expo-video",
       "expo-audio",
       [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ],
+      [
         "expo-calendar",
         {
           "calendarPermission": "ProDay synchronise vos matchs et convocations avec votre calendrier.",
@@ -216,8 +215,8 @@
       [
         "react-native-health",
         {
-          "healthSharePermission": "ProDay lit vos pas, sommeil et fréquence cardiaque pour affiner votre état santé sportif.",
-          "healthUpdatePermission": "ProDay n'écrit pas de données dans Apple Santé."
+          "healthSharePermission": "ProDay lit vos pas, votre sommeil et votre fréquence cardiaque pour suivre votre niveau de forme et votre récupération sportive.",
+          "healthUpdatePermission": "ProDay synchronise vos données d’entraînement et de récupération sportive avec Apple Santé."
         }
       ],
       [

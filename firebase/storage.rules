@@ -22,6 +22,21 @@ service firebase.storage {
         && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif)|application/pdf');
     }
 
+    /**
+     * Feuilles d'équipe déposées pour conversion PDF → tableau (pôle Coach).
+     *
+     * Écriture : l'auteur seul, PDF, 8 Mo max. **Lecture refusée aux clients** :
+     * le document contient des données de mineurs et la Cloud Function
+     * `extractSquadSheetText` y accède via le SDK Admin (qui ignore ces règles),
+     * puis le supprime. Aucun écran n'a besoin de relire la feuille.
+     */
+    match /squad-sheets/{userId}/{fileName} {
+      allow read: if false;
+      allow write: if isOwner(userId)
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+    }
+
     /** Pièces devis sponsor — upload par le sponsor (uid dans le nom) ou admin */
     match /sponsor_quotes/{requestId}/{fileName} {
       allow read: if request.auth != null
@@ -99,6 +114,29 @@ service firebase.storage {
         isAdmin() ||
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.profile.club_id == clubId
       );
+    }
+
+    /**
+     * Périmètre financier club — miroir de `canManageClubFinance` côté Firestore.
+     * Un coach rattaché au club n'a pas à lire les justificatifs de cotisation des familles.
+     */
+    function isClubFinanceManager(clubId) {
+      return request.auth != null && (
+        isAdmin()
+        || request.auth.uid == clubId
+        || (
+          firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('role', '') == 'club'
+          && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('profile', {}).get('club_id', '') == clubId
+        )
+      );
+    }
+
+    /** Justificatifs financiers (reçus, bordereaux) — chemin clubId, lecture staff financier. */
+    match /club_finance_receipts/{clubId}/{fileName} {
+      allow read: if isClubFinanceManager(clubId);
+      allow write: if isClubFinanceManager(clubId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif)|application/pdf');
     }
 
     /** Documents partagés équipe — staff club / adhérents (chemin clubId) */

@@ -48,10 +48,10 @@
     "firebase:deploy": "firebase deploy --only firestore:rules,firestore:indexes && npm run stats:refresh",
     "firebase:deploy:functions": "firebase deploy --only functions",
     "firebase:deploy:check": "node scripts/firebase-health.mjs",
+    "fff:status": "node scripts/fff-sync-status.mjs",
     "firebase:deploy:storage": "firebase deploy --only storage",
     "firebase:rules:test": "FIREBASE_EMULATORS_PATH=\"${FIREBASE_EMULATORS_PATH:-$PWD/.firebase-emulators}\" JAVA_HOME=\"${JAVA_HOME:-/opt/homebrew/opt/openjdk}\" PATH=\"$JAVA_HOME/bin:$PATH\" firebase emulators:exec --only firestore \"node scripts/firestore-rules.test.mjs\"",
     "beta:check": "node scripts/beta-readiness.mjs",
-    "release:check": "node scripts/release-check.mjs",
     "stripe:subscriptions:check": "node scripts/stripe-subscriptions-readiness.mjs",
     "beta:broadcast-ios": "node scripts/broadcast-beta-ios-pre-announcement.mjs",
     "docs:cv": "node scripts/generate-player-cv.mjs",
@@ -93,6 +93,7 @@
     "census:fff": "node scripts/seed-fff-club-census.mjs"
   },
   "dependencies": {
+    "@emailjs/nodejs": "^5.0.2",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/sora": "^0.4.2",
     "@expo-google-fonts/syne": "^0.4.2",
@@ -118,6 +119,7 @@
     "expo-local-authentication": "~17.0.9",
     "expo-location": "~19.0.8",
     "expo-notifications": "~0.32.17",
+    "expo-screen-orientation": "~9.0.9",
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
