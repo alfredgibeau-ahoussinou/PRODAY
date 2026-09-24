@@ -413,6 +413,7 @@ export function CoachParamsPanel({
   onReferral,
   onSignOut,
   onAvatarPress,
+  onOpenSettings,
 }: {
   profile: User;
   verifiedStaff?: boolean;
@@ -427,6 +428,7 @@ export function CoachParamsPanel({
   onReferral?: () => void;
   onSignOut?: () => void;
   onAvatarPress?: () => void;
+  onOpenSettings?: () => void;
 }) {
   const { tokens } = useCoachTheme();
   const { confirmDeleteAccount, deleting } = useAccountDeletion();
@@ -438,6 +440,23 @@ export function CoachParamsPanel({
         title="Paramètres & Sécurité"
         subtitle="Gestion de vos préférences, vérification FFF, club et compte."
       />
+
+      {onOpenSettings ? (
+        <SectionCard
+          title="RÉGLAGES & LIQUID GLASS"
+          subtitle="Apparence visuelle, notifications tactiques et préférences"
+          icon="settings-outline"
+        >
+          <View style={styles.menu}>
+            <MenuRow
+              icon="settings-outline"
+              title="Paramètres complets ProDay"
+              sub="Apparence Liquid Glass, notifications et schéma tactique"
+              onPress={onOpenSettings}
+            />
+          </View>
+        </SectionCard>
+      ) : null}
 
       {/* 1. PRÉFÉRENCES & PHOTO */}
       <SectionCard

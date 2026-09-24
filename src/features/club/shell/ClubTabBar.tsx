@@ -18,7 +18,7 @@ type Props = {
   items: ClubNavResolvedItem[];
   activeId: ClubNavItemId;
   onSelect: (id: ClubNavItemId) => void;
-  /** FAB central du dock (« + CRÉER ») — forme reprise de la référence Fitness Park. */
+  /** FAB central du dock (« + CRÉER ») — forme reprise de la référence Apple Fitness. */
   onCreate?: () => void;
 };
 

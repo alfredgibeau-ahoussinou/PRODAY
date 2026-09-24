@@ -10,7 +10,7 @@ import { CLUB_TOKENS, type ClubThemeTokens } from './clubTokens';
 import { APPLE_FONT_STACK } from '../../../theme/appleTypography';
 
 /**
- * Forme « application listed as Fitness Park » (captures du 15/09/2026).
+ * Forme « application Apple Fitness / Apple HIG » (hiérarchie sport premium).
  *
  * Référence de **forme** retenue pour le pôle Club/Admin : rayons généreux,
  * conteneurs de liste groupée, séparateurs en retrait, puces pilule dont la

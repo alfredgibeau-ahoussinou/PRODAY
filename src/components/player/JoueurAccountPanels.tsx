@@ -544,6 +544,7 @@ type ParamsProps = {
   onLegal: (id: 'terms' | 'privacy') => void;
   onSignOut: () => void;
   onAvatarPress?: () => void;
+  onOpenSettings?: () => void;
   AlertCard: React.ComponentType<{
     title: string;
     body: string;
@@ -567,6 +568,17 @@ export function JoueurParamsPanel(props: ParamsProps) {
       title="Paramètres & Sécurité"
       subtitle="Gestion de vos préférences, langue, vérification d'identité et options de compte."
     >
+      {props.onOpenSettings ? (
+        <Block accent={props.accent} label="RÉGLAGES & LIQUID GLASS" icon="settings-outline">
+          <ActionTile
+            accent={props.accent}
+            icon="shirt"
+            title="Réglages ProDay & Liquid Glass"
+            sub="Apparence visuelle, notifications et préférences"
+            onPress={props.onOpenSettings}
+          />
+        </Block>
+      ) : null}
       {props.onAvatarPress ? (
         <Block accent={props.accent} label="PHOTO DE PROFIL" icon="camera-outline">
           <ActionTile

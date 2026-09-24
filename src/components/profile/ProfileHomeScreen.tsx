@@ -46,6 +46,7 @@ import { screenScrollPad } from '../../navigation/screenLayout';
 import { spacing, radius } from '../../theme/designTokens';
 import { ProfilePreferencesCard } from './ProfilePreferencesCard';
 import { LanguageSettingControl } from '../settings/LanguageSettingControl';
+import { UnifiedSettingsModal } from '../settings/UnifiedSettingsModal';
 import { ProgressionBlock } from '../../features/home/components/ProgressionBlock';
 import type { SectionIntelligence } from '../../features/v3/models/sectionIntelligence';
 import type { GamificationState } from '../../features/v3/models/gamification';
@@ -163,6 +164,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     [props.profile.role, t]
   );
   const [chapter, setChapter] = useState<ProfileChapterId>(props.initialChapter ?? 'apercu');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const p = props.profile.profile;
   const completionPercent = useMemo(
     () => getProfileCompletion(props.profile).percent,
@@ -551,6 +553,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 onLegal={props.onLegal}
                 onSignOut={props.onSignOut}
                 onAvatarPress={props.onAvatarPress}
+                onOpenSettings={() => setSettingsOpen(true)}
               />
             ) : isCoach ? (
               <CoachParamsPanel
@@ -567,6 +570,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 onReferral={props.onReferral}
                 onSignOut={props.onSignOut}
                 onAvatarPress={props.onAvatarPress}
+                onOpenSettings={() => setSettingsOpen(true)}
               />
             ) : (
               <>
@@ -797,6 +801,13 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     >
       {identityHeader}
       <View style={useHubChrome ? styles.playerPager : undefined}>{pager}</View>
+      <UnifiedSettingsModal
+        visible={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        userRole={props.profile.role}
+        user={props.profile}
+        onSignOut={props.onSignOut}
+      />
     </View>
   );
   if (inCoachShell) {

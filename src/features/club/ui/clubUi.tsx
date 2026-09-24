@@ -217,7 +217,7 @@ export function ClubSectionCard({
 }
 
 /**
- * Ligne de réglage — forme de la référence Fitness Park : icône en contour,
+ * Ligne de réglage — forme de la référence Apple Fitness : icône en contour,
  * libellé large, chevron fin gris à droite. Aucun fond d'icône, aucune couleur
  * d'accent sur la ligne : l'accent reste réservé à l'action et à l'état actif.
  */

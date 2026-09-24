@@ -14,6 +14,7 @@ import { useCoachTheme } from './CoachThemeContext';
 import type { CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
 import { useCoachShellNav } from './CoachShellNavContext';
 import { LegalDocumentModal } from '../../../components/legal/LegalDocumentModal';
+import { UnifiedSettingsModal } from '../../../components/settings/UnifiedSettingsModal';
 import { TAB_BAR_CONTENT_INSET } from '../../../navigation/tabBarLayout';
 import { spacing } from '../../../theme/designTokens';
 import { coachChrome } from '../theme/coachDesignSystem';
@@ -121,6 +122,7 @@ export function CoachMenuPane({ items = [] }: Props) {
   const wide = width >= coachChrome.wideBreakpoint;
   const [searchOpen, setSearchOpen] = useState(false);
   const [legalModalDoc, setLegalModalDoc] = useState<'terms' | 'privacy' | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const resolvedById = useMemo(
     () => new Map(items.map((item) => [item.id, item] as const)),
@@ -270,6 +272,13 @@ export function CoachMenuPane({ items = [] }: Props) {
               onPress: () => shellNav?.requestNav('profil'),
             },
             {
+              key: 'settings',
+              label: 'Paramètres & Liquid Glass',
+              hint: 'Apparence, notifications et tactique',
+              icon: 'settings',
+              onPress: () => setSettingsOpen(true),
+            },
+            {
               key: 'cgu',
               label: 'Conditions Générales (CGU)',
               hint: 'Règles d’utilisation du service',
@@ -300,6 +309,14 @@ export function CoachMenuPane({ items = [] }: Props) {
         visible={legalModalDoc !== null}
         documentId={legalModalDoc}
         onClose={() => setLegalModalDoc(null)}
+      />
+
+      <UnifiedSettingsModal
+        visible={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        userRole="coach"
+        user={profile}
+        onSignOut={shellNav?.signOut}
       />
     </View>
   );

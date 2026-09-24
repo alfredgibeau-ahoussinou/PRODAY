@@ -47,7 +47,7 @@ function deriveRsvp(event: TeamEvent, uid: string): PlayerRsvpStatus {
 /**
  * Accueil joueur — refonte Player §4 : la page répond d'abord à quatre
  * questions (prochain événement · réponse attendue · activité récente ·
- * message important), sans tableau de bord dense. Forme « Fitness Park » :
+ * message important), sans tableau de bord dense. Forme « Apple Fitness » :
  * cartes plates à rayons généreux sur fond noir, typographie Apple system.
  * Toutes les couleurs viennent du socle partagé — aucune valeur littérale.
  */

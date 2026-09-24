@@ -13,6 +13,7 @@ import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { useClubTheme } from './ClubThemeContext';
 import { useClubShellNav } from './ClubShellNavContext';
 import { LegalDocumentModal } from '../../../components/legal/LegalDocumentModal';
+import { UnifiedSettingsModal } from '../../../components/settings/UnifiedSettingsModal';
 import type { ClubNavResolvedItem } from '../navigation/resolveClubNavAccess';
 import { CLUB_TOOL_GROUPS, type ClubNavItemId } from '../navigation/clubNavConfig';
 import { ClubActionRow, ClubListGroup } from '../ui/clubUi';
@@ -163,6 +164,7 @@ export function ClubMenuPane({ items = [] }: Props) {
   const wide = width >= clubChrome.wideBreakpoint;
   const [searchOpen, setSearchOpen] = useState(false);
   const [legalModalDoc, setLegalModalDoc] = useState<'terms' | 'privacy' | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const resolvedById = useMemo(
     () => new Map(items.map((item) => [item.id, item] as const)),
@@ -276,7 +278,7 @@ export function ClubMenuPane({ items = [] }: Props) {
         ) : null}
 
         {/*
-         * 2. Modules groupés — forme reprise de la référence Fitness Park :
+         * 2. Modules groupés — hiérarchie inspirée d’Apple Fitness / Apple HIG :
          * libellé de section en majuscules, puis un encart arrondi unique par
          * groupe, lignes à icône contour + libellé + chevron et filets en retrait.
          * Les destinations du dock (Accueil, Calendrier, Équipes, Menu) ne sont
@@ -322,10 +324,13 @@ export function ClubMenuPane({ items = [] }: Props) {
             iconBg: `${clubAccent}15`,
           }}
           links={[
-            // « Profil club » et « Rôles & Permissions » sont **volontairement absents** :
-            // ces deux destinations existent déjà comme lignes de menu (« Identité du
-            // club », « Rôles & Permissions »). Deux entrées pour une seule page, sous
-            // deux libellés différents, rendaient la navigation ambiguë.
+            {
+              key: 'settings',
+              label: 'Paramètres & Liquid Glass',
+              hint: 'Apparence, configuration club & FFF',
+              icon: 'settings',
+              onPress: () => setSettingsOpen(true),
+            },
             {
               key: 'cgu',
               label: 'Conditions Générales (CGU)',
@@ -359,6 +364,14 @@ export function ClubMenuPane({ items = [] }: Props) {
         visible={legalModalDoc !== null}
         documentId={legalModalDoc}
         onClose={() => setLegalModalDoc(null)}
+      />
+
+      <UnifiedSettingsModal
+        visible={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        userRole="club"
+        user={profile}
+        onSignOut={shellNav?.signOut}
       />
     </View>
   );

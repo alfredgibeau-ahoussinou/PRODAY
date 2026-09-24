@@ -84,6 +84,42 @@ describe('Membership Registration and Routing Flow', () => {
       expect(dest.user?.uid).toBe('real_user_123');
     });
 
+    it('strictly forbids real users with profile club_id pointing to proday_demo_club without active membership', () => {
+      const realUserWithDemoClub = mockUser({
+        profile: { club_id: 'proday_demo_club' },
+      });
+      const dest = resolveUserDestination(realUserWithDemoClub, []);
+      expect(dest.kind).toBe('no_club');
+    });
+
+    it('requires active membership for real players even if profile has another club_id', () => {
+      const realPlayerWithClub = mockUser({
+        role: 'player',
+        profile: { club_id: 'real_club_marseille' },
+      });
+      const dest = resolveUserDestination(realPlayerWithClub, []);
+      expect(dest.kind).toBe('no_club');
+    });
+
+    it('allows real club owners with non-demo club profile to route to active_club', () => {
+      const realClubAdmin = mockUser({
+        role: 'club',
+        profile: { club_id: 'fc_versailles_78' },
+      });
+      const dest = resolveUserDestination(realClubAdmin, []);
+      expect(dest.kind).toBe('active_club');
+      expect(dest.clubId).toBe('fc_versailles_78');
+    });
+
+    it('forbids real club owners from routing to proday_demo_club', () => {
+      const realClubAdminDemo = mockUser({
+        role: 'club',
+        profile: { club_id: 'proday_demo_club' },
+      });
+      const dest = resolveUserDestination(realClubAdminDemo, []);
+      expect(dest.kind).toBe('no_club');
+    });
+
     it('returns pending_approval when user has a pending membership', () => {
       const pendingMembership = mockMembership({
         id: 'mem_pending_1',

@@ -54,12 +54,12 @@ export const playerType = {
 export type PlayerTypeVariant = keyof typeof playerType;
 
 /**
- * Forme « Fitness Park » — constantes de composition du pôle Joueur.
+ * Forme « Apple Fitness » — constantes de composition du pôle Joueur.
  * Parité assumée avec `clubForm` pour les mesures partagées (puces, actions,
  * lignes, champs, dock) : les deux pôles répondent aux mêmes cibles.
  */
 export const playerForm = {
-  /** Carte groupée Fitness Park — rayon généreux, parité stricte avec le socle. */
+  /** Carte groupée Apple Fitness — rayon généreux, parité stricte avec le socle. */
   cardRadius: 22,
   /** Grand bloc hero (carte FUT, passeport). */
   heroRadius: 24,

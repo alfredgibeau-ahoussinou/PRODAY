@@ -26,6 +26,18 @@ export interface UserDestination {
   latestRejected?: Membership;
 }
 
+export function isDemoClubId(clubId?: string | null): boolean {
+  if (!clubId) return false;
+  const normalized = clubId.trim().toLowerCase();
+  return (
+    normalized === 'proday_demo_club' ||
+    normalized === 'demo-club' ||
+    normalized === 'club-demo' ||
+    normalized.startsWith('demo_') ||
+    normalized.startsWith('seed_')
+  );
+}
+
 export function resolveUserDestination(
   user: User | null | undefined,
   memberships: Membership[] = [],
@@ -104,17 +116,20 @@ export function resolveUserDestination(
     };
   }
 
-  // Fallback: If user profile already has an established club_id (e.g. club owner or existing verified profile)
-  // but memberships collection hasn't created a doc yet, treat as active if club role or explicit profile club_id
-  if (user.profile?.club_id && user.profile.club_id !== 'demo-club' && user.profile.club_id !== 'club-demo') {
-    // If there is no pending membership indicating an ongoing request
-    if (pendingMemberships.length === 0) {
-      return {
-        kind: 'active_club',
-        clubId: user.profile.club_id,
-        role: user.role,
-        user,
-      };
+
+  // Fallback: If user is a club manager (role === 'club') whose club_id is attached directly on their profile or uid
+  // (Players and coaches MUST have an active record in memberships collection to access a club)
+  if (user.role === 'club') {
+    const clubId = user.profile?.club_id || user.uid;
+    if (clubId && (!isDemoClubId(clubId) || isSyntheticUser(user))) {
+      if (pendingMemberships.length === 0) {
+        return {
+          kind: 'active_club',
+          clubId,
+          role: 'club',
+          user,
+        };
+      }
     }
   }
 

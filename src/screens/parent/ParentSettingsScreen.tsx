@@ -18,6 +18,7 @@ import { authService } from '../../services/auth.service';
 import { ParentalTimeLimitScreen } from '../ParentalTimeLimitScreen';
 import { ParentalActivityReportScreen } from '../ParentalActivityReportScreen';
 import { LanguageSettingControl } from '../../components/settings/LanguageSettingControl';
+import { UnifiedSettingsModal } from '../../components/settings/UnifiedSettingsModal';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeGuardianEmail } from '../../utils/guardianEmail';
 import type { ParentalEmergencyContact } from '../../models/ParentalSettings';
@@ -53,6 +54,7 @@ export const ParentSettingsScreen: React.FC<Props> = ({ onSignOut }) => {
   const [emRelation, setEmRelation] = useState('');
   const [bonusBusy, setBonusBusy] = useState(false);
   const [resetSending, setResetSending] = useState(false);
+  const [unifiedSettingsOpen, setUnifiedSettingsOpen] = useState(false);
 
   const handlePasswordReset = async () => {
     if (!email) {
@@ -476,6 +478,17 @@ export const ParentSettingsScreen: React.FC<Props> = ({ onSignOut }) => {
           />
         </ParentSectionCard>
 
+        <ParentSectionCard
+          title="Réglages Généraux & Liquid Glass"
+          subtitle="Personnalisation de l’affichage, alertes directes et préférences"
+        >
+          <ParentActionButton
+            label="Ouvrir les réglages complets"
+            icon="settings"
+            onPress={() => setUnifiedSettingsOpen(true)}
+          />
+        </ParentSectionCard>
+
         <ParentActionButton
           label="Se déconnecter"
           tone="danger"
@@ -488,6 +501,14 @@ export const ParentSettingsScreen: React.FC<Props> = ({ onSignOut }) => {
           }
         />
       </ScrollView>
+
+      <UnifiedSettingsModal
+        visible={unifiedSettingsOpen}
+        onClose={() => setUnifiedSettingsOpen(false)}
+        userRole="parent"
+        user={profile}
+        onSignOut={onSignOut}
+      />
     </ParentPageFrame>
   );
 };

@@ -43,6 +43,7 @@ import { useProDayBrain } from '../hooks/useProDayBrain';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
 import { OnboardingDocumentsScreen } from './OnboardingDocumentsScreen';
 import { PushScreenTransition } from '../components/motion';
+import { UnifiedSettingsModal } from '../components/settings/UnifiedSettingsModal';
 
 interface ProfileScreenProps {
   profile: User;
@@ -85,6 +86,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [showCvEditor, setShowCvEditor] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
   const [showReferral, setShowReferral] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     maybeRecordProfileCompletion(profile);
@@ -332,6 +334,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       });
     }
 
+    actions.push({
+      id: 'settings',
+      label: 'Réglages',
+      icon: 'settings',
+      onPress: () => setShowSettings(true),
+    });
+
     return actions;
   }, [profile.role, productLine, nav]);
 
@@ -552,6 +561,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         progression={brain.progression}
       />
       <PushScreenTransition active={hasOverlay}>{renderOverlay()}</PushScreenTransition>
+      <UnifiedSettingsModal
+        visible={showSettings}
+        onClose={() => setShowSettings(false)}
+        userRole={profile.role}
+        user={profile}
+        onSignOut={handleSignOutPress}
+      />
     </>
   );
 };

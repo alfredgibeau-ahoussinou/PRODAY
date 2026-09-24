@@ -35,7 +35,7 @@ describe('playerDesignSystem', () => {
     expect(playerType.nav).toBe(APPLE_TYPOGRAPHY.footnote);
   });
 
-  it('reprend la forme Fitness Park avec la parité de mesure du socle professionnel', () => {
+  it('reprend la forme Apple Fitness avec la parité de mesure du socle professionnel', () => {
     /** Mêmes cibles que Club/Coach : puces, actions, lignes, champs, dock. */
     expect(playerForm.chipHeight).toBe(clubForm.chipHeight);
     expect(playerForm.chipRadius).toBe(clubForm.chipRadius);
@@ -43,7 +43,7 @@ describe('playerDesignSystem', () => {
     expect(playerForm.actionRadius).toBe(clubForm.actionRadius);
     expect(playerForm.rowMinHeight).toBe(clubForm.rowMinHeight);
     expect(playerForm.dockLabelSize).toBe(clubForm.dockLabelSize);
-    /** Signature Fitness Park propre au pôle : grandes cartes groupées. */
+    /** Signature Apple Fitness propre au pôle : grandes cartes groupées. */
     expect(playerForm.cardRadius).toBeGreaterThan(clubForm.groupRadius - 1);
     expect(playerForm.cardRadius).toBeGreaterThanOrEqual(20);
   });

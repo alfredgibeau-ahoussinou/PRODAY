@@ -15,7 +15,7 @@ import { spacing } from '../../theme/designTokens';
  * Dock du pôle Joueur — **4 destinations** (refonte Player §4) :
  * Accueil · Calendrier · Ma Carte · Menu.
  *
- * Forme « Fitness Park » : capsule flottante, icône et libellé bas de casse,
+ * Forme « Apple Fitness » : capsule flottante, icône et libellé bas de casse,
  * état actif lu sur la **couleur** uniquement (ni encart, ni soulignement).
  * Typographie **Apple system** via `playerType.nav` ; libellés à
  * `playerForm.dockLabelSize`. Toutes les couleurs viennent du socle joueur

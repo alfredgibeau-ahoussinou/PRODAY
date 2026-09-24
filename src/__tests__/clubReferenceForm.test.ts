@@ -4,7 +4,7 @@ import { clubForm } from '../features/club/theme/clubDesignSystem';
 import { CLUB_TOKENS } from '../features/club/theme/clubTokens';
 
 /**
- * Référence de **forme** de l'application Fitness Park (captures du 15/09/2026),
+ * Référence de **forme** Apple Fitness / Apple HIG,
  * retenue pour le pôle Club/Admin : encart de liste groupée, filets en retrait,
  * puce au contour d'accent, action en pilule, FAB central de dock, cartes plates.
  *

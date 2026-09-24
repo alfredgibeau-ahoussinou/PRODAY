@@ -32,7 +32,7 @@ interface PlayerPortalScreenProps {
 /**
  * Portail interne du pôle Joueur (cockpit · passeport · santé · tactique).
  *
- * Rail segmenté « Fitness Park » : pilule sur surface élevée, segment actif en
+ * Rail segmenté inspiré d'Apple Fitness : pilule sur surface élevée, segment actif en
  * **contour d'accent** (jamais un aplat), typographie Apple system. Toutes les
  * couleurs viennent du socle partagé — aucune valeur littérale.
  */
