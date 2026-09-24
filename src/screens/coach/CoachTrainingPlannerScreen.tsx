@@ -23,6 +23,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -106,6 +107,9 @@ const INTENSITY_TONE: Record<SessionIntensity, string> = {
 export const CoachTrainingPlannerScreen: React.FC = () => {
   const { tokens } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
+  const { width: winWidth } = useWindowDimensions();
+  const cardPitchW = Math.max(260, Math.min(winWidth - 56, 460));
+  const cardPitchH = Math.round((cardPitchW * 64) / 100);
   const profile = useSessionProfile();
   const clubId = profile?.profile.club_id ?? null;
 
@@ -555,9 +559,70 @@ export const CoachTrainingPlannerScreen: React.FC = () => {
 
                 {expanded ? (
                   <View style={styles.expandedBody}>
-                    <Text style={styles.exerciseObjective}>{exercise.objective}</Text>
-                    <Text style={styles.exerciseInstructions}>{exercise.instructions}</Text>
+                    {/* 1. Titre complet sans coupure */}
+                    <View style={styles.expandedHeaderRow}>
+                      <Text style={styles.expandedTitle}>{exercise.name}</Text>
+                    </View>
 
+                    {/* 2. Terrain visuel grand format réactif (ratio 100:64 respecté) */}
+                    <View style={styles.expandedPitchContainer}>
+                      <CoachTrainingDrillDiagram
+                        drillType={exercise.drillType}
+                        diagramData={exercise.diagram}
+                        title={exercise.name}
+                        width={cardPitchW}
+                        height={cardPitchH}
+                        onPress={() => handleOpenViewer(exercise)}
+                      />
+                    </View>
+
+                    {/* 3. Contrôles de visualisation du schéma */}
+                    <View style={styles.diagramActionRow}>
+                      <PressableSpring
+                        onPress={() => handleOpenViewer(exercise)}
+                        scaleTo={0.96}
+                        haptic
+                        accessibilityRole="button"
+                        accessibilityLabel="Agrandir et zoomer le schéma"
+                        style={styles.diagramActionBtn}
+                      >
+                        <Feather name="maximize-2" size={14} color={tokens.accent} />
+                        <Text style={[styles.diagramActionText, { color: tokens.accent }]}>
+                          Agrandir & Zoom
+                        </Text>
+                      </PressableSpring>
+
+                      <PressableSpring
+                        onPress={() => handleOpenViewer(exercise)}
+                        scaleTo={0.96}
+                        haptic
+                        accessibilityRole="button"
+                        accessibilityLabel="Montrer aux joueurs en mode présentation"
+                        style={[styles.diagramActionBtn, styles.presentationModeBtn]}
+                      >
+                        <MaterialCommunityIcons name="presentation-play" size={15} color={tokens.bg} />
+                        <Text style={[styles.diagramActionText, { color: tokens.bg }]}>
+                          Montrer aux joueurs
+                        </Text>
+                      </PressableSpring>
+                    </View>
+
+                    {/* 4. Objectif et consignes STRICTEMENT sous le terrain */}
+                    {exercise.objective ? (
+                      <View style={styles.expandedObjectiveCard}>
+                        <Text style={styles.expandedObjectiveLabel}>🎯 OBJECTIF</Text>
+                        <Text style={styles.exerciseObjective}>{exercise.objective}</Text>
+                      </View>
+                    ) : null}
+
+                    {exercise.instructions ? (
+                      <View style={styles.expandedInstructionsCard}>
+                        <Text style={styles.expandedInstructionsLabel}>📋 CONSIGNES DE MISE EN PLACE</Text>
+                        <Text style={styles.exerciseInstructions}>{exercise.instructions}</Text>
+                      </View>
+                    ) : null}
+
+                    {/* 5. Durée, effectif, intensité, détails */}
                     <View style={styles.controlRow}>
                       <Text style={styles.controlLabel}>Durée</Text>
                       <Stepper
@@ -655,37 +720,22 @@ export const CoachTrainingPlannerScreen: React.FC = () => {
                       </View>
                     </View>
 
-                    <View style={styles.diagramActionRow}>
-                      <PressableSpring
-                        onPress={() => handleOpenViewer(exercise)}
-                        scaleTo={0.96}
-                        haptic
-                        accessibilityRole="button"
-                        accessibilityLabel="Montrer aux joueurs en mode présentation"
-                        style={[styles.diagramActionBtn, styles.presentationModeBtn]}
-                      >
-                        <MaterialCommunityIcons name="presentation-play" size={15} color={tokens.bg} />
-                        <Text style={[styles.diagramActionText, { color: tokens.bg }]}>
-                          Montrer aux joueurs
-                        </Text>
-                      </PressableSpring>
-
+                    {/* 6. Actions atelier */}
+                    <View style={styles.orderRow}>
                       <PressableSpring
                         onPress={() => handleOpenEditor(exercise)}
                         scaleTo={0.96}
                         haptic
                         accessibilityRole="button"
                         accessibilityLabel="Modifier ou créer le schéma d'atelier"
-                        style={styles.diagramActionBtn}
+                        style={styles.editDiagramBtn}
                       >
                         <Feather name="edit-2" size={13} color={tokens.accent} />
                         <Text style={[styles.diagramActionText, { color: tokens.accent }]}>
                           {exercise.diagram ? 'Modifier schéma' : 'Créer schéma'}
                         </Text>
                       </PressableSpring>
-                    </View>
 
-                    <View style={styles.orderRow}>
                       <PressableSpring
                         onPress={() => moveExercise(index, -1)}
                         scaleTo={0.9}
@@ -863,7 +913,7 @@ export const CoachTrainingPlannerScreen: React.FC = () => {
                         <CoachTrainingDrillDiagram diagramData={diag} width={76} height={50} showBadge={false} />
                       </View>
                       <View style={styles.libraryCopy}>
-                        <Text numberOfLines={2} style={styles.libraryName}>
+                        <Text style={styles.libraryName}>
                           {diag.name}
                         </Text>
                         <Text style={styles.libraryMeta}>
@@ -896,7 +946,7 @@ export const CoachTrainingPlannerScreen: React.FC = () => {
                     <CoachTrainingDrillDiagram drillType={template.drillType} width={72} height={48} />
                   </View>
                   <View style={styles.libraryCopy}>
-                    <Text numberOfLines={2} style={styles.libraryName}>
+                    <Text style={styles.libraryName}>
                       {template.name}
                     </Text>
                     <Text style={styles.libraryMeta}>
@@ -1229,14 +1279,66 @@ const createStyles = (tokens: CoachComponentTokens) =>
       borderTopColor: tokens.border,
       paddingTop: proSpace.md,
     },
+    expandedHeaderRow: {
+      marginBottom: 2,
+    },
+    expandedTitle: {
+      ...proType.body,
+      color: tokens.foreground,
+      fontWeight: '800',
+      fontSize: 16,
+    },
+    expandedPitchContainer: {
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 10,
+      overflow: 'hidden',
+      backgroundColor: withAlpha(tokens.surface, 0.5),
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.border, 0.4),
+    },
+    expandedObjectiveCard: {
+      backgroundColor: withAlpha(tokens.accent, 0.08),
+      borderLeftWidth: 3,
+      borderLeftColor: tokens.accent,
+      padding: 12,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.accent, 0.2),
+      gap: 4,
+    },
+    expandedObjectiveLabel: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: tokens.accent,
+      letterSpacing: 0.5,
+    },
+    expandedInstructionsCard: {
+      backgroundColor: tokens.elevated,
+      padding: 12,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: 4,
+    },
+    expandedInstructionsLabel: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: tokens.muted,
+      letterSpacing: 0.5,
+    },
     exerciseObjective: {
       ...proType.caption,
       color: tokens.foreground,
       fontWeight: '600',
+      lineHeight: 18,
     },
     exerciseInstructions: {
       ...proType.caption,
-      color: tokens.muted,
+      color: tokens.foreground,
+      lineHeight: 18,
     },
     controlRow: {
       gap: 6,
@@ -1313,6 +1415,17 @@ const createStyles = (tokens: CoachComponentTokens) =>
     diagramActionText: {
       ...proType.caption,
       fontWeight: '800',
+    },
+    editDiagramBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: proForm.chipRadius,
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.accent, 0.4),
+      backgroundColor: tokens.elevated,
     },
     orderRow: {
       flexDirection: 'row',

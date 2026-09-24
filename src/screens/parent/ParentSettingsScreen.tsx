@@ -19,6 +19,7 @@ import { ParentalTimeLimitScreen } from '../ParentalTimeLimitScreen';
 import { ParentalActivityReportScreen } from '../ParentalActivityReportScreen';
 import { LanguageSettingControl } from '../../components/settings/LanguageSettingControl';
 import { UnifiedSettingsModal } from '../../components/settings/UnifiedSettingsModal';
+import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeGuardianEmail } from '../../utils/guardianEmail';
 import type { ParentalEmergencyContact } from '../../models/ParentalSettings';
@@ -543,7 +544,7 @@ function Row({
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl },
+  content: { padding: spacing.lg, gap: spacing.md, paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   rowActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   emRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

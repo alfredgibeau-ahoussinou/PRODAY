@@ -393,7 +393,7 @@ export function CoachTrainingEventHub({
             {t('coach.portal.eventHub.backPlanning')}
           </CoachText>
         </Pressable>
-        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
           <Pressable
             onPress={() => setDebriefModalOpen(true)}
             style={[styles.shareBtn, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
@@ -434,7 +434,7 @@ export function CoachTrainingEventHub({
         <CoachText variant="caption" muted style={styles.type}>
           {EVENT_TYPE_LABELS[scopedEvent.event_type]}
         </CoachText>
-        <CoachText variant="title" style={styles.title} numberOfLines={2}>
+        <CoachText variant="title" style={styles.title}>
           {scopedEvent.title}
         </CoachText>
         <CoachText variant="body" muted>
@@ -887,6 +887,8 @@ function createStyles(tokens: CoachThemeTokens) {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingRight: spacing.lg,
+      flexWrap: 'wrap',
+      gap: 6,
     },
     shareBtn: {
       flexDirection: 'row',

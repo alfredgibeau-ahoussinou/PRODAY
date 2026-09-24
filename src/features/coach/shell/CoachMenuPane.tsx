@@ -120,6 +120,7 @@ export function CoachMenuPane({ items = [] }: Props) {
   const { confirmDeleteAccount } = useAccountDeletion();
   const { width } = useWindowDimensions();
   const wide = width >= coachChrome.wideBreakpoint;
+  const isNarrow = width < 380;
   const [searchOpen, setSearchOpen] = useState(false);
   const [legalModalDoc, setLegalModalDoc] = useState<'terms' | 'privacy' | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -196,58 +197,108 @@ export function CoachMenuPane({ items = [] }: Props) {
           style={styles.searchBarWrap}
         />
 
-        {/* 2. Grille de Cartes Premium 2 Colonnes */}
+        {/* 2. Grille de Cartes Premium 2 Colonnes ou Lignes Réactives Étroites */}
         <View style={styles.grid}>
           {menuList.map((item) => (
             <PressableSpring
               key={item.id}
-              style={[styles.tile, item.locked && styles.tileLocked]}
+              style={[
+                styles.tile,
+                isNarrow ? styles.tileNarrow : { width: '48.5%' },
+                item.locked && styles.tileLocked,
+              ]}
               onPress={() => handleSelect(item.id, item.locked)}
               scaleTo={0.97}
               haptic={!item.locked}
               testID={`coach-menu-${item.id}`}
             >
-              <View style={styles.tileTop}>
-                <View
-                  style={[
-                    styles.iconWrap,
-                    {
-                      backgroundColor: `${teamAccent}14`,
-                      borderColor: `${teamAccent}33`,
-                    },
-                  ]}
-                >
-                  <Icon
-                    name={item.icon}
-                    size={24}
-                    color={item.locked ? tokens.muted : teamAccent}
-                    variant="outline"
-                  />
-                </View>
-
-                {item.aiBadge ? (
-                  <View style={[styles.aiBadge, { backgroundColor: `${teamAccent}26` }]}>
-                    <ProDayText variant="caption" style={[styles.aiBadgeText, { color: teamAccent }]}>
-                      IA
+              {isNarrow ? (
+                <>
+                  <View
+                    style={[
+                      styles.iconWrap,
+                      {
+                        backgroundColor: `${teamAccent}14`,
+                        borderColor: `${teamAccent}33`,
+                      },
+                    ]}
+                  >
+                    <Icon
+                      name={item.icon}
+                      size={22}
+                      color={item.locked ? tokens.muted : teamAccent}
+                      variant="outline"
+                    />
+                  </View>
+                  <View style={styles.tileCopyNarrow}>
+                    <ProDayText variant="section" style={styles.tileLabel}>
+                      {item.label}
                     </ProDayText>
+                    {item.subtitle ? (
+                      <ProDayText variant="caption" style={styles.tileSub}>
+                        {item.subtitle}
+                      </ProDayText>
+                    ) : null}
                   </View>
-                ) : item.locked ? (
-                  <View style={styles.lockedBadge}>
-                    <Icon name="lock" size={12} color={tokens.muted} />
-                  </View>
-                ) : null}
-              </View>
+                  {item.aiBadge ? (
+                    <View style={[styles.aiBadge, { backgroundColor: `${teamAccent}26` }]}>
+                      <ProDayText variant="caption" style={[styles.aiBadgeText, { color: teamAccent }]}>
+                        IA
+                      </ProDayText>
+                    </View>
+                  ) : item.locked ? (
+                    <View style={styles.lockedBadge}>
+                      <Icon name="lock" size={12} color={tokens.muted} />
+                    </View>
+                  ) : (
+                    <Icon name="chevron-forward" size={16} color={tokens.muted} />
+                  )}
+                </>
+              ) : (
+                <>
+                  <View style={styles.tileTop}>
+                    <View
+                      style={[
+                        styles.iconWrap,
+                        {
+                          backgroundColor: `${teamAccent}14`,
+                          borderColor: `${teamAccent}33`,
+                        },
+                      ]}
+                    >
+                      <Icon
+                        name={item.icon}
+                        size={24}
+                        color={item.locked ? tokens.muted : teamAccent}
+                        variant="outline"
+                      />
+                    </View>
 
-              <View style={styles.tileBottom}>
-                <ProDayText variant="section" style={styles.tileLabel}>
-                  {item.label}
-                </ProDayText>
-                {item.subtitle ? (
-                  <ProDayText variant="caption" style={styles.tileSub} numberOfLines={2}>
-                    {item.subtitle}
-                  </ProDayText>
-                ) : null}
-              </View>
+                    {item.aiBadge ? (
+                      <View style={[styles.aiBadge, { backgroundColor: `${teamAccent}26` }]}>
+                        <ProDayText variant="caption" style={[styles.aiBadgeText, { color: teamAccent }]}>
+                          IA
+                        </ProDayText>
+                      </View>
+                    ) : item.locked ? (
+                      <View style={styles.lockedBadge}>
+                        <Icon name="lock" size={12} color={tokens.muted} />
+                      </View>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.tileBottom}>
+                    <ProDayText variant="section" style={styles.tileLabel}>
+                      {item.label}
+                    </ProDayText>
+                    {item.subtitle ? (
+                      <ProDayText variant="caption" style={styles.tileSub}>
+                        {item.subtitle}
+                      </ProDayText>
+                    ) : null}
+                  </View>
+                </>
+              )}
             </PressableSpring>
           ))}
         </View>
@@ -397,14 +448,27 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   tile: {
-    width: '48.5%',
-    minHeight: 136,
+    minHeight: 120,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: COACH_SITE.elevated,
     padding: 15,
     justifyContent: 'space-between',
     backgroundColor: COACH_SITE.surface,
+  },
+  tileNarrow: {
+    width: '100%',
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  tileCopyNarrow: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
   },
   tileLocked: {
     opacity: 0.5,

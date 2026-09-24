@@ -96,7 +96,7 @@ export const CoachDiagramPlayerPresentationModal: React.FC<CoachDiagramPlayerPre
             <View style={styles.tagBadge}>
               <Text style={styles.tagBadgeText}>PRÉSENTATION JOUEURS</Text>
             </View>
-            <Text numberOfLines={1} style={styles.mainTitle}>
+            <Text style={styles.mainTitle}>
               {displayTitle}
             </Text>
           </View>
@@ -167,7 +167,7 @@ export const CoachDiagramPlayerPresentationModal: React.FC<CoachDiagramPlayerPre
                 : 'POSITIONNEMENT'}
             </Text>
           </View>
-          <Text numberOfLines={2} style={styles.instructionText}>
+          <Text style={styles.instructionText}>
             {stageInstruction}
           </Text>
         </View>

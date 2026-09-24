@@ -215,7 +215,7 @@ export const CoachDiagramViewerModal: React.FC<CoachDiagramViewerModalProps> = (
       <SafeAreaView
         style={[styles.modalRoot, isPresentationMode && styles.modalRootPresentation]}
       >
-        {/* ——— Barre d'en-tête (standard ou compacte causerie) ——— */}
+        {/* ——— Barre d'en-tête responsive : Titre complet + Fermer ——— */}
         <View style={styles.topBar}>
           <View style={styles.titleBlock}>
             <View style={styles.badgeRow}>
@@ -227,356 +227,296 @@ export const CoachDiagramViewerModal: React.FC<CoachDiagramViewerModalProps> = (
               {durationMin ? (
                 <Text style={styles.metaDuration}>⏱ {durationMin} min</Text>
               ) : null}
+              {intensity ? (
+                <View style={[styles.badge, styles.intensityBadge]}>
+                  <Text style={styles.intensityBadgeText}>{intensity}</Text>
+                </View>
+              ) : null}
             </View>
-            <Text numberOfLines={1} style={styles.modalTitle}>
+            <Text style={styles.modalTitle}>
               {displayTitle}
             </Text>
           </View>
 
-          <View style={styles.topActions}>
-            {/* Mode switch si animation disponible */}
-            {hasAnimation ? (
-              <PressableSpring
-                onPress={() => {
-                  const next = !isAnimatedMode;
-                  setIsAnimatedMode(next);
-                  if (!next) animActions.pause();
-                }}
-                scaleTo={0.94}
-                haptic
-                accessibilityRole="button"
-                accessibilityLabel={isAnimatedMode ? 'Mode animé actif' : 'Mode statique actif'}
-                style={[styles.modeToggleBtn, isAnimatedMode && styles.modeToggleBtnActive]}
-              >
-                <MaterialCommunityIcons
-                  name={isAnimatedMode ? 'movie-play' : 'image-outline'}
-                  size={15}
-                  color={isAnimatedMode ? '#FFFFFF' : tokens.foreground}
-                />
-                <Text style={[styles.modeToggleText, isAnimatedMode && { color: '#FFFFFF' }]}>
-                  {isAnimatedMode ? 'Mode Animé' : 'Mode Statique'}
-                </Text>
-              </PressableSpring>
-            ) : null}
-
-            {/* Bouton « Montrer aux joueurs » dédié */}
-            <PressableSpring
-              onPress={() => {
-                setShowPlayerPresentation(true);
-              }}
-              scaleTo={0.94}
-              haptic
-              accessibilityRole="button"
-              accessibilityLabel="Montrer aux joueurs (Plein écran causerie)"
-              style={styles.presentationBtn}
-            >
-              <MaterialCommunityIcons
-                name="projector-screen-outline"
-                size={16}
-                color={tokens.accent}
-              />
-              <Text style={styles.presentationBtnText}>Montrer aux joueurs</Text>
-            </PressableSpring>
-
-            {!isPresentationMode && onEdit ? (
-              <PressableSpring
-                onPress={onEdit}
-                scaleTo={0.94}
-                haptic
-                accessibilityRole="button"
-                accessibilityLabel="Modifier le schéma"
-                style={styles.iconBtn}
-              >
-                <Feather name="edit-2" size={17} color={tokens.foreground} />
-              </PressableSpring>
-            ) : null}
-
-            {!isPresentationMode ? (
-              <PressableSpring
-                onPress={handleExport}
-                scaleTo={0.94}
-                haptic
-                accessibilityRole="button"
-                accessibilityLabel="Exporter ou imprimer la fiche d'atelier"
-                style={styles.iconBtn}
-              >
-                <Feather name="printer" size={17} color={tokens.foreground} />
-              </PressableSpring>
-            ) : null}
-
-            {/* Bouton Quitter / Fermer visible en permanence */}
-            <PressableSpring
-              onPress={onClose}
-              scaleTo={0.94}
-              haptic
-              accessibilityRole="button"
-              accessibilityLabel="Fermer le visualiseur"
-              style={[styles.iconBtn, styles.closeBtn]}
-            >
-              <Ionicons name="close" size={20} color={tokens.foreground} />
-            </PressableSpring>
-          </View>
-        </View>
-
-        {/* ——— Zone centrale : Canevas de terrain zoomable & panoramique ——— */}
-        <View
-          style={[styles.viewportContainer, isPresentationMode && styles.viewportPresentation]}
-          onStartShouldSetResponder={() => true}
-          onMoveShouldSetResponder={() => true}
-          onResponderGrant={handleTouchStart}
-          onResponderMove={handleTouchMove}
-          // @ts-ignore onWheel supported in React Native Web
-          onWheel={handleWheel}
-        >
-          <View
-            style={[
-              styles.pitchTransformWrap,
-              {
-                width: maxPitchW,
-                height: pitchH,
-                transform: [
-                  { translateX: pan.x },
-                  { translateY: pan.y },
-                  { scale },
-                ],
-              },
-            ]}
+          <PressableSpring
+            onPress={onClose}
+            scaleTo={0.92}
+            haptic
+            accessibilityRole="button"
+            accessibilityLabel="Fermer le visualiseur"
+            style={[styles.iconBtn, styles.closeBtn]}
           >
-            <CoachExerciseDiagramRenderer
-              diagram={diagram}
-              activeElements={activeElements}
-              activeMovements={activeMovements}
-              showTrajectories={true}
-              width="100%"
-              height="100%"
-            />
-          </View>
-
-          {/* Contrôles de zoom flottants discrets */}
-          <View style={styles.floatingZoomBar}>
-            <PressableSpring
-              onPress={handleZoomIn}
-              scaleTo={0.9}
-              haptic
-              style={styles.zoomBtn}
-              accessibilityLabel="Zoom avant"
-            >
-              <Ionicons name="add" size={18} color={tokens.foreground} />
-            </PressableSpring>
-            <PressableSpring
-              onPress={handleZoomOut}
-              scaleTo={0.9}
-              haptic
-              style={styles.zoomBtn}
-              accessibilityLabel="Zoom arrière"
-            >
-              <Ionicons name="remove" size={18} color={tokens.foreground} />
-            </PressableSpring>
-            {scale !== 1 || pan.x !== 0 || pan.y !== 0 ? (
-              <PressableSpring
-                onPress={resetView}
-                scaleTo={0.9}
-                haptic
-                style={[styles.zoomBtn, styles.resetViewBtn]}
-                accessibilityLabel="Réinitialiser l'affichage"
-              >
-                <Feather name="maximize-2" size={14} color={tokens.accent} />
-                <Text style={styles.zoomLevelText}>{Math.round(scale * 100)}%</Text>
-              </PressableSpring>
-            ) : null}
-          </View>
+            <Ionicons name="close" size={20} color={tokens.foreground} />
+          </PressableSpring>
         </View>
 
-        {/* ——— Contrôles de lecture d'animation ou Barre d'étapes ——— */}
-        {isAnimatedMode && hasAnimation ? (
-          <View style={styles.playbackBarContainer}>
-            {/* Scrubber temporel interactif */}
-            <View style={styles.scrubberRow}>
-              <Text style={styles.scrubberTimeText}>
-                {(animState.totalElapsedMs / 1000).toFixed(1)}s
-              </Text>
-              <View
-                style={styles.scrubberTrack}
-                onStartShouldSetResponder={() => true}
-                onResponderGrant={(e) => {
-                  const { locationX } = e.nativeEvent;
-                  // Largeur approximative 240px
-                  const ratio = Math.max(0, Math.min(1, locationX / 240));
-                  animActions.seekToTotalProgress(ratio);
-                }}
-              >
-                <View
-                  style={[
-                    styles.scrubberProgress,
-                    { width: `${Math.round(animState.totalProgress * 100)}%` },
-                  ]}
-                />
-              </View>
-              <Text style={styles.scrubberTimeText}>
-                {(animState.totalDurationMs / 1000).toFixed(1)}s
-              </Text>
+        {/* ——— Défilement vertical unifié pour mobile & tablette ——— */}
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollBody}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+        >
+          {/* 1. Canevas de terrain zoomable & panoramique (100:64 respecté) */}
+          <View
+            style={styles.viewportContainer}
+            onStartShouldSetResponder={() => scale > 1.05}
+            onMoveShouldSetResponder={() => scale > 1.05}
+            onResponderGrant={handleTouchStart}
+            onResponderMove={handleTouchMove}
+            // @ts-ignore onWheel supported in React Native Web
+            onWheel={handleWheel}
+          >
+            <View
+              style={[
+                styles.pitchTransformWrap,
+                {
+                  width: maxPitchW,
+                  height: pitchH,
+                  transform: [
+                    { translateX: pan.x },
+                    { translateY: pan.y },
+                    { scale },
+                  ],
+                },
+              ]}
+            >
+              <CoachExerciseDiagramRenderer
+                diagram={diagram}
+                activeElements={activeElements}
+                activeMovements={activeMovements}
+                showTrajectories={true}
+                width="100%"
+                height="100%"
+              />
             </View>
 
-            {/* Boutons de commande de lecture */}
-            <View style={styles.playbackButtonsRow}>
-              {/* Vitesse */}
+            {/* Contrôles de zoom flottants discrets */}
+            <View style={styles.floatingZoomBar}>
               <PressableSpring
-                onPress={() => {
-                  const speeds = [0.5, 1.0, 1.5, 2.0];
-                  const next = speeds[(speeds.indexOf(animState.playbackSpeed) + 1) % speeds.length];
-                  animActions.setPlaybackSpeed(next);
-                }}
-                scaleTo={0.92}
+                onPress={handleZoomIn}
+                scaleTo={0.9}
                 haptic
-                style={styles.playbackSpeedBtn}
-                accessibilityLabel="Changer la vitesse"
+                style={styles.zoomBtn}
+                accessibilityLabel="Zoom avant"
               >
-                <Text style={styles.playbackSpeedText}>{animState.playbackSpeed}x</Text>
+                <Ionicons name="add" size={18} color={tokens.foreground} />
               </PressableSpring>
-
-              {/* Redémarrer */}
               <PressableSpring
-                onPress={animActions.restart}
-                scaleTo={0.92}
+                onPress={handleZoomOut}
+                scaleTo={0.9}
                 haptic
-                style={styles.playbackIconBtn}
-                accessibilityLabel="Recommencer"
+                style={styles.zoomBtn}
+                accessibilityLabel="Zoom arrière"
               >
-                <Ionicons name="refresh" size={17} color={tokens.foreground} />
+                <Ionicons name="remove" size={18} color={tokens.foreground} />
               </PressableSpring>
+              {scale !== 1 || pan.x !== 0 || pan.y !== 0 ? (
+                <PressableSpring
+                  onPress={resetView}
+                  scaleTo={0.9}
+                  haptic
+                  style={[styles.zoomBtn, styles.resetViewBtn]}
+                  accessibilityLabel="Réinitialiser l'affichage"
+                >
+                  <Feather name="maximize-2" size={14} color={tokens.accent} />
+                  <Text style={styles.zoomLevelText}>{Math.round(scale * 100)}%</Text>
+                </PressableSpring>
+              ) : null}
+            </View>
+          </View>
 
-              {/* Étape précédente */}
+          {/* 2. Contrôles de lecture d'animation ou Barre d'étapes */}
+          {isAnimatedMode && hasAnimation ? (
+            <View style={styles.playbackBarContainer}>
+              <View style={styles.scrubberRow}>
+                <Text style={styles.scrubberTimeText}>
+                  {(animState.totalElapsedMs / 1000).toFixed(1)}s
+                </Text>
+                <View
+                  style={styles.scrubberTrack}
+                  onStartShouldSetResponder={() => true}
+                  onResponderGrant={(e) => {
+                    const { locationX } = e.nativeEvent;
+                    const ratio = Math.max(0, Math.min(1, locationX / 240));
+                    animActions.seekToTotalProgress(ratio);
+                  }}
+                >
+                  <View
+                    style={[
+                      styles.scrubberProgress,
+                      { width: `${Math.round(animState.totalProgress * 100)}%` },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.scrubberTimeText}>
+                  {(animState.totalDurationMs / 1000).toFixed(1)}s
+                </Text>
+              </View>
+
+              <View style={styles.playbackButtonsRow}>
+                <PressableSpring
+                  onPress={() => {
+                    const speeds = [0.5, 1.0, 1.5, 2.0];
+                    const next = speeds[(speeds.indexOf(animState.playbackSpeed) + 1) % speeds.length];
+                    animActions.setPlaybackSpeed(next);
+                  }}
+                  scaleTo={0.92}
+                  haptic
+                  style={styles.playbackSpeedBtn}
+                  accessibilityLabel="Changer la vitesse"
+                >
+                  <Text style={styles.playbackSpeedText}>{animState.playbackSpeed}x</Text>
+                </PressableSpring>
+
+                <PressableSpring
+                  onPress={animActions.restart}
+                  scaleTo={0.92}
+                  haptic
+                  style={styles.playbackIconBtn}
+                  accessibilityLabel="Recommencer"
+                >
+                  <Ionicons name="refresh" size={17} color={tokens.foreground} />
+                </PressableSpring>
+
+                <PressableSpring
+                  onPress={animActions.prevStage}
+                  scaleTo={0.92}
+                  haptic
+                  style={styles.playbackIconBtn}
+                  accessibilityLabel="Étape précédente"
+                >
+                  <Ionicons name="play-skip-back" size={17} color={tokens.foreground} />
+                </PressableSpring>
+
+                <PressableSpring
+                  onPress={animActions.togglePlay}
+                  scaleTo={0.92}
+                  haptic
+                  style={[
+                    styles.mainPlayBtn,
+                    animState.isPlaying && styles.mainPlayBtnActive,
+                  ]}
+                  accessibilityLabel={animState.isPlaying ? 'Mettre en pause' : 'Lancer l’animation'}
+                >
+                  <Ionicons
+                    name={animState.isPlaying ? 'pause' : 'play'}
+                    size={20}
+                    color={animState.isPlaying ? '#FFFFFF' : '#0B130E'}
+                    style={{ marginLeft: animState.isPlaying ? 0 : 2 }}
+                  />
+                </PressableSpring>
+
+                <PressableSpring
+                  onPress={animActions.nextStage}
+                  disabled={animState.currentStageIndex >= animState.stageCount - 1}
+                  scaleTo={0.92}
+                  haptic
+                  style={[
+                    styles.playbackIconBtn,
+                    animState.currentStageIndex >= animState.stageCount - 1 && { opacity: 0.35 },
+                  ]}
+                  accessibilityLabel="Étape suivante"
+                >
+                  <Ionicons name="play-skip-forward" size={17} color={tokens.foreground} />
+                </PressableSpring>
+
+                <PressableSpring
+                  onPress={() => animActions.setIsLooping(!animState.isLooping)}
+                  scaleTo={0.92}
+                  haptic
+                  style={[styles.playbackIconBtn, animState.isLooping && styles.loopBtnActive]}
+                  accessibilityLabel={animState.isLooping ? 'Boucle active' : 'Boucle inactive'}
+                >
+                  <Feather
+                    name="repeat"
+                    size={15}
+                    color={animState.isLooping ? tokens.accent : tokens.muted}
+                  />
+                </PressableSpring>
+              </View>
+            </View>
+          ) : hasStages ? (
+            <View style={styles.stageBar}>
               <PressableSpring
-                onPress={animActions.prevStage}
-                scaleTo={0.92}
+                onPress={prevStage}
+                disabled={stageIndex === 0}
+                scaleTo={0.94}
                 haptic
-                style={styles.playbackIconBtn}
+                style={[styles.stageNavBtn, stageIndex === 0 && styles.stageNavBtnDisabled]}
                 accessibilityLabel="Étape précédente"
               >
-                <Ionicons name="play-skip-back" size={17} color={tokens.foreground} />
-              </PressableSpring>
-
-              {/* Bouton Principal Play / Pause */}
-              <PressableSpring
-                onPress={animActions.togglePlay}
-                scaleTo={0.92}
-                haptic
-                style={[
-                  styles.mainPlayBtn,
-                  animState.isPlaying && styles.mainPlayBtnActive,
-                ]}
-                accessibilityLabel={animState.isPlaying ? 'Mettre en pause' : 'Lancer l’animation'}
-              >
                 <Ionicons
-                  name={animState.isPlaying ? 'pause' : 'play'}
-                  size={20}
-                  color={animState.isPlaying ? '#FFFFFF' : '#0B130E'}
-                  style={{ marginLeft: animState.isPlaying ? 0 : 2 }}
+                  name="chevron-back"
+                  size={18}
+                  color={stageIndex === 0 ? tokens.muted : tokens.foreground}
                 />
+                <Text
+                  style={[
+                    styles.stageNavText,
+                    { color: stageIndex === 0 ? tokens.muted : tokens.foreground },
+                  ]}
+                >
+                  Précédent
+                </Text>
               </PressableSpring>
 
-              {/* Étape suivante */}
+              <View style={styles.stageIndicator}>
+                <Text style={styles.stageNumber}>
+                  Étape {stageIndex + 1} / {stages.length}
+                </Text>
+                <Text style={styles.stageName}>
+                  {currentStage?.name || `Étape ${stageIndex + 1}`}
+                </Text>
+              </View>
+
               <PressableSpring
-                onPress={animActions.nextStage}
-                disabled={animState.currentStageIndex >= animState.stageCount - 1}
-                scaleTo={0.92}
+                onPress={nextStage}
+                disabled={stageIndex === stages.length - 1}
+                scaleTo={0.94}
                 haptic
                 style={[
-                  styles.playbackIconBtn,
-                  animState.currentStageIndex >= animState.stageCount - 1 && { opacity: 0.35 },
+                  styles.stageNavBtn,
+                  stageIndex === stages.length - 1 && styles.stageNavBtnDisabled,
                 ]}
                 accessibilityLabel="Étape suivante"
               >
-                <Ionicons name="play-skip-forward" size={17} color={tokens.foreground} />
-              </PressableSpring>
-
-              {/* Répétition en boucle */}
-              <PressableSpring
-                onPress={() => animActions.setIsLooping(!animState.isLooping)}
-                scaleTo={0.92}
-                haptic
-                style={[styles.playbackIconBtn, animState.isLooping && styles.loopBtnActive]}
-                accessibilityLabel={animState.isLooping ? 'Boucle active' : 'Boucle inactive'}
-              >
-                <Feather
-                  name="repeat"
-                  size={15}
-                  color={animState.isLooping ? tokens.accent : tokens.muted}
+                <Text
+                  style={[
+                    styles.stageNavText,
+                    { color: stageIndex === stages.length - 1 ? tokens.muted : tokens.foreground },
+                  ]}
+                >
+                  Suivant
+                </Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={stageIndex === stages.length - 1 ? tokens.muted : tokens.foreground}
                 />
               </PressableSpring>
             </View>
-          </View>
-        ) : hasStages ? (
-          <View style={styles.stageBar}>
-            <PressableSpring
-              onPress={prevStage}
-              disabled={stageIndex === 0}
-              scaleTo={0.94}
-              haptic
-              style={[styles.stageNavBtn, stageIndex === 0 && styles.stageNavBtnDisabled]}
-              accessibilityLabel="Étape précédente"
-            >
-              <Ionicons
-                name="chevron-back"
-                size={18}
-                color={stageIndex === 0 ? tokens.muted : tokens.foreground}
-              />
-              <Text
-                style={[
-                  styles.stageNavText,
-                  { color: stageIndex === 0 ? tokens.muted : tokens.foreground },
-                ]}
-              >
-                Précédent
-              </Text>
-            </PressableSpring>
+          ) : null}
 
-            <View style={styles.stageIndicator}>
-              <Text style={styles.stageNumber}>
-                Étape {stageIndex + 1} / {stages.length}
-              </Text>
-              <Text numberOfLines={1} style={styles.stageName}>
-                {currentStage?.name || `Étape ${stageIndex + 1}`}
-              </Text>
+          {/* 3. Consignes & Objectif STRICTEMENT EN DESSOUS DU TERRAIN */}
+          {displayObjective ? (
+            <View style={styles.objectiveCard}>
+              <Text style={styles.objectiveLabel}>🎯 OBJECTIF DE L'ATELIER</Text>
+              <Text style={styles.objectiveText}>{displayObjective}</Text>
             </View>
+          ) : null}
 
-            <PressableSpring
-              onPress={nextStage}
-              disabled={stageIndex === stages.length - 1}
-              scaleTo={0.94}
-              haptic
-              style={[
-                styles.stageNavBtn,
-                stageIndex === stages.length - 1 && styles.stageNavBtnDisabled,
-              ]}
-              accessibilityLabel="Étape suivante"
-            >
-              <Text
-                style={[
-                  styles.stageNavText,
-                  { color: stageIndex === stages.length - 1 ? tokens.muted : tokens.foreground },
-                ]}
-              >
-                Suivant
-              </Text>
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={stageIndex === stages.length - 1 ? tokens.muted : tokens.foreground}
-              />
-            </PressableSpring>
-          </View>
-        ) : null}
+          {displayInstructions ? (
+            <View style={styles.instructionsCard}>
+              <Text style={styles.instructionsLabel}>📋 CONSIGNES DE MISE EN PLACE & RÈGLES</Text>
+              <Text style={styles.instructionsText}>{displayInstructions}</Text>
+            </View>
+          ) : null}
 
-        {/* ——— Légende & Consignes (masquées ou allégées en mode causerie) ——— */}
-        {!isPresentationMode ? (
-          <ScrollView
-            style={styles.detailsScroll}
-            contentContainerStyle={styles.detailsContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Légende essentielle */}
-            {diagram.legend && diagram.legend.length > 0 ? (
+          {/* 4. Légende & détails */}
+          {diagram.legend && diagram.legend.length > 0 ? (
+            <View style={styles.legendCard}>
+              <Text style={styles.legendSectionTitle}>LÉGENDE DU SCHÉMA</Text>
               <View style={styles.legendRow}>
                 {diagram.legend.map((item) => (
                   <View key={item.id} style={styles.legendChip}>
@@ -585,41 +525,78 @@ export const CoachDiagramViewerModal: React.FC<CoachDiagramViewerModalProps> = (
                   </View>
                 ))}
               </View>
-            ) : null}
+            </View>
+          ) : null}
 
-            {displayObjective ? (
-              <View style={styles.objectiveCard}>
-                <Text style={styles.objectiveLabel}>🎯 OBJECTIF</Text>
-                <Text style={styles.objectiveText}>{displayObjective}</Text>
-              </View>
-            ) : null}
+          {/* 5. Actions principales accessibles */}
+          <View style={styles.actionsSection}>
+            <PressableSpring
+              onPress={() => setShowPlayerPresentation(true)}
+              scaleTo={0.98}
+              haptic
+              accessibilityRole="button"
+              accessibilityLabel="Montrer aux joueurs en plein écran causerie"
+              style={styles.presentationActionBtn}
+            >
+              <MaterialCommunityIcons
+                name="projector-screen-outline"
+                size={18}
+                color={tokens.onAccent || '#000000'}
+              />
+              <Text style={styles.presentationActionBtnText}>Montrer aux joueurs (Plein écran causerie)</Text>
+            </PressableSpring>
 
-            {displayInstructions ? (
-              <View style={styles.instructionsCard}>
-                <Text style={styles.instructionsLabel}>📋 CONSIGNES DE MISE EN PLACE</Text>
-                <Text style={styles.instructionsText}>{displayInstructions}</Text>
-              </View>
-            ) : null}
-          </ScrollView>
-        ) : (
-          <View style={styles.presentationFooter}>
-            {diagram.legend && diagram.legend.length > 0 ? (
-              <View style={styles.legendRow}>
-                {diagram.legend.slice(0, 4).map((item) => (
-                  <View key={item.id} style={styles.legendChip}>
-                    <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-                    <Text style={styles.legendText}>{item.label}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : null}
-            {currentStage?.instructions ? (
-              <Text numberOfLines={2} style={styles.presentationStageNote}>
-                ⚡ {currentStage.instructions}
-              </Text>
-            ) : null}
+            <View style={styles.secondaryActionsGrid}>
+              {hasAnimation ? (
+                <PressableSpring
+                  onPress={() => {
+                    const next = !isAnimatedMode;
+                    setIsAnimatedMode(next);
+                    if (!next) animActions.pause();
+                  }}
+                  scaleTo={0.96}
+                  haptic
+                  style={[styles.secondaryActionBtn, isAnimatedMode && styles.secondaryActionBtnActive]}
+                >
+                  <MaterialCommunityIcons
+                    name={isAnimatedMode ? 'movie-play' : 'image-outline'}
+                    size={16}
+                    color={isAnimatedMode ? tokens.accent : tokens.foreground}
+                  />
+                  <Text style={[styles.secondaryActionText, isAnimatedMode && { color: tokens.accent }]}>
+                    {isAnimatedMode ? 'Mode Animé' : 'Mode Statique'}
+                  </Text>
+                </PressableSpring>
+              ) : null}
+
+              {onEdit ? (
+                <PressableSpring
+                  onPress={onEdit}
+                  scaleTo={0.96}
+                  haptic
+                  accessibilityRole="button"
+                  accessibilityLabel="Modifier le schéma"
+                  style={styles.secondaryActionBtn}
+                >
+                  <Feather name="edit-2" size={16} color={tokens.foreground} />
+                  <Text style={styles.secondaryActionText}>Modifier</Text>
+                </PressableSpring>
+              ) : null}
+
+              <PressableSpring
+                onPress={handleExport}
+                scaleTo={0.96}
+                haptic
+                accessibilityRole="button"
+                accessibilityLabel="Exporter ou imprimer la fiche d'atelier"
+                style={styles.secondaryActionBtn}
+              >
+                <Feather name="printer" size={16} color={tokens.foreground} />
+                <Text style={styles.secondaryActionText}>Imprimer / PDF</Text>
+              </PressableSpring>
+            </View>
           </View>
-        )}
+        </ScrollView>
 
         {/* Modal dédié Présentation Joueurs « Show Players » */}
         <CoachDiagramPlayerPresentationModal
@@ -647,20 +624,22 @@ const createStyles = (tokens: CoachComponentTokens) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 16,
-      paddingVertical: 10,
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: withAlpha(tokens.border, 0.4),
       backgroundColor: tokens.surface,
+      gap: 12,
     },
     titleBlock: {
       flex: 1,
-      marginRight: 10,
+      gap: 3,
     },
     badgeRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      flexWrap: 'wrap',
       gap: 8,
-      marginBottom: 3,
+      marginBottom: 2,
     },
     badge: {
       backgroundColor: proSemantic.successSoft,
@@ -676,6 +655,17 @@ const createStyles = (tokens: CoachComponentTokens) =>
       fontWeight: '800',
       letterSpacing: 0.6,
     },
+    intensityBadge: {
+      backgroundColor: withAlpha(tokens.accent, 0.12),
+      borderColor: withAlpha(tokens.accent, 0.4),
+    },
+    intensityBadgeText: {
+      color: tokens.accent,
+      fontSize: 9,
+      fontWeight: '800',
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+    },
     metaDuration: {
       fontSize: 11,
       color: tokens.muted,
@@ -683,56 +673,13 @@ const createStyles = (tokens: CoachComponentTokens) =>
     },
     modalTitle: {
       color: tokens.foreground,
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: '800',
-    },
-    topActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    presentationBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: proRadius.md,
-      borderWidth: 1,
-      borderColor: withAlpha(tokens.accent, 0.4),
-      backgroundColor: withAlpha(tokens.accent, 0.08),
-    },
-    presentationBtnActive: {
-      backgroundColor: tokens.accent,
-      borderColor: tokens.accent,
-    },
-    presentationBtnText: {
-      fontSize: 11,
-      fontWeight: '700',
-    },
-    modeToggleBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      paddingHorizontal: 9,
-      paddingVertical: 6,
-      borderRadius: proRadius.md,
-      backgroundColor: withAlpha(tokens.foreground, 0.08),
-      borderWidth: 1,
-      borderColor: tokens.border,
-    },
-    modeToggleBtnActive: {
-      backgroundColor: proSemantic.info,
-      borderColor: proSemantic.info,
-    },
-    modeToggleText: {
-      fontSize: 11,
-      fontWeight: '700',
-      color: tokens.foreground,
+      lineHeight: 22,
     },
     iconBtn: {
-      width: 36,
-      height: 36,
+      width: 40,
+      height: 40,
       borderRadius: proRadius.md,
       borderWidth: 1,
       borderColor: tokens.border,
@@ -743,22 +690,34 @@ const createStyles = (tokens: CoachComponentTokens) =>
     closeBtn: {
       backgroundColor: withAlpha(tokens.foreground, 0.08),
     },
-    viewportContainer: {
+    scrollContainer: {
       flex: 1,
+      backgroundColor: tokens.bg,
+    },
+    scrollBody: {
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 40,
+      gap: 14,
+      alignItems: 'center',
+    },
+    viewportContainer: {
+      width: '100%',
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
       position: 'relative',
-      backgroundColor: withAlpha(tokens.bg, 0.8),
-    },
-    viewportPresentation: {
-      backgroundColor: '#000000',
+      backgroundColor: withAlpha(tokens.surface, 0.6),
+      borderRadius: 12,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.border, 0.5),
     },
     pitchTransformWrap: {
       borderRadius: 8,
       overflow: 'hidden',
       borderWidth: 1,
-      borderColor: withAlpha('FFFFFF', 0.15),
+      borderColor: withAlpha('#FFFFFF', 0.15),
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
@@ -771,7 +730,7 @@ const createStyles = (tokens: CoachComponentTokens) =>
       right: 14,
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: withAlpha(tokens.surface, 0.92),
+      backgroundColor: withAlpha(tokens.surface, 0.94),
       borderRadius: 20,
       paddingHorizontal: 6,
       paddingVertical: 4,
@@ -799,12 +758,14 @@ const createStyles = (tokens: CoachComponentTokens) =>
       color: tokens.accent,
     },
     playbackBarContainer: {
+      width: '100%',
       paddingHorizontal: 16,
-      paddingVertical: 10,
+      paddingVertical: 12,
       backgroundColor: tokens.surface,
-      borderTopWidth: 1,
-      borderTopColor: withAlpha(tokens.border, 0.4),
-      gap: 8,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.border, 0.6),
+      gap: 10,
     },
     scrubberRow: {
       flexDirection: 'row',
@@ -833,17 +794,20 @@ const createStyles = (tokens: CoachComponentTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 12,
+      flexWrap: 'wrap',
+      gap: 10,
     },
     playbackSpeedBtn: {
       paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingVertical: 5,
       borderRadius: proRadius.xs,
       backgroundColor: tokens.elevated,
       borderWidth: 1,
       borderColor: tokens.border,
-      minWidth: 38,
+      minWidth: 40,
+      minHeight: 36,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     playbackSpeedText: {
       fontSize: 11,
@@ -851,9 +815,9 @@ const createStyles = (tokens: CoachComponentTokens) =>
       color: tokens.foreground,
     },
     playbackIconBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 38,
+      height: 38,
+      borderRadius: 19,
       backgroundColor: tokens.elevated,
       borderWidth: 1,
       borderColor: tokens.border,
@@ -883,25 +847,29 @@ const createStyles = (tokens: CoachComponentTokens) =>
       backgroundColor: withAlpha(tokens.accent, 0.15),
     },
     stageBar: {
+      width: '100%',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
       backgroundColor: tokens.surface,
-      borderTopWidth: 1,
-      borderTopColor: withAlpha(tokens.border, 0.4),
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.border, 0.6),
+      gap: 10,
     },
     stageNavBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
       paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingVertical: 8,
       borderRadius: 6,
       borderWidth: 1,
       borderColor: tokens.border,
       backgroundColor: tokens.elevated,
+      minHeight: 38,
     },
     stageNavBtnDisabled: {
       opacity: 0.4,
@@ -911,7 +879,9 @@ const createStyles = (tokens: CoachComponentTokens) =>
       fontWeight: '600',
     },
     stageIndicator: {
+      flex: 1,
       alignItems: 'center',
+      paddingHorizontal: 4,
     },
     stageNumber: {
       fontSize: 10,
@@ -923,23 +893,71 @@ const createStyles = (tokens: CoachComponentTokens) =>
       fontSize: 12,
       fontWeight: '700',
       color: tokens.foreground,
-      maxWidth: 180,
+      textAlign: 'center',
+      marginTop: 2,
     },
-    detailsScroll: {
-      maxHeight: 180,
-      backgroundColor: tokens.surface,
-      borderTopWidth: 1,
-      borderTopColor: tokens.border,
-    },
-    detailsContent: {
+    objectiveCard: {
+      width: '100%',
+      backgroundColor: withAlpha(tokens.accent, 0.08),
+      borderLeftWidth: 3,
+      borderLeftColor: tokens.accent,
       padding: 14,
-      gap: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.accent, 0.2),
+      gap: 6,
+    },
+    objectiveLabel: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: tokens.accent,
+      letterSpacing: 0.6,
+    },
+    objectiveText: {
+      fontSize: 13,
+      color: tokens.foreground,
+      lineHeight: 19,
+      fontWeight: '500',
+    },
+    instructionsCard: {
+      width: '100%',
+      backgroundColor: tokens.surface,
+      padding: 14,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: 6,
+    },
+    instructionsLabel: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: tokens.muted,
+      letterSpacing: 0.6,
+    },
+    instructionsText: {
+      fontSize: 13,
+      color: tokens.foreground,
+      lineHeight: 20,
+    },
+    legendCard: {
+      width: '100%',
+      backgroundColor: tokens.surface,
+      padding: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: withAlpha(tokens.border, 0.5),
+      gap: 8,
+    },
+    legendSectionTitle: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: tokens.muted,
+      letterSpacing: 0.5,
     },
     legendRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 12,
-      justifyContent: 'center',
     },
     legendChip: {
       flexDirection: 'row',
@@ -947,63 +965,65 @@ const createStyles = (tokens: CoachComponentTokens) =>
       gap: 6,
     },
     legendDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 3.5,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
     },
     legendText: {
       fontSize: 11,
       color: tokens.muted,
       fontWeight: '600',
     },
-    objectiveCard: {
-      backgroundColor: withAlpha(tokens.accent, 0.08),
-      borderLeftWidth: 3,
-      borderLeftColor: tokens.accent,
-      padding: 10,
-      borderRadius: 4,
+    actionsSection: {
+      width: '100%',
+      gap: 10,
+      marginTop: 4,
     },
-    objectiveLabel: {
-      fontSize: 10,
+    presentationActionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: tokens.accent,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: proRadius.md,
+      minHeight: 48,
+    },
+    presentationActionBtnText: {
+      fontSize: 14,
       fontWeight: '800',
-      color: tokens.accent,
-      marginBottom: 3,
+      color: tokens.onAccent || '#000000',
+      letterSpacing: 0.2,
+      textAlign: 'center',
     },
-    objectiveText: {
-      fontSize: 12,
-      color: tokens.foreground,
-      lineHeight: 17,
-      fontWeight: '600',
+    secondaryActionsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
     },
-    instructionsCard: {
+    secondaryActionBtn: {
+      flex: 1,
+      minWidth: 110,
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
       backgroundColor: tokens.elevated,
-      padding: 10,
-      borderRadius: 6,
+      borderRadius: proRadius.md,
       borderWidth: 1,
       borderColor: tokens.border,
-    },
-    instructionsLabel: {
-      fontSize: 10,
-      fontWeight: '800',
-      color: tokens.muted,
-      marginBottom: 3,
-    },
-    instructionsText: {
-      fontSize: 11,
-      color: tokens.foreground,
-      lineHeight: 16,
-    },
-    presentationFooter: {
-      paddingHorizontal: 16,
+      paddingHorizontal: 12,
       paddingVertical: 10,
-      backgroundColor: '#05070B',
-      alignItems: 'center',
-      gap: 6,
     },
-    presentationStageNote: {
+    secondaryActionBtnActive: {
+      borderColor: tokens.accent,
+      backgroundColor: withAlpha(tokens.accent, 0.12),
+    },
+    secondaryActionText: {
       fontSize: 12,
-      color: tokens.accent,
-      fontWeight: '600',
-      textAlign: 'center',
+      fontWeight: '700',
+      color: tokens.foreground,
     },
   });

@@ -257,7 +257,7 @@ export function ClubActionRow({
           {label}
         </ClubText>
         {hint ? (
-          <ClubText variant="caption" muted numberOfLines={2}>
+          <ClubText variant="caption" muted>
             {hint}
           </ClubText>
         ) : null}

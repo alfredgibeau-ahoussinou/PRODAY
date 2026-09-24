@@ -810,6 +810,7 @@ const styles = StyleSheet.create({
   },
   btnRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginTop: 8,
   },
@@ -820,6 +821,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    minWidth: 120,
+    minHeight: 44,
   },
   primaryBtnText: { color: '#070B14', fontWeight: '900', fontSize: 13 },
   outlineBtn: {
@@ -831,11 +834,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 8,
     backgroundColor: 'rgba(255,255,255,0.05)',
+    minWidth: 120,
+    minHeight: 44,
   },
   outlineBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
-  statRow: { flexDirection: 'row', gap: 8 },
+  statRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   statChip: {
     flex: 1,
+    minWidth: 80,
     borderWidth: 1,
     borderRadius: 12,
     paddingVertical: 10,
