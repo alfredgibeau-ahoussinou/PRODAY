@@ -3,11 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
-import { Fragment, useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { useState } from "react";
 import { AnimatedMetric } from "@/components/immersive/AnimatedMetric";
 import { HeroVideoBackground } from "@/components/HeroVideoBackground";
-import { ROUTES } from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 

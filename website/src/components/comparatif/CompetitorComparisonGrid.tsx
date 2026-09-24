@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, X, Minus, Sparkles, HelpCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import { Check, X, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 

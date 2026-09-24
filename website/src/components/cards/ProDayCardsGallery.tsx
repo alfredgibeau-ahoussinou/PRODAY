@@ -6,7 +6,6 @@ import { ProDayFutCard } from "@/components/cards/ProDayFutCard";
 import {
   CARD_ROLE_META,
   DEMO_CARDS,
-  DEMO_PLAYER_CARD,
   type ProDayCardActionId,
   type ProDayCardData,
   type ProDayCardRole,
@@ -30,7 +29,6 @@ type Props = {
   showMoreLink?: boolean;
   id?: string;
   showSkinPicker?: boolean;
-  passportMode?: boolean;
 };
 
 async function shareCard(card: ProDayCardData) {
@@ -65,7 +63,6 @@ export function ProDayCardsGallery({
   support = "Joueur, Coach, Club, Supporter, Sponsor : cartes interactives avec effet 3D, glare et actions.",
   showMoreLink = false,
   id = "cartes",
-  passportMode = false,
 }: Props) {
   const [filter, setFilter] = useState<ProDayCardRole | "all">(initialRole);
   const [toast, setToast] = useState<string | null>(null);

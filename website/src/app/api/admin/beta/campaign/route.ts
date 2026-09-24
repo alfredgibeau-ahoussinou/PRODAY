@@ -82,6 +82,5 @@ export async function POST(request: Request) {
     );
   }
 
-  const { ok: _ok, ...payload } = result;
-  return jsonResponse({ ok: true, ...payload });
+  return jsonResponse({ ...result, ok: true });
 }

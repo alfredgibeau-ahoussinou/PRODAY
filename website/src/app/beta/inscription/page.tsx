@@ -34,7 +34,7 @@ export default async function BetaWaitlistPage() {
           <div className="border border-white/10 bg-[#111114] p-6 sm:p-8 rounded-2xl text-center">
             <h2 className="text-2xl font-display font-bold text-white mb-4">La Bêta est ouverte</h2>
             <p className="text-white/70 text-sm mb-8">
-              Téléchargez directement l'application ProDay pour votre appareil ci-dessous.
+              Téléchargez directement l’application ProDay pour votre appareil ci-dessous.
             </p>
             
             <div className="flex flex-col gap-3.5">
@@ -55,7 +55,7 @@ export default async function BetaWaitlistPage() {
                 className="flex items-center justify-center gap-3 rounded-xl border border-white/20 bg-white/5 text-white px-6 py-3.5 font-semibold hover:bg-white/10 transition-colors"
               >
                 <Play size={20} className="text-[#00E676]" />
-                <span>Télécharger l'APK (Android)</span>
+                <span>Télécharger l’APK (Android)</span>
               </a>
 
               <a
@@ -75,16 +75,16 @@ export default async function BetaWaitlistPage() {
                   <span>📱</span> Information installation Android (Play Protect)
                 </p>
                 <p className="leading-relaxed text-white/60 mb-2">
-                  Comme l'application est en phase de test bêta privée et téléchargée directement sous forme d'APK, <strong>Google Play Protect</strong> peut afficher un avertissement standard (<em>« Application non reconnue »</em> ou <em>« Bloqué par Play Protect »</em>).
+                  Comme l’application est en phase de test bêta privée et téléchargée directement sous forme d’APK, <strong>Google Play Protect</strong> peut afficher un avertissement standard (<em>« Application non reconnue »</em> ou <em>« Bloqué par Play Protect »</em>).
                 </p>
                 <div className="rounded-lg bg-emerald-950/40 border border-emerald-500/30 p-2.5 text-emerald-200">
-                  👉 <strong>Pour installer :</strong> Cliquez sur <strong>« Plus de détails »</strong> puis sur <strong>« Installer quand même »</strong>. L'APK ProDay est 100% sécurisé et certifié par notre équipe.
+                  👉 <strong>Pour installer :</strong> Cliquez sur <strong>« Plus de détails »</strong> puis sur <strong>« Installer quand même »</strong>. L’APK ProDay est 100% sécurisé et certifié par notre équipe.
                 </div>
               </div>
 
               <div className="rounded-xl border border-white/5 bg-black/40 p-3.5 text-xs text-white/50 space-y-1.5">
-                <p><strong>iOS :</strong> Nécessite l'application gratuite TestFlight d'Apple pour installer la bêta.</p>
-                <p><strong>Android :</strong> Pensez également à autoriser l'installation depuis votre navigateur si demandé (<em>« Sources inconnues »</em>).</p>
+                <p><strong>iOS :</strong> Nécessite l’application gratuite TestFlight d’Apple pour installer la bêta.</p>
+                <p><strong>Android :</strong> Pensez également à autoriser l’installation depuis votre navigateur si demandé (<em>« Sources inconnues »</em>).</p>
                 <p><strong>Windows PC :</strong> Téléchargez le dossier ZIP, extrayez-le et lancez directement <strong>ProDay.exe</strong>.</p>
               </div>
             </div>

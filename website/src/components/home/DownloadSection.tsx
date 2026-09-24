@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Apple, Play, Smartphone } from "lucide-react";
-import { BETA_PITCH } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 

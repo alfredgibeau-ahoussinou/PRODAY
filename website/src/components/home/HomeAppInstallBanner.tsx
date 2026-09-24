@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Apple, Play, Download, Smartphone, Sparkles, X } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
-import { BETA_APK_URL, BETA_APP_VERSION } from "@/lib/betaContent";
+import { BETA_APK_URL } from "@/lib/betaContent";
 import { getTestFlightUrl, isTestFlightAvailable, IOS_BETA_LAUNCH_LABEL } from "@/lib/betaIosLaunch";
 
 interface BeforeInstallPromptEvent extends Event {

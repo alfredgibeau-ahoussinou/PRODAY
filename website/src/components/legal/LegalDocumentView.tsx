@@ -2,7 +2,6 @@ import Link from "next/link";
 import { PageBody } from "@/components/layout/PageBody";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { LegalDocument } from "@/content/legal";
-import { LEGAL_META } from "@/content/legal";
 import { ROUTES } from "@/lib/routes";
 
 type LegalDocumentViewProps = {

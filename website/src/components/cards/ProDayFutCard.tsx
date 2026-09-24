@@ -5,11 +5,16 @@ import {
   FutCardShell,
   FutFaceLayout,
   StatBar,
-  StatChip,
   clampStat,
   nationCode,
 } from "@/components/cards/FutCardShell";
-import type { ProDayCardActionId, ProDayCardData } from "@/lib/prodayCards";
+import type {
+  ProDayCardActionId,
+  ProDayCardData,
+  ProDayPlayerCardData,
+  ProDayCoachCardData,
+  ProDayClubCardData,
+} from "@/lib/prodayCards";
 
 type Props = {
   card: ProDayCardData;
@@ -29,9 +34,9 @@ export function ProDayFutCard({ card, onAction, formationLabel }: Props) {
       ]
     : card.role === "coach"
     ? [
-        { label: "MAT", value: (card as any).matchesManaged || 0 },
+        { label: "MAT", value: (card as ProDayCoachCardData).matches || 0 },
         { label: "NOTE", value: clampStat(ovr - 2) },
-        { label: "VIC", value: (card as any).winRatePct || 0 },
+        { label: "VIC", value: (card as ProDayCoachCardData).winRatePct || 0 },
       ]
     : [
         { label: "XP", value: ovr },
@@ -42,6 +47,15 @@ export function ProDayFutCard({ card, onAction, formationLabel }: Props) {
   const primaryPosition = card.role === "player" ? card.primaryPosition :
                           card.role === "coach" ? "COA" : "PRO";
 
+  const flagNationality = card.role === "player" ? (card as ProDayPlayerCardData).nationality : "FRA";
+  const clubLabel = card.role === "player"
+    ? (card as ProDayPlayerCardData).clubName
+    : card.role === "club"
+    ? (card as ProDayClubCardData).city
+    : card.displayName;
+  const photo = card.photoUrl || undefined;
+  const lastName = card.role === "player" ? (card as ProDayPlayerCardData).lastName : card.displayName;
+
   return (
     <FutCardShell
       card={card}
@@ -51,10 +65,10 @@ export function ProDayFutCard({ card, onAction, formationLabel }: Props) {
         <FutFaceLayout
           rating={ovr}
           position={primaryPosition}
-          flagLabel={nationCode(card.role === "player" || card.role === "coach" ? (card as any).nationality : "FRA")}
-          clubLabel={card.role === "player" ? (card as any).clubName : card.role === "club" ? (card as any).city : card.displayName}
-          photoUrl={card.role === "player" || card.role === "coach" ? (card as any).photoUrl : undefined}
-          name={(card as any).lastName || card.displayName}
+          flagLabel={nationCode(flagNationality)}
+          clubLabel={clubLabel}
+          photoUrl={photo}
+          name={lastName}
           stats={statsList}
           ink="#FFF"
           inkMuted="rgba(255,255,255,0.6)"

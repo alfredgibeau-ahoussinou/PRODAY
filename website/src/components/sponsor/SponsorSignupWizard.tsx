@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Building2, Check, ChevronLeft, ChevronRight, Loader2, Sparkles } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   SPONSOR_BUDGET_RANGES,
   SPONSOR_CAMPAIGN_GOALS,
@@ -177,15 +177,12 @@ function stepValid(step: StepId, form: FormState): boolean {
 export function SponsorSignupWizard() {
   const searchParams = useSearchParams();
   const packageFromUrl = searchParams.get("package");
-  const [packageTier, setPackageTier] = useState<
-    "starter" | "territorial" | "national" | "custom"
-  >(
+  const packageTier: "starter" | "territorial" | "national" | "custom" =
     packageFromUrl === "starter" ||
-      packageFromUrl === "territorial" ||
-      packageFromUrl === "national"
+    packageFromUrl === "territorial" ||
+    packageFromUrl === "national"
       ? packageFromUrl
-      : "custom",
-  );
+      : "custom";
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<FormState>(INITIAL);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");

@@ -163,7 +163,7 @@ export function SupportModal() {
               </div>
 
               {status === "error" && (
-                <p className="text-sm text-red-500">Une erreur est survenue lors de l'envoi. Veuillez réessayer.</p>
+                <p className="text-sm text-red-500">Une erreur est survenue lors de l’envoi. Veuillez réessayer.</p>
               )}
 
               <button

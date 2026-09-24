@@ -223,11 +223,9 @@ function AdultScene({ accent }: { accent: string }) {
 function SceneBody({
   kind,
   accent,
-  position,
 }: {
   kind: JoueurSceneKind | "gate";
   accent: string;
-  position?: JoueurPositionGroup;
 }) {
   if (kind === "gate") return <GateOrbit accent={accent} />;
   if (kind === "pitch_playful") return <YouthScene accent={accent} />;
@@ -247,7 +245,6 @@ type Props = {
 export function JoueurWorldCanvas({
   kind,
   accent = "#FFFFFF",
-  position,
   className,
   intensity = "medium",
 }: Props) {
@@ -282,7 +279,7 @@ export function JoueurWorldCanvas({
           />
           <directionalLight position={[-3, 2, -2]} intensity={0.55} color={accent} />
           <pointLight position={[0, 1.5, 1]} intensity={0.4} color={accent} />
-          <SceneBody kind={kind} accent={accent} position={position} />
+          <SceneBody kind={kind} accent={accent} />
           <ContactShadows
             position={[0, -0.95, 0]}
             opacity={0.45}

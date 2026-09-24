@@ -10,20 +10,18 @@ import {
   useTransform,
 } from "framer-motion";
 import {
-  useEffect,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
-import { RotateCcw, X, Shield } from "lucide-react";
+import { X, Shield } from "lucide-react";
 import {
   CARD_ACTION_LABELS,
-  CARD_ROLE_META,
   type ProDayCardActionId,
   type ProDayCardBase,
 } from "@/lib/prodayCards";
-import { resolveFutSkin, type FutSkinMeta } from "@/lib/futSkins";
+import type { FutSkinMeta } from "@/lib/futSkins";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -40,12 +38,10 @@ export function FutCardShell({
   front,
   back,
   onAction,
-  formationLabel,
 }: FutCardShellProps) {
   const [open, setOpen] = useState(false);
   const [pressing, setPressing] = useState(false);
   const reduce = useReducedMotion();
-  const skin = resolveFutSkin(card.tier, card.skinId);
   const tiltRef = useRef<HTMLDivElement>(null);
 
   const mx = useMotionValue(0);
@@ -189,23 +185,21 @@ export function FutFaceLayout({
   position,
   flagLabel,
   clubLabel,
-  leagueLabel,
   photoUrl,
   name,
   stats,
-  ink,
 }: {
   rating: number | string;
   position: string;
-  flagLabel: string;
+  flagLabel?: string;
   clubLabel: string;
   leagueLabel?: string;
   photoUrl?: string | null;
   name: string;
   stats: { label: string; value: number | string }[];
-  ink: string;
-  inkMuted: string;
-  divider: string;
+  ink?: string;
+  inkMuted?: string;
+  divider?: string;
   upgrade?: number;
 }) {
   return (
@@ -229,6 +223,12 @@ export function FutFaceLayout({
             <span className="text-xl font-black text-white">{rating}</span>
             <div className="h-4 w-px bg-white/30" />
             <span className="text-xs font-bold text-white/80">{position}</span>
+            {flagLabel && (
+              <>
+                <div className="h-4 w-px bg-white/30" />
+                <span className="text-[10px] font-bold text-white/60">{flagLabel}</span>
+              </>
+            )}
           </div>
 
           <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/40 backdrop-blur-md">
@@ -260,7 +260,7 @@ export function FutFaceLayout({
   );
 }
 
-export function StatChip({ label, value, accent, animate }: { label: string; value: number | string; accent?: string; animate?: boolean }) {
+export function StatChip({ label, value, accent }: { label: string; value: number | string; accent?: string; animate?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
       <span className="text-lg font-bold text-white" style={{ color: accent || 'white' }}>{value}</span>
@@ -278,10 +278,9 @@ export function nationCode(n: string | undefined | null) {
 }
 
 export function FutBackDetails({
-  ink,
   children,
 }: {
-  ink: string;
+  ink?: string;
   children: ReactNode;
 }) {
   return <div className="text-white">{children}</div>;
@@ -291,12 +290,11 @@ export function StatBar({
   label,
   value,
   max = 100,
-  ink,
 }: {
   label: string;
   value: number;
   max?: number;
-  ink: string;
+  ink?: string;
 }) {
   const pct = Math.min(100, Math.max(0, (value / max) * 100));
   return (
@@ -312,7 +310,7 @@ export function StatBar({
   );
 }
 
-export function FutSkinSwatch({ skin, active }: { skin: any; active: boolean }) {
+export function FutSkinSwatch({ skin, active }: { skin: FutSkinMeta; active: boolean }) {
   return (
     <div
       className={`h-8 w-8 rounded-full border-2 ${

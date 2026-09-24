@@ -1,21 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Play,
   Pause,
-  RotateCcw,
-  Sparkles,
   Sliders,
-  ChevronRight,
-  Shield,
-  Zap,
-  Target,
-  Users,
-  Compass,
-  ArrowRight,
-  Flame,
   CheckCircle2,
 } from "lucide-react";
 

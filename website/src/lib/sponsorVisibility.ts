@@ -46,10 +46,19 @@ export function calculateSponsorVisibility(
     recommendedBudgetMin = 250;
   }
 
+  // Budget bonus si budget personnalisé renseigné
+  let budgetMultiplier = 1;
+  if (budgetStr) {
+    const num = parseInt(budgetStr.replace(/\D/g, ""), 10);
+    if (!Number.isNaN(num) && num > recommendedBudgetMin) {
+      budgetMultiplier = Math.min(2.5, 1 + (num - recommendedBudgetMin) / 500);
+    }
+  }
+
   // Facteur sport
   const sportsFactor = 1 + (normSports - 1) * 0.25;
   const activeClubs = Math.round(baseClubs * sportsFactor);
-  const playersReached = Math.round(basePlayers * sportsFactor);
+  const playersReached = Math.round(basePlayers * sportsFactor * budgetMultiplier);
   const monthlyImpressions = Math.round(playersReached * impressionsMultiplier);
   const estimatedClickLeads = Math.round(monthlyImpressions * 0.024); // ~2.4% CTR/engagement
   const localEventsPerSeason = Math.round(activeClubs * 4.5);

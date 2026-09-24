@@ -2,17 +2,10 @@
 
 import { useState } from "react";
 import {
-  Sparkles,
   RotateCcw,
   Share2,
   Check,
-  Flame,
-  Shield,
-  Zap,
-  Target,
   Activity,
-  Award,
-  Sliders,
   User,
 } from "lucide-react";
 import {
@@ -20,7 +13,6 @@ import {
   FutCardShell,
   FutFaceLayout,
   StatBar,
-  StatChip,
   nationCode,
 } from "@/components/cards/FutCardShell";
 import type {
@@ -82,7 +74,7 @@ export function FutCardStudio({
     setTimeout(() => setCopied(false), 2000);
   }
 
-  const cardData: any = {
+  const cardData: ProDayPlayerCardData = {
     id: "studio-custom",
     role: "player",
     tier: "elite",
@@ -100,11 +92,24 @@ export function FutCardStudio({
     formPct: 92,
     photoUrl: "/images/card-player-01.jpg",
     age: 22,
+    gender: "M",
+    strongFoot: "Droit",
     heightCm: 178,
     weightKg: 72,
+    levelLabel: "R1",
+    levelBadge: "Amateur",
+    estimatedValueLabel: "N/A",
     matches: 24,
     goals: Math.round(state.sho / 4),
     assists: Math.round(state.pas / 3),
+    minutesPlayed: 1980,
+    lastMatchLabel: "Dernier match",
+    maxSpeedKmh: 31.4,
+    progressLabel: "+2 ce mois",
+    skillBadges: ["Vitesse", "Finition"],
+    aiObjectives: ["Améliorer endurance"],
+    recruitmentStatus: "À l’écoute",
+    heatmapHint: "Axe droit",
     verified: false,
     accentHex: "#00E676",
     deepHex: "#052424",

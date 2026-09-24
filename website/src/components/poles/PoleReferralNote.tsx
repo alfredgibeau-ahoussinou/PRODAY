@@ -1,4 +1,3 @@
-import { ShieldCheck, Gift } from "lucide-react";
 import { POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
 
 type PoleReferralNoteProps = {

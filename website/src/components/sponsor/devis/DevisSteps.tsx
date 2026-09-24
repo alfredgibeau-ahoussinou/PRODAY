@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Sparkles, Building2, User, Award, Layers } from "lucide-react";
+import { ArrowRight, Sparkles, Building2, User, Award, Layers } from "lucide-react";
 import { ChipSelect, FieldLabel, SelectInput, TextInput } from "@/components/sponsor/devis/DevisField";
 import { DevisWizardShell } from "@/components/sponsor/devis/DevisWizardShell";
 import { SponsorVisibilityWidget } from "@/components/sponsor/devis/SponsorVisibilityWidget";
