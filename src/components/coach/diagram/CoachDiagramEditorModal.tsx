@@ -381,7 +381,7 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (hasUnsavedChanges) {
       Alert.alert(
         'Modifications non enregistrées',
@@ -394,7 +394,19 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
     } else {
       onClose();
     }
-  };
+  }, [hasUnsavedChanges, onClose]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, handleClose]);
 
   // Ajout d'une étape
   const addStage = () => {
@@ -876,9 +888,9 @@ const createStyles = (tokens: CoachComponentTokens) =>
       gap: 8,
     },
     closeBtn: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tokens.elevated,

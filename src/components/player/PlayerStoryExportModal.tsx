@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -82,6 +82,18 @@ export const PlayerStoryExportModal: React.FC<PlayerStoryExportModalProps> = ({
       // Ignored
     }
   };
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -309,9 +321,9 @@ const styles = StyleSheet.create({
     color: PLAYER_DARK.text,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: PLAYER_DARK.border,
     alignItems: 'center',
     justifyContent: 'center',

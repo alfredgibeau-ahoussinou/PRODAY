@@ -31,6 +31,8 @@ export interface CoachTrainingDrillDiagramProps {
   height?: number;
   onPress?: () => void;
   showBadge?: boolean;
+  /** Mode vignette compacte (uniquement le terrain, sans en-tête ni légende externe) */
+  compact?: boolean;
 }
 
 /**
@@ -45,6 +47,7 @@ export function CoachTrainingDrillDiagram({
   height = 170,
   onPress,
   showBadge = true,
+  compact = false,
 }: CoachTrainingDrillDiagramProps) {
   const vbW = 100;
   const vbH = 60;
@@ -216,6 +219,79 @@ export function CoachTrainingDrillDiagram({
     }
   };
 
+  const isCompact = compact || (!showBadge && width < 150);
+
+  const pitchCanvas = (
+    <View style={[styles.pitchCanvasWrap, { width, height }]}>
+      {diagramData ? (
+        <CoachExerciseDiagramRenderer
+          diagram={diagramData}
+          width="100%"
+          height="100%"
+        />
+      ) : (
+        <Svg width="100%" height="100%" viewBox={`0 0 ${vbW} ${vbH}`}>
+          <Defs>
+            {/* Arrow markers */}
+            <Marker id="drillArrowGreen" viewBox="0 0 10 10" refX={6} refY={5} markerWidth={4} markerHeight={4} orient="auto-start-reverse">
+              <Path d="M 0 1 L 10 5 L 0 9 z" fill={proSemantic.success} />
+            </Marker>
+            <Marker id="drillArrowRed" viewBox="0 0 10 10" refX={6} refY={5} markerWidth={4} markerHeight={4} orient="auto-start-reverse">
+              <Path d="M 0 1 L 10 5 L 0 9 z" fill={proSemantic.danger} />
+            </Marker>
+            <Marker id="drillArrowWhite" viewBox="0 0 10 10" refX={6} refY={5} markerWidth={4} markerHeight={4} orient="auto-start-reverse">
+              <Path d="M 0 1 L 10 5 L 0 9 z" fill={tokens.foreground} />
+            </Marker>
+          </Defs>
+
+          {/* Grass Background with stripes */}
+          <Rect x={0} y={0} width={vbW} height={vbH} rx={4} fill={COACH_SITE.pitchDeep} />
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <Rect
+              key={i}
+              x={i * (vbW / 6)}
+              y={0}
+              width={vbW / 12}
+              height={vbH}
+              fill={withAlpha(COACH_SITE.pitchLight, 0.45)}
+              opacity={0.7}
+            />
+          ))}
+
+          {/* Pitch Outer Boundary line */}
+          <Rect
+            x={2}
+            y={2}
+            width={vbW - 4}
+            height={vbH - 4}
+            rx={3}
+            fill="none"
+            stroke={withAlpha('FFFFFF', 0.22)}
+            strokeWidth={0.6}
+          />
+
+          {/* Center line and circle watermark */}
+          <Line x1={vbW / 2} y1={2} x2={vbW / 2} y2={vbH - 2} stroke={withAlpha('FFFFFF', 0.12)} strokeWidth={0.5} />
+          <Circle cx={vbW / 2} cy={vbH / 2} r={9} fill="none" stroke={withAlpha('FFFFFF', 0.12)} strokeWidth={0.5} />
+
+          {/* Drill specific overlay */}
+          {renderDrillGraphics()}
+        </Svg>
+      )}
+    </View>
+  );
+
+  if (isCompact) {
+    if (onPress) {
+      return (
+        <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={title ? `Agrandir le schéma ${title}` : "Agrandir le schéma"}>
+          {pitchCanvas}
+        </Pressable>
+      );
+    }
+    return pitchCanvas;
+  }
+
   const content = (
     <View style={styles.container}>
       {showBadge ? (
@@ -246,63 +322,7 @@ export function CoachTrainingDrillDiagram({
         </View>
       ) : null}
 
-      <View style={[styles.pitchCanvasWrap, { width, height }]}>
-        {diagramData ? (
-          <CoachExerciseDiagramRenderer
-            diagram={diagramData}
-            width="100%"
-            height="100%"
-          />
-        ) : (
-          <Svg width="100%" height="100%" viewBox={`0 0 ${vbW} ${vbH}`}>
-            <Defs>
-              {/* Arrow markers */}
-              <Marker id="drillArrowGreen" viewBox="0 0 10 10" refX={6} refY={5} markerWidth={4} markerHeight={4} orient="auto-start-reverse">
-                <Path d="M 0 1 L 10 5 L 0 9 z" fill={proSemantic.success} />
-              </Marker>
-              <Marker id="drillArrowRed" viewBox="0 0 10 10" refX={6} refY={5} markerWidth={4} markerHeight={4} orient="auto-start-reverse">
-                <Path d="M 0 1 L 10 5 L 0 9 z" fill={proSemantic.danger} />
-              </Marker>
-              <Marker id="drillArrowWhite" viewBox="0 0 10 10" refX={6} refY={5} markerWidth={4} markerHeight={4} orient="auto-start-reverse">
-                <Path d="M 0 1 L 10 5 L 0 9 z" fill={tokens.foreground} />
-              </Marker>
-            </Defs>
-
-            {/* Grass Background with stripes */}
-            <Rect x={0} y={0} width={vbW} height={vbH} rx={4} fill={COACH_SITE.pitchDeep} />
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <Rect
-                key={i}
-                x={i * (vbW / 6)}
-                y={0}
-                width={vbW / 12}
-                height={vbH}
-                fill={withAlpha(COACH_SITE.pitchLight, 0.45)}
-                opacity={0.7}
-              />
-            ))}
-
-            {/* Pitch Outer Boundary line */}
-            <Rect
-              x={2}
-              y={2}
-              width={vbW - 4}
-              height={vbH - 4}
-              rx={3}
-              fill="none"
-              stroke={withAlpha('FFFFFF', 0.22)}
-              strokeWidth={0.6}
-            />
-
-            {/* Center line and circle watermark */}
-            <Line x1={vbW / 2} y1={2} x2={vbW / 2} y2={vbH - 2} stroke={withAlpha('FFFFFF', 0.12)} strokeWidth={0.5} />
-            <Circle cx={vbW / 2} cy={vbH / 2} r={9} fill="none" stroke={withAlpha('FFFFFF', 0.12)} strokeWidth={0.5} />
-
-            {/* Drill specific overlay */}
-            {renderDrillGraphics()}
-          </Svg>
-        )}
-      </View>
+      {pitchCanvas}
 
       <View style={styles.footerRow}>
         <View style={styles.legendItem}>

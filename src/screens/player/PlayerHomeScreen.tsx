@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
-import { userToProDayCard } from '../../utils/prodayFutCard';
-import type { ProDayPlayerCardData } from '../../models/ProDayCard';
 import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import { playerRsvpService, type PlayerRsvpStatus } from '../../services/playerRsvp.service';
 import { teamEventsService } from '../../services/teamEvents.service';
@@ -20,23 +19,38 @@ import {
   type RsvpStatus,
   type TeamEvent,
 } from '../../models/TeamEvent';
-import { PlayerPageGuideModal, type GuideSection } from '../../components/player/PlayerPageGuideModal';
 import {
   playerColors,
   playerType,
   playerForm,
   playerCard,
-  playerHeroCard,
   playerResponseTone,
   PLAYER_SURFACE_TOKENS,
 } from '../../theme/playerDesignSystem';
 import { CLUB_TOKENS } from '../../features/club/theme/clubTokens';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { ProDayText } from '../../components/ui/ProDayText';
+
+// Composants de Progression & Quêtes
+import { XpProgressBar } from '../../components/progression/XpProgressBar';
+import { ObjectiveCard } from '../../components/progression/ObjectiveCard';
+import { RankJourneyModal } from '../../components/progression/RankJourneyModal';
+import { LevelUpModal } from '../../components/progression/LevelUpModal';
+import { footballProgressionService } from '../../services/footballProgression.service';
+import type {
+  PlayerProgressionProfile,
+  ProgressionObjective,
+  ObjectiveActionKind,
+  ProgressionRank,
+} from '../../models/FootballProgression';
+import { playerFeedbackService } from '../../services/playerFeedback.service';
+import type { PlayerFeedbackRequest } from '../../models/PlayerFeedback';
+import { EventEquipmentChecklistPanel } from '../../components/team/EventEquipmentChecklistPanel';
 
 interface PlayerHomeScreenProps {
   onNavigateTab?: (tabId: 'stats' | 'wellness' | 'tactics') => void;
 }
 
-/** Statut réel du joueur pour un événement — source unique effet/requête/rétabli. */
 function deriveRsvp(event: TeamEvent, uid: string): PlayerRsvpStatus {
   const stored = userRsvp(event, uid);
   if (stored === 'yes') return 'present';
@@ -44,30 +58,59 @@ function deriveRsvp(event: TeamEvent, uid: string): PlayerRsvpStatus {
   return 'pending';
 }
 
-/**
- * Accueil joueur — refonte Player §4 : la page répond d'abord à quatre
- * questions (prochain événement · réponse attendue · activité récente ·
- * message important), sans tableau de bord dense. Forme « Apple Fitness » :
- * cartes plates à rayons généreux sur fond noir, typographie Apple system.
- * Toutes les couleurs viennent du socle partagé — aucune valeur littérale.
- */
 export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTab }) => {
   const profile = useSessionProfile();
   const userId = profile?.uid || 'player-demo';
   const tabNav = useTabNavigationOptional();
 
+  // Événement & RSVP
   const [rsvp, setRsvp] = useState<PlayerRsvpStatus>('pending');
   const [rsvpError, setRsvpError] = useState(false);
-  const [showStoryModal, setShowStoryModal] = useState(false);
-  const [showGuideModal, setShowGuideModal] = useState(false);
-
-  /** Prochain match réel (convocation du staff) — aucun match fictif. */
   const [nextMatch, setNextMatch] = useState<TeamEvent | null>(null);
   const [rsvpBusy, setRsvpBusy] = useState(false);
+
+  // Progression & Quêtes
+  const [progressionProfile, setProgressionProfile] = useState<PlayerProgressionProfile | null>(null);
+  const [activeObjectives, setActiveObjectives] = useState<ProgressionObjective[]>([]);
+  const [recentCoachFeedback, setRecentCoachFeedback] = useState<PlayerFeedbackRequest[]>([]);
+  const [showJourneyModal, setShowJourneyModal] = useState(false);
+
+  // Modal Level-Up / Promotion
+  const [levelUpModalVisible, setLevelUpModalVisible] = useState(false);
+  const [levelUpData, setLevelUpData] = useState<{
+    level: number;
+    rank: ProgressionRank;
+    isRankPromotion: boolean;
+    unlockedTitle?: string;
+  }>({ level: 1, rank: 'wood', isRankPromotion: false });
+
+  // Checklist rapide
+  const [showChecklistSheet, setShowChecklistSheet] = useState(false);
+
+  const loadProgressionData = useCallback(async () => {
+    if (!profile?.uid) return;
+    try {
+      const p = await footballProgressionService.getOrCreateProgressionProfile(
+        profile.uid,
+        profile.profile.club_id || undefined,
+      );
+      setProgressionProfile(p);
+
+      const objs = await footballProgressionService.listActiveObjectives(profile.uid);
+      setActiveObjectives(objs);
+
+      const fb = await playerFeedbackService.listForPlayer(profile.uid);
+      setRecentCoachFeedback(fb.filter((item: PlayerFeedbackRequest) => item.status === 'answered').slice(0, 2));
+    } catch {
+      // Best-effort
+    }
+  }, [profile]);
 
   useEffect(() => {
     if (!profile?.uid) return;
     let alive = true;
+
+    // Chargement prochain match
     teamEventsService
       .listForUser(profile.uid, profile.profile.club_id || undefined)
       .then((rows) => {
@@ -82,22 +125,35 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
         }
       })
       .catch(() => undefined);
+
+    loadProgressionData();
+
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [userId, profile, loadProgressionData]);
 
   const handleRsvpChange = (status: PlayerRsvpStatus) => {
     prodayHaptics.impactMedium();
     if (!nextMatch || !profile?.uid) return;
     const mapped: RsvpStatus = status === 'present' ? 'yes' : status === 'absent' ? 'no' : 'maybe';
     setRsvpError(false);
-    setRsvp(status); // Ack immédiat — la couleur répond avant le réseau.
+    setRsvp(status);
     setRsvpBusy(true);
     teamEventsService
       .updateRsvp(nextMatch.id, profile.uid, mapped)
-      .then(() => prodayHaptics.rsvpConfirm())
+      .then(async () => {
+        prodayHaptics.rsvpConfirm();
+        // Attribution de jalon de présence si applicable
+        if (status === 'present') {
+          await footballProgressionService.awardXp(profile.uid, 15, 'rsvp_presence_confirmed', {
+            idempotencyKey: `xp_rsvp_${nextMatch.id}_${profile.uid}`,
+            completionStatus: 'system_observed',
+            milestoneKey: 'm_bronze_presence',
+          });
+          loadProgressionData();
+        }
+      })
       .catch(() => {
         setRsvp(deriveRsvp(nextMatch, profile.uid));
         setRsvpError(true);
@@ -106,99 +162,64 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
       .finally(() => setRsvpBusy(false));
   };
 
-  const guideSections: GuideSection[] = [
-    {
-      icon: 'card',
-      iconColor: playerColors.accent,
-      title: 'Ta carte officielle',
-      description: 'Ta carte officielle ProDay résume ton identité, ton niveau réel et tes 3 métriques clés : matchs joués, note moyenne du staff et buts+passes. Touche-la pour accéder à ton passeport complet.',
-      badge: 'IDENTITÉ',
-    },
-    {
-      icon: 'checkmark-done-circle',
-      iconColor: playerResponseTone.present.color,
-      title: 'Réponse en un tap',
-      description: 'Indique ton statut pour ton prochain match (Présent, Incertain ou Absent). Le staff voit immédiatement ta réponse pour préparer la feuille de match.',
-      badge: 'EN 1 TAP',
-    },
-    {
-      icon: 'partly-sunny',
-      iconColor: CLUB_TOKENS.secondary,
-      title: 'Prochain match & décompte',
-      description: 'Visualise le décompte jusqu\'au coup d\'envoi de ton prochain match programmé par le staff.',
-    },
-    {
-      icon: 'sparkles',
-      iconColor: playerColors.accentAlt,
-      title: 'Export Story (9:16)',
-      description: 'Génère une story avec ta carte officielle et tes statistiques réelles pour valoriser ton statut sur les réseaux.',
-    },
-  ];
-
-  const cardData: ProDayPlayerCardData = React.useMemo(() => {
-    if (profile) {
-      // Carte dérivée exclusivement des données réelles du profil —
-      // les anciens overrides figés (18 matchs, 14 buts, OVR 87…) sont retirés.
-      return userToProDayCard(profile, {});
+  // Action directe sur une quête
+  const handleExecuteObjectiveAction = (actionKind: ObjectiveActionKind, targetId?: string) => {
+    prodayHaptics.selection();
+    switch (actionKind) {
+      case 'open_tactical_role':
+        onNavigateTab?.('tactics');
+        break;
+      case 'open_individual_program':
+      case 'open_mid_season_review':
+        tabNav?.setActiveTab('progression');
+        break;
+      case 'open_video_clips':
+      case 'open_journal':
+      case 'open_feedback':
+        tabNav?.setActiveTab('plus');
+        break;
+      case 'open_checklist':
+        if (nextMatch) {
+          setShowChecklistSheet(true);
+        } else {
+          tabNav?.setActiveTab('matchs');
+        }
+        break;
+      case 'open_calendar':
+        tabNav?.setActiveTab('matchs');
+        break;
+      default:
+        tabNav?.setActiveTab('progression');
+        break;
     }
-    // Invité sans profil : carte neutre, aucune statistique inventée.
-    return {
-      id: userId,
-      role: 'player',
-      tier: 'bronze',
-      displayName: 'Invité',
-      photoUrl: null,
-      verified: false,
-      accentHex: playerColors.textMuted,
-      deepHex: playerColors.surfaceRaised,
-      actions: ['view_profile'],
-      firstName: 'Invité',
-      lastName: '',
-      age: 0,
-      gender: 'M',
-      nationality: 'FR',
-      clubName: '—',
-      primaryPosition: '—',
-      strongFoot: 'R',
-      heightCm: 0,
-      weightKg: 0,
-      levelLabel: '—',
-      league: '—',
-      levelBadge: 'amateur',
-      overall: 0,
-      formPct: 0,
-      potential: 0,
-      estimatedValueLabel: '—',
-      matches: 0,
-      goals: 0,
-      assists: 0,
-      minutesPlayed: 0,
-      lastMatchLabel: '—',
-      progressLabel: '—',
-      skillBadges: [],
-      aiObjectives: [],
-      recruitmentStatus: '—',
-    };
-  }, [profile, userId]);
+  };
 
-  const playerData = {
-    id: cardData.id,
-    name: cardData.displayName,
-    pos: cardData.primaryPosition,
-    ovr: cardData.overall,
-    tier: cardData.overall >= 88 ? ('special' as const) : ('gold' as const),
-    clubName: cardData.clubName,
-    // Aucun attribut inventé : le radar détaillé sera branché sur les
-    // évaluations réelles du staff / recruteurs.
-    pac: 0,
-    sho: 0,
-    pas: 0,
-    dri: 0,
-    def: 0,
-    phy: 0,
-    matchesPlayed: cardData.matches,
-    goals: cardData.goals,
-    assists: cardData.assists,
+  // Soumission de complétion d'un objectif
+  const handleSubmitCompletion = async (objectiveId: string) => {
+    if (!profile?.uid) return;
+    try {
+      const res = await footballProgressionService.submitObjectiveCompletion(objectiveId, profile.uid);
+      if (res.completed) {
+        prodayHaptics.confirm();
+        if (res.leveledUp || res.rankPromoted) {
+          const updated = await footballProgressionService.getOrCreateProgressionProfile(profile.uid);
+          setLevelUpData({
+            level: updated.level,
+            rank: updated.rank,
+            isRankPromotion: res.rankPromoted,
+            unlockedTitle: updated.current_title,
+          });
+          setLevelUpModalVisible(true);
+        } else {
+          Alert.alert('Quête validée !', `Tu as gagné +${res.xpAwarded} XP.`);
+        }
+      } else if (res.awaitingCoach) {
+        Alert.alert('Transmis au coach', 'Ton coach a été notifié pour valider cette réalisation.');
+      }
+      loadProgressionData();
+    } catch (err: any) {
+      Alert.alert('Information', err?.message || 'Impossible de valider cet objectif.');
+    }
   };
 
   const nextMatchWhen = nextMatch
@@ -217,28 +238,46 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. En-tête Identité & Contexte Équipe épuré */}
+      {/* 1. En-tête Identité & Contexte Équipe */}
       <View style={styles.headerRow}>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.greetingText}>
-            Bonjour, {cardData.firstName || 'Joueur'}
+            Bonjour, {profile?.display_name?.split(' ')[0] || 'Joueur'}
           </Text>
           <Text style={styles.teamSubHeader} numberOfLines={1}>
-            {cardData.clubName !== '—' ? cardData.clubName : 'Sans club affilié'} · {cardData.primaryPosition !== '—' ? cardData.primaryPosition : 'Poste à renseigner'}
+            {profile?.profile?.club_id ? 'Club affilié' : 'Joueur indépendant'} • {profile?.profile?.position || 'Poste à renseigner'}
           </Text>
         </View>
 
-        <View style={styles.headerBadges}>
-          <View style={styles.levelPill}>
-            <MaterialCommunityIcons name="shield-check" size={14} color={CLUB_TOKENS.secondary} />
-            <Text style={styles.levelText} numberOfLines={1}>
-              {cardData.levelLabel || 'Joueur'}
-            </Text>
-          </View>
-        </View>
+        <TouchableOpacity
+          style={styles.journeyRoadmapBtn}
+          onPress={() => {
+            prodayHaptics.selection();
+            setShowJourneyModal(true);
+          }}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="map" size={13} color={PLAYER_DARK.accentAlt} style={{ marginRight: 4 }} />
+          <ProDayText variant="caption" style={styles.journeyBtnText}>
+            Roadmap
+          </ProDayText>
+        </TouchableOpacity>
       </View>
 
-      {/* 2. Priorité n°1 : Carte Prochain Événement & Convocation avec RSVP immédiat */}
+      {/* 2. Centre de Gravité : Système de Progression Football (Solo Leveling inspiré) */}
+      {progressionProfile ? (
+        <XpProgressBar
+          level={progressionProfile.level}
+          rank={progressionProfile.rank}
+          totalXp={progressionProfile.total_xp}
+          xpIntoLevel={progressionProfile.xp_into_level}
+          xpForNextLevel={progressionProfile.xp_for_next_level}
+          currentTitle={progressionProfile.current_title}
+          onPressRank={() => setShowJourneyModal(true)}
+        />
+      ) : null}
+
+      {/* 3. ALERTE URGENTE / CONVOCATION (Ne doit jamais être masquée par la progression) */}
       <View style={[styles.matchWidgetCard, playerCard(PLAYER_SURFACE_TOKENS)]}>
         <View style={styles.matchBadgeRow}>
           <View style={styles.matchLiveBadge}>
@@ -248,7 +287,10 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
             </Text>
           </View>
           {nextMatch && rsvp === 'pending' && (
-            <Text style={styles.rsvpUrgentPill}>RÉPONSE ATTENDUE</Text>
+            <View style={styles.urgentBadge}>
+              <Ionicons name="alert-circle" size={12} color={PLAYER_DARK.text} style={{ marginRight: 3 }} />
+              <Text style={styles.rsvpUrgentPill}>RÉPONSE ATTENDUE</Text>
+            </View>
           )}
         </View>
 
@@ -295,21 +337,9 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
                     onPress={() => handleRsvpChange(status)}
                     disabled={rsvpBusy}
                     activeOpacity={0.8}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    accessibilityLabel={`Répondre : ${tone.label}`}
                   >
-                    <Ionicons
-                      name={icon}
-                      size={14}
-                      color={active ? tone.ink : tone.color}
-                    />
-                    <Text
-                      style={[
-                        styles.rsvpBtnText,
-                        { color: active ? tone.ink : playerColors.text },
-                      ]}
-                    >
+                    <Ionicons name={icon} size={14} color={active ? tone.ink : tone.color} />
+                    <Text style={[styles.rsvpBtnText, { color: active ? tone.ink : playerColors.text }]}>
                       {tone.label}
                     </Text>
                   </TouchableOpacity>
@@ -325,75 +355,102 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
         )}
       </View>
 
-      {/* 3. Priorité n°2 : Carte Direct Vestiaire & Communications */}
-      <TouchableOpacity
-        style={[styles.announcementCard, playerCard(PLAYER_SURFACE_TOKENS)]}
-        onPress={() => {
-          prodayHaptics.selection();
-          tabNav?.setActiveTab('messages');
-        }}
-        activeOpacity={0.85}
-        accessibilityRole="button"
-        accessibilityLabel="Messages">
-        <View style={styles.announcementInner}>
-          <View style={styles.announcementIconBox}>
-            <Ionicons name="chatbubbles" size={18} color={playerColors.accent} />
-          </View>
-          <View style={styles.announcementTextCol}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.announcementTitle}>Vestiaire & Communications</Text>
-              <View style={styles.activePill}>
-                <Text style={styles.activePillText}>DIRECT</Text>
-              </View>
-            </View>
-            <Text style={styles.announcementSub}>
-              Consulter les consignes du staff et échanges d'équipe.
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={playerColors.textMuted} />
+      {/* 4. Section : QUÊTES ACTIVES & OBJECTIFS DE DÉVELOPPEMENT */}
+      <View style={styles.sectionHeaderRow}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Ionicons name="flame" size={16} color={PLAYER_DARK.accentAlt} style={{ marginRight: 6 }} />
+          <ProDayText variant="title" style={styles.sectionHeading}>
+            Quêtes Football en cours
+          </ProDayText>
         </View>
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            prodayHaptics.selection();
+            tabNav?.setActiveTab('progression');
+          }}
+        >
+          <ProDayText variant="caption" style={styles.sectionLink}>
+            Voir tout →
+          </ProDayText>
+        </TouchableOpacity>
+      </View>
 
-      {/* 4. Priorité n°3 : Synthèse Essentielle & Accès Pages Dédiées */}
-      <TouchableOpacity
-        style={[styles.summaryCard, playerCard(PLAYER_SURFACE_TOKENS)]}
-        onPress={() => {
-          prodayHaptics.selection();
-          tabNav?.setActiveTab('profil');
-        }}
-        activeOpacity={0.85}
-        accessibilityRole="button"
-      >
-        <View style={styles.summaryInner}>
-          <View style={styles.summaryLeftCol}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="shield-checkmark" size={17} color={playerColors.accent} />
-              <Text style={styles.summaryTitle}>Passeport & Carte Officielle</Text>
-            </View>
-            <Text style={styles.summarySub}>
-              {cardData.matches > 0
-                ? `${cardData.matches} match${cardData.matches > 1 ? 's' : ''} disputé${cardData.matches > 1 ? 's' : ''} · Note globale ${cardData.overall > 0 ? cardData.overall : '—'}`
-                : 'Fiche joueur prête · Données et passeport à jour'}
-            </Text>
-          </View>
-          <View style={styles.summaryActionWrap}>
-            <Text style={styles.summaryActionText}>Voir fiche →</Text>
-          </View>
+      {activeObjectives.length === 0 ? (
+        <View style={styles.emptyObjectivesBox}>
+          <Ionicons name="sparkles-outline" size={24} color={PLAYER_DARK.textMuted} />
+          <ProDayText variant="body" style={styles.emptyObjectivesText}>
+            Toutes tes quêtes actuelles sont complétées !
+          </ProDayText>
+          <TouchableOpacity
+            style={styles.browseObjectivesBtn}
+            onPress={() => tabNav?.setActiveTab('progression')}
+          >
+            <ProDayText variant="caption" style={styles.browseObjectivesBtnText}>
+              Choisir un nouvel objectif de travail
+            </ProDayText>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      ) : (
+        activeObjectives.slice(0, 3).map((obj) => (
+          <ObjectiveCard
+            key={obj.id}
+            objective={obj}
+            onExecuteAction={handleExecuteObjectiveAction}
+            onSubmitCompletion={handleSubmitCompletion}
+          />
+        ))
+      )}
 
-      {/* Guide interactif si besoin */}
-      <PlayerPageGuideModal
-        visible={showGuideModal}
-        onClose={() => setShowGuideModal(false)}
-        pageTitle="Cockpit & Carte Officielle"
-        pageSubtitle="Ton centre de contrôle joueur ProDay"
-        badgeLabel="GUIDE DU COCKPIT"
-        badgeColor={playerColors.accent}
-        introText="Bienvenue sur ton Cockpit personnel. Cet écran rassemble ton identité de joueur et ta disponibilité pour le prochain match."
-        sections={guideSections}
-        proTip="Mets à jour ton statut au moins 48h avant la rencontre pour aider le coach à préparer la feuille de match."
-        ctaLabel="C'est parti !"
+      {/* 5. Section : RETOURS DU COACH & ACCOMPLISSEMENTS */}
+      <View style={[styles.sectionHeaderRow, { marginTop: 18 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Ionicons name="chatbubble-ellipses" size={16} color={CLUB_TOKENS.warning} style={{ marginRight: 6 }} />
+          <ProDayText variant="title" style={styles.sectionHeading}>
+            Derniers retours du coach
+          </ProDayText>
+        </View>
+      </View>
+
+      {recentCoachFeedback.length === 0 ? (
+        <View style={styles.feedbackEmptyCard}>
+          <ProDayText variant="caption" style={styles.feedbackEmptyText}>
+            Aucun débriefing récent du staff. Pose une question technique au coach pour ouvrir un axe de progression.
+          </ProDayText>
+        </View>
+      ) : (
+        recentCoachFeedback.map((fb) => (
+          <View key={fb.id} style={styles.feedbackCard}>
+            <View style={styles.feedbackHeader}>
+              <ProDayText variant="caption" style={styles.feedbackCoachName}>
+                Coach {fb.coach_name}
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.feedbackDate}>
+                {fb.event_title || 'Débriefing technique'}
+              </ProDayText>
+            </View>
+            <ProDayText variant="body" style={styles.feedbackQuote}>
+              « {fb.coach_response} »
+            </ProDayText>
+          </View>
+        ))
+      )}
+
+      {/* Modals de progression */}
+      {progressionProfile ? (
+        <RankJourneyModal
+          visible={showJourneyModal}
+          onClose={() => setShowJourneyModal(false)}
+          profile={progressionProfile}
+        />
+      ) : null}
+
+      <LevelUpModal
+        visible={levelUpModalVisible}
+        onClose={() => setLevelUpModalVisible(false)}
+        level={levelUpData.level}
+        rank={levelUpData.rank}
+        isRankPromotion={levelUpData.isRankPromotion}
+        unlockedTitle={levelUpData.unlockedTitle}
       />
     </ScrollView>
   );
@@ -408,71 +465,40 @@ const styles = StyleSheet.create({
     padding: playerForm.space.lg,
     paddingBottom: playerForm.space.xxl,
   },
-
-  /* En-tête */
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: playerForm.space.lg,
+    marginBottom: 8,
   },
   greetingText: {
     ...playerType.subheadline,
     color: playerColors.textMuted,
-  },
-  nameHeader: {
-    ...playerType.title,
-    color: playerColors.text,
-    maxWidth: 220,
   },
   teamSubHeader: {
     ...playerType.caption,
     color: playerColors.textDim,
     marginTop: 2,
   },
-  headerBadges: {
+  journeyRoadmapBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: playerForm.space.sm,
-  },
-  guideIconBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    minHeight: playerForm.chipHeight - 12,
-    backgroundColor: playerColors.accentSoft,
-    borderWidth: 1,
-    borderColor: playerColors.border,
-    paddingHorizontal: 9,
-    borderRadius: playerForm.chipRadius,
-  },
-  guideBtnText: {
-    ...playerType.micro,
-    fontWeight: '800',
-    color: playerColors.accent,
-  },
-  levelPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    minHeight: playerForm.chipHeight - 12,
-    backgroundColor: playerColors.surfaceRaised,
-    borderWidth: 1,
-    borderColor: playerColors.border,
+    backgroundColor: PLAYER_DARK.accentSoft,
     paddingHorizontal: 10,
-    borderRadius: playerForm.chipRadius,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.accentGlow,
   },
-  levelText: {
-    ...playerType.micro,
+  journeyBtnText: {
+    color: PLAYER_DARK.accentAlt,
     fontWeight: '800',
-    color: CLUB_TOKENS.secondary,
-    maxWidth: 110,
+    fontSize: 11,
   },
-
-  /* Widget prochain match */
   matchWidgetCard: {
     padding: playerForm.cardPaddingH,
     marginBottom: playerForm.space.md,
+    marginTop: 6,
   },
   matchBadgeRow: {
     flexDirection: 'row',
@@ -495,74 +521,73 @@ const styles = StyleSheet.create({
     color: playerColors.accent,
     letterSpacing: 0.5,
   },
-  rsvpUrgentPill: {
-    ...playerType.micro,
-    fontWeight: '800',
-    color: CLUB_TOKENS.warning,
-    backgroundColor: CLUB_TOKENS.warningSoft,
+  urgentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: CLUB_TOKENS.danger,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: playerForm.fieldRadius - 10,
+    borderRadius: 6,
+  },
+  rsvpUrgentPill: {
+    ...playerType.micro,
+    fontWeight: '900',
+    color: PLAYER_DARK.text,
     letterSpacing: 0.5,
   },
   matchFixtureTitle: {
     ...playerType.headline,
     color: playerColors.text,
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 4,
   },
   matchCountdownSub: {
     ...playerType.caption,
-    color: playerColors.textMuted,
-    marginTop: 2,
+    color: playerColors.textSecondary,
+    marginBottom: 12,
   },
   matchEmptyBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: playerForm.space.sm,
-    backgroundColor: playerColors.surfaceRaised,
-    borderRadius: playerForm.fieldRadius,
-    paddingHorizontal: playerForm.space.md,
-    paddingVertical: playerForm.space.md,
+    paddingVertical: 8,
+    gap: 10,
   },
   matchEmptyText: {
     ...playerType.caption,
-    color: playerColors.textMuted,
+    color: playerColors.textDim,
     flex: 1,
+    lineHeight: 16,
   },
   rsvpSection: {
-    paddingTop: playerForm.space.md,
-    marginTop: playerForm.space.md,
-    borderTopWidth: playerForm.separatorThickness,
+    marginTop: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
     borderTopColor: playerColors.border,
   },
   rsvpHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    gap: playerForm.space.sm,
-    marginBottom: playerForm.space.sm,
-  },
-  rsvpHintText: {
-    ...playerType.caption,
-    color: CLUB_TOKENS.warning,
-  },
-  rsvpErrorText: {
-    ...playerType.caption,
-    color: CLUB_TOKENS.danger,
-    marginTop: playerForm.space.sm,
-  },
-  rsvpBarBusy: {
-    opacity: 0.6,
+    alignItems: 'center',
+    marginBottom: 8,
   },
   rsvpSectionTitle: {
     ...playerType.micro,
     fontWeight: '800',
-    color: playerColors.textDim,
-    marginBottom: playerForm.space.sm,
+    color: playerColors.textMuted,
     letterSpacing: 0.5,
+  },
+  rsvpHintText: {
+    ...playerType.micro,
+    color: CLUB_TOKENS.warning,
+    fontWeight: '700',
   },
   rsvpBar: {
     flexDirection: 'row',
-    gap: playerForm.chipGap - 6,
+    gap: 8,
+  },
+  rsvpBarBusy: {
+    opacity: 0.6,
   },
   rsvpBtn: {
     flex: 1,
@@ -570,95 +595,102 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    minHeight: 44,
-    borderRadius: playerForm.fieldRadius,
+    paddingVertical: 9,
+    borderRadius: 10,
   },
   rsvpBtnText: {
-    ...playerType.callout,
-    color: playerColors.text,
-  },
-
-  /* Annonces / Vestiaire */
-  announcementCard: {
-    marginBottom: playerForm.space.md,
-    overflow: 'hidden',
-  },
-  announcementInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: playerForm.cardPaddingH,
-    paddingVertical: playerForm.cardPaddingV - 2,
-    gap: playerForm.space.md,
-  },
-  announcementIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: playerColors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  announcementTextCol: {
-    flex: 1,
-    minWidth: 0,
-  },
-  announcementTitle: {
-    ...playerType.headline,
-    color: playerColors.text,
-  },
-  announcementSub: {
-    ...playerType.caption,
-    color: playerColors.textMuted,
-    marginTop: 2,
-  },
-  activePill: {
-    backgroundColor: CLUB_TOKENS.successSoft,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  activePillText: {
-    ...playerType.micro,
-    fontWeight: '800',
-    color: CLUB_TOKENS.secondary,
-    letterSpacing: 0.5,
-  },
-
-  /* Synthèse essentielle */
-  summaryCard: {
-    padding: playerForm.cardPaddingH,
-    marginBottom: playerForm.space.md,
-  },
-  summaryInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: playerForm.space.md,
-  },
-  summaryLeftCol: {
-    flex: 1,
-    minWidth: 0,
-  },
-  summaryTitle: {
-    ...playerType.headline,
-    color: playerColors.text,
-  },
-  summarySub: {
-    ...playerType.caption,
-    color: playerColors.textMuted,
-    marginTop: 2,
-  },
-  summaryActionWrap: {
-    backgroundColor: playerColors.surfaceRaised,
-    borderRadius: playerForm.chipRadius,
-    borderWidth: 1,
-    borderColor: playerColors.border,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  summaryActionText: {
     ...playerType.caption,
     fontWeight: '700',
-    color: playerColors.accent,
+    fontSize: 12,
+  },
+  rsvpErrorText: {
+    ...playerType.micro,
+    color: CLUB_TOKENS.danger,
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  sectionHeading: {
+    color: PLAYER_DARK.text,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  sectionLink: {
+    color: PLAYER_DARK.accentAlt,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  emptyObjectivesBox: {
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+  },
+  emptyObjectivesText: {
+    color: PLAYER_DARK.textSecondary,
+    fontSize: 13,
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  browseObjectivesBtn: {
+    backgroundColor: PLAYER_DARK.accentSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  browseObjectivesBtnText: {
+    color: PLAYER_DARK.accentAlt,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  feedbackEmptyCard: {
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+  },
+  feedbackEmptyText: {
+    color: PLAYER_DARK.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  feedbackCard: {
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: CLUB_TOKENS.warningSoft,
+    marginBottom: 10,
+  },
+  feedbackHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  feedbackCoachName: {
+    color: CLUB_TOKENS.warning,
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  feedbackDate: {
+    color: PLAYER_DARK.textMuted,
+    fontSize: 11,
+  },
+  feedbackQuote: {
+    color: PLAYER_DARK.text,
+    fontSize: 12,
+    lineHeight: 17,
+    fontStyle: 'italic',
   },
 });
+
+export default PlayerHomeScreen;

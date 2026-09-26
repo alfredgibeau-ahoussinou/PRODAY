@@ -1,0 +1,100 @@
+1
+00:00:00,000 --> 00:00:00,000
+Début de la capture
+
+2
+00:00:00,000 --> 00:00:14,944
+Connexion au pôle Club avec un compte de démonstration isolé. Le mot de passe reste masqué à l'écran.
+
+3
+00:00:14,944 --> 00:00:35,363
+Accueil club — carte club, recherche globale, prochain rendez-vous, raccourcis et statistiques
+
+4
+00:00:35,363 --> 00:00:46,431
+Équipes — sélection d'une équipe et effectif
+
+5
+00:00:46,431 --> 00:00:59,015
+Joueurs — annuaire des licenciés
+
+6
+00:00:59,015 --> 00:01:09,091
+Coach — staff et affectations
+
+7
+00:01:09,091 --> 00:01:19,150
+Demandes d'adhésion — affiliations en attente
+
+8
+00:01:19,150 --> 00:01:34,200
+Calendrier — vues jour, semaine, mois
+
+9
+00:01:34,200 --> 00:01:45,255
+Matchs — convocations et invitations
+
+10
+00:01:45,255 --> 00:01:56,309
+Entraînements — séances et présences
+
+11
+00:01:56,309 --> 00:02:06,367
+Événements — tournois et poules
+
+12
+00:02:06,367 --> 00:02:16,432
+Classements — championnat officiel FFF
+
+13
+00:02:16,432 --> 00:02:26,467
+Vidéo & Analyse — Veo, smartphone, clips IA (démonstration)
+
+14
+00:02:26,467 --> 00:02:37,509
+Communication — canaux équipes, coachs, parents
+
+15
+00:02:37,509 --> 00:02:48,560
+Covoiturage — déplacements et logistique
+
+16
+00:02:48,560 --> 00:03:00,069
+Copilote Club — assistant IA à confirmation
+
+17
+00:03:00,069 --> 00:03:10,076
+Notifications — centre d'alertes et préférences
+
+18
+00:03:10,076 --> 00:03:22,824
+Club — identité et réglages
+
+19
+00:03:22,824 --> 00:03:32,896
+Pack Club — offre sur devis
+
+20
+00:03:32,896 --> 00:03:42,935
+Licences — documents et licences
+
+21
+00:03:42,935 --> 00:03:53,003
+Finances — grand livre simplifié
+
+22
+00:03:53,003 --> 00:04:05,279
+Sponsoring — partenaires, buvette, médical FFF, équipements
+
+23
+00:04:05,279 --> 00:04:15,352
+Permissions — rôles admin, dirigeant, DS, coach
+
+24
+00:04:15,352 --> 00:04:21,354
+Note — la bascule Pôle Président est disponible sur mobile (Menu) ; desktop = sidebar complète
+
+25
+00:04:21,354 --> 00:04:22,554
+Fin de la visite guidée du pôle Club.
+

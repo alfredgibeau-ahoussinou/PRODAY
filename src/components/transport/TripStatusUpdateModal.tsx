@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -8,6 +8,7 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Icon } from '../ui/Icon';
 import type { BusTripStatus, ClubBusPlan } from '../../models/TransportLogistics';
@@ -69,6 +70,18 @@ export const TripStatusUpdateModal: React.FC<TripStatusUpdateModalProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -79,9 +92,12 @@ export const TripStatusUpdateModal: React.FC<TripStatusUpdateModalProps> = ({
               <Text style={styles.title}>Statut du Trajet</Text>
               <Text style={styles.subtitle}>{bus.name}</Text>
             </View>
-            <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeBtn}
               accessibilityRole="button"
-              accessibilityLabel="Fermer">
+              accessibilityLabel="Fermer"
+            >
               <Icon name="close" size={24} color="#94A3B8" />
             </TouchableOpacity>
           </View>
@@ -221,6 +237,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#94A3B8',
     marginTop: 2,
+  },
+  closeBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   body: {
     marginBottom: spacing.md,

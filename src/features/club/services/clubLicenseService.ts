@@ -69,6 +69,7 @@ export const clubLicenseService = {
         await updateDoc(memRef, {
           license_number: licenseNumber?.trim() || m.license_number || null,
           status: 'active',
+          fff_license_status: 'active',
           validated_by_uid: approverUid,
           validated_at: serverTimestamp(),
           updated_at: serverTimestamp(),
@@ -161,6 +162,8 @@ export const clubLicenseService = {
             license_number: row.licenseNumber || null,
             category: row.category || null,
             status: 'pending',
+            fff_license_status: 'active',
+            fff_medical_valid: row.medicalValid,
             source: 'footclubs_import',
             imported_by_uid: approverUid,
             created_at: serverTimestamp(),

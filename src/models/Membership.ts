@@ -33,6 +33,8 @@ export interface Membership {
   /** Coach/staff qui a invité le joueur (invitation pending). */
   invited_by_uid?: string;
   license_number?: string;
+  fff_license_status?: 'active' | 'renewal_pending' | 'transferred' | 'expired' | 'unverified';
+  fff_medical_valid?: boolean;
   created_at: Date;
   updated_at: Date;
 }

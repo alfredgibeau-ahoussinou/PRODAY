@@ -26,6 +26,11 @@ import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
 import { GlobalSearchModal } from '../../components/search/GlobalSearchModal';
 import { CrestWatermark } from './PlayerSaisonIcons';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { PlayerJournalModal } from '../../components/player/PlayerJournalModal';
+import { PlayerExtraSessionsModal } from '../../components/player/PlayerExtraSessionsModal';
+import { PlayerEquipmentModal } from '../../components/player/PlayerEquipmentModal';
+import { CoachAppointmentBookingModal } from '../../components/player/CoachAppointmentBookingModal';
+import { ShareableSportsProfileModal } from '../../components/player/ShareableSportsProfileModal';
 
 /** Hub Plus — menu complet Tout ProDay */
 export function JoueurPlusHubScreen() {
@@ -41,6 +46,13 @@ export function JoueurPlusHubScreen() {
   const clubName = playerThemeCtx.clubName;
   const { isEnabled, disabledCopy } = usePlatformFeatureFlags();
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Modals state for Player features
+  const [journalOpen, setJournalOpen] = useState(false);
+  const [extraSessionsOpen, setExtraSessionsOpen] = useState(false);
+  const [equipmentOpen, setEquipmentOpen] = useState(false);
+  const [appointmentOpen, setAppointmentOpen] = useState(false);
+  const [cvPdfOpen, setCvPdfOpen] = useState(false);
 
   const visibleTabs = useMemo(
     () => getVisibleMainTabs(productLine, profile?.role, profile ?? undefined),
@@ -69,6 +81,14 @@ export function JoueurPlusHubScreen() {
       return;
     }
     const { action } = item;
+    if (action.kind === 'modal') {
+      if (action.modal === 'journal') setJournalOpen(true);
+      else if (action.modal === 'extra_sessions') setExtraSessionsOpen(true);
+      else if (action.modal === 'equipment') setEquipmentOpen(true);
+      else if (action.modal === 'appointment') setAppointmentOpen(true);
+      else if (action.modal === 'cv_pdf') setCvPdfOpen(true);
+      return;
+    }
     if (action.kind === 'tab') {
       nav.setActiveTab(action.tab, { returnTo: 'plus' });
       return;
@@ -188,6 +208,62 @@ export function JoueurPlusHubScreen() {
         onClose={() => setSearchOpen(false)}
         accent={teamPrimary}
       />
+
+      {journalOpen && (
+        <PlayerJournalModal
+          visible={journalOpen}
+          onClose={() => setJournalOpen(false)}
+          playerUid={profile.uid}
+          clubId={profile.profile?.club_id}
+          accent={teamPrimary}
+        />
+      )}
+
+      {extraSessionsOpen && (
+        <PlayerExtraSessionsModal
+          visible={extraSessionsOpen}
+          onClose={() => setExtraSessionsOpen(false)}
+          playerUid={profile.uid}
+          playerName={profile.display_name}
+          clubId={profile.profile?.club_id}
+          isMinor={isMinorUser(profile)}
+          accent={teamPrimary}
+        />
+      )}
+
+      {equipmentOpen && (
+        <PlayerEquipmentModal
+          visible={equipmentOpen}
+          onClose={() => setEquipmentOpen(false)}
+          playerUid={profile.uid}
+          clubId={profile.profile?.club_id}
+          accent={teamPrimary}
+        />
+      )}
+
+      {appointmentOpen && (
+        <CoachAppointmentBookingModal
+          visible={appointmentOpen}
+          onClose={() => setAppointmentOpen(false)}
+          playerUid={profile.uid}
+          playerName={profile.display_name}
+          clubId={profile.profile?.club_id}
+          isMinor={isMinorUser(profile)}
+          parentUid={profile.parental_settings?.parent_uid}
+          accent={teamPrimary}
+        />
+      )}
+
+      {cvPdfOpen && (
+        <ShareableSportsProfileModal
+          visible={cvPdfOpen}
+          onClose={() => setCvPdfOpen(false)}
+          user={profile}
+          clubName={clubName ?? undefined}
+          isMinor={isMinorUser(profile)}
+          accent={teamPrimary}
+        />
+      )}
     </View>
   );
 }

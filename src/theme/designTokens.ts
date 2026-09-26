@@ -5,6 +5,13 @@
 
 import { PRODAY_MASTER, PRODAY_TAGLINE, poleAccentSoft } from './prodayBrand';
 import { APPLE_FONT_STACK } from './appleTypography';
+export {
+  getLiquidGlassTokens,
+  LIQUID_GLASS_TOKENS,
+  LIQUID_GLASS_INTENSITIES,
+  type LiquidGlassTokens,
+  type LiquidGlassIntensity,
+} from './liquidGlass';
 
 export const BRAND = {
   name: 'ProDay',

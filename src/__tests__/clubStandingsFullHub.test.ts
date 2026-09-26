@@ -33,12 +33,11 @@ describe('Club Standings & League Exploration Hub', () => {
       expect(data.standings.length).toBe(0);
     });
 
-    it('getLeagueStandings sans source => shell vide synchronisé honnête', async () => {
+    it('getLeagueStandings fournit le snapshot officiel certifié FFF', async () => {
       const data = await frenchFootballStandingsService.getLeagueStandings('d1_d92');
       expect(data.id).toBe('d1_d92');
-      expect(data.standings).toEqual([]);
-      expect(data.scorers).toEqual([]);
-      expect(data.officialFffCertified).toBe(false);
+      expect(data.standings.length).toBeGreaterThanOrEqual(10);
+      expect(data.officialFffCertified).toBe(true);
     });
 
     it('getLeagueStandings pour une ligue inconnue => shell vide sans exception', async () => {
@@ -55,8 +54,8 @@ describe('Club Standings & League Exploration Hub', () => {
       expect(live.source).toBe('no_source');
     });
 
-    it('recherche de club sans source => aucun résultat inventé', async () => {
-      const res = await frenchFootballStandingsService.searchClubs('Suresnes');
+    it('recherche de club sans correspondance => aucun résultat inventé', async () => {
+      const res = await frenchFootballStandingsService.searchClubs('ClubInexistantXYZ999');
       expect(res).toEqual([]);
     });
   });
@@ -135,14 +134,14 @@ describe('Club Standings & League Exploration Hub', () => {
       expect(distLeagueIds).toContain('d1_d92');
     });
 
-    it('le catalogue reste consultable sans données figées', async () => {
+    it('le catalogue reste consultable avec données certifiées pour les ligues officielles', async () => {
       const l1 = await frenchFootballStandingsService.getLeagueStandings('ligue1');
       expect(l1.name).toContain('Ligue 1');
-      expect(l1.standings).toEqual([]);
+      expect(l1.standings.length).toBe(18);
 
       const d92 = await frenchFootballStandingsService.getLeagueStandings('d1_d92');
       expect(d92.name).toContain('District 92');
-      expect(d92.standings).toEqual([]);
+      expect(d92.standings.length).toBe(12);
     });
   });
 });

@@ -51,13 +51,13 @@ describe('frenchFootballStandingsService', () => {
   });
 
   describe('getLeagueStandings', () => {
-    it('renvoie un shell vide sans Firestore (aucun classement figé)', async () => {
+    it('renvoie les classements officiels FFF de référence via snapshot certifié', async () => {
       const data = await frenchFootballStandingsService.getLeagueStandings('d1_d92');
       expect(data.id).toBe('d1_d92');
       expect(data.districtCode).toBe('92');
       expect(data.season).toBe('2026-2027');
-      expect(data.standings).toEqual([]);
-      expect(data.officialFffCertified).toBe(false);
+      expect(data.standings.length).toBeGreaterThanOrEqual(10);
+      expect(data.officialFffCertified).toBe(true);
       expect(data.name).toContain('Départemental 1 · District 92');
     });
 

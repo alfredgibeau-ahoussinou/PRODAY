@@ -6,8 +6,9 @@ import {
   type ViewStyle,
   Pressable,
 } from 'react-native';
+import { useAppearance } from '../../context/AppearanceContext';
 import { getLiquidGlassTokens } from '../../theme/liquidGlass';
-import { radius, spacing } from '../../theme/designTokens';
+import { radius } from '../../theme/designTokens';
 
 export type LiquidGlassVariant = 'card' | 'header' | 'footer' | 'pill' | 'interactive' | 'input';
 
@@ -26,10 +27,12 @@ export interface LiquidGlassSurfaceProps {
 }
 
 /**
- * Surface Liquid Glass universelle avec Progressive Enhancement.
- * S'adapte automatiquement :
- * - Mode Glass (translucide + flou d'arrière-plan + reflets fins)
- * - Mode Opaque (Obsidian profond + bordure nette à haut contraste)
+ * Surface Liquid Glass universelle Apple-inspired avec Progressive Enhancement.
+ * S'adapte automatiquement et de façon réactive :
+ * - Mode Glass (translucide + flou d'arrière-plan + reflets spéculaires)
+ * - Mode Opaque (Surfaces solides à fort contraste)
+ * - Support dynamique Clair / Sombre
+ * - Respect strict de l'accessibilité système (réduction de transparence)
  */
 export const LiquidGlassSurface: React.FC<LiquidGlassSurfaceProps> = ({
   variant = 'card',
@@ -44,7 +47,10 @@ export const LiquidGlassSurface: React.FC<LiquidGlassSurfaceProps> = ({
   disabled = false,
   children,
 }) => {
-  const tokens = getLiquidGlassTokens(forceOpaque);
+  const { tokens: appearanceTokens, isEffectiveLight, intensity } = useAppearance();
+  const tokens = forceOpaque
+    ? getLiquidGlassTokens(true, intensity, isEffectiveLight)
+    : appearanceTokens;
 
   const containerBorderRadius =
     variant === 'pill'
@@ -53,7 +59,11 @@ export const LiquidGlassSurface: React.FC<LiquidGlassSurfaceProps> = ({
         ? 0
         : radius.xl;
 
-  const bg = active ? tokens.bgActive : variant === 'header' || variant === 'footer' ? tokens.bgElevated : tokens.bg;
+  const bg = active
+    ? tokens.bgActive
+    : variant === 'header' || variant === 'footer'
+      ? tokens.bgElevated
+      : tokens.bg;
   const borderColor = active ? tokens.borderActive : tokens.border;
 
   const containerStyle: ViewStyle = {
@@ -71,6 +81,7 @@ export const LiquidGlassSurface: React.FC<LiquidGlassSurfaceProps> = ({
     containerStyle.borderLeftWidth = 0;
     containerStyle.borderRightWidth = 0;
     containerStyle.borderBottomWidth = 1;
+    containerStyle.borderBottomColor = tokens.border;
   } else if (variant === 'footer') {
     containerStyle.borderBottomWidth = 0;
     containerStyle.borderLeftWidth = 0;

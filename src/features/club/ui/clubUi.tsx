@@ -21,6 +21,9 @@ import { ProDayText } from '../../../components/ui/ProDayText';
 import { Icon } from '../../../components/ui/Icon';
 import type { IconName } from '../../../components/ui/iconNames';
 import { useClubTheme } from '../shell/ClubThemeContext';
+import { useClubShellNav } from '../shell/ClubShellNavContext';
+import type { ClubNavItemId } from '../navigation/clubNavConfig';
+import { AppBackButton } from '../../../components/ui/AppBackButton';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import { tabBarScrollInset } from '../../../navigation/tabBarLayout';
 import {
@@ -71,22 +74,41 @@ export function ClubScreenHeader({
   title,
   subtitle,
   right,
+  showBack,
+  onBack,
+  fallbackNavId,
 }: {
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
+  showBack?: boolean;
+  onBack?: () => void;
+  fallbackNavId?: ClubNavItemId;
 }) {
   const { tokens } = useClubTheme();
+  const shellNav = useClubShellNav();
   const styles = useMemo(() => headerStyles(tokens), [tokens]);
+  const shouldShowBack =
+    showBack ?? (onBack ? true : Boolean(shellNav?.canGoBack || fallbackNavId));
+
   return (
     <View style={styles.wrap}>
-      <View style={styles.textCol}>
-        <ClubText variant="h1">{title}</ClubText>
-        {subtitle ? (
-          <ClubText variant="caption" muted style={styles.sub}>
-            {subtitle}
-          </ClubText>
+      <View style={styles.leftRow}>
+        {shouldShowBack ? (
+          <AppBackButton
+            onPress={onBack}
+            fallbackNavId={fallbackNavId}
+            style={styles.backBtn}
+          />
         ) : null}
+        <View style={styles.textCol}>
+          <ClubText variant="h1">{title}</ClubText>
+          {subtitle ? (
+            <ClubText variant="caption" muted style={styles.sub}>
+              {subtitle}
+            </ClubText>
+          ) : null}
+        </View>
       </View>
       {right}
     </View>
@@ -926,6 +948,16 @@ const headerStyles = (tokens: ClubThemeTokens) =>
       gap: clubSpace.md,
       paddingTop: clubSpace.sm,
       paddingBottom: clubSpace.xs,
+    },
+    leftRow: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+    },
+    backBtn: {
+      alignSelf: 'center',
     },
     textCol: { flex: 1, minWidth: 0, gap: 4 },
     sub: { marginTop: 2 },

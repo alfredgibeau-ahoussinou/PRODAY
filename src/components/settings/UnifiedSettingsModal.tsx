@@ -26,6 +26,7 @@ import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { LiquidGlassMode, LiquidGlassIntensity } from '../../services/appearanceSettings.service';
 
 import { isPlatformAdminEmail } from '../../config/admin';
+import { ReportProblemModal } from '../feedback/ReportProblemModal';
 
 export interface UnifiedSettingsModalProps {
   visible: boolean;
@@ -90,12 +91,21 @@ export const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({
   const isAdmin = !!(effectiveUser?.is_admin || isPlatformAdminEmail(effectiveUser?.email));
   const { confirmDeleteAccount, deleting } = useAccountDeletion();
 
-  // Liquid Glass Context
+  // Liquid Glass & Unified Appearance Context
   const {
+    themeMode,
     glassMode,
     intensity,
+    reduceMotion,
+    isEffectiveGlass,
+    isEffectiveLight,
+    isEffectiveReducedMotion,
+    isReducedTransparency,
+    isReducedMotion,
+    setThemeMode,
     setGlassMode,
     setIntensity,
+    setMotionMode,
     resetAppearance,
     tokens: glassTokens,
   } = useAppearance();
@@ -148,6 +158,7 @@ export const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
   const [resetEmailSending, setResetEmailSending] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // Load preferences from storage on mount
   useEffect(() => {
@@ -403,13 +414,44 @@ export const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({
                 <Text style={styles.sectionHeaderTitle}>EXPÉRIENCE VISUELLE LIQUID GLASS</Text>
               </View>
 
-              {/* Mode Selection */}
+              {/* Theme Mode Selection */}
               <View style={styles.appleCard}>
-                <Text style={styles.cardSectionTitle}>Mode d'affichage</Text>
+                <Text style={styles.cardSectionTitle}>Thème d'affichage</Text>
                 <View style={styles.pillSelectorRow}>
                   {(
                     [
                       { id: 'system', label: 'Système' },
+                      { id: 'dark', label: 'Sombre' },
+                      { id: 'light', label: 'Clair' },
+                    ] as const
+                  ).map((t) => {
+                    const active = themeMode === t.id;
+                    return (
+                      <PressableSpring
+                        key={t.id}
+                        onPress={async () => {
+                          prodayHaptics.selection();
+                          await setThemeMode(t.id);
+                        }}
+                        scaleTo={0.96}
+                        style={[styles.pillOption, active && styles.pillOptionActive]}
+                      >
+                        <Text style={[styles.pillOptionText, active && styles.pillOptionTextActive]}>
+                          {t.label}
+                        </Text>
+                      </PressableSpring>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.separator} />
+
+                {/* Glass Mode Selection */}
+                <Text style={styles.cardSectionTitle}>Rendu Liquid Glass</Text>
+                <View style={styles.pillSelectorRow}>
+                  {(
+                    [
+                      { id: 'system', label: 'Automatique' },
                       { id: 'glass', label: 'Verre Dépoli' },
                       { id: 'opaque', label: 'Opaque' },
                     ] as const
@@ -463,7 +505,56 @@ export const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({
                     );
                   })}
                 </View>
+
+                <View style={styles.separator} />
+
+                {/* Motion Mode Selection */}
+                <Text style={styles.cardSectionTitle}>Animations & Effets de mouvement</Text>
+                <View style={styles.pillSelectorRow}>
+                  {(
+                    [
+                      { id: 'auto', label: 'Standard' },
+                      { id: 'reduce', label: 'Réduit' },
+                    ] as const
+                  ).map((mot) => {
+                    const active = reduceMotion === mot.id;
+                    return (
+                      <PressableSpring
+                        key={mot.id}
+                        onPress={async () => {
+                          prodayHaptics.selection();
+                          await setMotionMode(mot.id);
+                        }}
+                        scaleTo={0.96}
+                        style={[styles.pillOption, active && styles.pillOptionActive]}
+                      >
+                        <Text style={[styles.pillOptionText, active && styles.pillOptionTextActive]}>
+                          {mot.label}
+                        </Text>
+                      </PressableSpring>
+                    );
+                  })}
+                </View>
               </View>
+
+              {/* Accessibility Notice if OS overrides */}
+              {(isReducedTransparency || isReducedMotion) && (
+                <View style={[styles.appleCard, { borderColor: '#F59E0B', borderWidth: 1, backgroundColor: 'rgba(245, 158, 11, 0.08)', marginTop: 10 }]}>
+                  <Text style={[styles.cardSectionTitle, { color: '#F59E0B', marginBottom: 4 }]}>
+                    Priorité Accessibilité Matérielle / OS
+                  </Text>
+                  {isReducedTransparency && (
+                    <Text style={[styles.settingHint, { color: '#D97706', marginBottom: 4 }]}>
+                      • Réduction de transparence système active : mode opaque automatique pour un contraste optimal.
+                    </Text>
+                  )}
+                  {isReducedMotion && (
+                    <Text style={[styles.settingHint, { color: '#D97706' }]}>
+                      • Mouvement réduit système actif : les animations sont simplifiées sans effet de parallaxe.
+                    </Text>
+                  )}
+                </View>
+              )}
 
               {/* Live Preview Card */}
               <View style={styles.sectionHeaderRow}>
@@ -481,15 +572,19 @@ export const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({
                 >
                   <View style={styles.previewHeaderRow}>
                     <View style={styles.previewDotWrap}>
-                      <View style={[styles.previewDot, { backgroundColor: '#30D158' }]} />
-                      <Text style={styles.previewBadgeText}>Rendu dynamique</Text>
+                      <View style={[styles.previewDot, { backgroundColor: isEffectiveGlass ? '#00F0A8' : '#3B82F6' }]} />
+                      <Text style={[styles.previewBadgeText, { color: glassTokens.text }]}>
+                        {isEffectiveGlass ? 'Liquid Glass Actif' : 'Mode Opaque de Sécurité'}
+                      </Text>
                     </View>
-                    <Text style={styles.previewModeText}>
-                      Mode: {glassMode} · Intensité: {intensity}
+                    <Text style={[styles.previewModeText, { color: glassTokens.textMuted }]}>
+                      {isEffectiveLight ? 'Clair' : 'Sombre'} · {intensity}
                     </Text>
                   </View>
-                  <Text style={styles.previewCardTitle}>Surface Liquid Glass Apple</Text>
-                  <Text style={styles.previewCardSubtitle}>
+                  <Text style={[styles.previewCardTitle, { color: glassTokens.text }]}>
+                    Surface Liquid Glass Apple
+                  </Text>
+                  <Text style={[styles.previewCardSubtitle, { color: glassTokens.textMuted }]}>
                     Flou optique natif, gestion dynamique du contraste et bordures translucides.
                   </Text>
                 </View>
@@ -799,6 +894,32 @@ export const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({
                 </PressableSpring>
               </View>
 
+              {/* Assistance & Retour d'Essai Club */}
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionHeaderTitle}>ASSISTANCE & RETOUR D'ESSAI</Text>
+              </View>
+              <View style={styles.appleCard}>
+                <PressableSpring
+                  onPress={() => {
+                    prodayHaptics.selection();
+                    setShowReportModal(true);
+                  }}
+                  scaleTo={0.98}
+                  style={styles.actionRow}
+                >
+                  <View style={{ marginRight: 10 }}>
+                    <Icon name="alert-circle" size={18} color="#FF9F43" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.actionRowText}>Signaler un problème technique</Text>
+                    <Text style={styles.actionRowHint}>
+                      Transmettre une anomalie constatée lors de l'essai club
+                    </Text>
+                  </View>
+                  <Icon name="chevron-forward" size={16} color="#636366" />
+                </PressableSpring>
+              </View>
+
               {/* Session Management */}
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionHeaderTitle}>GESTION DE SESSION</Text>
@@ -871,6 +992,13 @@ export const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({
           </View>
         </ScrollView>
       </View>
+
+      <ReportProblemModal
+        visible={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        userRole={role}
+        currentRoute="Paramètres"
+      />
     </AnimatedModalShell>
   );
 };
@@ -923,8 +1051,12 @@ const styles = StyleSheet.create({
     color: '#E5E5EA',
   },
   doneButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 999,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },

@@ -467,3 +467,44 @@ export function clubNavFromDashboard(view: DashboardDeepLink): ClubNavItemId | n
   if (view === 'smart_tactics') return 'matches';
   return null;
 }
+
+/**
+ * Fallback logique de navigation club en l'absence d'historique in-app.
+ * - Matchs, entraînements, événements, classements -> 'calendar'
+ * - Joueurs, coachs, adhésions -> 'teams'
+ * - Outils secondaires du menu -> 'plus' (Menu)
+ * - Onglets racines -> 'today' (Accueil)
+ */
+export function resolveClubFallbackNav(id: ClubNavItemId): ClubNavItemId {
+  const canonical = canonicalizeClubNav(id);
+  switch (canonical) {
+    case 'today':
+      return 'today';
+    case 'calendar':
+    case 'teams':
+    case 'plus':
+      return 'today';
+    case 'matches':
+    case 'trainings':
+    case 'events':
+    case 'standings':
+      return 'calendar';
+    case 'players':
+    case 'coaches':
+    case 'memberships':
+      return 'teams';
+    case 'communication':
+    case 'assistant':
+    case 'licenses':
+    case 'finances':
+    case 'sponsoring':
+    case 'pack':
+    case 'club':
+    case 'notifications':
+    case 'permissions':
+    case 'video':
+    case 'carpool':
+    default:
+      return 'plus';
+  }
+}

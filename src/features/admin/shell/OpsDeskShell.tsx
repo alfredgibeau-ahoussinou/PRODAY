@@ -59,6 +59,7 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
 
   const [section, setSection] = useState<AdminNavSectionId>('overview');
   const [focusId, setFocusId] = useState<string | undefined>();
+  const [history, setHistory] = useState<{ section: AdminNavSectionId; focusId?: string }[]>([]);
   const [commandOpen, setCommandOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [direction, setDirection] = useState<AdminNavDirection>(1);
@@ -66,14 +67,38 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
   sectionRef.current = section;
 
   const navigate = useCallback(
-    (next: AdminNavSectionId, nextFocus?: string) => {
-      const dir = recordNav(sectionRef.current, next);
+    (next: AdminNavSectionId, nextFocus?: string, options?: { replace?: boolean }) => {
+      const currentSection = sectionRef.current;
+      if (!options?.replace && (next !== currentSection || nextFocus !== focusId)) {
+        setHistory((prev) => [...prev.slice(-29), { section: currentSection, focusId }]);
+      }
+      const dir = recordNav(currentSection, next);
       setDirection(dir);
       setSection(next);
       setFocusId(nextFocus);
     },
-    [recordNav],
+    [recordNav, focusId],
   );
+
+  const canGoBack = history.length > 0 || section !== 'overview';
+
+  const goBack = useCallback(() => {
+    if (history.length > 0) {
+      const prev = history[history.length - 1];
+      setHistory((h) => h.slice(0, -1));
+      const dir = recordNav(sectionRef.current, prev.section);
+      setDirection(dir);
+      setSection(prev.section);
+      setFocusId(prev.focusId);
+      return;
+    }
+    if (section !== 'overview') {
+      const dir = recordNav(sectionRef.current, 'overview');
+      setDirection(dir);
+      setSection('overview');
+      setFocusId(undefined);
+    }
+  }, [history, section, recordNav]);
 
   const openCommand = useCallback(() => setCommandOpen(true), []);
 
@@ -133,6 +158,8 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
               actionCount={data.workQueue.length}
               topInset={topInset}
               showMenuButton={!expandedRail}
+              canGoBack={canGoBack}
+              onBack={goBack}
               onOpenCommand={openCommand}
               onOpenOverview={() => navigate('overview')}
               onOpenMenu={() => setMenuOpen(true)}

@@ -379,7 +379,7 @@ export async function processFffStandingsSync(
   const apiKey =
     process.env.EXTERNAL_SCORES_API_KEY ||
     (functions.config() as { external_scores?: { api_key?: string } } | undefined)?.external_scores?.api_key ||
-    '';
+    '911eb314b2a64403c427fe0455b4e753';
   const baseUrl =
     process.env.EXTERNAL_SCORES_API_URL || 'https://v3.football.api-sports.io';
   const dofaMap = parseDofaMap();

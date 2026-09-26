@@ -26,6 +26,7 @@ import {
 } from '../../services/fffScraper.service';
 import { fffCalendarSyncService } from '../../services/fffCalendarSync.service';
 import { formatSyncTimestamp } from '../../features/club/ui/clubStandingsModel';
+import { FffAuthoritativeDataService } from '../../services/fffAuthoritativeData.service';
 
 export interface LeagueStandingRow {
   rank: number;
@@ -250,6 +251,14 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
   const displayedSyncStatus = currentLeagueData?.syncStatus ?? syncStatus;
   const syncTimestampLabel = formatSyncTimestamp(currentLeagueData?.lastSyncAt);
 
+  const freshnessBadge = useMemo(() => {
+    return FffAuthoritativeDataService.computeFreshnessBadge(
+      currentLeagueData?.lastSyncAt,
+      currentLeagueData?.syncHealth ?? (currentLeagueData?.syncStatus === 'live' ? 'ok' : 'unavailable'),
+      currentLeagueData?.source?.includes('national') ? 'API Nationale' : 'FFF DOFA',
+    );
+  }, [currentLeagueData]);
+
 
 
 
@@ -316,10 +325,10 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
           <Ionicons name="shield-checkmark" size={15} color="#10B981" />
           <Text style={styles.fffBadgeText}>Source Officielle FFF & Districts</Text>
           {currentLeagueData ? (
-            <View style={[styles.certifiedBadge, { backgroundColor: SYNC_STATUS_COLORS[displayedSyncStatus]?.bg ?? 'transparent' }]}>
-              <View style={[styles.syncDot, { backgroundColor: SYNC_STATUS_COLORS[displayedSyncStatus]?.dot ?? '#9CA3AF' }]} />
-              <Text style={[styles.certifiedBadgeText, { color: SYNC_STATUS_COLORS[displayedSyncStatus]?.text ?? '#9CA3AF' }]}>
-                {SYNC_STATUS_LABELS[displayedSyncStatus] ?? '● —'}
+            <View style={[styles.certifiedBadge, { backgroundColor: freshnessBadge.bgColor }]}>
+              <View style={[styles.syncDot, { backgroundColor: freshnessBadge.dotColor }]} />
+              <Text style={[styles.certifiedBadgeText, { color: freshnessBadge.textColor }]}>
+                {freshnessBadge.label}
               </Text>
             </View>
           ) : null}

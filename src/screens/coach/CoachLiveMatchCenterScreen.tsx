@@ -14,7 +14,7 @@ import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { teamEventsService } from '../../services/teamEvents.service';
 import type { TeamEvent } from '../../models/TeamEvent';
 import { countRsvpYes, getPendingInviteeUids, isCoachMatchEvent } from '../../models/TeamEvent';
-import { resolveLiveState } from '../../utils/matchLive';
+import { resolveLiveState, formatMatchScoreSourceLabel } from '../../utils/matchLive';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
@@ -573,6 +573,11 @@ export const CoachLiveMatchCenterScreen: React.FC = () => {
                 <CoachText variant="caption" muted style={{ fontSize: 11 }}>
                   {formatCalendarDate(selectedMatch.starts_at)}
                 </CoachText>
+                {activeLive ? (
+                  <CoachText variant="caption" muted style={{ fontSize: 10, marginTop: 2, textAlign: 'center' }}>
+                    {formatMatchScoreSourceLabel(activeLive)}{activeLive.minute != null ? ` · ${activeLive.minute}'` : ''}
+                  </CoachText>
+                ) : null}
               </View>
 
               <View style={styles.teamCol}>

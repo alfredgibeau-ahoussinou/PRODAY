@@ -2074,6 +2074,150 @@ service cloud.firestore {
     }
 
     /**
+     * Espace Joueur — Collections des 12 fonctionnalités.
+     */
+    match /player_feedback_requests/{requestId} {
+      allow read: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        resource.data.coach_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.player_uid == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        resource.data.coach_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /individual_training_programs/{programId} {
+      allow read: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        resource.data.coach_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow create, update: if isSignedIn() && (
+        request.resource.data.player_uid == request.auth.uid ||
+        request.resource.data.coach_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /player_journal_entries/{entryId} {
+      allow read: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        (resource.data.is_shared == true && resource.data.shared_with_coach_uid == request.auth.uid)
+      );
+      allow create: if isSignedIn() && request.resource.data.player_uid == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.player_uid == request.auth.uid;
+    }
+
+    match /player_extra_sessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.organizer_uid == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.organizer_uid == request.auth.uid);
+    }
+
+    match /player_mid_season_reviews/{reviewId} {
+      allow read: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.player_uid == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /player_assigned_equipment/{eqId} {
+      allow read: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow create: if isStaffOrAdmin();
+      allow update: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /coach_appointments/{aptId} {
+      allow read: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        resource.data.coach_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.player_uid == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        resource.data.coach_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /coach_availability_slots/{slotId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin();
+      allow delete: if isStaffOrAdmin();
+    }
+
+    match /event_player_checklists/{checklistKey} {
+      allow read: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow create, update: if isSignedIn() && request.resource.data.player_uid == request.auth.uid;
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.player_uid == request.auth.uid);
+    }
+
+    match /player_progression_profiles/{playerUid} {
+      allow read: if isSignedIn() && (
+        playerUid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow create, update: if isSignedIn() && (
+        playerUid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /player_progression_objectives/{objectiveId} {
+      allow read: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow update: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /player_xp_ledger/{ledgerId} {
+      allow read: if isSignedIn() && (
+        resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.player_uid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    /**
      * Identifiants API Veo enregistrés par le club depuis l'application.
      *
      * Aucun client n'y accède : seules les Cloud Functions (SDK admin) lisent et écrivent

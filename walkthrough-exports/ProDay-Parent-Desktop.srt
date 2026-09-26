@@ -1,0 +1,52 @@
+1
+00:00:00,000 --> 00:00:00,000
+Début de la capture
+
+2
+00:00:00,000 --> 00:00:03,002
+Connexion au pôle Parent (session de démonstration déjà ouverte, mot de passe masqué)
+
+3
+00:00:03,002 --> 00:00:25,022
+Accueil parent — enfants liés, alertes, invitations et demandes de temps d'écran
+
+4
+00:00:25,022 --> 00:00:57,824
+Enfant — fiche de l'enfant : statistiques, agenda et suivi
+
+5
+00:00:57,824 --> 00:01:13,603
+Second enfant — bascule entre les deux profils rattachés au compte
+
+6
+00:01:13,603 --> 00:01:30,386
+Guide IA — suggestions et conseils pour accompagner l'enfant
+
+7
+00:01:30,386 --> 00:01:46,155
+Menu — hub « Outils famille » : messages, agenda, trajet
+
+8
+00:01:46,155 --> 00:02:02,923
+Messages — contacts approuvés et conversations de l'enfant
+
+9
+00:02:02,923 --> 00:02:19,688
+Agenda — réponse de présence « Je viens / Absent » et signalement de retard
+
+10
+00:02:19,688 --> 00:02:36,458
+Trajet — suivi live du covoiturage et partage de position
+
+11
+00:02:36,458 --> 00:02:53,241
+Profil parent — langue de l'application, mot de passe et documents légaux
+
+12
+00:02:53,241 --> 00:03:06,026
+Retour à l'accueil — synthèse du parcours parent
+
+13
+00:03:06,026 --> 00:03:07,226
+Fin de la visite guidée du pôle Parent.
+

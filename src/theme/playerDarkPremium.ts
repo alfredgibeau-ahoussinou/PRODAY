@@ -11,6 +11,7 @@ export const PLAYER_DARK = {
   borderStrong: 'rgba(255,255,255,0.14)',
   text: '#FFFFFF',
   textMuted: '#8B8B9A',
+  textSecondary: '#8B8B9A',
   textDim: 'rgba(139,139,154,0.72)',
   accent: '#00E676',
   accentAlt: '#2DD4BF',

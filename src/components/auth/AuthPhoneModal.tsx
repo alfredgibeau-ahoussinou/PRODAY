@@ -69,6 +69,18 @@ export const AuthPhoneModal: React.FC<AuthPhoneModalProps> = ({
     };
   }, [resendCooldown]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible]);
+
   const resetState = () => {
     setStep('phone');
     setPhoneNumber('');
@@ -398,7 +410,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   closeBtn: {
-    padding: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorBox: {
     flexDirection: 'row',

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { withAlpha } from '../../utils/coachTeamTheme';
-import { Dimensions, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Dimensions, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { CoachText } from './CoachText';
@@ -51,6 +51,18 @@ export function CoachAccentColorPickerModal({
     onClose();
   }, [onClose]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, handleClose]);
+
   const handleApply = useCallback(() => {
     onApply(draftColor);
     handleClose();
@@ -64,8 +76,12 @@ export function CoachAccentColorPickerModal({
             <CoachText variant="section" style={styles.title}>
               {t('coach.portal.theme.pickColor')}
             </CoachText>
-            <Pressable onPress={handleClose} hitSlop={12} accessibilityRole="button"
-              accessibilityLabel="Fermer">
+            <Pressable
+              onPress={handleClose}
+              style={styles.closeBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer"
+            >
               <Icon name="close" size={22} color={tokens.muted} />
             </Pressable>
           </View>
@@ -162,6 +178,12 @@ function createStyles(tokens: CoachThemeTokens, sheetMode: boolean) {
       gap: spacing.sm,
     },
     title: { flex: 1, fontWeight: '800', color: tokens.foreground },
+    closeBtn: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     segmentRow: {
       flexDirection: 'row',
       gap: spacing.sm,

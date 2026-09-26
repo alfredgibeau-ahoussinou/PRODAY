@@ -1404,7 +1404,7 @@ export const CoachSquadScreen: React.FC = () => {
         <View style={[styles.root, { backgroundColor: tokens.bg }]}>
           <SheetHeader title="Classement" onClose={() => setStandingsVisible(false)} />
           <ScrollView contentContainerStyle={styles.sheetBody}>
-            <CoachStandingsTable compact={false} />
+            <CoachStandingsTable compact={false} teamId={teamId} teamName={teamName} />
           </ScrollView>
         </View>
       </Modal>
@@ -2011,9 +2011,9 @@ const createStyles = (tokens: CoachThemeTokens) =>
     sheetHeaderEmbedded: { paddingTop: proSpace.lg, paddingHorizontal: 0 },
     sheetTitle: { ...proType.h2, flex: 1, minWidth: 0 },
     closeBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: proRadius.pill,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       borderWidth: 1,
       alignItems: 'center',
       justifyContent: 'center',

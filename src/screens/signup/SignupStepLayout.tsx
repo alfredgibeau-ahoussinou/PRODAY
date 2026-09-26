@@ -182,8 +182,8 @@ function createStyles(contentMaxWidth: number, v: SignupVisualChrome) {
       gap: 16,
     },
     navBtn: {
-      width: 42,
-      height: 42,
+      width: 44,
+      height: 44,
       borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
@@ -192,8 +192,8 @@ function createStyles(contentMaxWidth: number, v: SignupVisualChrome) {
       borderColor: 'rgba(255, 255, 255, 0.12)',
     },
     navSpacer: {
-      width: 42,
-      height: 42,
+      width: 44,
+      height: 44,
     },
     progressContainer: {
       flex: 1,

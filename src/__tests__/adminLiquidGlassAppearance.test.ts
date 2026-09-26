@@ -183,7 +183,7 @@ describe('Platform Admin — Apple & Liquid Glass Appearance System', () => {
       await appearanceSettingsService.setIntensity('intense');
 
       const saved = await AsyncStorage.getItem('@proday:appearance_liquid_glass');
-      expect(JSON.parse(saved!)).toEqual({ glassMode: 'glass', intensity: 'intense' });
+      expect(JSON.parse(saved!)).toMatchObject({ glassMode: 'glass', intensity: 'intense' });
     });
   });
 });

@@ -30,6 +30,8 @@ import { EventLiveStatsScreen } from './EventLiveStatsScreen';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
 import { EventCarpoolPanel } from '../components/team/EventCarpoolPanel';
 import { LateReportControl } from '../components/team/LateReportControl';
+import { EventEquipmentChecklistPanel } from '../components/team/EventEquipmentChecklistPanel';
+import { PlayerFeedbackModal } from '../components/player/PlayerFeedbackModal';
 import { PushScreenTransition, PressableSpring } from '../components/motion';
 import { ProDayText } from '../components/ui/ProDayText';
 import { PLAYER_DARK } from '../theme/playerDarkPremium';
@@ -61,6 +63,7 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
   const [saving, setSaving] = useState(false);
   const [absenceNote, setAbsenceNote] = useState('');
   const [showAbsenceNote, setShowAbsenceNote] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -439,6 +442,43 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
             </View>
           )}
 
+          {/* CHECKLIST ÉQUIPEMENT D'ÉVÉNEMENT (PERSONNELLE & REQUIS COACH) */}
+          {profile ? (
+            <EventEquipmentChecklistPanel
+              eventId={event.id}
+              eventType={event.event_type}
+              playerUid={profile.uid}
+              accent={PLAYER_DARK.accent}
+            />
+          ) : null}
+
+          {/* DEMANDER UN FEEDBACK AU COACH SUR CET ÉVÉNEMENT */}
+          {profile && (event.club_id || isStaff) ? (
+            <TouchableOpacity
+              style={styles.askFeedbackBtn}
+              onPress={() => {
+                prodayHaptics.selection();
+                setShowFeedbackModal(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={styles.askFeedbackLeft}>
+                <View style={styles.askFeedbackIconWrap}>
+                  <Ionicons name="chatbubble-ellipses" size={17} color={PLAYER_DARK.accent} />
+                </View>
+                <View style={styles.askFeedbackTextCol}>
+                  <ProDayText style={styles.askFeedbackTitle}>
+                    Une question sur ce rendez-vous ?
+                  </ProDayText>
+                  <ProDayText style={styles.askFeedbackSub}>
+                    Demander un feedback personnalisé à votre coach
+                  </ProDayText>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={PLAYER_DARK.textMuted} />
+            </TouchableOpacity>
+          ) : null}
+
           {/* 4. COMPOSITION D'ÉQUIPE (SI PUBLIÉE) */}
           {event.lineup && (
             <View style={styles.sectionCard}>
@@ -566,11 +606,65 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
           />
         ) : null}
       </PushScreenTransition>
+
+      {profile ? (
+        <PlayerFeedbackModal
+          visible={showFeedbackModal}
+          onClose={() => setShowFeedbackModal(false)}
+          playerUid={profile.uid}
+          playerName={profile.display_name}
+          clubId={event.club_id}
+          teamId={event.team_id}
+          initialKind="event_feedback"
+          initialEventId={event.id}
+          initialEventTitle={event.title}
+          initialEventDate={event.starts_at ? new Date(event.starts_at) : undefined}
+          accent={PLAYER_DARK.accent}
+        />
+      ) : null}
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  askFeedbackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+    marginVertical: 8,
+  },
+  askFeedbackLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  askFeedbackIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(76, 139, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  askFeedbackTextCol: {
+    flex: 1,
+  },
+  askFeedbackTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: PLAYER_DARK.text,
+  },
+  askFeedbackSub: {
+    fontSize: 11,
+    color: PLAYER_DARK.textMuted,
+    marginTop: 2,
+  },
   container: {
     flex: 1,
     backgroundColor: PLAYER_DARK.bg,

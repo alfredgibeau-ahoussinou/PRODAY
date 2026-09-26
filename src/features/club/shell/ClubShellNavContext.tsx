@@ -1,8 +1,16 @@
 import React, { createContext, useContext } from 'react';
 import type { ClubCreateActionId, ClubNavItemId } from '../navigation/clubNavConfig';
 
-type ClubShellNavValue = {
-  requestNav: (id: ClubNavItemId) => void;
+export type ClubNavOptions = {
+  replace?: boolean;
+  clearHistory?: boolean;
+};
+
+export type ClubShellNavValue = {
+  history?: ClubNavItemId[];
+  canGoBack?: boolean;
+  goBack?: () => void;
+  requestNav: (id: ClubNavItemId, options?: ClubNavOptions) => void;
   openCreate?: (action?: ClubCreateActionId) => void;
   openHelp?: () => void;
   /** Ouvre le Pôle Président (dirigeants autorisés). */
@@ -26,6 +34,9 @@ type ClubShellNavValue = {
 const ClubShellNavContext = createContext<ClubShellNavValue | null>(null);
 
 export function ClubShellNavProvider({
+  history = [],
+  canGoBack = false,
+  goBack = () => {},
   requestNav,
   openCreate,
   openHelp,
@@ -44,6 +55,9 @@ export function ClubShellNavProvider({
   return (
     <ClubShellNavContext.Provider
       value={{
+        history,
+        canGoBack,
+        goBack,
         requestNav,
         openCreate,
         openHelp,

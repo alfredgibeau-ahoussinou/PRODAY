@@ -21,6 +21,7 @@ import {
   canonicalizeClubNav,
   clubNavFromDashboard,
   clubNavFromTab,
+  resolveClubFallbackNav,
   CLUB_CREATE_ACTIONS,
   CLUB_MENU_DEST_IDS,
   CLUB_PRIMARY_NAV_IDS,
@@ -123,6 +124,7 @@ function ClubAppShellInner({
   const [navId, setNavId] = useState<ClubNavItemId>(() =>
     canonicalizeClubNav(clubNavFromTab(activeTab)),
   );
+  const [history, setHistory] = useState<ClubNavItemId[]>([]);
   const intendedNavRef = useRef<ClubNavItemId | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createFormAction, setCreateFormAction] = useState<ClubCreateActionId | null>(null);
@@ -133,23 +135,91 @@ function ClubAppShellInner({
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const applyNav = useCallback((id: ClubNavItemId) => {
-    const next = canonicalizeClubNav(id);
-    noteNav(next);
-    intendedNavRef.current = next;
-    setNavId(next);
-    if (next !== 'teams') setSelectedTeamId(null);
-    if (next !== 'players') setSelectedPlayerUid(null);
-    // On oublie l'événement ciblé dès qu'on quitte le calendrier, pour ne pas le rouvrir
-    // à chaque retour sur l'onglet.
-    if (next !== 'calendar') setSelectedEventId(null);
-    const nextTab = tabFromClubNav(next);
-    if (nextTab !== activeTab) {
-      onTabChange(nextTab);
-    } else {
-      intendedNavRef.current = null;
+  const applyNav = useCallback(
+    (id: ClubNavItemId, options?: { replace?: boolean; clearHistory?: boolean }) => {
+      const next = canonicalizeClubNav(id);
+      const current = canonicalizeClubNav(navId);
+
+      if (options?.clearHistory) {
+        setHistory([]);
+      } else if (options?.replace) {
+        // do not append to history
+      } else if (next !== current) {
+        setHistory((prev) => [...prev.slice(-29), current]);
+      }
+
+      noteNav(next);
+      intendedNavRef.current = next;
+      setNavId(next);
+      if (next !== 'teams') setSelectedTeamId(null);
+      if (next !== 'players') setSelectedPlayerUid(null);
+      // On oublie l'événement ciblé dès qu'on quitte le calendrier, pour ne pas le rouvrir
+      // à chaque retour sur l'onglet.
+      if (next !== 'calendar') setSelectedEventId(null);
+      const nextTab = tabFromClubNav(next);
+      if (nextTab !== activeTab) {
+        onTabChange(nextTab);
+      } else {
+        intendedNavRef.current = null;
+      }
+    },
+    [activeTab, navId, noteNav, onTabChange, setSelectedTeamId],
+  );
+
+  const fallback = resolveClubFallbackNav(navId);
+  const hasFallback =
+    canonicalizeClubNav(fallback) !== canonicalizeClubNav(navId);
+  const canGoBack =
+    Boolean(selectedPlayerUid) ||
+    Boolean(selectedTeamId) ||
+    history.length > 0 ||
+    hasFallback;
+
+  const goBack = useCallback(() => {
+    if (selectedPlayerUid) {
+      setSelectedPlayerUid(null);
+      return;
     }
-  }, [activeTab, noteNav, onTabChange, setSelectedTeamId]);
+    if (selectedTeamId) {
+      setSelectedTeamId(null);
+      return;
+    }
+    if (history.length > 0) {
+      const previous = history[history.length - 1];
+      setHistory((prev) => prev.slice(0, -1));
+      const next = canonicalizeClubNav(previous);
+      noteNav(next);
+      intendedNavRef.current = next;
+      setNavId(next);
+      if (next !== 'teams') setSelectedTeamId(null);
+      if (next !== 'players') setSelectedPlayerUid(null);
+      if (next !== 'calendar') setSelectedEventId(null);
+      const nextTab = tabFromClubNav(next);
+      if (nextTab !== activeTab) {
+        onTabChange(nextTab);
+      } else {
+        intendedNavRef.current = null;
+      }
+      return;
+    }
+
+    const fb = resolveClubFallbackNav(navId);
+    if (fb && canonicalizeClubNav(fb) !== canonicalizeClubNav(navId)) {
+      const next = canonicalizeClubNav(fb);
+      noteNav(next);
+      intendedNavRef.current = next;
+      setNavId(next);
+      if (next !== 'teams') setSelectedTeamId(null);
+      if (next !== 'players') setSelectedPlayerUid(null);
+      if (next !== 'calendar') setSelectedEventId(null);
+      const nextTab = tabFromClubNav(next);
+      if (nextTab !== activeTab) {
+        onTabChange(nextTab);
+      } else {
+        intendedNavRef.current = null;
+      }
+    }
+  }, [selectedPlayerUid, selectedTeamId, history, navId, noteNav, activeTab, onTabChange, setSelectedTeamId]);
 
   const offerId = resolveClubOfferId(profile);
   const formulaLabel = offerId ? CLUB_OFFERS[offerId].label : 'Sans formule';
@@ -203,8 +273,11 @@ function ClubAppShellInner({
     if (dest) applyNav(dest);
   }, [pendingDashboardView, clearPendingDashboard, applyNav]);
 
-  const onSelect = (id: ClubNavItemId) => {
-    applyNav(id);
+  const onSelect = (
+    id: ClubNavItemId,
+    options?: { replace?: boolean; clearHistory?: boolean },
+  ) => {
+    applyNav(id, options);
   };
 
   const onOpenHelp = () => {
@@ -275,6 +348,9 @@ function ClubAppShellInner({
 
   return (
     <ClubShellNavProvider
+      history={history}
+      canGoBack={canGoBack}
+      goBack={goBack}
       requestNav={onSelect}
       openCreate={openCreate}
       openHelp={onOpenHelp}
@@ -309,6 +385,9 @@ function ClubAppShellInner({
             title={pageTitle}
             visible={wide}
             clubName={clubName}
+            showBack={canGoBack}
+            onBack={goBack}
+            fallbackNavId={fallback}
             onNotifications={() => onSelect('notifications')}
             onSearch={() => setSearchOpen(true)}
             onProfile={() => onSelect('club')}

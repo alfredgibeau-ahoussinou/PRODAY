@@ -2,6 +2,7 @@
 ios
 android
 website
+desktop
 functions
 docs
 e2e
@@ -13,6 +14,11 @@ firebase
 .netlify
 dist
 .git
+presentation
+walkthrough-exports
+walkthrough-silent
+scratch
+.venv-intro
 
 # Artefacts & caches
 .expo
@@ -43,6 +49,8 @@ firestore-debug.log
 assets/social
 assets/mockups
 assets/diagrams
+/proday_*_walkthrough.mp4
+*.zip
 
 # Divers
 **/.DS_Store

@@ -654,11 +654,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconBtn: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 19,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
   kickerBadge: {

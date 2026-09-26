@@ -69,3 +69,26 @@ export function canonicalizeParentNav(id: ParentTabId | 'profil'): ParentTabId {
   if (id === 'profil') return 'enfant';
   return id;
 }
+
+/**
+ * Fallback logique de navigation parent en l'absence d'historique in-app.
+ * - Outils secondaires (messages, agenda, trajet) -> 'plus' (Menu)
+ * - Onglets primaires (enfant, guide, plus, reglages) -> 'home' (Accueil)
+ */
+export function resolveParentFallbackNav(id: ParentTabId): ParentTabId {
+  const canonical = canonicalizeParentNav(id);
+  switch (canonical) {
+    case 'home':
+      return 'home';
+    case 'messages':
+    case 'agenda':
+    case 'trajet':
+      return 'plus';
+    case 'enfant':
+    case 'guide':
+    case 'plus':
+    case 'reglages':
+    default:
+      return 'home';
+  }
+}

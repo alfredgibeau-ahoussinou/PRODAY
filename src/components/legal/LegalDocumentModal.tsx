@@ -1,5 +1,5 @@
-import React from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Modal, Platform, StyleSheet, View } from 'react-native';
 import { LegalDocumentScreen } from '../../screens/LegalDocumentScreen';
 import type { LegalDocumentId } from '../../content/legalDocuments';
 
@@ -18,6 +18,18 @@ export const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
   documentId,
   onClose,
 }) => {
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
+
   if (!visible || !documentId) return null;
 
   return (

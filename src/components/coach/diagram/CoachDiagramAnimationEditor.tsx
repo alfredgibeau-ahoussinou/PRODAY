@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -361,6 +362,18 @@ export const CoachDiagramAnimationEditor: React.FC<CoachDiagramAnimationEditorPr
 
   const pitchW = Math.min(winWidth - 32, 540);
   const pitchH = Math.round((pitchW * 64) / 100);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
 
   if (!visible) return null;
 
@@ -798,9 +811,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   miniBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -811,10 +824,11 @@ const styles = StyleSheet.create({
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 5,
     backgroundColor: proSemantic.success,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    minHeight: 44,
     borderRadius: proRadius.sm,
   },
   saveBtnText: {
@@ -823,9 +837,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   closeBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',

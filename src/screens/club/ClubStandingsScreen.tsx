@@ -1,10 +1,13 @@
 /**
- * Espace Club › Hub des Classements FFF
+ * Espace Club › Hub des Classements & Ligues FFF
  * Dual-tab Apple Design :
- * 1. « Notre Poule · FC ProDay (R1 Poule B) » : classement complet officiel, buteurs, forme & règles FFF
- * 2. « Toutes les Ligues de France » : explorateur exhaustif L1, L2, N1, N2, N3, Régionaux IDF & Districts
+ * 1. « Mon Club » : Suivi de toutes les équipes du club (Seniors, U19, U17, Féminines...),
+ *    sélecteur multi-compétitions (championnat vs coupe), tableau de poule complet avec
+ *    optimisation mobile et fiches publiques des adversaires.
+ * 2. « Explorer » : Annuaire exhaustif des championnats et clubs FFF de France avec
+ *    filtres géographiques (région, district), catégories d'âge et fiches publiques minimales.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +21,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { useClubLeagueId } from '../../features/club/hooks/useClubLeagueId';
+import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubText } from '../../features/club/ui/clubUi';
 import { EliteLeagueStandings } from '../../components/matchs/EliteLeagueStandings';
@@ -29,31 +33,61 @@ import {
   frenchFootballStandingsService,
   type FrenchLeagueData,
 } from '../../services/frenchFootballStandings.service';
+import {
+  buildClubTeamsOverviewList,
+  isClubStandingRow,
+  type ClubTeamOverviewItem,
+  type PublicTeamSportingRecord,
+} from '../../features/club/ui/clubStandingsModel';
+import { ClubTeamStandingsCard } from '../../features/club/ui/ClubTeamStandingsCard';
+import { ClubGroupStandingsTable } from '../../features/club/ui/ClubGroupStandingsTable';
+import { ClubPublicTeamDetailsModal } from '../../features/club/ui/ClubPublicTeamDetailsModal';
+import { ClubDirectoryExplorer } from '../../features/club/ui/ClubDirectoryExplorer';
 import { Icon } from '../../components/ui/Icon';
 import { PressableSpring } from '../../components/motion';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import type { LeagueStandingRow } from '../../components/matchs/EliteLeagueStandings';
 
-type StandingsTab = 'notre_poule' | 'toutes_ligues';
+type StandingsTab = 'mon_club' | 'explorer';
 type PoolSubTab = 'classement' | 'buteurs';
 
 export function ClubStandingsScreen() {
   const { tokens } = useClubTheme();
+  const ws = useClubWorkspace();
   const {
-    leagueId,
-    teamId,
-    clubTeamName,
-    divisionLabel,
-    groupLabel,
+    leagueId: defaultLeagueId,
+    teamId: defaultTeamId,
+    clubTeamName: defaultTeamName,
+    divisionLabel: defaultDivisionLabel,
+    groupLabel: defaultGroupLabel,
     season,
-    loading,
+    loading: leagueResolutionLoading,
   } = useClubLeagueId();
 
-  const [activeTab, setActiveTab] = useState<StandingsTab>('notre_poule');
+  const [activeTab, setActiveTab] = useState<StandingsTab>('mon_club');
   const [poolSubTab, setPoolSubTab] = useState<PoolSubTab>('classement');
   const [poolData, setPoolData] = useState<FrenchLeagueData | null>(null);
   const [loadingPool, setLoadingPool] = useState<boolean>(false);
   const [refreshingStandings, setRefreshingStandings] = useState(false);
+
+  // État de sélection d'équipe pour la vue détaillée de poule
+  const [selectedTeamForTable, setSelectedTeamForTable] = useState<{
+    teamId: string;
+    teamName: string;
+    leagueId: string;
+    divisionLabel: string;
+    groupLabel?: string;
+  } | null>(null);
+
+  // État des sélections de compétition par équipe (pour le multi-compétition)
+  const [teamCompetitionSelections, setTeamCompetitionSelections] = useState<Record<string, string>>({});
+
+  // Fiche publique inspectée (adversaire ou explorée)
+  const [publicRecordModal, setPublicRecordModal] = useState<PublicTeamSportingRecord | null>(null);
+
+  // Cache des classements résolus par ligue pour les cartes multi-équipes
+  const [teamsOverviewData, setTeamsOverviewData] = useState<Record<string, FrenchLeagueData>>({});
 
   // État des corrections manuelles systématiques (Page 19)
   const [overrides, setOverrides] = useState<Record<string, {
@@ -66,7 +100,7 @@ export function ClubStandingsScreen() {
     reason?: string;
   }>>({});
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+  const [selectedOverrideTeamId, setSelectedOverrideTeamId] = useState<string>('');
   const [editPts, setEditPts] = useState('');
   const [editPlayed, setEditPlayed] = useState('');
   const [editWon, setEditWon] = useState('');
@@ -76,34 +110,131 @@ export function ClubStandingsScreen() {
   const [editReason, setEditReason] = useState('');
 
   const styles = useMemo(() => createStyles(tokens), [tokens]);
-  const effectiveTeamName = clubTeamName;
   const seasonLabel = (season || '2026-2027').replace('-', '/');
-  const freshness = useMemo(() => describeStandingsFreshness(poolData), [poolData]);
 
-  /** Charge (sans état local intermédiaire) le classement de la poule. */
-  const loadPool = React.useCallback(async () => {
-    if (!leagueId) {
+  // Construction de la liste des équipes du club
+  const clubTeamItems: ClubTeamOverviewItem[] = useMemo(() => {
+    const rawList = buildClubTeamsOverviewList(ws.teams, ws.club);
+    return rawList.map((item) => {
+      const activeCompId = teamCompetitionSelections[item.id] || item.activeCompetitionId;
+      const comp = item.competitions.find((c) => c.id === activeCompId) ?? item.competitions[0];
+      const isKnockout = Boolean(comp?.isKnockout);
+
+      // Si c'est un championnat avec classement disponible
+      const leagueData = teamsOverviewData[activeCompId];
+      let rank = item.rank;
+      let points = item.points;
+      let played = item.played;
+      let goalDiff = item.goalDiff;
+      let form = item.form;
+
+      if (leagueData && leagueData.standings.length > 0) {
+        const found = leagueData.standings.find((row) =>
+          isClubStandingRow(row, {
+            teamId: item.id,
+            fffTeamId: item.fffTeamId,
+            teamName: item.teamName,
+            clubName: item.clubName,
+          }),
+        );
+        if (found) {
+          rank = found.rank;
+          points = found.points;
+          played = found.played;
+          goalDiff = found.goal_diff;
+          form = found.form;
+        }
+      }
+
+      return {
+        ...item,
+        activeCompetitionId: activeCompId,
+        isKnockout,
+        rank,
+        points,
+        played,
+        goalDiff,
+        form,
+        lastSyncAt: leagueData?.lastSyncAt,
+      };
+    });
+  }, [ws.teams, ws.club, teamCompetitionSelections, teamsOverviewData]);
+
+  // Chargement des données de classement pour toutes les compétitions actives des équipes
+  useEffect(() => {
+    let active = true;
+    const compIdsToFetch = new Set<string>();
+
+    const rawList = buildClubTeamsOverviewList(ws.teams, ws.club);
+    rawList.forEach((t) => {
+      const activeCompId = teamCompetitionSelections[t.id] || t.activeCompetitionId;
+      const activeComp = t.competitions.find((c) => c.id === activeCompId) ?? t.competitions[0];
+      if (activeComp && !activeComp.isKnockout) {
+        compIdsToFetch.add(activeComp.id);
+      }
+    });
+
+    if (defaultLeagueId) compIdsToFetch.add(defaultLeagueId);
+
+    Promise.all(
+      Array.from(compIdsToFetch).map(async (lid) => {
+        try {
+          const data = await frenchFootballStandingsService.getLeagueStandings(lid, season);
+          return { lid, data };
+        } catch {
+          return { lid, data: null };
+        }
+      }),
+    ).then((results) => {
+      if (!active) return;
+      setTeamsOverviewData((prev) => {
+        let changed = false;
+        results.forEach(({ lid, data }) => {
+          if (data && prev[lid] !== data) {
+            changed = true;
+          }
+        });
+        if (!changed) return prev;
+        const next = { ...prev };
+        results.forEach(({ lid, data }) => {
+          if (data) next[lid] = data;
+        });
+        return next;
+      });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [ws.teams, ws.club, teamCompetitionSelections, defaultLeagueId, season]);
+
+  // Ligue active pour le tableau de poule affiché
+  const activeLeagueId = selectedTeamForTable?.leagueId || defaultLeagueId || null;
+
+  // Charge les données de la poule affichée
+  const loadPool = useCallback(async () => {
+    if (!activeLeagueId) {
       setPoolData(null);
       setLoadingPool(false);
       return;
     }
     setLoadingPool(true);
-    setPoolData(buildCertifiedSeedLeague(leagueId, season));
+    setPoolData(buildCertifiedSeedLeague(activeLeagueId, season));
     try {
-      const data = await frenchFootballStandingsService.getLeagueStandings(leagueId, season);
+      const data = await frenchFootballStandingsService.getLeagueStandings(activeLeagueId, season);
       if (data) setPoolData(data);
     } catch {
       // Source injoignable : le shell vide honnête reste affiché
     } finally {
       setLoadingPool(false);
     }
-  }, [leagueId, season]);
+  }, [activeLeagueId, season]);
 
-  /**
-   * Rafraîchissement manuel autorisé (admin) — la Cloud Function applique son
-   * propre rate limiting (15 min) et un verrou anti-chevauchement ; on remonte
-   * son message tel quel plutôt que d'afficher un faux « à jour ».
-   */
+  useEffect(() => {
+    void loadPool();
+  }, [loadPool]);
+
+  // Rafraîchissement manuel
   const refreshStandings = async () => {
     if (refreshingStandings) return;
     setRefreshingStandings(true);
@@ -122,11 +253,6 @@ export function ClubStandingsScreen() {
       setRefreshingStandings(false);
     }
   };
-
-  // Chargement officiel des données de la poule du club
-  useEffect(() => {
-    void loadPool();
-  }, [loadPool]);
 
   // Calcul du classement effectif intégrant les corrections manuelles (Page 19)
   const effectiveStandings = useMemo(() => {
@@ -147,6 +273,12 @@ export function ClubStandingsScreen() {
       };
     });
 
+    // Si aucune contestation/modification manuelle n'est active, conserver STRICTEMENT
+    // les rangs officiels publiés par la FFF (règle : ne jamais recalculer les places par points seuls).
+    if (Object.keys(overrides).length === 0) {
+      return base;
+    }
+
     base.sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points;
       return b.goal_diff - a.goal_diff;
@@ -159,28 +291,18 @@ export function ClubStandingsScreen() {
   }, [poolData?.standings, overrides]);
 
   const hasOverrides = Object.keys(overrides).length > 0;
+  const freshness = useMemo(() => describeStandingsFreshness(poolData), [poolData]);
 
-  if (loading) {
+  if (ws.loading || leagueResolutionLoading) {
     return (
       <View style={[styles.root, styles.centerFlex]}>
         <ActivityIndicator size="large" color={tokens.accent} />
         <ClubText variant="caption" muted style={styles.loadingText}>
-          Chargement de votre championnat officiel…
+          Chargement des championnats officiels du club…
         </ClubText>
       </View>
     );
   }
-
-  // Équipe du club dans le classement — uniquement par rattachement explicite.
-  // Jamais de repli silencieux sur la première ligne (ancien comportement trompeur).
-  const myTeamRow = effectiveStandings.find(
-    (row) =>
-      row.isMyTeam ||
-      (teamId != null && row.team_id === teamId) ||
-      (effectiveTeamName != null &&
-        effectiveTeamName.trim().length > 0 &&
-        row.name.toLowerCase().includes(effectiveTeamName.toLowerCase())),
-  ) ?? null;
 
   return (
     <View style={styles.root}>
@@ -191,64 +313,64 @@ export function ClubStandingsScreen() {
           subtitle={`Saison ${seasonLabel} · Compétitions Officielles FFF`}
         />
 
-        {/* 2. Apple Segmented Control */}
+        {/* 2. Apple Segmented Control : Mon Club vs Explorer */}
         <View style={styles.segmentedContainer}>
           <PressableSpring
             onPress={() => {
               prodayHaptics.tabSwitch();
-              setActiveTab('notre_poule');
+              setActiveTab('mon_club');
             }}
             style={[
               styles.segmentedTab,
-              activeTab === 'notre_poule' && styles.segmentedTabActive,
+              activeTab === 'mon_club' && styles.segmentedTabActive,
             ]}
             scaleTo={0.98}
           >
             <Icon
-              name="trophy"
+              name="shield"
               size={15}
-              color={activeTab === 'notre_poule' ? tokens.accent : tokens.muted}
+              color={activeTab === 'mon_club' ? tokens.accent : tokens.muted}
             />
             <ProDayText
               style={[
                 styles.segmentedTabText,
-                { color: activeTab === 'notre_poule' ? tokens.accent : tokens.muted },
+                { color: activeTab === 'mon_club' ? tokens.accent : tokens.muted },
               ]}
             >
-              Notre Poule · R1 B
+              Mon Club ({clubTeamItems.length} équipes)
             </ProDayText>
           </PressableSpring>
 
           <PressableSpring
             onPress={() => {
               prodayHaptics.tabSwitch();
-              setActiveTab('toutes_ligues');
+              setActiveTab('explorer');
             }}
             style={[
               styles.segmentedTab,
-              activeTab === 'toutes_ligues' && styles.segmentedTabActive,
+              activeTab === 'explorer' && styles.segmentedTabActive,
             ]}
             scaleTo={0.98}
           >
             <Icon
-              name="football"
+              name="globe"
               size={15}
-              color={activeTab === 'toutes_ligues' ? tokens.accent : tokens.muted}
+              color={activeTab === 'explorer' ? tokens.accent : tokens.muted}
             />
             <ProDayText
               style={[
                 styles.segmentedTabText,
-                { color: activeTab === 'toutes_ligues' ? tokens.accent : tokens.muted },
+                { color: activeTab === 'explorer' ? tokens.accent : tokens.muted },
               ]}
             >
-              Toutes les Ligues
+              Explorer les Ligues
             </ProDayText>
           </PressableSpring>
         </View>
       </View>
 
-      {/* 3. VUE ONGLET 1 : NOTRE POULE (FC PRODAY) */}
-      {activeTab === 'notre_poule' ? (
+      {/* 3. ONGLET 1 : MON CLUB (MULTI-ÉQUIPES & POULE DÉTAILLÉE) */}
+      {activeTab === 'mon_club' ? (
         <ScrollView
           contentContainerStyle={styles.scrollBody}
           showsVerticalScrollIndicator={false}
@@ -266,11 +388,6 @@ export function ClubStandingsScreen() {
                     ? `${Object.keys(overrides).length} club(s) corrigé(s) manuellement · ${freshness.detail}`
                     : `Sync auto toutes les 3 h · ${freshness.detail}`}
                 </ProDayText>
-                {freshness.isStale && !hasOverrides ? (
-                  <ProDayText style={[styles.syncStatusWarn, { color: '#F59E0B' }]}>
-                    Données conservées telles quelles : jamais présentées comme fraîchement synchronisées.
-                  </ProDayText>
-                ) : null}
               </View>
             </View>
 
@@ -286,22 +403,10 @@ export function ClubStandingsScreen() {
                 </ProDayText>
               </PressableSpring>
 
-              {hasOverrides ? (
-                <TouchableOpacity
-                  onPress={() => {
-                    setOverrides({});
-                    Alert.alert('Réinitialisation', 'Le classement officiel FFF synchronisé a été rétabli.');
-                  }}
-                  style={[styles.resetSyncBtn, { borderColor: tokens.border }]}
-                >
-                  <ProDayText style={styles.resetSyncBtnText}>Rétablir FFF</ProDayText>
-                </TouchableOpacity>
-              ) : null}
-
               <PressableSpring
                 onPress={() => {
                   const initialTeam = effectiveStandings[0]?.team_id || '';
-                  setSelectedTeamId(initialTeam);
+                  setSelectedOverrideTeamId(initialTeam);
                   const ov = overrides[initialTeam];
                   const st = effectiveStandings.find((s) => s.team_id === initialTeam);
                   setEditPts(String(ov?.points ?? st?.points ?? ''));
@@ -324,398 +429,239 @@ export function ClubStandingsScreen() {
             </View>
           </View>
 
-          {/* HERO CARD DU CLUB */}
-          <View style={styles.heroClubCard}>
-            <View style={styles.heroClubTop}>
-              <View style={styles.heroBadgeBox}>
-                <Icon name="shield" size={13} color={tokens.accent} />
-                <ProDayText style={styles.heroBadgeText}>
-                  {divisionLabel || poolData?.divisionLabel || 'Compétition non rattachée'}
-                </ProDayText>
-              </View>
-              <View style={styles.promotionPill}>
-                <ProDayText style={styles.promotionPillText}>
-                  {myTeamRow
-                    ? myTeamRow.rank === 1
-                      ? '1er du championnat'
-                      : `${myTeamRow.rank}e du championnat`
-                    : 'Classement non disponible'}
-                </ProDayText>
-              </View>
-            </View>
-
-            <View style={styles.heroClubMiddle}>
-              <View>
-                <ProDayText style={styles.heroClubName}>{effectiveTeamName}</ProDayText>
-                <ProDayText style={styles.heroClubSub}>
-                  {groupLabel || 'Poule à confirmer'}
-                </ProDayText>
-              </View>
-              <View style={styles.heroPointsBox}>
-                <ProDayText style={styles.heroPointsNum}>
-                  {myTeamRow?.points ?? '—'}
-                </ProDayText>
-                <ProDayText style={styles.heroPointsLabel}>POINTS</ProDayText>
-              </View>
-            </View>
-
-            {/* Quick Stat Strip */}
-            <View style={styles.statStrip}>
-              <View style={styles.statStripItem}>
-                <ProDayText style={styles.statStripNum}>{myTeamRow?.played ?? '—'}</ProDayText>
-                <ProDayText style={styles.statStripLabel}>Matchs</ProDayText>
-              </View>
-              <View style={styles.statStripItem}>
-                <ProDayText style={[styles.statStripNum, { color: '#10B981' }]}>
-                  {myTeamRow?.won ?? '—'}
-                </ProDayText>
-                <ProDayText style={styles.statStripLabel}>Victoires</ProDayText>
-              </View>
-              <View style={styles.statStripItem}>
-                <ProDayText style={[styles.statStripNum, { color: '#F59E0B' }]}>
-                  {myTeamRow?.drawn ?? '—'}
-                </ProDayText>
-                <ProDayText style={styles.statStripLabel}>Nuls</ProDayText>
-              </View>
-              <View style={styles.statStripItem}>
-                <ProDayText style={[styles.statStripNum, { color: '#EF4444' }]}>
-                  {myTeamRow?.lost ?? '—'}
-                </ProDayText>
-                <ProDayText style={styles.statStripLabel}>Défaites</ProDayText>
-              </View>
-              <View style={styles.statStripItem}>
-                <ProDayText style={[styles.statStripNum, { color: tokens.accent }]}>
-                  {myTeamRow?.goal_diff != null ? (myTeamRow.goal_diff > 0 ? `+${myTeamRow.goal_diff}` : myTeamRow.goal_diff) : '—'}
-                </ProDayText>
-                <ProDayText style={styles.statStripLabel}>Diff.</ProDayText>
-              </View>
-            </View>
-
-            {/* Série de Forme */}
-            {myTeamRow?.form && myTeamRow.form.length > 0 ? (
-              <View style={styles.formRow}>
-                <ProDayText style={styles.formLabel}>Série récente :</ProDayText>
-                <View style={styles.formPills}>
-                  {myTeamRow.form.map((res, i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.formPill,
-                        res === 'V'
-                          ? styles.formWin
-                          : res === 'N'
-                          ? styles.formDraw
-                          : styles.formLoss,
-                      ]}
-                    >
-                      <ProDayText style={styles.formPillText}>{res}</ProDayText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            ) : null}
-          </View>
-
-          {/* SOUS-COMMUTATEUR POULE (CLASSEMENT / BUTEURS) */}
-          <View style={styles.poolSubNav}>
-            <TouchableOpacity
-              onPress={() => {
-                prodayHaptics.selection();
-                setPoolSubTab('classement');
+          {/* VUE 1.A : VUE DÉTAILLÉE D'UNE POULE SPÉCIFIQUE (SI UNE ÉQUIPE EST SÉLECTIONNÉE) */}
+          {selectedTeamForTable ? (
+            <ClubGroupStandingsTable
+              standings={effectiveStandings}
+              divisionLabel={selectedTeamForTable.divisionLabel || poolData?.divisionLabel || 'Championnat FFF'}
+              groupLabel={selectedTeamForTable.groupLabel || poolData?.groupLabel || poolData?.name}
+              season={poolData?.season || season}
+              phase={poolData?.phase}
+              sourceUrl={poolData?.sourceUrl}
+              verificationStatus={poolData?.verificationStatus ?? (poolData?.standings?.length ? 'verified' : 'unverified')}
+              freshnessLabel={freshness.ageLabel ? `il y a ${freshness.ageLabel}` : undefined}
+              highlightTeamId={selectedTeamForTable.teamId}
+              highlightTeamName={selectedTeamForTable.teamName}
+              tokens={tokens}
+              onBackToTeams={() => {
+                setSelectedTeamForTable(null);
               }}
-              style={[
-                styles.poolSubBtn,
-                poolSubTab === 'classement' && styles.poolSubBtnActive,
-              ]}
-            >
-              <ProDayText
-                style={[
-                  styles.poolSubBtnText,
-                  poolSubTab === 'classement' && styles.poolSubBtnTextActive,
-                ]}
-              >
-                Classement Général ({poolData?.standings.length ?? 0} clubs)
-              </ProDayText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => {
-                prodayHaptics.selection();
-                setPoolSubTab('buteurs');
+              onSelectOpponent={(row) => {
+                setPublicRecordModal({
+                  clubId: row.team_id,
+                  clubName: row.name,
+                  teamName: row.name,
+                  category: selectedTeamForTable.teamName.includes('U19') ? 'U19' : 'Seniors',
+                  competitionName: selectedTeamForTable.divisionLabel || poolData?.name || 'Championnat FFF',
+                  divisionLabel: selectedTeamForTable.divisionLabel || poolData?.divisionLabel || '',
+                  groupLabel: selectedTeamForTable.groupLabel,
+                  rank: row.rank,
+                  points: row.points,
+                  played: row.played,
+                  won: row.won,
+                  drawn: row.drawn,
+                  lost: row.lost,
+                  goalsFor: row.goals_for,
+                  goalsAgainst: row.goals_against,
+                  goalDiff: row.goal_diff,
+                  form: row.form,
+                  source: poolData?.source ?? 'FFF DOFA Officiel',
+                  lastSyncAt: poolData?.lastSyncAt,
+                });
               }}
-              style={[
-                styles.poolSubBtn,
-                poolSubTab === 'buteurs' && styles.poolSubBtnActive,
-              ]}
-            >
-              <ProDayText
-                style={[
-                  styles.poolSubBtnText,
-                  poolSubTab === 'buteurs' && styles.poolSubBtnTextActive,
-                ]}
-              >
-                Buteurs de la Poule
-              </ProDayText>
-            </TouchableOpacity>
-          </View>
-
-          {/* CONTENU SOUS-ONGLET 1 : CLASSEMENT COMPLET 12 CLUBS */}
-          {poolSubTab === 'classement' ? (
-            <View style={styles.tableCard}>
-              {effectiveStandings.length === 0 ? (
-                <ProDayText style={styles.honestNote}>
-                  {leagueId
-                    ? 'Aucun classement disponible pour cette compétition pour le moment. Les données officielles apparaîtront dès leur synchronisation.'
-                    : 'Aucune compétition FFF rattachée au club pour cette saison. Le classement apparaîtra ici dès qu’un rattachement sera validé — aucun championnat fictif n’est affiché.'}
-                </ProDayText>
-              ) : (
-              <>
-              {/* En-tête Tableau */}
-              <View style={styles.tableHeaderRow}>
-                <ProDayText style={[styles.colRank, styles.colHeadText]}>#</ProDayText>
-                <ProDayText style={[styles.colTeam, styles.colHeadText]}>Club</ProDayText>
-                <ProDayText style={[styles.colPts, styles.colHeadText]}>Pts</ProDayText>
-                <ProDayText style={[styles.colNum, styles.colHeadText]}>J</ProDayText>
-                <ProDayText style={[styles.colNum, styles.colHeadText]}>V</ProDayText>
-                <ProDayText style={[styles.colNum, styles.colHeadText]}>N</ProDayText>
-                <ProDayText style={[styles.colNum, styles.colHeadText]}>D</ProDayText>
-                <ProDayText style={[styles.colNum, styles.colHeadText]}>Diff</ProDayText>
-              </View>
-
-              {/* Lignes du Tableau */}
-              {effectiveStandings.map((row) => {
-                const isProDay =
-                  row.isMyTeam || (teamId != null && row.team_id === teamId);
-                const isPromotion = row.rank === 1;
-                const isPlayoff = row.rank === 2;
-                const isRelegation = row.rank >= 10;
-
-                return (
-                  <View
-                    key={row.team_id || row.rank}
-                    style={[
-                      styles.tableRow,
-                      isProDay && styles.tableRowHighlight,
-                    ]}
-                  >
-                    {/* Indicateur de statut (barre latérale de couleur) */}
-                    <View
-                      style={[
-                        styles.rankIndicator,
-                        isPromotion
-                          ? styles.indicatorPromotion
-                          : isPlayoff
-                          ? styles.indicatorPlayoff
-                          : isRelegation
-                          ? styles.indicatorRelegation
-                          : styles.indicatorNeutral,
-                      ]}
-                    />
-
-                    <ProDayText
-                      style={[
-                        styles.colRank,
-                        styles.rowCellText,
-                        isProDay && { color: tokens.accent, fontWeight: '800' },
-                      ]}
-                    >
-                      {row.rank}
-                    </ProDayText>
-
-                    <View style={styles.colTeam}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <ProDayText
-                          style={[
-                            styles.teamNameText,
-                            isProDay && { color: tokens.accent, fontWeight: '800' },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {row.name}
-                        </ProDayText>
-                        {row.isOverridden ? (
-                          <View style={styles.overriddenBadge}>
-                            <ProDayText style={styles.overriddenBadgeText}>Corrigé</ProDayText>
-                          </View>
-                        ) : null}
-                      </View>
-                      {isProDay ? (
-                        <View style={styles.myTeamBadge}>
-                          <ProDayText style={styles.myTeamBadgeText}>NOTRE CLUB</ProDayText>
-                        </View>
-                      ) : null}
-                    </View>
-
-                    <ProDayText
-                      style={[
-                        styles.colPts,
-                        styles.rowCellText,
-                        { color: isProDay ? tokens.accent : tokens.foreground, fontWeight: '800' },
-                      ]}
-                    >
-                      {row.points}
-                    </ProDayText>
-
-                    <ProDayText style={[styles.colNum, styles.rowCellTextMuted]}>
-                      {row.played}
-                    </ProDayText>
-
-                    <ProDayText style={[styles.colNum, styles.rowCellTextMuted]}>
-                      {row.won}
-                    </ProDayText>
-
-                    <ProDayText style={[styles.colNum, styles.rowCellTextMuted]}>
-                      {row.drawn}
-                    </ProDayText>
-
-                    <ProDayText style={[styles.colNum, styles.rowCellTextMuted]}>
-                      {row.lost}
-                    </ProDayText>
-
-                    <ProDayText
-                      style={[
-                        styles.colNum,
-                        styles.rowCellText,
-                        row.goal_diff > 0
-                          ? { color: '#10B981' }
-                          : row.goal_diff < 0
-                          ? { color: '#EF4444' }
-                          : styles.rowCellTextMuted,
-                      ]}
-                    >
-                      {row.goal_diff > 0 ? `+${row.goal_diff}` : row.goal_diff}
-                    </ProDayText>
-                  </View>
-                );
-              })}
-
-              {/* Légende Officielle FFF */}
-              <View style={styles.legendContainer}>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
-                  <ProDayText style={styles.legendText}>
-                    1er : Accession directe en National 3
-                  </ProDayText>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-                  <ProDayText style={styles.legendText}>
-                    2e : Barrages d'accession N3
-                  </ProDayText>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
-                  <ProDayText style={styles.legendText}>
-                    10e à 12e : Relégation en Régional 2
-                  </ProDayText>
-                </View>
-              </View>
-              </>
-              )}
-            </View>
+            />
           ) : (
-            /* CONTENU SOUS-ONGLET 2 : MEILLEURS BUTEURS DE LA POULE */
-            <View style={styles.tableCard}>
-              <View style={styles.scorersHeader}>
-                <Icon name="trophy" size={16} color={tokens.accent} />
-                <ProDayText style={styles.scorersTitle}>
-                  Meilleurs Buteurs · Seniors R1 Poule B
-                </ProDayText>
+            /* VUE 1.B : VUE D'ENSEMBLE DE TOUTES LES ÉQUIPES DU CLUB (MON CLUB OVERVIEW) */
+            <View style={styles.teamsOverviewContainer}>
+              <View style={styles.sectionHeaderRow}>
+                <View>
+                  <ProDayText style={[styles.sectionTitle, { color: tokens.foreground }]}>
+                    Toutes les Équipes du Club
+                  </ProDayText>
+                  <ProDayText style={[styles.sectionSub, { color: tokens.muted }]}>
+                    Sélectionnez une équipe pour ouvrir son classement de poule officiel
+                  </ProDayText>
+                </View>
               </View>
 
-              {(poolData?.scorers ?? []).length === 0 ? (
-                <ProDayText style={styles.honestNote}>
-                  Aucun buteur enregistré pour cette compétition.
-                </ProDayText>
+              {clubTeamItems.map((item) => (
+                <ClubTeamStandingsCard
+                  key={item.id}
+                  item={item}
+                  tokens={tokens}
+                  onSelectTeam={(teamId, compId) => {
+                    const comp = item.competitions.find((c) => c.id === compId) ?? item.competitions[0];
+                    setSelectedTeamForTable({
+                      teamId: item.fffTeamId || item.id,
+                      teamName: item.teamName,
+                      leagueId: comp.id,
+                      divisionLabel: comp.divisionLabel,
+                      groupLabel: comp.groupLabel,
+                    });
+                  }}
+                  onSelectCompetition={(teamId, compId) => {
+                    setTeamCompetitionSelections((prev) => ({
+                      ...prev,
+                      [teamId]: compId,
+                    }));
+                  }}
+                />
+              ))}
+
+              {/* TABLEAU COMPLET DE LA POULE OFFICIELLE DU CLUB */}
+              {poolData && poolData.standings.length > 0 ? (
+                <View style={{ marginTop: clubSpace.md, marginBottom: clubSpace.md }}>
+                  <ClubGroupStandingsTable
+                    standings={effectiveStandings}
+                    divisionLabel={poolData.divisionLabel || poolData.name}
+                    groupLabel={poolData.groupLabel || poolData.name}
+                    season={poolData.season}
+                    phase={poolData.phase}
+                    sourceUrl={poolData.sourceUrl}
+                    verificationStatus={poolData.verificationStatus ?? 'verified'}
+                    freshnessLabel={freshness.ageLabel ? `il y a ${freshness.ageLabel}` : undefined}
+                    highlightTeamId={defaultTeamId || (clubTeamItems[0]?.fffTeamId ?? clubTeamItems[0]?.id)}
+                    highlightTeamName={defaultTeamName || clubTeamItems[0]?.teamName}
+                    tokens={tokens}
+                    onSelectOpponent={(row) => {
+                      setPublicRecordModal({
+                        clubId: row.team_id,
+                        clubName: row.name,
+                        teamName: row.name,
+                        category: defaultTeamName?.includes('U19') ? 'U19' : 'Seniors',
+                        competitionName: poolData.name || 'Championnat FFF',
+                        divisionLabel: poolData.divisionLabel || '',
+                        rank: row.rank,
+                        points: row.points,
+                        played: row.played,
+                        won: row.won,
+                        drawn: row.drawn,
+                        lost: row.lost,
+                        goalsFor: row.goals_for,
+                        goalsAgainst: row.goals_against,
+                        goalDiff: row.goal_diff,
+                        form: row.form,
+                        source: poolData.source ?? 'FFF Officiel',
+                        lastSyncAt: poolData.lastSyncAt,
+                      });
+                    }}
+                  />
+                </View>
               ) : null}
-              {(poolData?.scorers ?? []).map((scorer) => {
-                const isProDayScorer =
-                  effectiveTeamName != null &&
-                  effectiveTeamName.trim().length > 0 &&
-                  scorer.club.trim().toLowerCase() === effectiveTeamName.trim().toLowerCase();
-                return (
-                  <View
-                    key={scorer.rank}
-                    style={[
-                      styles.scorerRow,
-                      isProDayScorer && styles.tableRowHighlight,
-                    ]}
-                  >
-                    <View style={styles.scorerRankBadge}>
-                      <ProDayText style={[styles.scorerRankNum, { color: tokens.accent }]}>
-                        {scorer.rank}
-                      </ProDayText>
-                    </View>
 
-                    <View style={styles.scorerInfo}>
-                      <ProDayText
-                        style={[
-                          styles.scorerName,
-                          isProDayScorer && { color: tokens.accent, fontWeight: '800' },
-                        ]}
-                      >
-                        {scorer.name}
-                      </ProDayText>
-                      <ProDayText style={styles.scorerClub}>{scorer.club}</ProDayText>
-                    </View>
+              {/* COMMUTATEUR SOUS-ONGLET BUTEURS DE LA POULE PRINCIPALE */}
+              <View style={[styles.scorersCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+                <View style={[styles.scorersHeader, { borderBottomColor: tokens.border }]}>
+                  <Icon name="trophy" size={16} color={tokens.accent} />
+                  <ProDayText style={[styles.scorersTitle, { color: tokens.foreground }]}>
+                    Buteurs de Référence · Seniors R1
+                  </ProDayText>
+                </View>
 
-                    <View style={styles.scorerStats}>
-                      <ProDayText style={styles.scorerGoalsNum}>{scorer.goals}</ProDayText>
-                      <ProDayText style={styles.scorerGoalsLabel}>buts</ProDayText>
+                {(poolData?.scorers ?? []).length === 0 ? (
+                  <ProDayText style={[styles.honestNote, { color: tokens.muted }]}>
+                    Aucun buteur enregistré pour cette compétition officielle.
+                  </ProDayText>
+                ) : null}
+
+                {(poolData?.scorers ?? []).slice(0, 5).map((scorer) => {
+                  return (
+                    <View key={scorer.rank} style={[styles.scorerRow, { borderBottomColor: tokens.border }]}>
+                      <View style={[styles.scorerRankBadge, { backgroundColor: tokens.elevated }]}>
+                        <ProDayText style={[styles.scorerRankNum, { color: tokens.accent }]}>
+                          {scorer.rank}
+                        </ProDayText>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <ProDayText style={[styles.scorerName, { color: tokens.foreground }]}>
+                          {scorer.name}
+                        </ProDayText>
+                        <ProDayText style={[styles.scorerClub, { color: tokens.muted }]}>
+                          {scorer.club}
+                        </ProDayText>
+                      </View>
+                      <View style={styles.scorerStats}>
+                        <ProDayText style={[styles.scorerGoalsNum, { color: tokens.accent }]}>
+                          {scorer.goals}
+                        </ProDayText>
+                        <ProDayText style={[styles.scorerGoalsLabel, { color: tokens.muted }]}>
+                          buts
+                        </ProDayText>
+                      </View>
                     </View>
+                  );
+                })}
+              </View>
+
+              {/* BANNIÈRE DE TRANSITION VERS L'EXPLORATEUR */}
+              <PressableSpring
+                onPress={() => {
+                  prodayHaptics.press();
+                  setActiveTab('explorer');
+                }}
+                style={[styles.exploreBanner, { backgroundColor: tokens.surface, borderColor: `${tokens.accent}40` }]}
+                scaleTo={0.98}
+              >
+                <View style={styles.exploreBannerLeft}>
+                  <Icon name="globe" size={22} color={tokens.accent} />
+                  <View style={{ flex: 1 }}>
+                    <ProDayText style={[styles.exploreBannerTitle, { color: tokens.foreground }]}>
+                      Explorer les autres clubs et championnats
+                    </ProDayText>
+                    <ProDayText style={[styles.exploreBannerSub, { color: tokens.muted }]}>
+                      Recherche par région (IDF, PACA, Auvergne...), district (92, 93, 75...) et catégorie
+                    </ProDayText>
                   </View>
-                );
-              })}
+                </View>
+                <Icon name="chevron-forward" size={18} color={tokens.accent} />
+              </PressableSpring>
             </View>
           )}
-
-          {/* BANNIÈRE DE TRANSITION VERS LES AUTRES LIGUES */}
-          <PressableSpring
-            onPress={() => {
-              prodayHaptics.press();
-              setActiveTab('toutes_ligues');
-            }}
-            style={styles.exploreBanner}
-            scaleTo={0.98}
-          >
-            <View style={styles.exploreBannerLeft}>
-              <Icon name="globe" size={22} color={tokens.accent} />
-              <View style={{ flex: 1 }}>
-                <ProDayText style={styles.exploreBannerTitle}>
-                  Explorer toutes les ligues de France
-                </ProDayText>
-                <ProDayText style={styles.exploreBannerSub}>
-                  Ligue 1, L2, National 1-3, Régionaux LPIFF & tous les Districts (92, 93, 75…)
-                </ProDayText>
-              </View>
-            </View>
-            <Icon name="chevron-forward" size={18} color={tokens.accent} />
-          </PressableSpring>
         </ScrollView>
       ) : (
-        /* 4. VUE ONGLET 2 : TOUTES LES LIGUES DE FRANCE (ELITE LEAGUE STANDINGS) */
+        /* 4. ONGLET 2 : EXPLORATEUR GLOBAL DES CLUBS & COMPÉTITIONS FFF */
         <ScrollView
           contentContainerStyle={styles.scrollBody}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
         >
-          {/* Bandeau d'information explorateur */}
-          <View style={styles.allLeaguesIntro}>
-            <Icon name="alert-circle" size={16} color={tokens.accent} />
-            <ProDayText style={styles.allLeaguesIntroText}>
-              Consultez n'importe quel championnat homologué FFF. Tapez pour changer de division ou rechercher un club en France.
-            </ProDayText>
-          </View>
-
-          {/* Moteur complet EliteLeagueStandings */}
-          <EliteLeagueStandings
-            initialLeagueId={leagueId ?? undefined}
-            highlightTeamName={effectiveTeamName ?? undefined}
-            highlightTeamId={teamId ?? undefined}
-            accent={tokens.accent}
+          <ClubDirectoryExplorer
+            tokens={tokens}
+            onSelectTeamStandings={(leagueId, teamName) => {
+              setActiveTab('mon_club');
+              setSelectedTeamForTable({
+                teamId: '',
+                teamName,
+                leagueId,
+                divisionLabel: 'Championnat FFF',
+              });
+            }}
+            onInspectPublicRecord={(record) => {
+              setPublicRecordModal(record);
+            }}
           />
         </ScrollView>
       )}
+
+      {/* MODAL FICHE PUBLIQUE D'ÉQUIPE (ADVERSAIRE OU EXPLORÉE) */}
+      <ClubPublicTeamDetailsModal
+        visible={publicRecordModal != null}
+        record={publicRecordModal}
+        tokens={tokens}
+        onClose={() => setPublicRecordModal(null)}
+        onOpenStandings={() => {
+          if (!publicRecordModal) return;
+          setActiveTab('mon_club');
+          setSelectedTeamForTable({
+            teamId: publicRecordModal.clubId || '',
+            teamName: publicRecordModal.teamName,
+            leagueId: defaultLeagueId || 'r1_idf_b',
+            divisionLabel: publicRecordModal.competitionName,
+            groupLabel: publicRecordModal.groupLabel,
+          });
+          setPublicRecordModal(null);
+        }}
+      />
 
       {/* MODAL CORRECTION MANUELLE DU CLASSEMENT (Page 19) */}
       <Modal
@@ -736,7 +682,11 @@ export function ClubStandingsScreen() {
                   Ajustement administratif & pénalités FFF
                 </ProDayText>
               </View>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Fermer"
+              >
                 <Icon name="close" size={22} color={tokens.muted} />
               </TouchableOpacity>
             </View>
@@ -751,7 +701,7 @@ export function ClubStandingsScreen() {
                   <TouchableOpacity
                     key={st.team_id}
                     onPress={() => {
-                      setSelectedTeamId(st.team_id);
+                      setSelectedOverrideTeamId(st.team_id);
                       const ov = overrides[st.team_id];
                       setEditPts(String(ov?.points ?? st.points));
                       setEditPlayed(String(ov?.played ?? st.played));
@@ -763,7 +713,7 @@ export function ClubStandingsScreen() {
                     }}
                     style={[
                       styles.teamPickPill,
-                      selectedTeamId === st.team_id
+                      selectedOverrideTeamId === st.team_id
                         ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
                         : { backgroundColor: CLUB_TOKENS.elevated, borderColor: tokens.border },
                     ]}
@@ -771,7 +721,7 @@ export function ClubStandingsScreen() {
                     <ProDayText
                       style={[
                         styles.teamPickText,
-                        selectedTeamId === st.team_id
+                        selectedOverrideTeamId === st.team_id
                           ? { color: '#000000', fontWeight: '700' }
                           : { color: tokens.muted },
                       ]}
@@ -860,11 +810,11 @@ export function ClubStandingsScreen() {
             </ScrollView>
 
             <View style={styles.modalActionsRow}>
-              {overrides[selectedTeamId] ? (
+              {overrides[selectedOverrideTeamId] ? (
                 <TouchableOpacity
                   onPress={() => {
                     const next = { ...overrides };
-                    delete next[selectedTeamId];
+                    delete next[selectedOverrideTeamId];
                     setOverrides(next);
                     setModalVisible(false);
                   }}
@@ -876,7 +826,7 @@ export function ClubStandingsScreen() {
 
               <PressableSpring
                 onPress={() => {
-                  if (!selectedTeamId) return;
+                  if (!selectedOverrideTeamId) return;
                   const ptsNum = parseInt(editPts, 10);
                   const playedNum = parseInt(editPlayed, 10);
                   const wonNum = parseInt(editWon, 10);
@@ -886,7 +836,7 @@ export function ClubStandingsScreen() {
 
                   setOverrides((prev) => ({
                     ...prev,
-                    [selectedTeamId]: {
+                    [selectedOverrideTeamId]: {
                       points: !isNaN(ptsNum) ? ptsNum : undefined,
                       played: !isNaN(playedNum) ? playedNum : undefined,
                       won: !isNaN(wonNum) ? wonNum : undefined,
@@ -959,405 +909,6 @@ function createStyles(tokens: ClubThemeTokens) {
       letterSpacing: -0.2,
     },
 
-    // Hero Club Card
-    heroClubCard: {
-      backgroundColor: tokens.surface,
-      borderRadius: clubRadius.md,
-      borderWidth: 1,
-      borderColor: `${tokens.accent}35`,
-      padding: clubSpace.md,
-      marginBottom: clubSpace.md,
-      gap: clubSpace.md,
-    },
-    heroClubTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    heroBadgeBox: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      backgroundColor: tokens.accentSoft,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: clubRadius.xs,
-    },
-    heroBadgeText: {
-      color: tokens.accent,
-      fontSize: 11,
-      fontWeight: '700',
-    },
-    promotionPill: {
-      backgroundColor: 'rgba(16, 185, 129, 0.15)',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: clubRadius.xs,
-      borderWidth: 1,
-      borderColor: 'rgba(16, 185, 129, 0.3)',
-    },
-    promotionPillText: {
-      color: '#10B981',
-      fontSize: 11,
-      fontWeight: '800',
-    },
-    heroClubMiddle: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    heroClubName: {
-      fontSize: 22,
-      fontWeight: '800',
-      color: tokens.foreground,
-      letterSpacing: -0.5,
-    },
-    heroClubSub: {
-      fontSize: 12,
-      color: tokens.muted,
-      marginTop: 2,
-    },
-    heroPointsBox: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: tokens.elevated,
-      borderRadius: clubRadius.sm,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: `${tokens.accent}40`,
-    },
-    heroPointsNum: {
-      fontSize: 24,
-      fontWeight: '900',
-      color: tokens.accent,
-      letterSpacing: -0.5,
-    },
-    heroPointsLabel: {
-      fontSize: 9,
-      fontWeight: '800',
-      color: tokens.muted,
-      letterSpacing: 0.5,
-    },
-    statStrip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: tokens.elevated,
-      borderRadius: clubRadius.sm,
-      paddingVertical: 8,
-      paddingHorizontal: 10,
-    },
-    statStripItem: {
-      alignItems: 'center',
-      gap: 2,
-    },
-    statStripNum: {
-      fontSize: 14,
-      fontWeight: '800',
-      color: tokens.foreground,
-    },
-    statStripLabel: {
-      fontSize: 10,
-      color: tokens.muted,
-      fontWeight: '600',
-    },
-    formRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    formLabel: {
-      fontSize: 12,
-      color: tokens.muted,
-      fontWeight: '600',
-    },
-    formPills: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    formPill: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    formWin: { backgroundColor: '#10B981' },
-    formDraw: { backgroundColor: '#F59E0B' },
-    formLoss: { backgroundColor: '#EF4444' },
-    formPillText: {
-      fontSize: 10,
-      fontWeight: '900',
-      color: '#FFFFFF',
-    },
-
-    // Sous-onglet Poule
-    poolSubNav: {
-      flexDirection: 'row',
-      backgroundColor: tokens.surface,
-      borderRadius: clubRadius.sm,
-      padding: 3,
-      marginBottom: clubSpace.md,
-      borderWidth: 1,
-      borderColor: tokens.border,
-    },
-    poolSubBtn: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      borderRadius: clubRadius.sm - 2,
-    },
-    poolSubBtnActive: {
-      backgroundColor: tokens.elevated,
-    },
-    poolSubBtnText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: tokens.muted,
-    },
-    poolSubBtnTextActive: {
-      color: tokens.foreground,
-      fontWeight: '700',
-    },
-
-    // Tableau de Classement
-    honestNote: {
-    color: tokens.muted,
-    fontSize: 12,
-    lineHeight: 18,
-    fontStyle: 'italic',
-    paddingVertical: 8,
-  },
-  tableCard: {
-      backgroundColor: tokens.surface,
-      borderRadius: clubRadius.md,
-      borderWidth: 1,
-      borderColor: tokens.border,
-      overflow: 'hidden',
-      marginBottom: clubSpace.md,
-    },
-    tableHeaderRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 9,
-      paddingHorizontal: 8,
-      backgroundColor: tokens.elevated,
-      borderBottomWidth: 1,
-      borderBottomColor: tokens.border,
-    },
-    colHeadText: {
-      fontSize: 10,
-      fontWeight: '800',
-      color: tokens.muted,
-      textTransform: 'uppercase',
-      letterSpacing: 0.3,
-    },
-    tableRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 9,
-      paddingHorizontal: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: tokens.border,
-      position: 'relative',
-    },
-    tableRowHighlight: {
-      backgroundColor: tokens.accentSoft,
-    },
-    rankIndicator: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 3,
-    },
-    indicatorPromotion: { backgroundColor: '#10B981' },
-    indicatorPlayoff: { backgroundColor: '#F59E0B' },
-    indicatorRelegation: { backgroundColor: '#EF4444' },
-    indicatorNeutral: { backgroundColor: 'transparent' },
-
-    colRank: {
-      width: 22,
-      textAlign: 'center',
-      fontSize: 12,
-      fontWeight: '700',
-    },
-    colTeam: {
-      flex: 1,
-      paddingHorizontal: 6,
-    },
-    teamNameText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: tokens.foreground,
-    },
-    myTeamBadge: {
-      alignSelf: 'flex-start',
-      backgroundColor: tokens.accentSoft,
-      paddingHorizontal: 4,
-      paddingVertical: 1,
-      borderRadius: 3,
-      marginTop: 2,
-    },
-    myTeamBadgeText: {
-      fontSize: 8,
-      fontWeight: '900',
-      color: tokens.accent,
-      letterSpacing: 0.5,
-    },
-    colPts: {
-      width: 32,
-      textAlign: 'center',
-      fontSize: 13,
-    },
-    colNum: {
-      width: 24,
-      textAlign: 'center',
-      fontSize: 11,
-    },
-    rowCellText: {
-      color: tokens.foreground,
-    },
-    rowCellTextMuted: {
-      color: tokens.muted,
-    },
-
-    // Légende
-    legendContainer: {
-      padding: 10,
-      backgroundColor: tokens.elevated,
-      gap: 4,
-    },
-    legendItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    legendDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-    },
-    legendText: {
-      fontSize: 11,
-      color: tokens.muted,
-      fontWeight: '500',
-    },
-
-    // Buteurs
-    scorersHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      padding: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: tokens.border,
-      backgroundColor: tokens.elevated,
-    },
-    scorersTitle: {
-      fontSize: 13,
-      fontWeight: '800',
-      color: tokens.foreground,
-    },
-    scorerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: tokens.border,
-    },
-    scorerRankBadge: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: tokens.elevated,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginRight: 10,
-    },
-    scorerRankNum: {
-      fontSize: 12,
-      fontWeight: '800',
-    },
-    scorerInfo: {
-      flex: 1,
-    },
-    scorerName: {
-      fontSize: 13,
-      fontWeight: '700',
-      color: tokens.foreground,
-    },
-    scorerClub: {
-      fontSize: 11,
-      color: tokens.muted,
-      marginTop: 1,
-    },
-    scorerStats: {
-      alignItems: 'flex-end',
-    },
-    scorerGoalsNum: {
-      fontSize: 16,
-      fontWeight: '900',
-      color: tokens.accent,
-    },
-    scorerGoalsLabel: {
-      fontSize: 10,
-      color: tokens.muted,
-      fontWeight: '600',
-    },
-
-    // Bannière d'exploration
-    exploreBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: tokens.surface,
-      borderRadius: clubRadius.md,
-      borderWidth: 1,
-      borderColor: `${tokens.accent}40`,
-      padding: clubSpace.md,
-      gap: clubSpace.sm,
-    },
-    exploreBannerLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: clubSpace.md,
-      flex: 1,
-    },
-    exploreBannerTitle: {
-      fontSize: 14,
-      fontWeight: '800',
-      color: tokens.foreground,
-    },
-    exploreBannerSub: {
-      fontSize: 11,
-      color: tokens.muted,
-      marginTop: 2,
-    },
-
-    // Intro Toutes les Ligues
-    allLeaguesIntro: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      backgroundColor: tokens.surface,
-      borderRadius: clubRadius.sm,
-      padding: 10,
-      borderWidth: 1,
-      borderColor: tokens.border,
-      marginBottom: 6,
-    },
-    allLeaguesIntroText: {
-      flex: 1,
-      fontSize: 12,
-      color: tokens.muted,
-      lineHeight: 16,
-    },
-
     // Barre Statut Synchro FFF (Page 19)
     syncStatusBar: {
       flexDirection: 'row',
@@ -1388,10 +939,6 @@ function createStyles(tokens: ClubThemeTokens) {
       fontSize: 11,
       marginTop: 1,
     },
-    syncStatusWarn: {
-      fontSize: 10,
-      marginTop: 2,
-    },
     syncStatusActions: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -1421,16 +968,114 @@ function createStyles(tokens: ClubThemeTokens) {
       fontWeight: '700',
       color: '#000000',
     },
-    overriddenBadge: {
-      backgroundColor: 'rgba(245, 158, 11, 0.2)',
-      paddingHorizontal: 5,
-      paddingVertical: 1,
-      borderRadius: 4,
+
+    // Section Mon Club Overview
+    teamsOverviewContainer: {
+      gap: 10,
     },
-    overriddenBadgeText: {
-      fontSize: 9,
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 4,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    sectionSub: {
+      fontSize: 12,
+      marginTop: 2,
+    },
+
+    // Buteurs
+    scorersCard: {
+      borderRadius: clubRadius.md,
+      borderWidth: 1,
+      overflow: 'hidden',
+      marginTop: 6,
+      marginBottom: 12,
+    },
+    scorersHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: 12,
+      borderBottomWidth: 1,
+      backgroundColor: tokens.elevated,
+    },
+    scorersTitle: {
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    honestNote: {
+      fontSize: 12,
+      fontStyle: 'italic',
+      padding: 12,
+    },
+    scorerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderBottomWidth: 1,
+    },
+    scorerRankBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+    },
+    scorerRankNum: {
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    scorerName: {
+      fontSize: 13,
       fontWeight: '700',
-      color: '#F59E0B',
+    },
+    scorerClub: {
+      fontSize: 11,
+      marginTop: 1,
+    },
+    scorerStats: {
+      alignItems: 'flex-end',
+    },
+    scorerGoalsNum: {
+      fontSize: 16,
+      fontWeight: '900',
+    },
+    scorerGoalsLabel: {
+      fontSize: 10,
+      fontWeight: '600',
+    },
+
+    // Bannière transition
+    exploreBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderRadius: clubRadius.md,
+      borderWidth: 1,
+      padding: clubSpace.md,
+      gap: clubSpace.sm,
+      marginTop: 4,
+    },
+    exploreBannerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.md,
+      flex: 1,
+    },
+    exploreBannerTitle: {
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    exploreBannerSub: {
+      fontSize: 11,
+      marginTop: 2,
     },
 
     // Modal Correction Manuelle

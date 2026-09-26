@@ -168,6 +168,18 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
     onClose();
   }, [onClose]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, handleClose]);
+
   // Navigation vers une page
   const handleSelectPage = useCallback(
     (page: GlobalSearchPageTarget) => {
@@ -782,7 +794,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   cancelButton: {
-    paddingHorizontal: 6,
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
     paddingVertical: 8,
   },
   cancelText: {

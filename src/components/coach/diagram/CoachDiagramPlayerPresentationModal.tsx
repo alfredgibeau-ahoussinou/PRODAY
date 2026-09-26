@@ -54,6 +54,18 @@ export const CoachDiagramPlayerPresentationModal: React.FC<CoachDiagramPlayerPre
     initialSpeed: 1.0,
   });
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
+
   // Si réduction des mouvements activée, mettre en pause automatique
   useEffect(() => {
     if (reduceMotionActive && animState.isPlaying) {
@@ -373,9 +385,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   closeBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',

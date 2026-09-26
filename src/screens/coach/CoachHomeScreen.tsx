@@ -52,12 +52,12 @@ interface Props {
 export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
   const profile = useSessionProfile();
   const { teamName, displayName } = useCoachTeamChrome();
-  const { tokens } = useCoachTheme();
+  const { tokens, teamId } = useCoachTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   /** Saison unique du produit (`clubSeason`) — même définitions que le pôle Club. */
   const season = formatClubSeasonLabel(clubSeasonLabelForDate(new Date()));
   const [refreshing, setRefreshing] = useState(false);
-  const [showStandings, setShowStandings] = useState(false);
+  const [showStandings, setShowStandings] = useState(true);
   /** Détail des réponses en attente — déroulé du badge du prochain événement. */
   const [pendingSheetOpen, setPendingSheetOpen] = useState(false);
 
@@ -474,7 +474,7 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
 
         {showStandings ? (
           <View style={styles.standingsContainer}>
-            <CoachStandingsTable compact={false} />
+            <CoachStandingsTable compact={false} teamId={teamId} teamName={teamName} />
           </View>
         ) : null}
       </View>

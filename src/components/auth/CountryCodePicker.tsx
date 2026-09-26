@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -72,6 +73,18 @@ export const CountryCodePicker: React.FC<CountryCodePickerProps> = ({
         c.code.toLowerCase().includes(q),
     );
   }, [search]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -169,7 +182,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   closeBtn: {
-    padding: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchContainer: {
     flexDirection: 'row',

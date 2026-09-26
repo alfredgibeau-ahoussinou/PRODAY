@@ -67,6 +67,18 @@ export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
     });
   }, [visible, reduced, backdrop, sheetY]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
+
   const backdropStyle = useAnimatedStyle(() => ({ opacity: backdrop.value }));
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetY.value }],
@@ -76,7 +88,7 @@ export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
   return (
     <Modal visible={visible} animationType="none" transparent onRequestClose={onClose}>
       <View style={styles.root}>
-        <Pressable style={styles.scrim} onPress={onClose}>
+        <Pressable style={styles.scrim} onPress={onClose} accessibilityLabel="Fermer">
           <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
             <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFill} />
             <View style={[StyleSheet.absoluteFill, { backgroundColor: tokens.scrim }]} />
@@ -90,10 +102,24 @@ export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
           ]}
         >
           <View style={styles.handle} />
-          <ClubText variant="h3">Créer</ClubText>
-          <ClubText variant="caption" muted style={{ marginBottom: clubSpace.sm }}>
-            Actions rapides — match, séance, joueur…
-          </ClubText>
+          <View style={styles.sheetHeaderRow}>
+            <View style={{ flex: 1 }}>
+              <ClubText variant="h3">Créer</ClubText>
+              <ClubText variant="caption" muted style={{ marginBottom: clubSpace.sm }}>
+                Actions rapides — match, séance, joueur…
+              </ClubText>
+            </View>
+            <PressableSpring
+              onPress={onClose}
+              scaleTo={0.92}
+              haptic
+              accessibilityRole="button"
+              accessibilityLabel="Fermer"
+              style={styles.closeBtn}
+            >
+              <Icon name="close" size={20} color={tokens.foreground} />
+            </PressableSpring>
+          </View>
           {CLUB_CREATE_ACTIONS.map((action) => (
             <PressableSpring
               key={action.id}
@@ -208,6 +234,23 @@ function createStyles(tokens: ClubThemeTokens) {
       borderRadius: 2,
       backgroundColor: tokens.borderStrong,
       marginBottom: clubSpace.sm,
+    },
+    sheetHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: clubSpace.md,
+      marginBottom: clubSpace.xs,
+    },
+    closeBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
     },
     row: {
       flexDirection: 'row',

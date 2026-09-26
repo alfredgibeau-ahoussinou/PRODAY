@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -84,6 +84,18 @@ export const ShareablePlayerCardModal: React.FC<ShareablePlayerCardModalProps> =
   };
 
   const textColor = themeTextColors[cardTheme];
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
@@ -268,9 +280,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   closeBtn: {
-    padding: 6,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#1E293B',
-    borderRadius: 20,
+    borderRadius: 22,
   },
   cardContainer: {
     width: 320,

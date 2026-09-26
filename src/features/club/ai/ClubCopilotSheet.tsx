@@ -95,9 +95,9 @@ const createStyles = (tokens: ClubThemeTokens) =>
     },
     title: { fontWeight: '800' },
     closeBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       borderWidth: StyleSheet.hairlineWidth,
       alignItems: 'center',
       justifyContent: 'center',

@@ -1,0 +1,80 @@
+1
+00:00:00,000 --> 00:00:00,000
+Début de la capture
+
+2
+00:00:00,000 --> 00:00:03,003
+Connexion au pôle Coach (session de démonstration déjà ouverte, mot de passe masqué)
+
+3
+00:00:03,003 --> 00:00:26,525
+Accueil coach — cockpit du banc : vigilance de charge, prochain événement, raccourcis (tableau tactique, entraînements, scouting vocal)
+
+4
+00:00:26,525 --> 00:01:02,108
+Messagerie — messagerie interne du staff, ouverte depuis l'en-tête (conversations, groupes, non lus)
+
+5
+00:01:02,108 --> 00:01:26,075
+Calendrier (barre latérale) — vue du mois avec séances et matchs de l'équipe active
+
+6
+00:01:26,075 --> 00:01:48,575
+Équipe — effectif de l'équipe active, actions d'équipe et accès à la composition
+
+7
+00:01:48,575 --> 00:02:15,600
+Menu — hub « Tout ProDay » du pôle Coach : tous les modules du staff en une page
+
+8
+00:02:15,600 --> 00:02:43,524
+Module Matchs & Live — direct, convocations et scores
+
+9
+00:02:43,524 --> 00:03:11,516
+Module Entraînements — séances, exercices d'atelier et présences
+
+10
+00:03:11,516 --> 00:03:39,486
+Module Effectif & Joueurs — fiches joueurs, forme et statistiques individuelles
+
+11
+00:03:39,486 --> 00:04:07,460
+Assistant Coach IA — conseils et causeries proposées (résultats de démonstration)
+
+12
+00:04:07,460 --> 00:04:35,407
+Chat Copilote IA — assistant conversationnel du staff
+
+13
+00:04:35,407 --> 00:05:03,374
+Mes Vidéos — captations, clips et analyse vidéo (démonstration)
+
+14
+00:05:03,374 --> 00:05:31,327
+Forme & Charge — suivi physique de l'effectif : charge, alertes et objectifs
+
+15
+00:05:31,327 --> 00:05:59,262
+Gestion Équipe — licences, catégories et organisation administrative
+
+16
+00:05:59,262 --> 00:06:23,702
+Historique des relances — qui a été relancé, quand et combien de destinataires
+
+17
+00:06:23,702 --> 00:06:51,618
+Covoiturage — trajets et véhicules des matchs
+
+18
+00:06:51,618 --> 00:07:19,573
+Coaching Perso — créneaux ouverts et tarification à l'heure
+
+19
+00:07:19,573 --> 00:07:34,537
+Retour à l'accueil coach — synthèse du parcours
+
+20
+00:07:34,537 --> 00:07:35,737
+Fin de la visite guidée du pôle Coach.
+

@@ -10,6 +10,7 @@ import {
   Alert,
   ScrollView,
   Modal,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -77,6 +78,19 @@ export function NoClubScreen({ latestRejected, onMembershipSubmitted }: NoClubSc
       clearTimeout(timer);
     };
   }, [searchTerm]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || (!modalVisible && !unlistedModalVisible)) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setModalVisible(false);
+        setUnlistedModalVisible(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [modalVisible, unlistedModalVisible]);
 
   const handleOpenRequest = (club: Club) => {
     setSelectedClub(club);
@@ -734,7 +748,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   modalCloseButton: {
-    padding: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalForm: {
     paddingBottom: spacing.xxl,

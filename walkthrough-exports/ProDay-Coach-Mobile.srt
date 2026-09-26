@@ -1,0 +1,72 @@
+1
+00:00:00,000 --> 00:00:00,000
+Début de la capture
+
+2
+00:00:00,000 --> 00:00:18,766
+Connexion au pôle Coach avec un compte de démonstration isolé. Le mot de passe reste masqué à l'écran.
+
+3
+00:00:18,766 --> 00:00:39,803
+Accueil coach (mobile) — briefing du banc, vigilance charge, prochaines échéances et RSVP
+
+4
+00:00:39,803 --> 00:01:12,802
+Onglet Menu — hub « Tout ProDay » du pôle Coach (tous les modules)
+
+5
+00:01:12,802 --> 00:01:34,020
+Module Matchs & Live — direct, convocations et scores
+
+6
+00:01:34,020 --> 00:01:57,513
+Module Entraînements — séances, exercices et présences de l'équipe
+
+7
+00:01:57,513 --> 00:02:21,003
+Module Effectif & Joueurs — fiches, forme et statistiques individuelles
+
+8
+00:02:21,003 --> 00:02:42,282
+Assistant Coach IA — conseils et causeries (résultats de démonstration)
+
+9
+00:02:42,282 --> 00:03:02,537
+Chat Copilote IA — assistant conversationnel du staff
+
+10
+00:03:02,537 --> 00:03:22,863
+Mes Vidéos — captations et clips d'analyse (démonstration)
+
+11
+00:03:22,863 --> 00:03:44,164
+Forme & Charge — suivi physique : charge, alertes et objectifs
+
+12
+00:03:44,164 --> 00:04:04,432
+Gestion Équipe — licences, catégories et organisation
+
+13
+00:04:04,432 --> 00:04:24,748
+Messagerie — messages directs et groupes staff / parents
+
+14
+00:04:24,748 --> 00:04:44,986
+Covoiturage — trajets et véhicules des matchs
+
+15
+00:04:44,986 --> 00:05:05,273
+Coaching Perso — créneaux et tarifs à l'heure
+
+16
+00:05:05,273 --> 00:05:34,501
+Tableau tactique en paysage — composition et schéma de jeu (plein écran)
+
+17
+00:05:34,501 --> 00:05:47,991
+Retour à l'accueil coach — synthèse du parcours mobile
+
+18
+00:05:47,991 --> 00:05:49,191
+Fin de la visite guidée du pôle Coach.
+

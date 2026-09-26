@@ -24,17 +24,22 @@ export function resolveLiveState(event: TeamEvent): MatchLiveState {
       home_label: homeLabel,
       opponent_name: opponent,
       home_score: Math.max(stored.home_score, actionGoals > stored.home_score ? actionGoals : stored.home_score),
+      minute: stored.minute ?? (stored.has_live_telemetry ? estimateLiveMinute(event) : undefined),
+      has_live_telemetry: stored.has_live_telemetry ?? false,
+      source_type: stored.source_type ?? (stored.verified_by_uid ? 'club_official_entry' : 'unconfirmed'),
     };
   }
 
   const inferredStatus = inferMatchStatus(event);
   return {
     status: inferredStatus,
-    minute: inferredStatus === 'live' ? estimateLiveMinute(event) : undefined,
+    minute: undefined, // Jamais de chronomètre simulé en l'absence de flux télémétrique
     home_score: actionGoals,
     away_score: 0,
     home_label: homeLabel,
     opponent_name: opponent,
+    has_live_telemetry: false,
+    source_type: 'unconfirmed',
   };
 }
 
@@ -53,10 +58,30 @@ export function inferMatchStatus(event: TeamEvent): MatchLiveStatus {
   return 'scheduled';
 }
 
-export function estimateLiveMinute(event: TeamEvent): number {
+/**
+ * Retourne la minute de jeu officielle UNIQUEMENT si le match bénéficie d'une vraie télémétrie.
+ * Ne simule jamais une progression arbitraire pour les matchs amateurs sans capteurs.
+ */
+export function estimateLiveMinute(event: TeamEvent): number | undefined {
   if (event.live_state?.minute != null) return event.live_state.minute;
-  const elapsed = Math.floor((Date.now() - event.starts_at.getTime()) / 60000);
-  return Math.max(0, Math.min(120, elapsed));
+  if (event.live_state?.has_live_telemetry) {
+    const elapsed = Math.floor((Date.now() - event.starts_at.getTime()) / 60000);
+    return Math.max(0, Math.min(120, elapsed));
+  }
+  return undefined;
+}
+
+export function formatMatchScoreSourceLabel(state: MatchLiveState): string {
+  if (state.source_type === 'national_api_sports' || state.has_live_telemetry) {
+    return '● DIRECT OFFICIEL FFF (API)';
+  }
+  if (state.source_type === 'club_official_entry' || state.verified_by_uid) {
+    return '● SAISIE BANC DE TOUCHE CLUB';
+  }
+  if (state.status === 'finished') {
+    return '● RÉSULTAT FINAL HOMOLOGUÉ';
+  }
+  return '● SCORE NON CONFIRMÉ';
 }
 
 export function isInMatchWindow(event: TeamEvent): boolean {

@@ -1,0 +1,108 @@
+1
+00:00:00,000 --> 00:00:00,000
+Début de la capture
+
+2
+00:00:00,000 --> 00:00:19,779
+Connexion au pôle Club avec un compte de démonstration isolé. Le mot de passe reste masqué à l'écran.
+
+3
+00:00:19,779 --> 00:00:39,799
+Accueil club (mobile) — carte du club, recherche universelle, prochain rendez-vous et modules du club
+
+4
+00:00:39,799 --> 00:01:15,342
+Bouton « + CRÉER » — feuille de création : match, entraînement, joueur, coach, invitation
+
+5
+00:01:15,342 --> 00:01:39,993
+Onglet Calendrier — vue jour/semaine/mois des événements du club
+
+6
+00:01:39,993 --> 00:01:59,690
+Onglet Équipes — équipes rattachées au club et effectifs
+
+7
+00:01:59,690 --> 00:02:17,204
+Onglet Menu — hub « Tout ProDay » : tous les modules du club et bannière Pôle Président
+
+8
+00:02:17,204 --> 00:02:38,717
+Module Matchs & Live — convocations, scores en direct et feuilles de match
+
+9
+00:02:38,717 --> 00:03:03,908
+Module Événements & Tournois — tournois, stages et rassemblements du club
+
+10
+00:03:03,908 --> 00:03:29,130
+Module Classements FFF — championnat du club et divisions suivies
+
+11
+00:03:29,130 --> 00:03:54,320
+Module Vidéo & Analyse IA — Veo, smartphone, smart clipping et tags (démonstration)
+
+12
+00:03:54,320 --> 00:04:24,532
+Analyse vidéo en paysage — lecture plein écran d'un clip (rotation du support)
+
+13
+00:04:24,532 --> 00:04:50,060
+Module Effectif & Licences — annuaire des licenciés, adhésions et statuts
+
+14
+00:04:50,060 --> 00:05:14,274
+Module Staff & Coachs — affectations et encadrement des équipes
+
+15
+00:05:14,274 --> 00:05:39,466
+Module Communication — canaux officiels, Flash Info et messagerie directe
+
+16
+00:05:39,466 --> 00:06:01,435
+Module Finances & Cotisations — trésorerie, adhésions et suivi (données de démonstration)
+
+17
+00:06:01,435 --> 00:06:23,433
+Module Entraînements — séances planifiées, exercices et présences
+
+18
+00:06:23,433 --> 00:06:47,401
+Module Covoiturage & Logistique — déplacements extérieurs, places et itinéraires
+
+19
+00:06:47,401 --> 00:07:11,384
+Module Documents & Licences — bordereaux FFF et certificats
+
+20
+00:07:11,384 --> 00:07:33,345
+Module Sponsoring & Partenaires — dossiers, mécénat et visibilité
+
+21
+00:07:33,345 --> 00:07:57,348
+Module Rôles & Permissions — droits d'accès du staff et des dirigeants
+
+22
+00:07:57,348 --> 00:08:21,305
+Module Identité du club — couleurs, logo, saison et réglages
+
+23
+00:08:21,305 --> 00:08:45,314
+Centre de notifications — alertes adhésions, convocations et staff
+
+24
+00:08:45,314 --> 00:09:07,286
+Module Copilote Club IA — briefings et requêtes assistées (démonstration)
+
+25
+00:09:07,286 --> 00:09:34,771
+Pôle Président & Direction — cockpit stratégique du club (bascule depuis le Menu)
+
+26
+00:09:34,771 --> 00:09:49,653
+Fin du parcours mobile — le retour à l'accueil club n'a pas pu être déclenché depuis le cockpit Président : constat conservé tel quel
+
+27
+00:09:49,653 --> 00:09:50,853
+Fin de la visite guidée du pôle Club.
+

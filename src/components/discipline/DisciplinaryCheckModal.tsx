@@ -1,7 +1,7 @@
 // src/components/discipline/DisciplinaryCheckModal.tsx
 // Modal de consultation détaillée de l'éligibilité disciplinaire et audit d'override
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -11,6 +11,7 @@ import {
   Pressable,
   TextInput,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type {
@@ -50,6 +51,18 @@ export const DisciplinaryCheckModal: React.FC<DisciplinaryCheckModalProps> = ({
   const [overrideReason, setOverrideReason] = useState('');
   const [officialDocRef, setOfficialDocRef] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
 
   if (!result) return null;
 

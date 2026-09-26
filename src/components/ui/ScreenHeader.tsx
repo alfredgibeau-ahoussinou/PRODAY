@@ -7,16 +7,19 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import type { AppColors } from '../../theme/universeTheme';
 import { Icon } from './Icon';
 import { Logo } from '../Logo';
 import { ProDayText } from './ProDayText';
+import { useAppearance } from '../../context/AppearanceContext';
 
 interface ScreenHeaderProps {
   title: string;
   subtitle?: string;
   label?: string;
   onBack?: () => void;
+  showBack?: boolean;
   onMenu?: () => void;
   rightAction?: React.ReactNode;
   centered?: boolean;
@@ -31,6 +34,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   subtitle,
   label,
   onBack,
+  showBack,
   onMenu,
   rightAction,
   centered = false,
@@ -43,7 +47,17 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   const isPlayer = profile?.role === 'player';
   const joueurTheme = useJoueurTheme();
   const playerColors = usePlayerThemeColors();
+  const tabNav = useTabNavigationOptional();
+  const { tokens: glassTokens, isEffectiveGlass } = useAppearance();
   const styles = useMemo(() => createStyles(c), [c]);
+
+  const effectiveOnBack =
+    onBack ??
+    (showBack || tabNav?.returnTab
+      ? () => {
+          if (tabNav?.returnTab) tabNav.goBackTab();
+        }
+      : undefined);
   const isDarkHeader = dark || sponsorDark;
   const ink = isDarkHeader
     ? sponsorDark
@@ -58,6 +72,11 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   const wrapStyle = [
     isDarkHeader ? styles.wrapDark : styles.wrap,
     !isDarkHeader && { backgroundColor: c.background },
+    isEffectiveGlass && glassTokens.blurStyle,
+    isEffectiveGlass && {
+      borderBottomWidth: 1,
+      borderBottomColor: glassTokens.border,
+    },
     sponsorDark && {
       backgroundColor: SPONSOR_THEME.surface,
       borderBottomWidth: 1,
@@ -75,12 +94,18 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
     ? { backgroundColor: SPONSOR_THEME.primarySoft }
     : { backgroundColor: isPlayer ? playerColors.accentSoft : c.brandSoft };
 
-  if (centered || onBack) {
+  if (centered || effectiveOnBack) {
     return (
       <View style={wrapStyle}>
         <View style={styles.bar}>
-          {onBack ? (
-            <TouchableOpacity onPress={onBack} style={[styles.backBtn, backBtnStyle]} hitSlop={12}>
+          {effectiveOnBack ? (
+            <TouchableOpacity
+              onPress={effectiveOnBack}
+              style={[styles.backBtn, backBtnStyle]}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Retour"
+            >
               <Ionicons name="chevron-back" size={22} color={backIconColor} />
             </TouchableOpacity>
           ) : (
@@ -201,9 +226,9 @@ function createStyles(c: AppColors) {
   },
   side: { width: 44, alignItems: 'center', justifyContent: 'center' },
   backBtn: {
-    // §5.1 — bouton retour squircle 40×40, radius 12, bordure border.
-    width: 40,
-    height: 40,
+    // §5.1 — bouton retour squircle 44×44, radius 12, bordure border.
+    width: 44,
+    height: 44,
     borderRadius: 12,
     backgroundColor: c.brandSoft,
     borderWidth: 1,

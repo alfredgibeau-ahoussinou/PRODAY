@@ -34,7 +34,9 @@ import {
   PARENT_PRIMARY_TABS,
   PARENT_MENU_TOOLS,
   canonicalizeParentNav,
+  resolveParentFallbackNav,
 } from '../features/parent/navigation/parentNavConfig';
+import { AppBackButton } from '../components/ui/AppBackButton';
 import { ParentTabBar } from '../features/parent/shell/ParentTabBar';
 import { ParentSidebar } from '../features/parent/shell/ParentSidebar';
 import { ParentShellNavProvider } from '../features/parent/shell/ParentShellNavContext';
@@ -69,15 +71,51 @@ const ParentAppShellInner: React.FC = () => {
   const wide = width >= parentChrome.wideBreakpoint;
   const { direction, noteNav } = useShellNavDirection(PARENT_MOTION_ORDER);
   const [activeTab, setActiveTabRaw] = useState<ParentTabId>('home');
+  const [history, setHistory] = useState<ParentTabId[]>([]);
   const [children, setChildren] = useState<ParentChildBundle[]>([]);
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const setActiveTab = useCallback((tab: ParentTabId) => {
-    const next = canonicalizeParentNav(tab);
-    noteNav(next);
-    setActiveTabRaw(next);
-  }, [noteNav]);
+  const setActiveTab = useCallback(
+    (tab: ParentTabId, options?: { replace?: boolean; clearHistory?: boolean }) => {
+      const next = canonicalizeParentNav(tab);
+      const current = canonicalizeParentNav(activeTab);
+
+      if (options?.clearHistory) {
+        setHistory([]);
+      } else if (options?.replace) {
+        // do not append to history
+      } else if (next !== current) {
+        setHistory((prev) => [...prev.slice(-29), current]);
+      }
+
+      noteNav(next);
+      setActiveTabRaw(next);
+    },
+    [activeTab, noteNav],
+  );
+
+  const fallback = resolveParentFallbackNav(activeTab);
+  const hasFallback =
+    canonicalizeParentNav(fallback) !== canonicalizeParentNav(activeTab);
+  const canGoBack = history.length > 0 || hasFallback;
+
+  const goBack = useCallback(() => {
+    if (history.length > 0) {
+      const previous = history[history.length - 1];
+      setHistory((prev) => prev.slice(0, -1));
+      const next = canonicalizeParentNav(previous);
+      noteNav(next);
+      setActiveTabRaw(next);
+      return;
+    }
+    const fb = resolveParentFallbackNav(activeTab);
+    if (fb && canonicalizeParentNav(fb) !== canonicalizeParentNav(activeTab)) {
+      const next = canonicalizeParentNav(fb);
+      noteNav(next);
+      setActiveTabRaw(next);
+    }
+  }, [history, activeTab, noteNav]);
 
   const reload = useCallback(async () => {
     if (!profile) {
@@ -160,7 +198,12 @@ const ParentAppShellInner: React.FC = () => {
 
   return (
     <ParentShellContext.Provider value={ctxValue}>
-      <ParentShellNavProvider requestNav={setActiveTab}>
+      <ParentShellNavProvider
+        history={history}
+        canGoBack={canGoBack}
+        goBack={goBack}
+        requestNav={setActiveTab}
+      >
         <SafeAreaView
           style={[
             styles.root,
@@ -182,11 +225,20 @@ const ParentAppShellInner: React.FC = () => {
           <View style={styles.main}>
             {!wide ? (
               <View style={styles.header}>
-                <View>
-                  <ProDayText variant="caption" muted>
-                    Parent
-                  </ProDayText>
-                  <ProDayText variant="section">Pro Day</ProDayText>
+                <View style={styles.headerLeft}>
+                  {canGoBack || activeTab !== 'home' ? (
+                    <AppBackButton
+                      onPress={goBack}
+                      fallbackNavId="home"
+                      style={styles.headerBackBtn}
+                    />
+                  ) : null}
+                  <View>
+                    <ProDayText variant="caption" muted>
+                      Parent
+                    </ProDayText>
+                    <ProDayText variant="section">Pro Day</ProDayText>
+                  </View>
                 </View>
                 {selected ? (
                   <Pressable
@@ -237,6 +289,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  headerBackBtn: {
+    marginRight: 2,
   },
   childPill: {
     paddingHorizontal: spacing.md,

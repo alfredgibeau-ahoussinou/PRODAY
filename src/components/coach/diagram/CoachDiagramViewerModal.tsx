@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   Platform,
@@ -50,6 +50,18 @@ export const CoachDiagramViewerModal: React.FC<CoachDiagramViewerModalProps> = (
   const { tokens } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
   const { width: winWidth, height: winHeight } = useWindowDimensions();
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
 
   // Mode présentation (« Montrer aux joueurs »)
   const [isPresentationMode, setIsPresentationMode] = useState(false);
@@ -678,8 +690,8 @@ const createStyles = (tokens: CoachComponentTokens) =>
       lineHeight: 22,
     },
     iconBtn: {
-      width: 40,
-      height: 40,
+      width: 44,
+      height: 44,
       borderRadius: proRadius.md,
       borderWidth: 1,
       borderColor: tokens.border,

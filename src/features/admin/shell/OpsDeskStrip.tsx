@@ -13,6 +13,8 @@ type Props = {
   actionCount: number;
   topInset?: number;
   showMenuButton?: boolean;
+  canGoBack?: boolean;
+  onBack?: () => void;
   onOpenCommand: () => void;
   onOpenOverview: () => void;
   onOpenMenu?: () => void;
@@ -27,6 +29,8 @@ export function OpsDeskStrip({
   actionCount,
   topInset = 0,
   showMenuButton = false,
+  canGoBack = false,
+  onBack,
   onOpenCommand,
   onOpenOverview,
   onOpenMenu,
@@ -64,6 +68,21 @@ export function OpsDeskStrip({
       ]}
     >
       <View style={styles.zone}>
+        {canGoBack && onBack ? (
+          <Pressable
+            onPress={onBack}
+            hitSlop={8}
+            style={styles.backBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+            testID="admin-back-btn"
+          >
+            <Icon name="arrow-back" size={16} color={t.signal} />
+            <AdminText variant="caption" color={t.signal} style={{ fontWeight: '700' }}>
+              Retour
+            </AdminText>
+          </Pressable>
+        ) : null}
         {showMenuButton && onOpenMenu ? (
           <Pressable
             onPress={onOpenMenu}
@@ -163,6 +182,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     minWidth: 0,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: adminLayout.hitTarget,
+    borderRadius: adminRadius.sm,
+    borderWidth: 1,
+    borderColor: ADMIN_TOKENS.signal,
+    backgroundColor: ADMIN_TOKENS.accentSoft,
   },
   menuBtn: {
     flexDirection: 'row',

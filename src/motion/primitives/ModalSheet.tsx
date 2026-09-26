@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Modal,
   PanResponder,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -9,6 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppearance } from '../../context/AppearanceContext';
 import { prodayMotion } from '../tokens';
 
 type Variant = 'full' | 'sheet';
@@ -44,6 +46,7 @@ export function ModalSheet({
   accessibilityCloseLabel = 'Fermer',
 }: ModalSheetProps) {
   const insets = useSafeAreaInsets();
+  const { tokens: glassTokens, isEffectiveGlass } = useAppearance();
   const isSheet = variant === 'sheet';
 
   const pan = useMemo(
@@ -59,6 +62,18 @@ export function ModalSheet({
       }),
     [gestureClose, onClose],
   );
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
 
   return (
     <Modal
@@ -79,11 +94,13 @@ export function ModalSheet({
         <View
           style={[
             isSheet ? styles.sheet : styles.full,
+            isEffectiveGlass && (glassTokens.blurStyle as any),
             {
-              backgroundColor,
+              backgroundColor: isEffectiveGlass ? glassTokens.bgElevated : backgroundColor,
               paddingBottom: isSheet ? Math.max(insets.bottom, 16) : 0,
               borderTopLeftRadius: isSheet ? 20 : 0,
               borderTopRightRadius: isSheet ? 20 : 0,
+              borderTopColor: isEffectiveGlass ? glassTokens.specularTop : borderColor,
               borderColor,
             },
             contentStyle,

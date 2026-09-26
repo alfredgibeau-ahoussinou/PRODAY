@@ -218,6 +218,14 @@ export interface MatchLiveState {
   home_label?: string;
   /** Motif d'annulation ou de report affiché au staff et aux joueurs. */
   cancel_reason?: string;
+  /** Source de la mise à jour (ex: 'national_api_sports', 'club_official_entry') */
+  source_type?: 'national_api_sports' | 'club_official_entry' | 'official_final_result' | 'unconfirmed';
+  /** Indique si le match bénéficie d'une vraie télémétrie chronométrée en continu */
+  has_live_telemetry?: boolean;
+  /** Identifiant du coach/délégué ayant saisi ou validé le score */
+  verified_by_uid?: string;
+  /** Date/heure de la dernière saisie ou synchronisation */
+  last_updated_at?: string;
 }
 
 export interface TeamEvent {

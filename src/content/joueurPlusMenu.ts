@@ -13,6 +13,7 @@ import { getJoueurGameTabLabel } from './joueurGameMenu';
 export type JoueurPlusMenuAction =
   | { kind: 'tab'; tab: MainTabId }
   | { kind: 'dashboard'; view: DashboardDeepLink }
+  | { kind: 'modal'; modal: 'journal' | 'extra_sessions' | 'equipment' | 'appointment' | 'cv_pdf' }
   | { kind: 'shop' };
 
 export type JoueurPlusMenuItem = {
@@ -146,6 +147,46 @@ export function buildJoueurPlusMenuItems({
       subtitle: 'Conseils personnalisés',
       icon: 'star-four-points',
       action: { kind: 'dashboard', view: 'tactics_coach' },
+      visible: true,
+    },
+    {
+      id: 'journal',
+      label: 'Mon Journal',
+      subtitle: 'Notes privées & ressentis',
+      icon: 'bookmark',
+      action: { kind: 'modal', modal: 'journal' },
+      visible: true,
+    },
+    {
+      id: 'extra_sessions',
+      label: 'Séances Extra',
+      subtitle: 'Entraînements coéquipiers',
+      icon: 'football',
+      action: { kind: 'modal', modal: 'extra_sessions' },
+      visible: true,
+    },
+    {
+      id: 'equipment',
+      label: 'Mes Équipements',
+      subtitle: 'Dotations & équipements club',
+      icon: 'shirt',
+      action: { kind: 'modal', modal: 'equipment' },
+      visible: true,
+    },
+    {
+      id: 'appointment',
+      label: 'Rendez-vous Coach',
+      subtitle: 'Disponibilités & débriefs 1-à-1',
+      icon: 'calendar',
+      action: { kind: 'modal', modal: 'appointment' },
+      visible: true,
+    },
+    {
+      id: 'cv_pdf',
+      label: 'CV Sportif',
+      subtitle: 'Export PDF & profil vérifié',
+      icon: 'document',
+      action: { kind: 'modal', modal: 'cv_pdf' },
       visible: true,
     },
   ];

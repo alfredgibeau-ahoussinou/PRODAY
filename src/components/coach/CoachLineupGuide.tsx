@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -157,6 +158,18 @@ export function CoachLineupGuide({
   const showBench = step.id === 'subs' || step.id === 'review';
   const pickerTargetSlot = pickerSlot !== null ? pitchSlots[pickerSlot] : undefined;
   const pickerCurrent = pickerSlot !== null ? starters[pickerSlot] ?? null : null;
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
 
   return (
     <Modal visible={visible} animationType="fade" onRequestClose={onClose}>
@@ -460,9 +473,9 @@ const styles = StyleSheet.create({
   title: { ...proType.h1 },
   subtitle: { ...proType.caption, lineHeight: 17 },
   closeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: proRadius.pill,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -471,7 +484,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: proSpace.xs,
-    height: 40,
+    minHeight: 44,
+    minWidth: 44,
     paddingHorizontal: proSpace.md,
     borderRadius: proRadius.pill,
     borderWidth: 1,

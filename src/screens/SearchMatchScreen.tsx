@@ -9,9 +9,11 @@ import {
   Modal,
   TextInput,
   Pressable,
+  Platform,
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SearchBar } from '../components/ui/SearchBar';
+import { Icon } from '../components/ui/Icon';
 import { PressableSpring, StaggerReveal, InteractiveListItem } from '../components/motion';
 import { prodayHaptics } from '../utils/prodayHaptics';
 import { spacing, radius, shadows } from '../theme/designTokens';
@@ -131,6 +133,18 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
     });
     return list;
   }, [matches, query, cityFilter, onlyWithOpponent, sortMode]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !filtersOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setFiltersOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filtersOpen]);
 
   return (
     <View style={[styles.root, rootStyle]}>
@@ -260,8 +274,18 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
 
       <Modal visible={filtersOpen} transparent animationType="fade" onRequestClose={() => setFiltersOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setFiltersOpen(false)}>
-          <View style={[styles.modalCard, { backgroundColor: c.surface, borderColor: c.border }]}>
-            <Text style={[styles.modalTitle, { color: c.text }]}>Filtres avancés</Text>
+          <View style={[styles.modalCard, { backgroundColor: c.surface, borderColor: c.border }]} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={[styles.modalTitle, { color: c.text }]}>Filtres avancés</Text>
+              <PressableSpring
+                style={styles.modalCloseBtn}
+                onPress={() => setFiltersOpen(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Fermer les filtres"
+              >
+                <Icon name="close" size={22} color={c.text} />
+              </PressableSpring>
+            </View>
             <Text style={[styles.modalLabel, { color: c.textSecondary }]}>Ville</Text>
             <TextInput
               style={[styles.modalInput, { borderColor: c.border, color: c.text }]}
@@ -431,7 +455,19 @@ function createStyles(c: AppColors) {
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  modalTitle: { fontSize: 18, fontWeight: '900', marginBottom: spacing.xs },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '900', flex: 1 },
+  modalCloseBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   modalLabel: { fontSize: 12, fontWeight: '700' },
   modalInput: {
     borderWidth: 1,
@@ -463,7 +499,9 @@ function createStyles(c: AppColors) {
   applyBtn: {
     borderRadius: radius.md,
     paddingVertical: spacing.md,
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   applyText: { color: '#fff', fontWeight: '800', fontSize: 15 },
   });

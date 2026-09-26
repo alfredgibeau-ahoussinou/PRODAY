@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Modal, View, StyleSheet, Pressable, Text, type ModalProps } from 'react-native';
+import { Modal, View, StyleSheet, Pressable, Text, Platform, type ModalProps } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,6 +9,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { motion, useReducedMotion } from '../../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useAppearance } from '../../context/AppearanceContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
@@ -49,6 +50,7 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   sheetBackgroundColor,
 }) => {
   const insets = useSafeAreaInsets();
+  const { tokens: glassTokens, isEffectiveGlass } = useAppearance();
   const reduced = useReducedMotion();
   const { colors: appColors } = useAppTheme();
   const c = themeColors ?? appColors;
@@ -57,6 +59,18 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   const styles = useMemo(() => createStyles(c), [c]);
   const backdrop = useSharedValue(0);
   const sheetY = useSharedValue(80);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
 
   useEffect(() => {
     if (visible) {
@@ -110,10 +124,12 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
             styles.sheet,
             isCompact ? styles.sheetCompact : isTall ? styles.sheetTall : styles.sheetFull,
             isBottomSheet && styles.sheetCompactRadius,
+            isEffectiveGlass && (glassTokens.blurStyle as any),
             sheetStyle,
             {
               paddingTop: sheetPaddingTop,
-              backgroundColor: sheetBackgroundColor ?? c.background,
+              backgroundColor: sheetBackgroundColor ?? (isEffectiveGlass ? glassTokens.bgElevated : c.background),
+              borderTopColor: isEffectiveGlass ? glassTokens.specularTop : c.border,
             },
           ]}
         >
@@ -185,7 +201,14 @@ function createStyles(c: AppColors) {
       borderRadius: 2,
       backgroundColor: c.borderMedium,
     },
-    closeBtn: { paddingVertical: spacing.xs, paddingHorizontal: spacing.sm },
+    closeBtn: {
+      minHeight: 44,
+      minWidth: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+    },
     closeText: { fontSize: 14, fontWeight: '800', color: c.brand },
     body: { flex: 1 },
   });

@@ -416,6 +416,16 @@ export function RosterProfileSheet({
               </Text>
             ) : null}
           </View>
+          <PressableSpring
+            onPress={onClose}
+            scaleTo={0.92}
+            haptic
+            style={[styles.sheetCloseBtn, { borderColor: tokens.border, backgroundColor: tokens.elevated }]}
+            accessibilityRole="button"
+            accessibilityLabel="Fermer la fiche joueur"
+          >
+            <Icon name="close" size={20} color={tokens.foreground} />
+          </PressableSpring>
         </View>
 
         {facts && facts.length > 0 ? (
@@ -549,7 +559,7 @@ const createStyles = (tokens: RosterChromeTokens) =>
     },
     emptyBody: { color: tokens.muted, textAlign: 'center' },
     sheetBody: { padding: proSpace.lg, gap: proSpace.lg, paddingBottom: proSpace.xl },
-    sheetHead: { flexDirection: 'row', alignItems: 'center', gap: proSpace.md },
+    sheetHead: { flexDirection: 'row', alignItems: 'flex-start', gap: proSpace.md },
     sheetBadge: {
       width: 52,
       height: 52,
@@ -560,6 +570,14 @@ const createStyles = (tokens: RosterChromeTokens) =>
     },
     sheetBadgeText: { ...proType.h3, fontWeight: '800' },
     sheetHeadText: { flex: 1, minWidth: 0, gap: 2 },
+    sheetCloseBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     sheetName: { ...proType.h3, fontWeight: '800' },
     sheetTitle: { fontWeight: '700' },
     factGrid: {

@@ -11,11 +11,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
+import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
+import { useParentShellNav } from '../../features/parent/shell/ParentShellNavContext';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { useTabNavigation } from '../../context/TabNavigationContext';
+import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import { radius } from '../../theme/designTokens';
 import { prodayHaptics } from '../../utils/prodayHaptics';
-import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
 
 export interface AppBackButtonProps {
   /** Libellé du bouton — défaut « Retour » */
@@ -37,7 +39,7 @@ export interface AppBackButtonProps {
   /** Message de l'alerte en cas de modifications non sauvegardées */
   unsavedMessage?: string;
   /** Destination de repli en l'absence d'historique */
-  fallbackNavId?: CoachNavItemId;
+  fallbackNavId?: string;
   /** Accessibilité */
   accessibilityLabel?: string;
   /** Style du conteneur pressable */
@@ -73,20 +75,23 @@ export const AppBackButton: React.FC<AppBackButtonProps> = ({
   iconOnly = false,
 }) => {
   const shellNav = useCoachShellNav();
+  const clubNav = useClubShellNav();
+  const parentNav = useParentShellNav();
   const coachTheme = useCoachTheme();
+  const clubTheme = useClubTheme();
   const appTheme = useAppTheme();
-  const tabNav = useTabNavigation();
+  const tabNav = useTabNavigationOptional();
 
-  // Contraste élevé : dérivé des tokens du coach ou du thème d'application
+  // Contraste élevé : dérivé des tokens du coach, club ou du thème d'application
   const tokens = coachTheme?.tokens;
-  const isLight = tokens?.isLight ?? false;
+  const isLight = tokens?.isLight ?? (appTheme as any)?.isLight ?? false;
 
   const bg = isLight
-    ? tokens?.elevated ?? '#E5E5EA'
-    : tokens?.surface ?? '#1C1C24';
+    ? tokens?.elevated ?? appTheme?.colors?.surface ?? '#E5E5EA'
+    : tokens?.surface ?? clubTheme?.tokens?.surface ?? '#1C1C24';
   const border = isLight
-    ? tokens?.border ?? '#D1D1D6'
-    : tokens?.border ?? 'rgba(255, 255, 255, 0.16)';
+    ? tokens?.border ?? appTheme?.colors?.border ?? '#D1D1D6'
+    : tokens?.border ?? clubTheme?.tokens?.border ?? 'rgba(255, 255, 255, 0.16)';
   const textColor = color ?? (isLight ? '#000000' : '#FFFFFF');
 
   const executeBack = () => {
@@ -95,19 +100,53 @@ export const AppBackButton: React.FC<AppBackButtonProps> = ({
       return;
     }
     if (shellNav) {
-      if (shellNav.canGoBack) {
+      if (shellNav.canGoBack && shellNav.goBack) {
         shellNav.goBack();
         return;
       }
       if (fallbackNavId) {
-        shellNav.requestNav(fallbackNavId);
+        shellNav.requestNav(fallbackNavId as any);
         return;
       }
-      shellNav.goBack();
-      return;
+      if (shellNav.goBack) {
+        shellNav.goBack();
+        return;
+      }
+    }
+    if (clubNav) {
+      if (clubNav.canGoBack && clubNav.goBack) {
+        clubNav.goBack();
+        return;
+      }
+      if (fallbackNavId) {
+        clubNav.requestNav(fallbackNavId as any);
+        return;
+      }
+      if (clubNav.goBack) {
+        clubNav.goBack();
+        return;
+      }
+    }
+    if (parentNav) {
+      if (parentNav.canGoBack && parentNav.goBack) {
+        parentNav.goBack();
+        return;
+      }
+      if (fallbackNavId) {
+        parentNav.requestNav(fallbackNavId as any);
+        return;
+      }
+      if (parentNav.goBack) {
+        parentNav.goBack();
+        return;
+      }
     }
     if (tabNav?.returnTab) {
       tabNav.goBackTab();
+      return;
+    }
+    if (tabNav && fallbackNavId) {
+      tabNav.setActiveTab(fallbackNavId as any);
       return;
     }
   };

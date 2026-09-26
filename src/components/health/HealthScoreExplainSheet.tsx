@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Modal, ScrollView, StyleSheet, Pressable } from 'react-native';
+import React, { useMemo, useEffect } from 'react';
+import { View, Modal, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
 import type { HealthEngineInput, HealthSnapshot } from '../../core/types/health';
 import { explainHealthScores } from '../../features/v3/engines/healthExplain.engine';
 import { ProDayText } from '../ui/ProDayText';
@@ -23,6 +23,18 @@ export const HealthScoreExplainSheet: React.FC<HealthScoreExplainSheetProps> = (
   const { colors } = useAppTheme();
   const explanation = useMemo(() => explainHealthScores(input, health), [input, health]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
@@ -31,7 +43,18 @@ export const HealthScoreExplainSheet: React.FC<HealthScoreExplainSheetProps> = (
           onPress={(e) => e.stopPropagation()}
         >
           <View style={styles.handle} />
-          <ProDayText variant="section">Pourquoi ce score ?</ProDayText>
+          <View style={styles.headerRow}>
+            <ProDayText variant="section" style={styles.headerTitle}>Pourquoi ce score ?</ProDayText>
+            <Pressable
+              onPress={onClose}
+              style={styles.headerCloseBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer"
+              hitSlop={8}
+            >
+              <Icon name="close" size={20} color={colors.text} />
+            </Pressable>
+          </View>
           <ProDayText variant="body" muted style={styles.summary}>
             {explanation.summary}
           </ProDayText>
@@ -117,6 +140,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(128,128,128,0.35)',
     marginBottom: spacing.xs,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerTitle: {
+    flex: 1,
+  },
+  headerCloseBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   summary: { lineHeight: 20 },
   scroll: { maxHeight: 360 },
   section: { marginTop: spacing.md, marginBottom: spacing.xs },
@@ -125,6 +162,8 @@ const styles = StyleSheet.create({
   factorLabel: { fontWeight: '700' },
   closeBtn: {
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
     paddingVertical: spacing.md,
     borderRadius: radius.pill,
     marginTop: spacing.sm,

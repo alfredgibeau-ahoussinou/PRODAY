@@ -123,6 +123,18 @@ export function FederationSyncDrawer({
 
   const filteredChamps = champs.filter((c) => c.categoryTag === activeCategory);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.overlay}>
@@ -142,7 +154,12 @@ export function FederationSyncDrawer({
                 </CoachText>
               )}
             </View>
-            <PressableSpring onPress={onClose} hitSlop={10}>
+            <PressableSpring
+              onPress={onClose}
+              style={styles.closeBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer"
+            >
               <Icon name="close" size={24} color={tokens.foreground} />
             </PressableSpring>
           </View>
@@ -340,6 +357,7 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.md },
   title: { fontSize: 20, fontWeight: '800' },
+  closeBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   contentArea: { minHeight: 300 },
   
   // Step 1

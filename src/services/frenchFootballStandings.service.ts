@@ -1,4 +1,5 @@
 import type { LeagueStandingRow } from '../components/matchs/EliteLeagueStandings';
+import { getOfficialSnapshot } from './data/fffOfficialStandingsStore';
 import type { FffFixture } from './fffScraper.service';
 
 export interface LeagueScorer {
@@ -37,6 +38,18 @@ export interface FrenchLeagueData {
   scorers: LeagueScorer[];
   /** Source technique du snapshot : API/DOFA/cache/empty. */
   source?: string;
+  /** URL officielle publique de la compétition / poule. */
+  sourceUrl?: string;
+  /** Phase de la compétition (ex. 'Phase 1' ou 'Unique'). */
+  phase?: string;
+  /** Libellé exact de la poule / groupe. */
+  groupLabel?: string;
+  /** Statut de vérification d'exactitude par rapport à la source officielle. */
+  verificationStatus?: 'verified' | 'unverified' | 'pending_selection';
+  /** Motif explicatif en cas d'absence de vérification. */
+  verificationReason?: string;
+  /** Mention d'éventuelles pénalités ou décisions administratives FFF. */
+  penaltiesNotice?: string;
   officialFffCertified?: boolean;
   /** Date ISO du dernier snapshot ou de la dernière tentative de synchronisation. */
   lastSyncAt?: string;
@@ -114,6 +127,7 @@ export const FRENCH_LEAGUE_CATEGORIES: FrenchLeagueCategory[] = [
       { id: 'd1_d93', name: 'Départemental 1 · District 93 (Seine-Saint-Denis)', shortLabel: 'D1 District 93' },
       { id: 'd1_d75', name: 'Départemental 1 · District 75 (Paris)', shortLabel: 'D1 District 75' },
       { id: 'd1_d94', name: 'Départemental 1 · District 94 (Val-de-Marne)', shortLabel: 'D1 District 94' },
+      { id: 'd2_d94_b', name: 'Départemental 2 · Poule B · District 94 (Val-de-Marne)', shortLabel: 'D2 District 94 (Poule B)' },
       { id: 'd1_d78', name: 'Départemental 1 · District 78 (Yvelines)', shortLabel: 'D1 District 78' },
       { id: 'd1_d91', name: 'Départemental 1 · District 91 (Essonne)', shortLabel: 'D1 District 91' },
       { id: 'd1_d95', name: 'Départemental 1 · District 95 (Val-d\'Oise)', shortLabel: 'D1 District 95' },
@@ -184,6 +198,8 @@ export const FRENCH_LEAGUE_METADATA: Record<
   d1_d93: { id: 'd1_d93', name: 'Départemental 1 · District 93 (Seine-Saint-Denis)', category: 'district', districtCode: '93', region: 'Île-de-France', divisionLabelBase: 'District de Seine-Saint-Denis FFF · Seniors D1' },
   d1_d75: { id: 'd1_d75', name: 'Départemental 1 · District 75 (Paris)', category: 'district', districtCode: '75', region: 'Île-de-France', divisionLabelBase: 'District de Paris FFF · Seniors D1' },
   d1_d94: { id: 'd1_d94', name: 'Départemental 1 · District 94 (Val-de-Marne)', category: 'district', districtCode: '94', region: 'Île-de-France', divisionLabelBase: 'District du Val-de-Marne FFF · Seniors D1' },
+  d2_d94_b: { id: 'd2_d94_b', name: 'Départemental 2 · Poule B (District du Val-de-Marne)', category: 'district', districtCode: '94', region: 'Île-de-France', divisionLabelBase: 'District du Val-de-Marne FFF · Seniors D2 (Poule B)' },
+  d2_d94: { id: 'd2_d94', name: 'Départemental 2 · Poule B (District du Val-de-Marne)', category: 'district', districtCode: '94', region: 'Île-de-France', divisionLabelBase: 'District du Val-de-Marne FFF · Seniors D2 (Poule B)' },
   d1_d78: { id: 'd1_d78', name: 'Départemental 1 · District 78 (Yvelines)', category: 'district', districtCode: '78', region: 'Île-de-France', divisionLabelBase: 'District des Yvelines FFF · Seniors D1' },
   d1_d91: { id: 'd1_d91', name: 'Départemental 1 · District 91 (Essonne)', category: 'district', districtCode: '91', region: 'Île-de-France', divisionLabelBase: 'District de l\'Essonne FFF · Seniors D1' },
   d1_d95: { id: 'd1_d95', name: 'Départemental 1 · District 95 (Val-d\'Oise)', category: 'district', districtCode: '95', region: 'Île-de-France', divisionLabelBase: 'District du Val-d\'Oise FFF · Seniors D1' },
@@ -325,15 +341,36 @@ function emptyLeague(leagueId: string, _status?: SyncStatus, _source = 'certifie
   return buildCertifiedSeedLeague(leagueId, season);
 }
 
+const standingsMemoryCache = new Map<string, { data: FrenchLeagueData; timestamp: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
 export const frenchFootballStandingsService = {
   getCategories(): FrenchLeagueCategory[] {
     return FRENCH_LEAGUE_CATEGORIES;
   },
 
-  async getLeagueStandings(leagueId: string, season?: string): Promise<FrenchLeagueData> {
-    const cloud = await this.getCloudLeagueStandings(leagueId, season);
-    if (cloud && cloud.standings && cloud.standings.length > 0) return cloud;
-    return this.getLocalFallback(leagueId, season);
+  /** Réinitialise le cache mémoire local (utile pour les tests unitaires). */
+  clearMemoryCache(): void {
+    standingsMemoryCache.clear();
+  },
+
+  async getLeagueStandings(leagueId: string, season?: string, forceRefresh = false): Promise<FrenchLeagueData> {
+    const s = season || activeFffSeason();
+    const cacheKey = `${leagueId}_${s}`;
+    if (!forceRefresh) {
+      const cached = standingsMemoryCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        return cached.data;
+      }
+    }
+
+    const cloud = await this.getCloudLeagueStandings(leagueId, s);
+    const result = cloud && cloud.standings && cloud.standings.length > 0
+      ? cloud
+      : await this.getLocalFallback(leagueId, s);
+
+    standingsMemoryCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
   },
 
   async getLocalFallback(leagueId: string, season?: string): Promise<FrenchLeagueData> {
@@ -361,8 +398,18 @@ export const frenchFootballStandingsService = {
         };
       }
     } catch {
-      // Source officielle injoignable : dégradation vide, jamais un classement inventé
+      // Source officielle injoignable : recours au snapshot certifié
     }
+
+    try {
+      const snap = getOfficialSnapshot(leagueId, s);
+      if (snap && snap.standings && snap.standings.length > 0) {
+        return snap;
+      }
+    } catch {
+      // ignore
+    }
+
     return buildCertifiedSeedLeague(leagueId, s);
   },
 
@@ -390,6 +437,12 @@ export const frenchFootballStandingsService = {
         ? (data.scorers as LeagueScorer[])
         : [];
 
+      const sourceUrl = typeof data.source_url === 'string' ? data.source_url : typeof data.sourceUrl === 'string' ? data.sourceUrl : undefined;
+      const phase = typeof data.phase === 'string' ? data.phase : undefined;
+      const groupLabel = typeof data.group_label === 'string' ? data.group_label : typeof data.groupLabel === 'string' ? data.groupLabel : undefined;
+      const verificationStatus = (data.verification_status as FrenchLeagueData['verificationStatus']) ?? (standings.length > 0 ? 'verified' : 'unverified');
+      const penaltiesNotice = typeof data.penalties_notice === 'string' ? data.penalties_notice : undefined;
+
       return {
         id: String(data.id ?? leagueId),
         name: String(data.name ?? FRENCH_LEAGUE_METADATA[leagueId]?.name ?? leagueId),
@@ -401,6 +454,11 @@ export const frenchFootballStandingsService = {
         standings,
         scorers,
         source,
+        sourceUrl,
+        phase,
+        groupLabel,
+        verificationStatus,
+        penaltiesNotice,
         officialFffCertified: true,
         lastSyncAt: isoDate(data.lastSyncAt) ?? isoDate(data.updated_at),
         // Le snapshot existe : le badge de fraîcheur est piloté par `sync_health`,
@@ -421,12 +479,64 @@ export const frenchFootballStandingsService = {
     if (!query) return [];
 
     const leagueIds = Object.keys(FRENCH_LEAGUE_METADATA);
-    const cloudResults = await Promise.all(leagueIds.map((id) => this.getCloudLeagueStandings(id)));
+    const cloudResults = await Promise.all(leagueIds.map((id) => this.getLeagueStandings(id)));
     const results: { league: FrenchLeagueData; club: LeagueStandingRow }[] = [];
 
     cloudResults.forEach((league) => {
       league?.standings.forEach((club) => {
         if (club.name.toLowerCase().includes(query)) results.push({ league, club });
+      });
+    });
+
+    return results;
+  },
+
+  async searchClubsFiltered(params: {
+    queryText?: string;
+    region?: string;
+    districtCode?: string;
+    category?: string;
+  }): Promise<{ league: FrenchLeagueData; club: LeagueStandingRow }[]> {
+    const query = (params.queryText || '').trim().toLowerCase();
+    const region = params.region && params.region !== 'all' ? params.region.toLowerCase() : undefined;
+    const district = params.districtCode && params.districtCode !== 'all' ? params.districtCode : undefined;
+    const category = params.category && params.category !== 'all' ? params.category.toLowerCase() : undefined;
+
+    let leagueIds = Object.keys(FRENCH_LEAGUE_METADATA);
+
+    if (category) {
+      leagueIds = leagueIds.filter((id) => {
+        const meta = FRENCH_LEAGUE_METADATA[id];
+        if (!meta) return false;
+        if (category === 'seniors') return meta.category === 'national' || meta.category === 'regional' || meta.category === 'district';
+        if (category === 'u19' || category === 'u17' || category === 'u15') return meta.category === 'jeunes' || meta.id.includes(category);
+        if (category === 'feminines') return meta.category === 'feminines';
+        return meta.category === category;
+      });
+    }
+
+    if (district) {
+      leagueIds = leagueIds.filter((id) => FRENCH_LEAGUE_METADATA[id]?.districtCode === district);
+    } else if (region) {
+      leagueIds = leagueIds.filter((id) => {
+        const r = FRENCH_LEAGUE_METADATA[id]?.region?.toLowerCase();
+        if (!r) return false;
+        if (region === 'idf') return r.includes('ile-de-france') || r.includes('paris');
+        if (region === 'ara') return r.includes('auvergne') || r.includes('rhone');
+        if (region === 'paca') return r.includes('paca') || r.includes('cote d\'azur');
+        if (region === 'hdf') return r.includes('hauts-de-france') || r.includes('nord');
+        return r.includes(region);
+      });
+    }
+
+    const cloudResults = await Promise.all(leagueIds.map((id) => this.getLeagueStandings(id)));
+    const results: { league: FrenchLeagueData; club: LeagueStandingRow }[] = [];
+
+    cloudResults.forEach((league) => {
+      league?.standings.forEach((club) => {
+        if (!query || club.name.toLowerCase().includes(query)) {
+          results.push({ league, club });
+        }
       });
     });
 
@@ -461,8 +571,19 @@ export const frenchFootballStandingsService = {
         };
       }
     } catch {
-      // Source officielle injoignable : dégradation vide, jamais un classement inventé
+      // Source scraper injoignable : recours au snapshot certifié
     }
+
+    try {
+      const { getOfficialSnapshot } = await import('./data/fffOfficialStandingsStore');
+      const snap = getOfficialSnapshot(leagueId, s);
+      if (snap && snap.standings && snap.standings.length > 0) {
+        return snap;
+      }
+    } catch {
+      // ignore
+    }
+
     return buildCertifiedSeedLeague(leagueId, s);
   },
 

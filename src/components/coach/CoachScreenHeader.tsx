@@ -157,8 +157,8 @@ export function CoachScreenHeader({
         </>
       ) : null}
 
-      <View style={styles.titleRow}>
-        {shouldShowBack && (
+      {shouldShowBack ? (
+        <View style={styles.backRow}>
           <AppBackButton
             onPress={onBack}
             onBeforeBack={onBeforeBack}
@@ -166,7 +166,10 @@ export function CoachScreenHeader({
             fallbackNavId={fallbackNavId}
             style={styles.headerBackBtn}
           />
-        )}
+        </View>
+      ) : null}
+
+      <View style={styles.titleRow}>
         <CoachText variant="title" numberOfLines={1} style={styles.pageTitle}>
           {title}
         </CoachText>
@@ -293,6 +296,11 @@ function createStyles(tokens: CoachThemeTokens) {
       justifyContent: 'center',
     },
     badgeText: { color: '#fff', fontSize: 10, fontWeight: '800', lineHeight: 12 },
+    backRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 2,
+    },
     titleRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -315,7 +323,7 @@ function createStyles(tokens: CoachThemeTokens) {
       backgroundColor: tokens.surface,
     },
     headerBackBtn: {
-      marginRight: 6,
+      alignSelf: 'flex-start',
     },
   });
 }

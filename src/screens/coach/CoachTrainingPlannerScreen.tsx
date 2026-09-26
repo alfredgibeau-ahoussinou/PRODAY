@@ -527,6 +527,7 @@ export const CoachTrainingPlannerScreen: React.FC = () => {
                         title={exercise.name}
                         width={84}
                         height={56}
+                        compact
                         onPress={() => handleOpenViewer(exercise)}
                       />
                     </View>
@@ -910,7 +911,7 @@ export const CoachTrainingPlannerScreen: React.FC = () => {
                       style={styles.libraryCard}
                     >
                       <View style={styles.diagramWrap}>
-                        <CoachTrainingDrillDiagram diagramData={diag} width={76} height={50} showBadge={false} />
+                        <CoachTrainingDrillDiagram diagramData={diag} width={76} height={50} showBadge={false} compact />
                       </View>
                       <View style={styles.libraryCopy}>
                         <Text style={styles.libraryName}>
@@ -943,7 +944,7 @@ export const CoachTrainingPlannerScreen: React.FC = () => {
                   style={styles.libraryCard}
                 >
                   <View style={styles.diagramWrap}>
-                    <CoachTrainingDrillDiagram drillType={template.drillType} width={72} height={48} />
+                    <CoachTrainingDrillDiagram drillType={template.drillType} width={72} height={48} showBadge={false} compact />
                   </View>
                   <View style={styles.libraryCopy}>
                     <Text style={styles.libraryName}>
@@ -1240,11 +1241,15 @@ const createStyles = (tokens: CoachComponentTokens) =>
       borderRadius: proRadius.sm,
       overflow: 'hidden',
       backgroundColor: tokens.elevated,
+      flexShrink: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     exerciseMain: {
       flex: 1,
       minWidth: 0,
-      gap: 3,
+      gap: 4,
+      justifyContent: 'center',
     },
     exerciseName: {
       ...proType.body,
@@ -1254,6 +1259,7 @@ const createStyles = (tokens: CoachComponentTokens) =>
     exerciseMetaRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      flexWrap: 'wrap',
       gap: 6,
     },
     exerciseMeta: {

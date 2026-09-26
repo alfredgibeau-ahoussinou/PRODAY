@@ -9,9 +9,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ClubText } from './clubUi';
 import { useClubTheme } from '../shell/ClubThemeContext';
+import { useClubShellNav } from '../shell/ClubShellNavContext';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../theme/clubTokens';
+import type { ClubNavItemId } from '../navigation/clubNavConfig';
 import { motion } from '../../../theme/motion';
+import { AppBackButton } from '../../../components/ui/AppBackButton';
 
 type Props = {
   title: string;
@@ -20,6 +23,10 @@ type Props = {
   /** Affiche le logo club (défaut true). */
   showLogo?: boolean;
   style?: StyleProp<ViewStyle>;
+  showBack?: boolean;
+  onBack?: () => void;
+  fallbackNavId?: ClubNavItemId;
+  hasUnsavedChanges?: boolean;
 };
 
 /**
@@ -35,15 +42,30 @@ export function ClubBrandHeader({
   showLogo = true,
   crestLabel,
   style,
+  showBack,
+  onBack,
+  fallbackNavId,
+  hasUnsavedChanges,
 }: Props & { /** Initiale crest si pas de logo (défaut : titre). */ crestLabel?: string }) {
   const { tokens, logoUrl, club } = useClubTheme();
+  const shellNav = useClubShellNav();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const initialSource = (crestLabel ?? club?.name ?? subtitle ?? title).trim();
   const initial = (initialSource.charAt(0) || '?').toUpperCase();
+  const shouldShowBack =
+    showBack ?? (onBack ? true : Boolean(shellNav?.canGoBack || fallbackNavId));
 
   return (
     <View style={[styles.wrap, style]}>
       <View style={styles.row}>
+        {shouldShowBack ? (
+          <AppBackButton
+            onPress={onBack}
+            fallbackNavId={fallbackNavId}
+            hasUnsavedChanges={hasUnsavedChanges}
+            style={styles.backBtn}
+          />
+        ) : null}
         {showLogo ? (
           <View style={[styles.logoWrap, { borderColor: tokens.accentSoft }]}>
             {logoUrl ? (
@@ -108,6 +130,9 @@ const createStyles = (tokens: ClubThemeTokens) =>
       alignItems: 'center',
       gap: clubSpace.md,
       minHeight: 48,
+    },
+    backBtn: {
+      alignSelf: 'center',
     },
     logoWrap: {
       width: 44,
