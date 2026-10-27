@@ -21,6 +21,12 @@ import { SignupFlow } from './signup/SignupFlow';
 import { ForgotPasswordScreen } from './ForgotPasswordScreen';
 import { LegalDocumentScreen } from './LegalDocumentScreen';
 import { AuthPhoneModal } from '../components/auth/AuthPhoneModal';
+import { AuthPartnerCodeModal } from '../components/auth/AuthPartnerCodeModal';
+import {
+  AuthCodeIdentityModal,
+  type CodeIdentitySubmission,
+} from '../components/auth/AuthCodeIdentityModal';
+import type { ResolvedClubAffiliation } from '../services/partnerClubs.service';
 import type { LegalDocumentId } from '../content/legalDocuments';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation, type AuthIntent } from '../context/TabNavigationContext';
@@ -37,12 +43,12 @@ import {
   AuthInput,
   AuthButton,
   AuthError,
-  AuthLink,
   AuthModeSwitch,
   AuthPostLoginReveal,
   AuthGatePanel,
   AUTH_XP,
 } from '../features/auth/experience';
+import { AUTH_SHEET } from '../components/auth/authSheetPalette';
 import { isGoogleAuthConfigured } from '../config/oauth';
 import type { CarouselPoleId } from '../models/CarouselPole';
 import { resolveUniverseAuthCopy } from './authUniverseCopy';
@@ -52,6 +58,9 @@ import {
 } from '../utils/authBackStack';
 import { shouldReopenUniverseAfterAuth } from '../utils/postAuthNavigation';
 import { resolveSignupVisual } from './signup/signupVisualSystem';
+
+/** Hôte auth = feuille claire (maquette #F7F7F7 / AUTH_SHEET), pas le pitch sombre. */
+const AUTH_HOST_THEME = 'light' as const;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -75,7 +84,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 }) => {
   const { loading: authLoading, configured, refreshProfile } = useAuth();
   const { setActiveTab } = useTabNavigation();
-  const { productLine } = useAppTheme();
+  const { productLine, colors: themeColors } = useAppTheme();
   const { openSpacePicker } = useLaunchIntro();
   const { t } = useTranslation();
   const { isEnabled, disabledCopy } = usePlatformFeatureFlags();
@@ -110,6 +119,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   } | null>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showPhoneAuth, setShowPhoneAuth] = useState(false);
+  const [showPartnerCodeModal, setShowPartnerCodeModal] = useState(false);
+  const [pendingAffiliation, setPendingAffiliation] = useState<ResolvedClubAffiliation | null>(null);
+  const [partnerCodeLoading, setPartnerCodeLoading] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [postLoginReveal, setPostLoginReveal] = useState(false);
@@ -311,6 +323,28 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     }
   };
 
+  const handlePartnerCodeResolved = (affiliation: ResolvedClubAffiliation) => {
+    setShowPartnerCodeModal(false);
+    setPendingAffiliation(affiliation);
+  };
+
+  const handlePartnerCodeIdentitySubmit = async (identity: CodeIdentitySubmission) => {
+    if (!pendingAffiliation) return;
+    setPartnerCodeLoading(true);
+    clearErrors();
+    try {
+      await authService.loginWithPartnerCode(pendingAffiliation, identity);
+      setPendingAffiliation(null);
+      await goHomeAfterAuth();
+      prodayHaptics.confirm();
+    } catch (e) {
+      prodayHaptics.error();
+      setBanner(authService.getAuthErrorMessage(e));
+    } finally {
+      setPartnerCodeLoading(false);
+    }
+  };
+
   if (!configured) {
     return (
       <View style={styles.centered}>
@@ -338,10 +372,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         accessibilityLabel={t('auth.backHome')}
         accessibilityRole="button"
       >
-        <Icon name="arrow-back" size={20} color={AUTH_XP.white} />
+        <Icon name="arrow-back" size={20} color={AUTH_SHEET.text} />
       </PressableSpring>
       <View style={styles.toolbarEnd}>
-        <LanguageSettingControl variant="chip" />
+        <LanguageSettingControl
+          variant="chip"
+          theme={AUTH_HOST_THEME}
+          colors={{
+            ...themeColors,
+            surface: 'rgba(255, 255, 255, 0.92)',
+            border: 'rgba(0, 0, 0, 0.08)',
+            text: AUTH_SHEET.text,
+            textMuted: AUTH_SHEET.textMuted,
+            accent: signupVisual.focus,
+          }}
+        />
       </View>
     </View>
   );
@@ -371,6 +416,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   return (
     <>
       <AuthExperienceShell
+        theme={AUTH_HOST_THEME}
         toolbar={toolbar}
         footer={legalFooter}
         brandCopy={mode === 'signupTeaser'}
@@ -380,19 +426,31 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         <AuthModeSwitch modeKey={mode}>
           {mode === 'login' ? (
             <View>
-              <View style={styles.kickerBadge}>
-                <View style={[styles.kickerDot, { backgroundColor: signupVisual.accent }]} />
-                <ProDayText variant="eyebrow" style={[styles.kickerText, { color: signupVisual.focus }]}>
-                  {universeAuthCopy.kicker}
-                </ProDayText>
-              </View>
-              <View style={[styles.gateAccentBar, { backgroundColor: signupVisual.accent }]} />
-              <ProDayText variant="title" style={styles.title}>
-                {universeAuthCopy.title}
-              </ProDayText>
-              <ProDayText variant="body" style={styles.sub}>
-                {universeAuthCopy.sub}
-              </ProDayText>
+              {isAdminAuth ? (
+                <>
+                  <View style={styles.kickerBadge}>
+                    <View style={[styles.kickerDot, { backgroundColor: signupVisual.accent }]} />
+                    <ProDayText variant="eyebrow" style={[styles.kickerText, { color: signupVisual.focus }]}>
+                      ACCÈS FONDATION VIP
+                    </ProDayText>
+                  </View>
+                  <ProDayText variant="title" style={styles.title}>
+                    Connexion Admin
+                  </ProDayText>
+                  <ProDayText variant="body" style={styles.sub}>
+                    Réservé aux fondateurs et administrateurs autorisés.
+                  </ProDayText>
+                </>
+              ) : (
+                <>
+                  <ProDayText variant="title" style={styles.title}>
+                    PRODAY
+                  </ProDayText>
+                  <ProDayText variant="body" style={styles.sub}>
+                    {t('auth.loginSub') || 'Connectez-vous pour accéder à votre espace.'}
+                  </ProDayText>
+                </>
+              )}
 
               {banner ? (
                 <AuthError message={banner} onDismiss={() => setBanner(null)} />
@@ -405,6 +463,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     biometricLabel={quickLogin.biometricLabel}
                     onPress={() => void handleBiometricLogin()}
                     loading={biometricLoading || loading}
+                    theme={AUTH_HOST_THEME}
                   />
                 </View>
               ) : null}
@@ -427,6 +486,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 onSubmitEditing={() => passwordRef.current?.focus()}
                 error={fieldErrors.email}
                 accent={signupVisual.focus}
+                theme={AUTH_HOST_THEME}
               />
               <AuthInput
                 ref={passwordRef}
@@ -445,6 +505,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 onSubmitEditing={() => void handleLogin()}
                 error={fieldErrors.password}
                 accent={signupVisual.focus}
+                theme={AUTH_HOST_THEME}
               />
 
               <AuthRememberRow
@@ -454,17 +515,23 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 onBiometricChange={quickLogin.setBiometricEnabled}
                 biometricLabel={quickLogin.biometricLabel}
                 biometricAvailable={quickLogin.biometricAvailable}
+                theme={AUTH_HOST_THEME}
               />
 
-              <AuthLink
-                label={t('auth.forgotPassword')}
+              <PressableSpring
                 onPress={() => {
                   clearErrors();
                   setShowForgotPassword(true);
                 }}
-                align="right"
-                muted
-              />
+                scaleTo={0.98}
+                style={styles.forgotRow}
+                accessibilityRole="link"
+                accessibilityLabel={t('auth.forgotPassword')}
+              >
+                <ProDayText variant="body" style={styles.forgotLink}>
+                  {t('auth.forgotPassword')}
+                </ProDayText>
+              </PressableSpring>
 
               <AuthButton
                 label={universeAuthCopy.cta}
@@ -485,6 +552,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   </View>
                   <AuthSocialButtons
                     disabled={loading}
+                    theme={AUTH_HOST_THEME}
                     onSuccess={() => void goHomeAfterAuth()}
                     onNeedsProfile={
                       !isAdminAuth
@@ -506,30 +574,54 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               ) : null}
 
               {!isAdminAuth ? (
-                <PressableSpring
-                  style={styles.phoneAuthBtn}
-                  onPress={() => {
-                    clearErrors();
-                    setShowPhoneAuth(true);
-                  }}
-                  scaleTo={0.98}
-                  haptic
-                >
-                  <Icon name="call" size={16} color="rgba(255, 255, 255, 0.75)" />
-                  <ProDayText variant="caption" style={styles.phoneAuthText}>
-                    Connexion par Numéro de Téléphone
-                  </ProDayText>
-                </PressableSpring>
+                <>
+                  <PressableSpring
+                    style={styles.phoneAuthBtn}
+                    onPress={() => {
+                      clearErrors();
+                      setShowPhoneAuth(true);
+                    }}
+                    scaleTo={0.98}
+                    haptic
+                  >
+                    <Icon name="call" size={16} color={AUTH_SHEET.text} />
+                    <ProDayText variant="caption" style={styles.phoneAuthText}>
+                      Connexion par Numéro de Téléphone
+                    </ProDayText>
+                  </PressableSpring>
+
+                  <PressableSpring
+                    style={styles.partnerCodeAuthBtn}
+                    onPress={() => {
+                      clearErrors();
+                      setShowPartnerCodeModal(true);
+                    }}
+                    scaleTo={0.98}
+                    haptic
+                  >
+                    <Icon name="shield-checkmark" size={16} color="#E8B923" />
+                    <ProDayText variant="caption" style={styles.partnerCodeAuthText}>
+                      Connexion avec un Code Club Bêta
+                    </ProDayText>
+                  </PressableSpring>
+                </>
               ) : null}
 
               {!isAdminAuth ? (
                 <View style={styles.switchRow}>
-                  <AuthLink
-                    leading={t('auth.newOnProday')}
-                    label={t('auth.createAccount')}
+                  <ProDayText variant="body" style={styles.switchLeading}>
+                    {t('auth.newOnProday')}{' '}
+                  </ProDayText>
+                  <PressableSpring
                     onPress={openSignup}
-                    align="center"
-                  />
+                    scaleTo={0.98}
+                    accessibilityRole="link"
+                    accessibilityLabel={t('auth.createAccount')}
+                  >
+                    <ProDayText variant="body" style={[styles.switchLink, { color: signupVisual.focus }]}>
+                      {t('auth.createAccount')}
+                    </ProDayText>
+                  </PressableSpring>
                 </View>
               ) : null}
             </View>
@@ -544,6 +636,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               onPhoneAuth={() => {
                 clearErrors();
                 setShowPhoneAuth(true);
+              }}
+              onPartnerCode={() => {
+                clearErrors();
+                setShowPartnerCodeModal(true);
               }}
               onLogin={() => setMode('login')}
               onSocialSuccess={() => void goHomeAfterAuth()}
@@ -609,6 +705,22 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         onError={(msg) => setBanner(msg)}
         accent={signupVisual.accent}
       />
+
+      <AuthPartnerCodeModal
+        visible={showPartnerCodeModal}
+        onClose={() => setShowPartnerCodeModal(false)}
+        onCodeResolved={handlePartnerCodeResolved}
+      />
+
+      {pendingAffiliation ? (
+        <AuthCodeIdentityModal
+          visible={Boolean(pendingAffiliation)}
+          affiliation={pendingAffiliation}
+          onDismiss={() => setPendingAffiliation(null)}
+          onSubmit={handlePartnerCodeIdentitySubmit}
+          loading={partnerCodeLoading}
+        />
+      ) : null}
     </>
   );
 };
@@ -623,18 +735,36 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: AUTH_SHEET.backgroundMuted,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: AUTH_SHEET.border,
   },
   phoneAuthText: {
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: AUTH_SHEET.text,
     fontWeight: '600',
+    fontSize: 13,
+  },
+  partnerCodeAuthBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    backgroundColor: 'rgba(232, 185, 35, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 185, 35, 0.35)',
+  },
+  partnerCodeAuthText: {
+    color: '#E8B923',
+    fontWeight: '700',
     fontSize: 13,
   },
   centered: {
     flex: 1,
-    backgroundColor: AUTH_XP.black,
+    backgroundColor: AUTH_SHEET.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -654,12 +784,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconBtn: {
-    width: 44,
-    height: 44,
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   kickerBadge: {
     flexDirection: 'row',
@@ -680,7 +817,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   title: {
-    color: '#FFFFFF',
+    color: AUTH_SHEET.text,
     fontSize: 30,
     fontWeight: '800',
     letterSpacing: -0.7,
@@ -689,7 +826,7 @@ const styles = StyleSheet.create({
     lineHeight: 36,
   },
   sub: {
-    color: 'rgba(255, 255, 255, 0.58)',
+    color: AUTH_SHEET.textSecondary,
     fontSize: 15,
     lineHeight: 22,
     fontWeight: '400',
@@ -698,6 +835,15 @@ const styles = StyleSheet.create({
   },
   biometricWrap: {
     marginBottom: 12,
+  },
+  forgotRow: {
+    alignSelf: 'flex-end',
+    paddingVertical: 8,
+  },
+  forgotLink: {
+    color: AUTH_SHEET.textSecondary,
+    fontSize: 14,
+    fontWeight: '500',
   },
   dividerRow: {
     flexDirection: 'row',
@@ -708,16 +854,29 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: AUTH_XP.border,
+    backgroundColor: AUTH_SHEET.border,
   },
   dividerText: {
-    color: AUTH_XP.textDim,
+    color: AUTH_SHEET.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     fontSize: 10,
   },
   switchRow: {
     marginTop: 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  switchLeading: {
+    color: AUTH_SHEET.textSecondary,
+    fontSize: 14,
+  },
+  switchLink: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   gateAccentBar: {
     alignSelf: 'center',
@@ -727,11 +886,12 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   legal: {
-    color: AUTH_XP.textDim,
+    color: AUTH_SHEET.textMuted,
     textAlign: 'center',
     lineHeight: 18,
   },
   legalLink: {
-    color: AUTH_XP.goldBright,
+    color: AUTH_SHEET.text,
+    fontWeight: '700',
   },
 });
