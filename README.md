@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="assets/branding/logo-proday-official.png" alt="ProDay — CONNECTER. PROGRESSER. RÉVÉLER." width="360" />
 
-<br /><br />
 
 **CONNECTER. PROGRESSER. RÉVÉLER.**
 
