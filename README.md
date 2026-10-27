@@ -1,28 +1,25 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/branding/logo-proday-lockup-white.png">
-  <source media="(prefers-color-scheme: light)" srcset="assets/branding/logo-proday-lockup-black.png">
-  <img src="assets/branding/logo-proday-official.png" alt="ProDay · CONNECTER. PROGRESSER. RÉVÉLER." width="380" />
+  <source media="(prefers-color-scheme: dark)" srcset="assets/branding/proday-logo-master-white.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/branding/proday-logo-master-black.png">
+  <img src="assets/branding/logo-proday-official.png" alt="ProDay · CONNECTER. PROGRESSER. RÉVÉLER." width="360" />
 </picture>
 
 <br /><br />
 
 # CONNECTER · PROGRESSER · RÉVÉLER
 
-*Pas un outil de plus. L’infrastructure de votre football.*
+*L’infrastructure unifiée et intelligente de votre football.*
 
 [![Site](https://img.shields.io/badge/Site-proday75.fr-F5D04A?style=for-the-badge&logo=googlechrome&logoColor=black)](https://proday75.fr)
 [![Bêta](https://img.shields.io/badge/Bêta-Ouverte-0891b2?style=for-the-badge)](https://proday75.fr/beta/inscription)
-[![Docs publiques](https://img.shields.io/badge/Docs-PRODAY--docs-0ea5e9?style=for-the-badge)](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
-[![App Version](https://img.shields.io/badge/App-v1.0.10-blue?style=for-the-badge&logo=react)](package.json)
+[![App Version](https://img.shields.io/badge/App-v1.0.10(46)-blue?style=for-the-badge&logo=react)](package.json)
+[![IA Dédiée](https://img.shields.io/badge/IA-100%25%20Ollama%20Dédiée%20(0€/cloud)-emerald?style=for-the-badge)](src/services/ollamaClient.ts)
 
 <br/>
-<img src="assets/marketing/app-store/ios-6.5/08-objectif-infrastructure.png" alt="Aperçu ProDay" width="800" />
-<br/>
 
-© ProDay 2026 · Tous droits réservés · Code propriétaire  
-Documentation publique : [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+© ProDay 2026 · Tous droits réservés · Code propriétaire
 
 </div>
 
@@ -30,21 +27,23 @@ Documentation publique : [PRODAY-docs](https://github.com/alfredgibeau-ahoussino
 
 ## 📖 Qu’est-ce que ProDay ?
 
-ProDay n’est pas une collection d’apps séparées. C’est **l’infrastructure unifiée** du football amateur et professionnel : joueurs, coachs, clubs, familles, supporters et sponsors partagent le **même graphe de données**.
+ProDay est la **plateforme applicative d'élite** dédiée à l'écosystème du football : coachs, clubs, staff technique et communauté partagent le **même graphe de données en temps réel**, sans intermédiaire superflu.
 
-### 🌟 Six portes d’entrée, une seule plateforme
+### 🌟 Pôles Actifs
 
-| <img src="assets/marketing/app-store/ios-6.5/01-pole-joueur.png" width="80"> | <img src="assets/marketing/app-store/ios-6.5/02-pole-coach.png" width="80"> | <img src="assets/marketing/app-store/ios-6.5/03-pole-club.png" width="80"> |
-| :---: | :---: | :---: |
-| **Joueur** | **Coach** | **Club** |
-| CV digital, saison, Pulse, Mercato, highlights | Forme, tactique, convocations, séances | Équipes, licenciés, tournois, organisation |
+| <img src="assets/branding/proday-symbol-pole-coach.png" width="70"> | <img src="assets/branding/proday-symbol-pole-club.png" width="70"> | <img src="assets/branding/logo-mark-transparent.png" width="70"> | <img src="assets/branding/proday-symbol-pole-admin.png" width="70"> |
+| :---: | :---: | :---: | :---: |
+| **Pôle Coach** | **Pôle Club** | **Pôle Community** | **Pôle Admin** |
+| Pointage direct des présences terrain (1-tap), convocations, compositions tactiques, séances IA intégrées, centre match live et carnet d'entraînement. | Cockpit exécutif, import automatique FootClubs FFF (licences & suspensions), gestion des effectifs et intégration vidéo VEO native. | *Bientôt disponible* : Portail officiel partagé pour la communauté, les supporters et l'actualité des équipes. | Console de supervision, contrôle des accès, modération et suivi de l'infrastructure. |
 
-| <img src="assets/marketing/app-store/ios-6.5/05-pole-parent.png" width="80"> | <img src="assets/marketing/app-store/ios-6.5/06-pole-supporter.png" width="80"> | <img src="assets/marketing/app-store/ios-6.5/07-pole-sponsor.png" width="80"> |
-| :---: | :---: | :---: |
-| **Parent** | **Supporter** | **Sponsor** |
-| Agenda, messages, trajets, contrôle tuteur | Scores, compositions, communauté | Activations locales, packages, impact |
+---
 
-*(Agent, recruteur, organisateur et santé restent des **rôles intégrés**, pas des produits séparés.)*
+## 🧠 Intelligence Artificielle 100% Dédiée
+
+ProDay intègre une pile IA privative haute performance :
+- **Moteur dédié :** Instance sécurisée Ollama ProDay Cloud (`europe-west1`), coût cloud LLM de 0 € par token.
+- **Modèle :** `qwen2.5:3b` / `qwen2.5:7b` calibré pour le football (tactique, plans d'entraînement personnalisés, analyse de match).
+- **Intégrations :** Copilote Coach, suggestions d'exercices adaptées et assistants tactiques d'avant-match et de mi-temps.
 
 ---
 
@@ -52,36 +51,38 @@ ProDay n’est pas une collection d’apps séparées. C’est **l’infrastruct
 
 ```mermaid
 graph TD
-    A[PRODAY Monorepo] --> B(src/ : App mobile Expo)
+    A[PRODAY Monorepo] --> B(src/ : App mobile Expo & Tablette)
     A --> C(website/ : Site officiel Next.js)
-    A --> D(functions/ : Cloud Functions Firebase)
-    A --> E(firebase/ : Règles Firestore / Storage)
+    A --> D(functions/ : Cloud Functions Firebase & VEO API)
+    A --> E(firebase/ : Sécurité Firestore & Cloud Storage)
     
-    B --> F{React Native + TS}
-    C --> G{Next.js 16 + Tailwind}
+    B --> F{React Native 0.81 + Expo 54 + TS}
+    C --> G{Next.js 16 + Tailwind CSS 4}
     
-    A --> H[assets/ : Branding, marketing, mockups]
-    A --> I[docs/ : Guides opérateur, légal]
-    A --> J[presentation/ : Pitch Deck HTML]
-    A --> K[scripts/ : Outils CLI]
+    A --> H[assets/ : Branding officiel, icônes & médias]
+    A --> I[docs/ : Guides techniques & déploiement]
+    A --> K[scripts/ : Scripts d'automatisation & i18n]
 ```
 
 ### 🛠 Stack Technologique
 
 | Couche | Technologies clés |
 |--------|------------------|
-| **Mobile** | Expo SDK 54 · React Native 0.81 · React 19 · TypeScript |
-| **Web** | Next.js 16 (App Router) · Tailwind CSS 4 · Framer Motion · Netlify |
-| **Backend** | Firebase Auth · Firestore · Cloud Storage · Cloud Functions |
-| **Paiements** | Stripe (abonnements clubs / sponsoring) |
-| **Builds / CI** | EAS (TestFlight / APK) · Gradle |
+| **Mobile & Tablette** | Expo SDK 54 · React Native 0.81 · React 19 · TypeScript 5.8 |
+| **Design System** | Thèmes Dynamiques Clair / Sombre · Tokens ProDay · Lucide & Ionicons · Haptics |
+| **Web Vitrine** | Next.js 16 (App Router) · Tailwind CSS 4 · Framer Motion · Netlify |
+| **Backend & Cloud** | Firebase Auth · Firestore · Cloud Storage · Cloud Functions (Node.js 20) |
+| **Vidéo & Analyse** | Intégration VEO Camera API · Traitement et chapitrage tactique |
+| **IA Privative** | Ollama Cloud Dédié (Reverse proxy Caddy TLS) · Stream SSE natif |
+| **CI / CD & Builds** | EAS Build (iOS TestFlight & Android App Bundle) |
 
 ---
 
 ## 🚀 Démarrage Rapide
 
 ### 1️⃣ Prérequis
-Assurez-vous d'avoir installé **Node.js LTS** et **npm**. Vous devez également disposer d'un compte Firebase configuré (voir [`docs/FIREBASE_SETUP.md`](docs/FIREBASE_SETUP.md)).
+- **Node.js LTS** (v20+ ou v22+) et **npm**
+- Projet Firebase configuré
 
 ### 2️⃣ Installation
 
@@ -89,58 +90,45 @@ Assurez-vous d'avoir installé **Node.js LTS** et **npm**. Vous devez également
 git clone https://github.com/alfredgibeau-ahoussinou/PRODAY.git
 cd PRODAY
 npm install
-# Configuration des variables d'environnement
-cp .env.example .env   
+cp .env.example .env
 ```
 
 ### 3️⃣ Lancement de l'App Mobile
 
 ```bash
-npm start              # Lancer Metro (Expo)
-npm run start:ios      # Lancer sur simulateur iOS
-npm run android        # Lancer sur émulateur Android
+npm start              # Démarre le serveur Metro Expo
+npm run start:ios      # Lance l'application sur simulateur iOS
+npm run android        # Lance l'application sur émulateur Android
 ```
 
 ### 4️⃣ Lancement du Site Web
 
 ```bash
-npm run website:dev    # Serveur de dev sur http://localhost:3000
+npm run website:dev    # Serveur de développement Next.js (http://localhost:3000)
 ```
-*(Ou en naviguant dans `cd website && npm install && npm run dev`)*
 
-### 5️⃣ Contrôle Qualité
+### 5️⃣ Contrôles Qualité & Validation
 
 ```bash
-npm run typecheck      # Vérification TypeScript
-npm test               # Lancement des tests Jest
+npm run typecheck                                # Vérification statique TypeScript stricte
+npx jest src/__tests__/coachNavConfig.test.ts   # Tests navigation Coach
+npx jest src/__tests__/clubNavConfig.test.ts    # Tests navigation Club
+npm test                                         # Suite de tests globale
 ```
 
 ---
 
-## 🚢 Déploiements (Aperçu)
+## 🚢 Déploiements
 
-| Cible | Commande | Documentation Associée |
-|-------|----------|------------------------|
-| **Site Netlify** | `cd website && npm run netlify:deploy` | [`website/README.md`](website/README.md) |
-| **APK Bêta** | `npm run android:apk:beta` | [`docs/STORE_RELEASE.md`](docs/STORE_RELEASE.md) |
-| **TestFlight** | (via EAS) | [`docs/BETA_IOS_LAUNCH.md`](docs/BETA_IOS_LAUNCH.md) |
-
-💡 **Bêta Ouverte (Direct) :** [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)
-
----
-
-## 📚 Documentation Additionnelle
-
-Plongez plus profondément dans l'écosystème ProDay via nos guides dédiés :
-
-- 📖 **Index interne principal :** [`docs/README.md`](docs/README.md)
-- 🔒 **Sécurité et Architecture :** [`docs/WEBSITE_SECURITY.md`](docs/WEBSITE_SECURITY.md)
-- 🎨 **Branding et Assets :** [`assets/branding/README.md`](assets/branding/README.md)
-- 🌐 **Site Web détaillé :** [`website/README.md`](website/README.md)
+| Plateforme | Commande | Profil EAS |
+|------------|----------|------------|
+| **iOS TestFlight** | `eas build --platform ios --profile testflight` | Production / Store |
+| **Android AAB / APK** | `eas build --platform android --profile preview` | Interne / Store |
+| **Site Web** | `cd website && npm run netlify:deploy` | Production |
 
 ---
 
 ## ⚖️ Licence & Propriété
 
 © 2026 **ProDay** · Tous droits réservés.  
-*Logiciel propriétaire. Reproduction, modification ou distribution non autorisée strictement interdite.*
+*Logiciel propriétaire. Toute reproduction, distribution ou utilisation non autorisée est strictement interdite.*
