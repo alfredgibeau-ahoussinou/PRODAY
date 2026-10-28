@@ -1212,11 +1212,11 @@ export const CoachProfileSettingsScreen: React.FC = () => {
           trailing={<Ionicons name="chevron-forward" size={17} color={surfaces.sub} />}
         />
         <CoachListRow
-          title={tr(t, 'coach.squad.importer.des.effectifs', 'Importer des effectifs')}
+          title={tr(t, 'coach.squad.importer.des.effectifs', 'Centre d’importation Footclubs FFF')}
           subtitle={tr(
             t,
             'coach.espace.row.importSquadHint',
-            'CSV Footclubs FFF ou feuille de match PDF',
+            'Licences, calendriers officiels, discipline et sync FFF',
           )}
           leading={renderRowIcon('cloud-upload', catColor, surfaces.inputBg)}
           onPress={() => setSquadImportVisible(true)}
