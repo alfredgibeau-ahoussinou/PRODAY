@@ -192,6 +192,8 @@ export function CoachSquadImportPanel({
   const [fedSelectedClub, setFedSelectedClub] = useState<FederationClub | null>(null);
   const [fedChamps, setFedChamps] = useState<FederationChampionship[]>([]);
   const [fedSelectedChamp, setFedSelectedChamp] = useState<FederationChampionship | null>(null);
+  const [fedFilterCategory, setFedFilterCategory] = useState<string>('all');
+  const [fedFilterSearch, setFedFilterSearch] = useState<string>('');
 
   useEffect(() => {
     if (!visible) return;
@@ -243,6 +245,8 @@ export function CoachSquadImportPanel({
     setBusyLabel('');
     setFedSelectedClub(null);
     setFedSelectedChamp(null);
+    setFedFilterCategory('all');
+    setFedFilterSearch('');
   }, []);
 
   const handleCategorySwitch = useCallback(
@@ -506,7 +510,9 @@ export function CoachSquadImportPanel({
 
   const handleSelectFedClub = useCallback(async (selected: FederationClub) => {
     setFedSelectedClub(selected);
-    setBusyLabel('Chargement des championnats FFF…');
+    setFedFilterCategory('all');
+    setFedFilterSearch('');
+    setBusyLabel(`Chargement de toutes les catégories et équipes de ${selected.name}…`);
     try {
       const championships = await federationService.getClubChampionships(selected.id);
       setFedChamps(championships);
@@ -525,7 +531,22 @@ export function CoachSquadImportPanel({
     setStage('importing');
     setBusyLabel(`Synchronisation officielle FFF pour ${fedSelectedClub.name}…`);
     try {
-      onImported?.({ updated: 1, pending: 0 });
+      const champId = fedSelectedChamp?.id || '';
+      const teamNum = fedSelectedChamp?.teamsAvailable[0] || 'Équipe 1';
+      const syncRes = await federationService.triggerSync(
+        fedSelectedClub.id,
+        champId,
+        teamNum,
+        () => {}
+      );
+      if (clubId && fedSelectedClub.fffNumber) {
+        try {
+          await clubsService.setFffAffiliationNumber(clubId, fedSelectedClub.fffNumber);
+        } catch {
+          // ignore
+        }
+      }
+      onImported?.({ updated: syncRes.importedCount || 1, pending: 0 });
       reset();
       onClose();
     } catch (err) {
@@ -534,7 +555,82 @@ export function CoachSquadImportPanel({
     } finally {
       setBusyLabel('');
     }
-  }, [fedSelectedClub, onClose, onImported, reset]);
+  }, [clubId, fedSelectedChamp, fedSelectedClub, onClose, onImported, reset]);
+
+  const fedAvailableGroups = useMemo(() => {
+    const groups = new Set<string>();
+    for (const ch of fedChamps) {
+      if (
+        ch.subCategory === 'Vétérans' ||
+        ch.name.toLowerCase().includes('vétéran') ||
+        ch.name.toLowerCase().includes('ancien')
+      ) {
+        groups.add('Vétérans');
+      } else if (
+        ch.categoryTag === 'Féminines' ||
+        ch.subCategory?.includes('F') ||
+        ch.name.toLowerCase().includes('fémin')
+      ) {
+        groups.add('Féminines');
+      } else if (ch.categoryTag === 'Seniors') {
+        groups.add('Seniors');
+      } else if (['U19', 'U18', 'U17', 'U16', 'U15', 'U14'].includes(ch.subCategory || '')) {
+        groups.add('Jeunes (U14-U19)');
+      } else if (
+        ['U13', 'U12', 'U11', 'U10', 'U9', 'U8', 'U7', 'U6', 'Animation'].includes(ch.subCategory || '') ||
+        ch.categoryTag === 'Jeunes'
+      ) {
+        groups.add('École de Foot (U6-U13)');
+      }
+    }
+    return Array.from(groups);
+  }, [fedChamps]);
+
+  const filteredFedChamps = useMemo(() => {
+    return fedChamps.filter((ch) => {
+      if (fedFilterCategory !== 'all') {
+        if (fedFilterCategory === 'Vétérans') {
+          const isVet =
+            ch.subCategory === 'Vétérans' ||
+            ch.name.toLowerCase().includes('vétéran') ||
+            ch.name.toLowerCase().includes('ancien');
+          if (!isVet) return false;
+        } else if (fedFilterCategory === 'Féminines') {
+          const isFem =
+            ch.categoryTag === 'Féminines' ||
+            ch.subCategory?.includes('F') ||
+            ch.name.toLowerCase().includes('fémin');
+          if (!isFem) return false;
+        } else if (fedFilterCategory === 'Seniors') {
+          const isVet =
+            ch.subCategory === 'Vétérans' ||
+            ch.name.toLowerCase().includes('vétéran') ||
+            ch.name.toLowerCase().includes('ancien');
+          if (isVet || ch.categoryTag !== 'Seniors') return false;
+        } else if (fedFilterCategory === 'Jeunes (U14-U19)') {
+          if (!['U19', 'U18', 'U17', 'U16', 'U15', 'U14'].includes(ch.subCategory || '')) return false;
+        } else if (fedFilterCategory === 'École de Foot (U6-U13)') {
+          if (
+            !['U13', 'U12', 'U11', 'U10', 'U9', 'U8', 'U7', 'U6', 'Animation'].includes(ch.subCategory || '') &&
+            ch.categoryTag !== 'Jeunes'
+          ) {
+            return false;
+          }
+        }
+      }
+      if (fedFilterSearch.trim()) {
+        const q = fedFilterSearch.trim().toLowerCase();
+        const match =
+          ch.name.toLowerCase().includes(q) ||
+          ch.division.toLowerCase().includes(q) ||
+          ch.poule.toLowerCase().includes(q) ||
+          (ch.subCategory && ch.subCategory.toLowerCase().includes(q)) ||
+          ch.teamsAvailable.some((t) => t.toLowerCase().includes(q));
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [fedChamps, fedFilterCategory, fedFilterSearch]);
 
   const categories = useMemo(() => sheetCategories(rows), [rows]);
   const previewNames = useMemo(() => sheetPreviewNames(rows), [rows]);
@@ -677,6 +773,7 @@ export function CoachSquadImportPanel({
                     ]}
                     autoCapitalize="characters"
                     autoCorrect={false}
+                    onSubmitEditing={() => void handleFedSearch()}
                   />
                   <PressableSpring
                     onPress={() => void handleFedSearch()}
@@ -719,7 +816,7 @@ export function CoachSquadImportPanel({
                           <View style={{ flex: 1, gap: 2 }}>
                             <Text style={[styles.fedClubName, { color: tokens.foreground }]}>{c.name}</Text>
                             <Text style={[styles.fedClubCity, { color: tokens.muted }]}>
-                              {c.city} · N° FFF certifié
+                              {c.city} · N° {c.fffNumber || 'FFF certifié'}
                             </Text>
                           </View>
                           {isSel ? (
@@ -734,38 +831,151 @@ export function CoachSquadImportPanel({
                 {/* Sélection de championnat si club choisi */}
                 {fedSelectedClub && fedChamps.length > 0 ? (
                   <View style={styles.fedChampsWrap}>
-                    <Text style={[styles.fieldLabel, { color: tokens.muted }]}>
-                      Championnats disponibles pour {fedSelectedClub.name} :
-                    </Text>
-                    {fedChamps.map((ch) => {
-                      const isChampSel = fedSelectedChamp?.id === ch.id;
-                      return (
+                    <View style={styles.fedChampsHeaderRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.fieldLabel, { color: tokens.foreground, fontWeight: '700' }]}>
+                          Catégories & équipes ({fedChamps.length}) :
+                        </Text>
+                        <Text style={[styles.fedClubCity, { color: tokens.muted }]}>
+                          {fedSelectedClub.name} · Sélectionnez votre championnat pour synchroniser
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setFedSelectedClub(null);
+                          setFedChamps([]);
+                          setFedSelectedChamp(null);
+                        }}
+                        style={[styles.resetButton, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
+                      >
+                        <Icon name="refresh" size={13} color={tokens.foreground} />
+                        <Text style={[styles.resetButtonText, { color: tokens.foreground }]}>Autre club</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Filtres par catégories (Pills) */}
+                    {fedAvailableGroups.length > 1 ? (
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.fedPillsContainer}
+                        style={styles.fedPillsScroll}
+                      >
                         <TouchableOpacity
-                          key={ch.id}
                           style={[
-                            styles.fedChampItem,
+                            styles.fedFilterPill,
                             {
-                              backgroundColor: isChampSel ? tokens.soft : tokens.elevated,
-                              borderColor: isChampSel ? tokens.accent : tokens.border,
+                              backgroundColor: fedFilterCategory === 'all' ? tokens.accent : tokens.elevated,
+                              borderColor: fedFilterCategory === 'all' ? tokens.accent : tokens.border,
                             },
                           ]}
-                          onPress={() => setFedSelectedChamp(ch)}
+                          onPress={() => setFedFilterCategory('all')}
                         >
-                          <Icon name="football" size={16} color={tokens.accent} />
-                          <View style={{ flex: 1 }}>
-                            <Text style={[styles.fedChampName, { color: tokens.foreground }]}>
-                              {ch.name} ({ch.division} - {ch.poule})
-                            </Text>
-                            <Text style={[styles.fedChampTag, { color: tokens.muted }]}>
-                              Catégorie {ch.categoryTag} · {ch.teamsAvailable.join(', ')}
-                            </Text>
-                          </View>
-                          {isChampSel ? (
-                            <Icon name="checkmark-circle" size={16} color={tokens.accent} />
-                          ) : null}
+                          <Text
+                            style={[
+                              styles.fedFilterPillText,
+                              { color: fedFilterCategory === 'all' ? tokens.onAccent : tokens.foreground },
+                            ]}
+                          >
+                            Toutes ({fedChamps.length})
+                          </Text>
                         </TouchableOpacity>
-                      );
-                    })}
+
+                        {fedAvailableGroups.map((grp) => {
+                          const isGrpActive = fedFilterCategory === grp;
+                          return (
+                            <TouchableOpacity
+                              key={grp}
+                              style={[
+                                styles.fedFilterPill,
+                                {
+                                  backgroundColor: isGrpActive ? tokens.accent : tokens.elevated,
+                                  borderColor: isGrpActive ? tokens.accent : tokens.border,
+                                },
+                              ]}
+                              onPress={() => setFedFilterCategory(grp)}
+                            >
+                              <Text
+                                style={[
+                                  styles.fedFilterPillText,
+                                  { color: isGrpActive ? tokens.onAccent : tokens.foreground },
+                                ]}
+                              >
+                                {grp}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    ) : null}
+
+                    {/* Champ de recherche rapide si nombreuses catégories */}
+                    {fedChamps.length > 4 ? (
+                      <TextInput
+                        value={fedFilterSearch}
+                        onChangeText={setFedFilterSearch}
+                        placeholder="Rechercher une catégorie (ex: U17, Seniors, R1, D1, Féminine)…"
+                        placeholderTextColor={tokens.muted}
+                        style={[
+                          styles.fedQuickSearchInput,
+                          { backgroundColor: tokens.elevated, borderColor: tokens.border, color: tokens.foreground },
+                        ]}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                    ) : null}
+
+                    {/* Liste des catégories / championnats */}
+                    {filteredFedChamps.length > 0 ? (
+                      filteredFedChamps.map((ch) => {
+                        const isChampSel = fedSelectedChamp?.id === ch.id;
+                        const subCat = ch.subCategory || ch.categoryTag;
+                        return (
+                          <TouchableOpacity
+                            key={ch.id}
+                            style={[
+                              styles.fedChampItem,
+                              {
+                                backgroundColor: isChampSel ? tokens.soft : tokens.elevated,
+                                borderColor: isChampSel ? tokens.accent : tokens.border,
+                              },
+                            ]}
+                            onPress={() => setFedSelectedChamp(ch)}
+                            activeOpacity={0.7}
+                          >
+                            <View style={[styles.fedCategoryBadge, { backgroundColor: isChampSel ? tokens.accent : tokens.surface }]}>
+                              <Text style={[styles.fedCategoryBadgeText, { color: isChampSel ? tokens.onAccent : tokens.accent }]}>
+                                {subCat}
+                              </Text>
+                            </View>
+                            <View style={{ flex: 1, gap: 2 }}>
+                              <Text style={[styles.fedChampName, { color: tokens.foreground }]}>
+                                {ch.name}
+                              </Text>
+                              <View style={styles.fedChampMetaRow}>
+                                <View style={[styles.fedDivisionBadge, { borderColor: tokens.border }]}>
+                                  <Text style={[styles.fedDivisionBadgeText, { color: tokens.muted }]}>
+                                    {ch.division}
+                                  </Text>
+                                </View>
+                                <Text style={[styles.fedChampTag, { color: tokens.muted }]}>
+                                  {ch.poule} · {ch.teamsAvailable.join(', ')}
+                                </Text>
+                              </View>
+                            </View>
+                            {isChampSel ? (
+                              <Icon name="checkmark-circle" size={18} color={tokens.accent} />
+                            ) : null}
+                          </TouchableOpacity>
+                        );
+                      })
+                    ) : (
+                      <View style={{ paddingVertical: 12, alignItems: 'center' }}>
+                        <Text style={[styles.fedClubCity, { color: tokens.muted }]}>
+                          Aucune catégorie ne correspond à ce filtre.
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 ) : null}
               </View>
@@ -1584,6 +1794,38 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 6,
   },
+  fedChampsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  fedPillsScroll: {
+    marginBottom: 8,
+  },
+  fedPillsContainer: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingVertical: 2,
+  },
+  fedFilterPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  fedFilterPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  fedQuickSearchInput: {
+    height: 38,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    fontSize: 12,
+    marginBottom: 8,
+  },
   fedChampItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1592,8 +1834,36 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 10,
   },
+  fedCategoryBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 6,
+    minWidth: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fedCategoryBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
   fedChampName: {
     fontSize: 13,
+    fontWeight: '700',
+  },
+  fedChampMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  fedDivisionBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  fedDivisionBadgeText: {
+    fontSize: 10,
     fontWeight: '700',
   },
   fedChampTag: {

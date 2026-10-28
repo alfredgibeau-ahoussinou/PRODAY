@@ -4,6 +4,7 @@ import { parseCalendarCsv, parseCalendarIcs } from '../services/matchCenter/cale
 import { parseFootclubsDisciplineCsv } from '../features/club/utils/footclubsDisciplineParser';
 import { parseFootclubsCsv } from '../features/club/utils/footclubsCsvParser';
 import { parseImportedSheetText } from '../utils/squadSheetImport';
+import { federationService } from '../services/federation.service';
 
 const ROOT = path.resolve(__dirname, '..');
 function read(relative: string): string {
@@ -112,6 +113,30 @@ END:VCALENDAR`;
       expect(res.rows).toHaveLength(2);
       expect(res.rows[0].displayName).toBe('Alexandre BERNARD');
       expect(res.rows[1].displayName).toBe('Moussa TRAORE');
+    });
+  });
+
+  describe('Modalité 5 : Synchronisation Directe FFF (sans fichier)', () => {
+    it('génère un spectre complet de catégories et championnats pour le club', async () => {
+      const champs = await federationService.getClubChampionships('511876');
+      expect(champs.length).toBeGreaterThanOrEqual(10);
+      
+      const subCats = champs.map((c) => c.subCategory || c.categoryTag);
+      expect(subCats).toContain('Seniors');
+      expect(subCats).toContain('U17');
+      expect(subCats).toContain('U15');
+      expect(subCats).toContain('U14');
+      expect(subCats).toContain('U13');
+      expect(subCats.some((s) => s?.includes('Fémin') || (s?.startsWith('U') && s?.endsWith('F')))).toBe(true);
+      expect(subCats).toContain('Vétérans');
+    });
+
+    it('supporte le filtrage par catégories et la recherche dans CoachSquadImportPanel', () => {
+      expect(panelSource).toContain('fedAvailableGroups');
+      expect(panelSource).toContain('filteredFedChamps');
+      expect(panelSource).toContain('fedFilterCategory');
+      expect(panelSource).toContain('fedFilterSearch');
+      expect(panelSource).toContain('clubsService.setFffAffiliationNumber');
     });
   });
 });
