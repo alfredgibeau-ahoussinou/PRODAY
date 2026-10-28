@@ -4,8 +4,13 @@
  * Décompresse les flux PDF FlateDecode (Deflate RFC 1951 / zlib RFC 1950) en pur TypeScript
  * sans aucune dépendance binaire externe ni appel serveur obligatoire.
  *
- * Fonctionne hors-ligne, en prévisualisation coach et sur mobile sans dépendre
- * de Firebase Storage ni d'une Cloud Function.
+ * Prend en charge :
+ * - Les objets indirects simples ET les flux d'objets compressés (`/Type /ObjStm`)
+ * - L'arbre des pages (`/Pages -> /Kids`)
+ * - Les polices composites (`Identity-H`) avec tables `/ToUnicode`
+ * - Les polices simples avec encodage WinAnsi / Latin-1 et échappements octaux (\351 -> é)
+ * - Les opérateurs de texte PDF `Tj`, `TJ`, `Td`, `TD`, `T*`, `'`, `"`
+ * - La conversion automatique en tableau CSV exploitable par `parseFootclubsCsv`
  */
 
 // ---------------------------------------------------------------------------
@@ -118,11 +123,10 @@ export function inflatePureJs(input: Uint8Array): Uint8Array {
       const bType = getBits(2);
 
       if (bType === 0) {
-        // Bloc non compressé
         bitBuf = 0;
         bitCount = 0;
         const len = input[inPos++] | (input[inPos++] << 8);
-        inPos += 2; // saute nlen
+        inPos += 2;
         for (let i = 0; i < len; i++) out.push(input[inPos++]);
       } else if (bType === 1 || bType === 2) {
         let litHuff = fixedLitHuff;
@@ -182,7 +186,7 @@ export function inflatePureJs(input: Uint8Array): Uint8Array {
       }
     }
   } catch {
-    // Si la fin de flux est atteinte abruptement
+    // Si la fin de flux est atteinte
   }
 
   return new Uint8Array(out);
@@ -317,7 +321,7 @@ function decodeTextBytes(bytes: number[], cmap: ToUnicodeMap | null): string {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Modèle d'objets PDF & Extraction de pages
+// 3. Modèle d'objets PDF & Extraction (avec déballage des /ObjStm)
 // ---------------------------------------------------------------------------
 
 type PdfObject = {
@@ -335,6 +339,22 @@ function uint8ToStringLatin1(bytes: Uint8Array): string {
   return str;
 }
 
+function decodeStream(dictRaw: string, stream: Uint8Array): Uint8Array {
+  if (/\/FlateDecode/.test(dictRaw)) {
+    try {
+      return inflatePureJs(stream);
+    } catch {
+      return stream;
+    }
+  }
+  return stream;
+}
+
+function decodeStreamText(dictRaw: string, stream: Uint8Array): string {
+  const decompressed = decodeStream(dictRaw, stream);
+  return uint8ToStringLatin1(decompressed);
+}
+
 export function collectPdfObjects(bytes: Uint8Array): Map<number, PdfObject> {
   const latin1 = uint8ToStringLatin1(bytes);
   const objects = new Map<number, PdfObject>();
@@ -343,7 +363,7 @@ export function collectPdfObjects(bytes: Uint8Array): Map<number, PdfObject> {
   let match: RegExpExecArray | null;
   let count = 0;
   while ((match = header.exec(latin1)) !== null) {
-    if (count >= 10000) break;
+    if (count >= 15000) break;
     count += 1;
     const num = Number(match[1]);
     const bodyStart = header.lastIndex;
@@ -375,28 +395,147 @@ export function collectPdfObjects(bytes: Uint8Array): Map<number, PdfObject> {
       }
     }
 
-    const stream = bytes.subarray(dataStart, Math.min(dataEnd, dataStart + 10 * 1024 * 1024));
+    const stream = bytes.subarray(dataStart, Math.min(dataEnd, dataStart + 12 * 1024 * 1024));
     objects.set(num, { num, dictRaw, stream });
     header.lastIndex = Math.max(header.lastIndex, dataEnd);
+  }
+
+  // DÉBALLAGE DES FLUX D'OBJETS (/Type /ObjStm) — indispensable pour les PDF modernes 1.5+
+  for (const object of [...objects.values()]) {
+    if (!/\/Type\s*\/ObjStm/.test(object.dictRaw) || !object.stream) continue;
+    const text = decodeStreamText(object.dictRaw, object.stream);
+    const countMatch = /\/N\s+(\d+)/.exec(object.dictRaw);
+    const firstMatch = /\/First\s+(\d+)/.exec(object.dictRaw);
+    if (!countMatch || !firstMatch) continue;
+
+    const pairs = text
+      .slice(0, Number(firstMatch[1]))
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((value) => Number(value));
+    const total = Math.min(Number(countMatch[1]), Math.floor(pairs.length / 2));
+    for (let index = 0; index < total; index += 1) {
+      const objNum = pairs[index * 2];
+      const offset = pairs[index * 2 + 1];
+      if (!Number.isFinite(objNum) || !Number.isFinite(offset)) continue;
+      if (objects.has(objNum!)) continue;
+      const nextOffset = index + 1 < total ? pairs[(index + 1) * 2 + 1] : undefined;
+      const start = Number(firstMatch[1]) + offset!;
+      const end = nextOffset === undefined ? text.length : Number(firstMatch[1]) + nextOffset;
+      objects.set(objNum!, { num: objNum!, dictRaw: text.slice(start, end) });
+    }
   }
 
   return objects;
 }
 
-function decodeStream(dictRaw: string, stream: Uint8Array): string {
-  if (/\/FlateDecode/.test(dictRaw)) {
-    try {
-      const decompressed = inflatePureJs(stream);
-      return uint8ToStringLatin1(decompressed);
-    } catch {
-      return uint8ToStringLatin1(stream);
-    }
+export function resolvePageOrder(objects: Map<number, PdfObject>): PdfObject[] {
+  const kidRefs = new Set<string>();
+  for (const object of objects.values()) {
+    const kids = /\/Kids\s*\[([^\]]*)\]/.exec(object.dictRaw);
+    if (!kids) continue;
+    for (const entry of (kids[1] ?? '').matchAll(/(\d+)\s+\d+\s+R/g)) kidRefs.add(entry[1]!);
   }
-  return uint8ToStringLatin1(stream);
+
+  const roots = [...objects.values()].filter(
+    (object) => /\/Type\s*\/Pages/.test(object.dictRaw) && !kidRefs.has(String(object.num)),
+  );
+
+  const ordered: PdfObject[] = [];
+  const seen = new Set<number>();
+  const walk = (object: PdfObject, depth: number): void => {
+    if (depth > 32 || seen.has(object.num)) return;
+    seen.add(object.num);
+    if (/\/Type\s*\/Page\b/.test(object.dictRaw) && !/\/Type\s*\/Pages\b/.test(object.dictRaw)) {
+      ordered.push(object);
+      return;
+    }
+    const kids = /\/Kids\s*\[([^\]]*)\]/.exec(object.dictRaw);
+    if (!kids) return;
+    for (const entry of (kids[1] ?? '').matchAll(/(\d+)\s+\d+\s+R/g)) {
+      const child = objects.get(Number(entry[1]));
+      if (child) walk(child, depth + 1);
+    }
+  };
+
+  for (const root of roots) walk(root, 0);
+
+  if (ordered.length > 0) return ordered;
+
+  return [...objects.values()]
+    .filter((object) => /\/Type\s*\/Page\b/.test(object.dictRaw) && !/\/Type\s*\/Pages\b/.test(object.dictRaw))
+    .sort((a, b) => a.num - b.num);
+}
+
+function decodeObjectText(objects: Map<number, PdfObject>, object: PdfObject): string {
+  if (!object.stream) return '';
+  return decodeStreamText(object.dictRaw, object.stream);
+}
+
+export function resolvePageFonts(
+  objects: Map<number, PdfObject>,
+  page: PdfObject,
+): Map<string, ToUnicodeMap | null> {
+  const fonts = new Map<string, ToUnicodeMap | null>();
+
+  const inlineResources = /\/Resources\s*<<([\s\S]*?)>>\s*(?:\/|$)/.exec(page.dictRaw);
+  const resourcesRef = /\/Resources\s+(\d+)\s+\d+\s+R/.exec(page.dictRaw);
+  const resourcesRaw = resourcesRef
+    ? objects.get(Number(resourcesRef[1]))?.dictRaw ?? ''
+    : inlineResources?.[1] ?? page.dictRaw;
+
+  const fontBlock = /\/Font\s*<<([\s\S]*?)>>/.exec(resourcesRaw);
+  let fontDictRaw = fontBlock?.[1] ?? '';
+  if (!fontBlock) {
+    const fontRef = /\/Font\s+(\d+)\s+\d+\s+R/.exec(resourcesRaw);
+    if (fontRef) fontDictRaw = objects.get(Number(fontRef[1]))?.dictRaw ?? '';
+  }
+  if (!fontDictRaw) return fonts;
+
+  for (const entry of fontDictRaw.matchAll(/\/([A-Za-z0-9#_.-]+)\s+(\d+)\s+\d+\s+R/g)) {
+    const name = entry[1]!;
+    const fontObject = objects.get(Number(entry[2]));
+    if (!fontObject) {
+      fonts.set(name, null);
+      continue;
+    }
+    const cmapRef = /\/ToUnicode\s+(\d+)\s+\d+\s+R/.exec(fontObject.dictRaw);
+    if (!cmapRef) {
+      fonts.set(name, null);
+      continue;
+    }
+    const cmapObject = objects.get(Number(cmapRef[1]));
+    if (!cmapObject) {
+      fonts.set(name, null);
+      continue;
+    }
+    const cmapText = decodeObjectText(objects, cmapObject);
+    fonts.set(name, cmapText ? parseToUnicodeCmap(cmapText) : null);
+  }
+
+  return fonts;
+}
+
+function pageContent(objects: Map<number, PdfObject>, page: PdfObject): string {
+  const single = /\/Contents\s+(\d+)\s+\d+\s+R/.exec(page.dictRaw);
+  const many = /\/Contents\s*\[([^\]]*)\]/.exec(page.dictRaw);
+
+  const chunks: string[] = [];
+  if (many) {
+    for (const entry of (many[1] ?? '').matchAll(/(\d+)\s+\d+\s+R/g)) {
+      const object = objects.get(Number(entry[1]));
+      if (object) chunks.push(decodeObjectText(objects, object));
+    }
+  } else if (single) {
+    const object = objects.get(Number(single[1]));
+    if (object) chunks.push(decodeObjectText(objects, object));
+  }
+  return chunks.join('\n');
 }
 
 // ---------------------------------------------------------------------------
-// 4. Tokenizer et Opérateurs de texte PDF (BT ... ET, Tj, TJ)
+// 4. Tokenizer & Opérateurs de texte PDF (BT ... ET, Tj, TJ, Td, TD)
 // ---------------------------------------------------------------------------
 
 type Token =
@@ -410,7 +549,7 @@ function tokenizeContent(content: string): Token[] {
   const tokens: Token[] = [];
   let index = 0;
 
-  while (index < content.length && tokens.length < 200000) {
+  while (index < content.length && tokens.length < 300000) {
     const char = content[index]!;
 
     if (char === '(') {
@@ -526,7 +665,16 @@ export function extractTextFromContent(
         break;
       }
       case 'Td':
-      case 'TD':
+      case 'TD': {
+        const numbers = operandStack.filter((entry) => entry.kind === 'number');
+        const dy = numbers[numbers.length - 1];
+        if (dy && dy.kind === 'number' && Math.abs(dy.value) > 0.5) {
+          out += '\n';
+        } else if (out.length > 0 && !/\s$/.test(out)) {
+          out += ' ';
+        }
+        break;
+      }
       case 'T*': {
         out += '\n';
         break;
@@ -563,7 +711,7 @@ export function extractTextFromContent(
 }
 
 // ---------------------------------------------------------------------------
-// 5. Extraction complète du PDF & Structuration en CSV
+// 5. Point d'entrée de l'extraction de texte PDF
 // ---------------------------------------------------------------------------
 
 export function extractPdfTextClient(bytes: Uint8Array): {
@@ -571,88 +719,86 @@ export function extractPdfTextClient(bytes: Uint8Array): {
   hasText: boolean;
   pageCount: number;
 } {
-  const objects = collectPdfObjects(bytes);
-  if (objects.size === 0) {
+  try {
+    const objects = collectPdfObjects(bytes);
+    if (objects.size === 0) {
+      return { text: '', hasText: false, pageCount: 0 };
+    }
+
+    const pages = resolvePageOrder(objects);
+    const chunks: string[] = [];
+
+    for (const page of pages) {
+      const fonts = resolvePageFonts(objects, page);
+      const content = pageContent(objects, page);
+      if (!content) continue;
+      chunks.push(extractTextFromContent(content, fonts));
+    }
+
+    // Si aucune page n'a pu livrer de texte, examiner tous les flux textuels
+    if (chunks.length === 0 || chunks.join('').trim().length === 0) {
+      for (const obj of objects.values()) {
+        if (obj.stream) {
+          const decoded = decodeStreamText(obj.dictRaw, obj.stream);
+          if (decoded.includes('BT') && decoded.includes('ET')) {
+            chunks.push(extractTextFromContent(decoded, new Map()));
+          }
+        }
+      }
+    }
+
+    const fullText = chunks
+      .join('\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .join('\n');
+
+    return {
+      text: fullText,
+      hasText: fullText.length > 0,
+      pageCount: Math.max(1, pages.length),
+    };
+  } catch {
     return { text: '', hasText: false, pageCount: 0 };
   }
-
-  // Trouver les pages
-  const pages: PdfObject[] = [];
-  for (const obj of objects.values()) {
-    if (/\/Type\s*\/Page\b/.test(obj.dictRaw) && !/\/Type\s*\/Pages\b/.test(obj.dictRaw)) {
-      pages.push(obj);
-    }
-  }
-
-  const chunks: string[] = [];
-  for (const page of pages) {
-    // Fonts de la page
-    const fonts = new Map<string, ToUnicodeMap | null>();
-    for (const match of page.dictRaw.matchAll(/\/([A-Za-z0-9#_.-]+)\s+(\d+)\s+\d+\s+R/g)) {
-      const fontObj = objects.get(Number(match[2]));
-      if (fontObj) {
-        const cmapMatch = /\/ToUnicode\s+(\d+)\s+\d+\s+R/.exec(fontObj.dictRaw);
-        if (cmapMatch) {
-          const cmapObj = objects.get(Number(cmapMatch[1]));
-          if (cmapObj && cmapObj.stream) {
-            const cmapText = decodeStream(cmapObj.dictRaw, cmapObj.stream);
-            fonts.set(match[1]!, parseToUnicodeCmap(cmapText));
-          }
-        }
-      }
-    }
-
-    // Contenu de la page
-    const contentMatch = /\/Contents\s+(?:\[([^\]]*)\]|(\d+)\s+\d+\s+R)/.exec(page.dictRaw);
-    if (contentMatch) {
-      if (contentMatch[2]) {
-        const streamObj = objects.get(Number(contentMatch[2]));
-        if (streamObj && streamObj.stream) {
-          const decoded = decodeStream(streamObj.dictRaw, streamObj.stream);
-          chunks.push(extractTextFromContent(decoded, fonts));
-        }
-      } else if (contentMatch[1]) {
-        for (const entry of contentMatch[1].matchAll(/(\d+)\s+\d+\s+R/g)) {
-          const streamObj = objects.get(Number(entry[1]));
-          if (streamObj && streamObj.stream) {
-            const decoded = decodeStream(streamObj.dictRaw, streamObj.stream);
-            chunks.push(extractTextFromContent(decoded, fonts));
-          }
-        }
-      }
-    }
-  }
-
-  // Si aucune page explicite n'a fourni de texte, analyser tous les flux décompressés contenant BT ... ET
-  if (chunks.length === 0 || chunks.join('').trim().length === 0) {
-    for (const obj of objects.values()) {
-      if (obj.stream) {
-        const decoded = decodeStream(obj.dictRaw, obj.stream);
-        if (decoded.includes('BT') && decoded.includes('ET')) {
-          chunks.push(extractTextFromContent(decoded, new Map()));
-        }
-      }
-    }
-  }
-
-  const fullText = chunks
-    .join('\n')
-    .replace(/\r/g, '\n')
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .join('\n');
-
-  return {
-    text: fullText,
-    hasText: fullText.length > 0,
-    pageCount: Math.max(1, pages.length),
-  };
 }
 
-/**
- * Convertit le texte brut extrait en lignes CSV séparées par des points-virgules.
- */
+// ---------------------------------------------------------------------------
+// 6. Structuration en tableau CSV (combinaison buildSheetCsv + parser de lignes)
+// ---------------------------------------------------------------------------
+
+const HEADER_KEYWORDS = [
+  'nom',
+  'prenom',
+  'licence',
+  'license',
+  'joueur',
+  'categorie',
+  'name',
+  'firstname',
+  'lastname',
+];
+
+function normalizeCell(v: string): string {
+  return v
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+export function splitCells(line: string): string[] {
+  if (line.includes('\t')) return line.split('\t').map((c) => c.trim()).filter(Boolean);
+  if (line.includes(';')) return line.split(';').map((c) => c.trim()).filter(Boolean);
+  if ((line.match(/,/g) ?? []).length >= 2) return line.split(',').map((c) => c.trim()).filter(Boolean);
+  const wide = line.split(/\s{2,}/).map((c) => c.trim()).filter(Boolean);
+  if (wide.length >= 2) return wide;
+  return line.split(/\s+/).map((c) => c.trim()).filter(Boolean);
+}
+
 export function convertExtractedTextToSquadCsv(text: string): {
   csv: string;
   rowCount: number;
@@ -666,7 +812,6 @@ export function convertExtractedTextToSquadCsv(text: string): {
     return { csv: '', rowCount: 0 };
   }
 
-  // Expression régulière pour repérer un numéro de licence (6 à 12 chiffres ou majuscules)
   const licenseRegex = /\b(\d{6,11})\b/;
   const dateRegex = /\b(\d{2}[/.-]\d{2}[/.-]\d{2,4})\b/;
 
@@ -680,42 +825,35 @@ export function convertExtractedTextToSquadCsv(text: string): {
   }> = [];
 
   for (const line of lines) {
-    // Si la ligne contient un point-virgule ou une tabulation, la scinder
-    if (line.includes(';') || line.includes('\t')) {
-      const parts = line.split(/[;\t]/).map((p) => p.trim());
-      if (parts.length >= 2) {
-        const lic = parts.find((p) => licenseRegex.test(p)) || '';
-        const date = parts.find((p) => dateRegex.test(p)) || '';
-        const names = parts.filter((p) => p !== lic && p !== date && p.length > 1);
-        if (names.length >= 1) {
-          rows.push({
-            license: lic,
-            nom: names[0] || '',
-            prenom: names[1] || '',
-            category: parts.find((p) => /U\d+|Senior|Vétéran|Féminine/i.test(p)) || '',
-            medical: parts.some((p) => /valide|apte|ok/i.test(p)) ? 'Valide' : '',
-            birthDate: date,
-          });
-          continue;
-        }
-      }
-    }
-
-    // Analyse textuelle par espacements multiples
-    const tokens = line.split(/\s{2,}|\s+/).map((t) => t.trim()).filter(Boolean);
+    // Si la ligne contient une licence ou plusieurs cellules
+    const cells = splitCells(line);
     const licMatch = line.match(licenseRegex);
     const dateMatch = line.match(dateRegex);
 
     if (licMatch) {
       const lic = licMatch[1];
-      const remainingTokens = tokens.filter((t) => t !== lic && t !== (dateMatch ? dateMatch[1] : ''));
-      if (remainingTokens.length >= 2) {
+      const remaining = cells.filter((c) => c !== lic && c !== (dateMatch ? dateMatch[1] : ''));
+      if (remaining.length >= 1) {
         rows.push({
           license: lic,
-          nom: remainingTokens[0] || '',
-          prenom: remainingTokens[1] || '',
-          category: remainingTokens.find((t) => /U\d+|Senior|Vétéran/i.test(t)) || '',
+          nom: remaining[0] || '',
+          prenom: remaining[1] || '',
+          category: cells.find((c) => /U\d+|Senior|Vétéran|Féminine/i.test(c)) || '',
           medical: line.toLowerCase().includes('apte') || line.toLowerCase().includes('valide') ? 'Valide' : '',
+          birthDate: dateMatch ? dateMatch[1] : '',
+        });
+      }
+    } else if (cells.length >= 3 && !cells.some((c) => HEADER_KEYWORDS.includes(normalizeCell(c)))) {
+      // Cas où la licence n'est pas séparée par espaces ou ligne avec nom/prénom
+      const possibleNames = cells.filter((c) => c.length > 1 && !/^\d+$/.test(c));
+      if (possibleNames.length >= 2) {
+        const possibleLic = cells.find((c) => /^[A-Z0-9]{6,12}$/i.test(c)) || '';
+        rows.push({
+          license: possibleLic,
+          nom: possibleNames[0] || '',
+          prenom: possibleNames[1] || '',
+          category: cells.find((c) => /U\d+|Senior/i.test(c)) || '',
+          medical: line.toLowerCase().includes('valide') ? 'Valide' : '',
           birthDate: dateMatch ? dateMatch[1] : '',
         });
       }
@@ -723,8 +861,6 @@ export function convertExtractedTextToSquadCsv(text: string): {
   }
 
   if (rows.length === 0) {
-    // Repli de découpage direct si aucune licence stricte n'a été détectée mais qu'il y a des noms
-    const header = 'N° Licence;Nom;Prénom;Catégorie;Statut médical;Date de naissance';
     return { csv: '', rowCount: 0 };
   }
 

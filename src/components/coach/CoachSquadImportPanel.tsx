@@ -289,7 +289,7 @@ export function CoachSquadImportPanel({
   );
 
   const readPdf = useCallback(
-    async (file: { uri: string; mimeType: string; fileName?: string }) => {
+    async (file: { uri: string; mimeType: string; fileName?: string; file?: Blob }) => {
       setStage('reading');
       setBusyLabel('Analyse de la feuille PDF en cours…');
       setWarnings([]);
@@ -364,6 +364,7 @@ export function CoachSquadImportPanel({
           uri: asset.uri,
           mimeType: asset.mimeType ?? 'application/pdf',
           fileName: asset.name ?? undefined,
+          file: (asset as { file?: Blob }).file,
         });
         return;
       }
@@ -376,6 +377,7 @@ export function CoachSquadImportPanel({
           uri: asset.uri,
           mimeType: 'application/pdf',
           fileName: asset.name ?? 'Feuille_officielle.pdf',
+          file: (asset as { file?: Blob }).file,
         });
         return;
       }

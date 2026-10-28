@@ -1,3 +1,4 @@
+import { deflateSync } from 'zlib';
 import {
   inflatePureJs,
   parseToUnicodeCmap,
@@ -19,6 +20,13 @@ describe('Extracteur PDF autonome côté client (clientPdfExtractor)', () => {
       ]);
       const res = inflatePureJs(data);
       expect(String.fromCharCode(...res)).toBe('Hello');
+    });
+
+    it('décompresse un flux compressé par node:zlib (Deflate dynamique)', () => {
+      const sample = 'Licence;Nom;Prenom\n2548963210;DIALLO;Moussa\n2548963211;MARTIN;Lucas';
+      const compressed = new Uint8Array(deflateSync(Buffer.from(sample, 'utf8')));
+      const res = inflatePureJs(compressed);
+      expect(Buffer.from(res).toString('utf8')).toBe(sample);
     });
   });
 
@@ -110,6 +118,46 @@ trailer
       expect(res.hasText).toBe(true);
       expect(res.text).toContain('2549999999');
       expect(res.text).toContain('TRAORE');
+    });
+
+    it('décompresse et extrait les objets rangés dans un flux d’objets (/Type /ObjStm)', () => {
+      // Construction d'un /ObjStm compressé contenant l'objet 3 (Page)
+      const objStmInner = '3 0 << /Type /Page /Parent 2 0 R /Contents 4 0 R >>';
+      const compressedStream = deflateSync(Buffer.from(objStmInner, 'latin1'));
+
+      const pdf = `
+%PDF-1.5
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+10 0 obj
+<< /Type /ObjStm /N 1 /First 4 /Length ${compressedStream.length} /Filter /FlateDecode >>
+stream
+${compressedStream.toString('latin1')}
+endstream
+endobj
+4 0 obj
+<< /Length 70 >>
+stream
+BT
+(2548888888) Tj
+T*
+(CAMARA) Tj
+ET
+endstream
+endobj
+trailer
+<< /Root 1 0 R >>
+%%EOF
+      `;
+      const bytes = new Uint8Array(Buffer.from(pdf, 'latin1'));
+      const res = extractPdfTextClient(bytes);
+      expect(res.hasText).toBe(true);
+      expect(res.text).toContain('2548888888');
+      expect(res.text).toContain('CAMARA');
     });
   });
 });

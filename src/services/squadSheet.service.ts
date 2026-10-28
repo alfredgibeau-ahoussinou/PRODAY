@@ -62,16 +62,20 @@ function decodeBase64ToUint8(base64: string): Uint8Array {
   return bytes;
 }
 
-async function readPdfBytesLocally(uri: string): Promise<Uint8Array | null> {
+async function readPdfBytesLocally(file: UploadFileInput & { file?: Blob }): Promise<Uint8Array | null> {
   try {
-    if (Platform.OS === 'web') {
-      const resp = await fetch(uri);
+    if (file.file && typeof file.file.arrayBuffer === 'function') {
+      const buffer = await file.file.arrayBuffer();
+      return new Uint8Array(buffer);
+    }
+    if (Platform.OS === 'web' && file.uri) {
+      const resp = await fetch(file.uri);
       const buffer = await resp.arrayBuffer();
       return new Uint8Array(buffer);
     }
     const encoding = (FileSystem as { EncodingType?: { Base64?: string } })?.EncodingType?.Base64 ?? 'base64';
-    if (typeof FileSystem.readAsStringAsync === 'function') {
-      const base64 = await FileSystem.readAsStringAsync(uri, {
+    if (typeof FileSystem.readAsStringAsync === 'function' && file.uri) {
+      const base64 = await FileSystem.readAsStringAsync(file.uri, {
         encoding: encoding as never,
       });
       return decodeBase64ToUint8(base64);
@@ -91,7 +95,7 @@ async function readPdfBytesLocally(uri: string): Promise<Uint8Array | null> {
  */
 export async function extractSquadSheetCsv(params: {
   uid: string;
-  file: UploadFileInput;
+  file: UploadFileInput & { file?: Blob };
 }): Promise<SquadSheetExtraction> {
   // 1. Tenter le serveur Cloud Function si l'utilisateur est identifié
   let serverExtraction: SquadSheetExtraction | null = null;
@@ -123,7 +127,7 @@ export async function extractSquadSheetCsv(params: {
   }
 
   // 2. Repli autonome local : lit les octets du fichier et extrait en pur JS
-  const localBytes = await readPdfBytesLocally(params.file.uri);
+  const localBytes = await readPdfBytesLocally(params.file);
   if (localBytes && localBytes.length > 0) {
     try {
       const extracted = extractPdfTextClient(localBytes);
