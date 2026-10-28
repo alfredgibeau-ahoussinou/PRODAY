@@ -89,7 +89,18 @@ export const AuthCodeIdentityModal: React.FC<AuthCodeIdentityModalProps> = ({
     setStep(3);
   };
 
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const handleFinalSubmit = async () => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      setError('Veuillez renseigner votre adresse email pour activer votre compte.');
+      return;
+    }
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      setError('Format d’adresse email invalide.');
+      return;
+    }
     setError(null);
     await onSubmit({
       firstName: firstName.trim(),
@@ -97,7 +108,7 @@ export const AuthCodeIdentityModal: React.FC<AuthCodeIdentityModalProps> = ({
       phone: phone.trim() || undefined,
       functionOrDiploma: functionOrDiploma.trim(),
       category: selectedCategory || undefined,
-      email: email.trim().toLowerCase() || undefined,
+      email: cleanEmail,
     });
   };
 
@@ -369,16 +380,19 @@ export const AuthCodeIdentityModal: React.FC<AuthCodeIdentityModalProps> = ({
                     <View style={styles.fieldWrap}>
                       <View style={styles.labelRow}>
                         <ProDayText variant="caption" style={styles.fieldLabel}>
-                          Votre email personnel ou professionnel
+                          Votre email (obligatoire)
                         </ProDayText>
                       </View>
                       <View style={styles.inputContainer}>
                         <TextInput
                           style={styles.input}
-                          placeholder="alexandre@exemple.com"
+                          placeholder="votre.email@exemple.com"
                           placeholderTextColor="#A1A1AA"
                           value={email}
-                          onChangeText={setEmail}
+                          onChangeText={(v) => {
+                            setEmail(v);
+                            if (error) setError(null);
+                          }}
                           keyboardType="email-address"
                           autoCapitalize="none"
                           autoCorrect={false}
@@ -387,7 +401,7 @@ export const AuthCodeIdentityModal: React.FC<AuthCodeIdentityModalProps> = ({
                         />
                       </View>
                       <ProDayText variant="caption" style={styles.fieldHint}>
-                        Cet email servira à vos futures connexions et notifications.
+                        Votre véritable email pour recevoir le lien de validation et vos accès.
                       </ProDayText>
                     </View>
                   </View>
