@@ -2,9 +2,9 @@
  * Conversion d'une feuille d'équipe PDF en tableau importable.
  *
  * Combine deux moteurs d'extraction :
- * 1. Cloud Function `extractSquadSheetText` côté serveur avec suppression sécurisée.
- * 2. Repli autonome local (clientPdfExtractor) si Firebase Storage ou la Cloud Function
- *    n'est pas disponible (hors-ligne, preview, absence de bucket, erreur réseau).
+ * 1. Extraction autonome locale (`clientPdfExtractor`) pour garantir une extraction
+ *    immédiate hors-ligne et indépendante de Firebase Storage.
+ * 2. Repli serveur sur la Cloud Function `extractSquadSheetText` si disponible.
  */
 
 import { Platform } from 'react-native';
@@ -35,6 +35,7 @@ export class SquadSheetExtractionError extends Error {
 }
 
 function decodeBase64ToUint8(base64: string): Uint8Array {
+  if (!base64 || typeof base64 !== 'string') return new Uint8Array(0);
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
   const lookup = new Uint8Array(256);
   for (let i = 0; i < chars.length; i++) lookup[chars.charCodeAt(i)] = i;
@@ -68,6 +69,12 @@ async function readPdfBytesLocally(file: UploadFileInput & { file?: Blob }): Pro
       const buffer = await file.file.arrayBuffer();
       return new Uint8Array(buffer);
     }
+    if (file.uri && file.uri.startsWith('data:')) {
+      const comma = file.uri.indexOf(',');
+      if (comma !== -1) {
+        return decodeBase64ToUint8(file.uri.slice(comma + 1));
+      }
+    }
     if (Platform.OS === 'web' && file.uri) {
       const resp = await fetch(file.uri);
       const buffer = await resp.arrayBuffer();
@@ -91,46 +98,23 @@ async function readPdfBytesLocally(file: UploadFileInput & { file?: Blob }): Pro
 
 /**
  * Dépose puis convertit.
- * Tente d'abord le serveur s'il est configuré et disponible, avec repli autonome local immédiat.
+ * Tente d'abord l'extracteur local hors-ligne, puis le serveur si nécessaire.
  */
 export async function extractSquadSheetCsv(params: {
   uid: string;
   file: UploadFileInput & { file?: Blob };
 }): Promise<SquadSheetExtraction> {
-  // 1. Tenter le serveur Cloud Function si l'utilisateur est identifié
-  let serverExtraction: SquadSheetExtraction | null = null;
-  let serverFailed = false;
-
-  if (params.uid && params.uid !== 'anonymous-coach') {
-    try {
-      const uploaded = await storageService.uploadSquadSheet(params.uid, params.file);
-      const result = await callFunction<
-        { storagePath: string },
-        Partial<SquadSheetExtraction>
-      >(SQUAD_SHEET_FUNCTION, { storagePath: uploaded.path });
-      serverExtraction = normalizeExtraction(result);
-    } catch (error) {
-      serverFailed = true;
-      if (__DEV__) {
-        console.warn('[squadSheet.service] Serveur Cloud non disponible, bascule sur l’extracteur local:', error);
-      }
-    }
-  } else {
-    serverFailed = true;
-  }
-
-  // Si le serveur a répondu et a réussi à extraire du CSV ou a fourni un diagnostic
-  if (serverExtraction && !serverFailed) {
-    if (serverExtraction.csv.trim().length > 0 || serverExtraction.warnings.length > 0) {
-      return serverExtraction;
-    }
-  }
-
-  // 2. Repli autonome local : lit les octets du fichier et extrait en pur JS
+  // 1. D'abord tenter l'extraction locale autonome (ultra-rapide et insensible aux pannes cloud)
+  let localIsScanned = false;
+  let localPageCount = 1;
   const localBytes = await readPdfBytesLocally(params.file);
+
   if (localBytes && localBytes.length > 0) {
     try {
       const extracted = extractPdfTextClient(localBytes);
+      localPageCount = extracted.pageCount;
+      localIsScanned = extracted.isScannedImageOnly;
+
       if (extracted.hasText) {
         const converted = convertExtractedTextToSquadCsv(extracted.text);
         if (converted.rowCount > 0 && converted.csv.trim()) {
@@ -145,24 +129,43 @@ export async function extractSquadSheetCsv(params: {
       }
     } catch (localErr) {
       if (__DEV__) {
-        console.warn('[squadSheet.service] Échec extracteur local:', localErr);
+        console.warn('[squadSheet.service] Échec extracteur local, repli serveur:', localErr);
       }
     }
   }
 
-  // 3. Si le serveur avait donné une réponse (même vide), la conserver
-  if (serverExtraction) {
-    return serverExtraction;
+  // 2. Si l'extraction locale n'a pas suffi, tenter le serveur Cloud Function si configuré
+  if (params.uid && params.uid !== 'anonymous-coach') {
+    try {
+      const uploaded = await storageService.uploadSquadSheet(params.uid, params.file);
+      const result = await callFunction<
+        { storagePath: string },
+        Partial<SquadSheetExtraction>
+      >(SQUAD_SHEET_FUNCTION, { storagePath: uploaded.path });
+      const serverExtraction = normalizeExtraction(result);
+      if (serverExtraction.csv.trim().length > 0 && serverExtraction.rows > 0) {
+        return serverExtraction;
+      }
+      if (serverExtraction.warnings.length > 0) {
+        return serverExtraction;
+      }
+    } catch (cloudErr) {
+      if (__DEV__) {
+        console.warn('[squadSheet.service] Échec serveur:', cloudErr);
+      }
+    }
   }
 
-  // 4. Si aucun texte n'a pu être extrait ni en local ni sur le serveur
+  // 3. Si aucun texte n'a pu être extrait ni en local ni sur le serveur
   return {
     csv: '',
     rows: 0,
     columns: [],
-    pages: 1,
+    pages: localPageCount,
     warnings: [
-      'Document PDF sans texte sélectionnable (document scanné ou image). Préférez l’export CSV Footclubs officiel ou utilisez l’onglet Copier-coller.',
+      localIsScanned
+        ? 'Document PDF sans texte sélectionnable (document scanné ou image). Préférez l’export CSV Footclubs officiel ou utilisez l’onglet Copier-coller.'
+        : 'Document PDF sans texte exploitable (scan ou image). Préférez un export CSV Footclubs officiel ou utilisez l’onglet Copier-coller.',
     ],
   };
 }

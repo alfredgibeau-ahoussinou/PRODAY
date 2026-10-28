@@ -118,9 +118,10 @@ export function parseToUnicodeCmap(cmapText: string): ToUnicodeMap {
         if (value) map.set(low + index, value);
       });
     }
+    const strippedBody = body.replace(/<[0-9a-fA-F]+>\s*<[0-9a-fA-F]+>\s*\[[\s\S]*?\]/g, '');
     const simpleRanges =
       /<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g;
-    for (const match of body.matchAll(simpleRanges)) {
+    for (const match of strippedBody.matchAll(simpleRanges)) {
       const low = parseInt(match[1]!, 16);
       const high = parseInt(match[2]!, 16);
       const startBytes = hexToBytes(match[3]!);
@@ -228,12 +229,13 @@ export function collectObjects(bytes: Uint8Array): Map<number, PdfObject> {
     if (latin1[dataStart] === '\r') dataStart += 1;
     if (latin1[dataStart] === '\n') dataStart += 1;
 
-    const lengthMatch = /\/Length\s+(\d+)(?!\s+\d+\s+R)/.exec(dictRaw);
+    const indirectLength = /\/Length\s+\d+\s+\d+\s+R/.test(dictRaw);
+    const directLengthMatch = !indirectLength ? /\/Length\s+(\d+)\b/.exec(dictRaw) : null;
     let dataEnd: number;
-    if (lengthMatch) {
-      dataEnd = Math.min(buffer.length, dataStart + Number(lengthMatch[1]));
+    if (directLengthMatch) {
+      dataEnd = Math.min(buffer.length, dataStart + Number(directLengthMatch[1]));
     } else {
-      const endstreamIdx = latin1.indexOf('endstream', dataStart);
+      const endstreamIdx = endobjIdx !== -1 ? latin1.lastIndexOf('endstream', endobjIdx) : latin1.indexOf('endstream', dataStart);
       dataEnd = endstreamIdx === -1 ? buffer.length : endstreamIdx;
       while (dataEnd > dataStart && (buffer[dataEnd - 1] === 0x0a || buffer[dataEnd - 1] === 0x0d)) {
         dataEnd -= 1;
@@ -551,7 +553,7 @@ export function extractTextFromContent(
         if (Math.abs(dy) > 0.5) {
           out += '\n';
           lastY += dy;
-        } else if (Math.abs(dx) > 0 && out.length > 0 && !/\s$/.test(out)) {
+        } else if (dx >= 12 && out.length > 0 && !/\s$/.test(out)) {
           out += ' ';
         }
         lastX += dx;
@@ -609,16 +611,33 @@ export function extractTextFromPdf(bytes: Uint8Array): PdfTextResult {
     }
 
     const pages = resolvePageOrder(objects);
-    if (pages.length === 0) {
-      return { text: '', pages: 0, hasText: false, reason: 'Aucune page trouvée dans le PDF.' };
-    }
-
     const chunks: string[] = [];
+
     for (const page of pages) {
       const fonts = resolvePageFonts(objects, page);
       const content = pageContent(objects, page);
       if (!content) continue;
       chunks.push(extractTextFromContent(content, fonts));
+    }
+
+    // Balayage de secours : si l'arbre de pages n'a rien livré, examiner tous les flux textuels du document
+    if (chunks.length === 0 || chunks.join('').trim().length === 0) {
+      for (const obj of objects.values()) {
+        if (obj.stream) {
+          const decoded = decodeStream(obj.dictRaw, obj.stream);
+          if (decoded) {
+            const raw = decoded.toString('latin1');
+            if (raw.includes('BT') && raw.includes('ET')) {
+              chunks.push(extractTextFromContent(raw, new Map()));
+            } else {
+              const tjMatches = [...raw.matchAll(/\(([^()]{2,120})\)\s*(?:Tj|TJ|'|")/g)];
+              if (tjMatches.length >= 3) {
+                chunks.push(tjMatches.map((m) => m[1]).join('\n'));
+              }
+            }
+          }
+        }
+      }
     }
 
     const text = normalizeExtractedText(chunks.join('\n')).slice(0, MAX_TEXT_CHARS);

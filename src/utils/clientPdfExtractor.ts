@@ -6,8 +6,8 @@
  *
  * Prend en charge :
  * - Les objets indirects simples ET les flux d'objets compressés (`/Type /ObjStm`)
- * - L'arbre des pages (`/Pages -> /Kids`)
- * - Les polices composites (`Identity-H`) avec tables `/ToUnicode`
+ * - L'arbre des pages (`/Pages -> /Kids`) avec balayage universel de secours sur tous les flux
+ * - Les polices composites (`Identity-H`) avec tables `/ToUnicode` et repli UTF-16BE
  * - Les polices simples avec encodage WinAnsi / Latin-1 et échappements octaux (\351 -> é)
  * - Les opérateurs de texte PDF `Tj`, `TJ`, `Td`, `TD`, `T*`, `'`, `"`
  * - La conversion automatique en tableau CSV exploitable par `parseFootclubsCsv`
@@ -186,7 +186,7 @@ export function inflatePureJs(input: Uint8Array): Uint8Array {
       }
     }
   } catch {
-    // Si la fin de flux est atteinte
+    // Fin de flux
   }
 
   return new Uint8Array(out);
@@ -269,8 +269,9 @@ export function parseToUnicodeCmap(cmapText: string): ToUnicodeMap {
         if (value) map.set(low + index, value);
       });
     }
+    const strippedBody = body.replace(/<[0-9a-fA-F]+>\s*<[0-9a-fA-F]+>\s*\[[\s\S]*?\]/g, '');
     const simpleRanges = /<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g;
-    for (const match of body.matchAll(simpleRanges)) {
+    for (const match of strippedBody.matchAll(simpleRanges)) {
       const low = parseInt(match[1]!, 16);
       const high = parseInt(match[2]!, 16);
       const startBytes = hexToBytes(match[3]!);
@@ -317,6 +318,10 @@ function decodeTextBytes(bytes: number[], cmap: ToUnicodeMap | null): string {
     }
     return out;
   }
+  // Repli intelligent : si les octets ressemblent à de l'UTF-16BE (caractères pairs à 0x00)
+  if (bytes.length >= 2 && bytes[0] === 0x00 && bytes[1] >= 0x20 && bytes[1] <= 0x7e) {
+    return decodeUtf16Be(bytes);
+  }
   return decodeWinAnsi(bytes);
 }
 
@@ -340,9 +345,10 @@ function uint8ToStringLatin1(bytes: Uint8Array): string {
 }
 
 function decodeStream(dictRaw: string, stream: Uint8Array): Uint8Array {
-  if (/\/FlateDecode/.test(dictRaw)) {
+  if (/\/FlateDecode/.test(dictRaw) || (stream.length > 2 && stream[0] === 0x78)) {
     try {
-      return inflatePureJs(stream);
+      const decompressed = inflatePureJs(stream);
+      if (decompressed && decompressed.length > 0) return decompressed;
     } catch {
       return stream;
     }
@@ -383,12 +389,17 @@ export function collectPdfObjects(bytes: Uint8Array): Map<number, PdfObject> {
     if (latin1[dataStart] === '\r') dataStart += 1;
     if (latin1[dataStart] === '\n') dataStart += 1;
 
-    const lengthMatch = /\/Length\s+(\d+)(?!\s+\d+\s+R)/.exec(dictRaw);
+    const indirectLength = /\/Length\s+\d+\s+\d+\s+R/.test(dictRaw);
+    const directLengthMatch = !indirectLength ? /\/Length\s+(\d+)\b/.exec(dictRaw) : null;
     let dataEnd: number;
-    if (lengthMatch) {
-      dataEnd = Math.min(bytes.length, dataStart + Number(lengthMatch[1]));
+    if (directLengthMatch) {
+      dataEnd = Math.min(bytes.length, dataStart + Number(directLengthMatch[1]));
     } else {
-      const endstreamIdx = latin1.indexOf('endstream', dataStart);
+      // Trouver le vrai endstream précédant endobj
+      const endstreamIdx =
+        endobjIdx !== -1
+          ? latin1.lastIndexOf('endstream', endobjIdx)
+          : latin1.indexOf('endstream', dataStart);
       dataEnd = endstreamIdx === -1 ? bytes.length : endstreamIdx;
       while (dataEnd > dataStart && (bytes[dataEnd - 1] === 0x0a || bytes[dataEnd - 1] === 0x0d)) {
         dataEnd -= 1;
@@ -400,7 +411,7 @@ export function collectPdfObjects(bytes: Uint8Array): Map<number, PdfObject> {
     header.lastIndex = Math.max(header.lastIndex, dataEnd);
   }
 
-  // DÉBALLAGE DES FLUX D'OBJETS (/Type /ObjStm) — indispensable pour les PDF modernes 1.5+
+  // DÉBALLAGE DES FLUX D'OBJETS (/Type /ObjStm) — indispensable pour les PDF 1.5+
   for (const object of [...objects.values()]) {
     if (!/\/Type\s*\/ObjStm/.test(object.dictRaw) || !object.stream) continue;
     const text = decodeStreamText(object.dictRaw, object.stream);
@@ -668,9 +679,16 @@ export function extractTextFromContent(
       case 'TD': {
         const numbers = operandStack.filter((entry) => entry.kind === 'number');
         const dy = numbers[numbers.length - 1];
+        const dx = numbers[numbers.length - 2];
         if (dy && dy.kind === 'number' && Math.abs(dy.value) > 0.5) {
           out += '\n';
-        } else if (out.length > 0 && !/\s$/.test(out)) {
+        } else if (
+          dx &&
+          dx.kind === 'number' &&
+          dx.value >= 12 &&
+          out.length > 0 &&
+          !/\s$/.test(out)
+        ) {
           out += ' ';
         }
         break;
@@ -718,13 +736,18 @@ export function extractPdfTextClient(bytes: Uint8Array): {
   text: string;
   hasText: boolean;
   pageCount: number;
+  isScannedImageOnly: boolean;
 } {
   try {
+    const latin1 = uint8ToStringLatin1(bytes);
     const objects = collectPdfObjects(bytes);
     if (objects.size === 0) {
-      return { text: '', hasText: false, pageCount: 0 };
+      return { text: '', hasText: false, pageCount: 0, isScannedImageOnly: false };
     }
 
+    const hasImages = /\/Subtype\s*\/Image\b/.test(latin1);
+
+    // 1. Pages classiques
     const pages = resolvePageOrder(objects);
     const chunks: string[] = [];
 
@@ -732,17 +755,50 @@ export function extractPdfTextClient(bytes: Uint8Array): {
       const fonts = resolvePageFonts(objects, page);
       const content = pageContent(objects, page);
       if (!content) continue;
-      chunks.push(extractTextFromContent(content, fonts));
+      const pageText = extractTextFromContent(content, fonts);
+      if (pageText.trim().length > 0) {
+        chunks.push(pageText);
+      }
     }
 
-    // Si aucune page n'a pu livrer de texte, examiner tous les flux textuels
+    // 2. Balayage universel de TOUS les flux du PDF contenant BT ... ET
+    if (chunks.length === 0 || chunks.join('').trim().length === 0) {
+      for (const obj of objects.values()) {
+        if (obj.stream && obj.stream.length > 0) {
+          const decoded = decodeStreamText(obj.dictRaw, obj.stream);
+          if (decoded.includes('BT') && decoded.includes('ET')) {
+            const streamText = extractTextFromContent(decoded, new Map());
+            if (streamText.trim().length > 0) {
+              chunks.push(streamText);
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Extraction directe de chaînes textuelles entre parenthèses dans les flux
     if (chunks.length === 0 || chunks.join('').trim().length === 0) {
       for (const obj of objects.values()) {
         if (obj.stream) {
           const decoded = decodeStreamText(obj.dictRaw, obj.stream);
-          if (decoded.includes('BT') && decoded.includes('ET')) {
-            chunks.push(extractTextFromContent(decoded, new Map()));
+          const tjMatches = [...decoded.matchAll(/\(([^()]{2,120})\)\s*(?:Tj|TJ|'|")/g)];
+          if (tjMatches.length >= 3) {
+            chunks.push(tjMatches.map((m) => m[1]).join('\n'));
           }
+        }
+      }
+    }
+
+    // 4. Balayage brut de chaînes de texte hors-flux (fichiers non compressés ou métadonnées)
+    if (chunks.length === 0 || chunks.join('').trim().length === 0) {
+      const directMatches = [...latin1.matchAll(/\(([^()]{3,100})\)/g)];
+      if (directMatches.length >= 10) {
+        const directText = directMatches
+          .map((m) => m[1])
+          .filter((s) => s.trim().length > 0 && !/^[\x00-\x1f]+$/.test(s))
+          .join('\n');
+        if (directText.trim().length > 0) {
+          chunks.push(directText);
         }
       }
     }
@@ -759,14 +815,15 @@ export function extractPdfTextClient(bytes: Uint8Array): {
       text: fullText,
       hasText: fullText.length > 0,
       pageCount: Math.max(1, pages.length),
+      isScannedImageOnly: fullText.length === 0 && hasImages,
     };
   } catch {
-    return { text: '', hasText: false, pageCount: 0 };
+    return { text: '', hasText: false, pageCount: 0, isScannedImageOnly: false };
   }
 }
 
 // ---------------------------------------------------------------------------
-// 6. Structuration en tableau CSV (combinaison buildSheetCsv + parser de lignes)
+// 6. Structuration en tableau CSV de licenciés
 // ---------------------------------------------------------------------------
 
 const HEADER_KEYWORDS = [
@@ -799,6 +856,103 @@ export function splitCells(line: string): string[] {
   return line.split(/\s+/).map((c) => c.trim()).filter(Boolean);
 }
 
+function parseFootclubsMultiLineRoster(lines: string[]): Array<{
+  license: string;
+  nom: string;
+  prenom: string;
+  category: string;
+  medical: string;
+  birthDate: string;
+}> {
+  const isNoise = (s: string) => {
+    const l = s.toLowerCase();
+    return (
+      l.includes('liste licences') ||
+      l.includes('généré le') ||
+      l.includes('page ') ||
+      l.includes('photo') ||
+      l.startsWith('club :') ||
+      l.includes('dernier club') ||
+      l.includes('mutation') ||
+      l.includes('fédération') ||
+      l.includes('nom\tp') ||
+      l.includes('date\tn') ||
+      l.includes('sous-catégorie') ||
+      l.includes('date enreg') ||
+      l.includes('état') ||
+      l.includes('etat') ||
+      l === 'f' ||
+      l === 'm' ||
+      l === 'caf' ||
+      l === 'e'
+    );
+  };
+
+  const licenseRegex = /\b([12]\d{9})\b/;
+  const dateRegex = /\b(\d{2}\/\d{2}\/\d{4})\b/;
+  const players: Array<{
+    license: string;
+    nom: string;
+    prenom: string;
+    category: string;
+    medical: string;
+    birthDate: string;
+  }> = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    const licMatch = line.match(licenseRegex);
+    if (!licMatch) continue;
+    const license = licMatch[1]!;
+
+    let birthDate = '';
+    let nameLine = '';
+    for (let back = 1; back <= 4 && i - back >= 0; back++) {
+      const prev = lines[i - back]!;
+      if (!birthDate && dateRegex.test(prev)) {
+        birthDate = prev.match(dateRegex)![1]!;
+        continue;
+      }
+      if (!nameLine && !isNoise(prev) && !dateRegex.test(prev) && !licenseRegex.test(prev)) {
+        nameLine = prev;
+      }
+    }
+
+    let category = '';
+    let medical = 'Valide';
+    for (let fwd = 1; fwd <= 4 && i + fwd < lines.length; fwd++) {
+      const next = lines[i + fwd]!;
+      if (!category && (/U\d+|Senior|Vétéran|Féminine|Libre/i.test(next) || next.includes('/'))) {
+        category = next.replace(/\s+/g, ' ').trim();
+      }
+      if (next.toLowerCase().includes('validée') || next.toLowerCase().includes('apte')) {
+        medical = 'Valide';
+      }
+    }
+
+    let nom = '';
+    let prenom = '';
+    if (nameLine.includes('\t')) {
+      const parts = nameLine.split('\t').map((s) => s.trim()).filter(Boolean);
+      nom = parts[0] || '';
+      prenom = parts.slice(1).join(' ');
+    } else {
+      const parts = nameLine.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        nom = parts[0];
+        prenom = parts.slice(1).join(' ');
+      } else {
+        nom = nameLine;
+      }
+    }
+
+    if (nom || prenom) {
+      players.push({ license, nom, prenom, birthDate, category, medical });
+    }
+  }
+  return players;
+}
+
 export function convertExtractedTextToSquadCsv(text: string): {
   csv: string;
   rowCount: number;
@@ -810,6 +964,21 @@ export function convertExtractedTextToSquadCsv(text: string): {
 
   if (lines.length === 0) {
     return { csv: '', rowCount: 0 };
+  }
+
+  // 1. D'abord tenter le parseur multi-lignes Footclubs (format fiche de licences FFF)
+  const multiPlayers = parseFootclubsMultiLineRoster(lines);
+  if (multiPlayers.length >= 2) {
+    const csvLines = [
+      'N° Licence;Nom;Prénom;Catégorie;Statut médical;Date de naissance',
+      ...multiPlayers.map(
+        (p) => `${p.license};${p.nom};${p.prenom};${p.category};${p.medical};${p.birthDate}`,
+      ),
+    ];
+    return {
+      csv: csvLines.join('\n'),
+      rowCount: multiPlayers.length,
+    };
   }
 
   const licenseRegex = /\b(\d{6,11})\b/;
@@ -825,7 +994,6 @@ export function convertExtractedTextToSquadCsv(text: string): {
   }> = [];
 
   for (const line of lines) {
-    // Si la ligne contient une licence ou plusieurs cellules
     const cells = splitCells(line);
     const licMatch = line.match(licenseRegex);
     const dateMatch = line.match(dateRegex);
@@ -843,8 +1011,7 @@ export function convertExtractedTextToSquadCsv(text: string): {
           birthDate: dateMatch ? dateMatch[1] : '',
         });
       }
-    } else if (cells.length >= 3 && !cells.some((c) => HEADER_KEYWORDS.includes(normalizeCell(c)))) {
-      // Cas où la licence n'est pas séparée par espaces ou ligne avec nom/prénom
+    } else if (cells.length >= 2 && !cells.some((c) => HEADER_KEYWORDS.includes(normalizeCell(c)))) {
       const possibleNames = cells.filter((c) => c.length > 1 && !/^\d+$/.test(c));
       if (possibleNames.length >= 2) {
         const possibleLic = cells.find((c) => /^[A-Z0-9]{6,12}$/i.test(c)) || '';

@@ -159,5 +159,77 @@ trailer
       expect(res.text).toContain('2548888888');
       expect(res.text).toContain('CAMARA');
     });
+    it('décompresse et extrait les objets avec référence indirecte /Length (/Length 30 0 R)', () => {
+      const content = 'BT\n/F1 10 Tf\n(2541112223) Tj\nT*\n(DUPONT Lucas) Tj\nET';
+      const compressed = deflateSync(Buffer.from(content, 'latin1'));
+
+      const pdf = `
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 5 0 R /Filter /FlateDecode >>
+stream
+${compressed.toString('latin1')}
+endstream
+endobj
+5 0 obj
+${compressed.length}
+endobj
+trailer
+<< /Root 1 0 R >>
+%%EOF
+      `;
+      const bytes = new Uint8Array(Buffer.from(pdf, 'latin1'));
+      const res = extractPdfTextClient(bytes);
+      expect(res.hasText).toBe(true);
+      expect(res.text).toContain('2541112223');
+      expect(res.text).toContain('DUPONT Lucas');
+    });
+
+    it('extrait une fiche multi-lignes Footclubs FFF (format bloc carte joueur)', () => {
+      const sampleText = `
+TORCY PARIS VALLEE DE LA MARNE FOOTBALL U.S. - 511876
+Liste licences matchs *
+Généré le 28/10/2026 à 22:27:31
+PAGE 1 DE 21
+Nom\tPrénom
+Date Nais.
+Nat.
+Licence
+Sous-Catégorie
+Date Enreg.
+Etat
+
+ABADA\tZinedine
+14/05/2010
+F
+2548376029
+Libre / U17 (- 17 ans)
+01/07/2026
+Validée
+
+MUTATION jusqu'au 01/07/2027
+
+ABBES AMYS\tYanis
+06/01/2009
+F
+2547183748
+Libre / U18 (- 18 ans)
+01/07/2026
+Validée
+      `;
+      const res = convertExtractedTextToSquadCsv(sampleText);
+      expect(res.rowCount).toBe(2);
+      expect(res.csv).toContain('2548376029;ABADA;Zinedine;Libre / U17 (- 17 ans);Valide;14/05/2010');
+      expect(res.csv).toContain('2547183748;ABBES AMYS;Yanis;Libre / U18 (- 18 ans);Valide;06/01/2009');
+    });
   });
 });

@@ -162,6 +162,103 @@ function alignRow(cells: string[], width: number): string[] {
   return out;
 }
 
+function parseMultiLineRoster(lines: string[]): Array<{
+  license: string;
+  nom: string;
+  prenom: string;
+  category: string;
+  medical: string;
+  birthDate: string;
+}> {
+  const isNoise = (s: string) => {
+    const l = s.toLowerCase();
+    return (
+      l.includes('liste licences') ||
+      l.includes('généré le') ||
+      l.includes('page ') ||
+      l.includes('photo') ||
+      l.startsWith('club :') ||
+      l.includes('dernier club') ||
+      l.includes('mutation') ||
+      l.includes('fédération') ||
+      l.includes('nom\tp') ||
+      l.includes('date\tn') ||
+      l.includes('sous-catégorie') ||
+      l.includes('date enreg') ||
+      l.includes('état') ||
+      l.includes('etat') ||
+      l === 'f' ||
+      l === 'm' ||
+      l === 'caf' ||
+      l === 'e'
+    );
+  };
+
+  const licenseRegex = /\b([12]\d{9})\b/;
+  const dateRegex = /\b(\d{2}\/\d{2}\/\d{4})\b/;
+  const players: Array<{
+    license: string;
+    nom: string;
+    prenom: string;
+    category: string;
+    medical: string;
+    birthDate: string;
+  }> = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    const licMatch = line.match(licenseRegex);
+    if (!licMatch) continue;
+    const license = licMatch[1]!;
+
+    let birthDate = '';
+    let nameLine = '';
+    for (let back = 1; back <= 4 && i - back >= 0; back++) {
+      const prev = lines[i - back]!;
+      if (!birthDate && dateRegex.test(prev)) {
+        birthDate = prev.match(dateRegex)![1]!;
+        continue;
+      }
+      if (!nameLine && !isNoise(prev) && !dateRegex.test(prev) && !licenseRegex.test(prev)) {
+        nameLine = prev;
+      }
+    }
+
+    let category = '';
+    let medical = 'Valide';
+    for (let fwd = 1; fwd <= 4 && i + fwd < lines.length; fwd++) {
+      const next = lines[i + fwd]!;
+      if (!category && (/U\d+|Senior|Vétéran|Féminine|Libre/i.test(next) || next.includes('/'))) {
+        category = next.replace(/\s+/g, ' ').trim();
+      }
+      if (next.toLowerCase().includes('validée') || next.toLowerCase().includes('apte')) {
+        medical = 'Valide';
+      }
+    }
+
+    let nom = '';
+    let prenom = '';
+    if (nameLine.includes('\t')) {
+      const parts = nameLine.split('\t').map((s) => s.trim()).filter(Boolean);
+      nom = parts[0] || '';
+      prenom = parts.slice(1).join(' ');
+    } else {
+      const parts = nameLine.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        nom = parts[0] || '';
+        prenom = parts.slice(1).join(' ');
+      } else {
+        nom = nameLine;
+      }
+    }
+
+    if (nom || prenom) {
+      players.push({ license, nom, prenom, birthDate, category, medical });
+    }
+  }
+  return players;
+}
+
 /**
  * Transforme du texte extrait de PDF en tableau relisible par `parseFootclubsCsv`.
  * Ne renvoie jamais une ligne inventée : les lignes non exploitables sont
@@ -177,6 +274,21 @@ export function buildSheetCsv(pdfText: string): SheetTable {
 
   if (lines.length === 0) {
     return { csv: '', rows: 0, columns: [], warnings: ['Aucun texte lisible dans le document.'] };
+  }
+
+  const multiPlayers = parseMultiLineRoster(lines);
+  if (multiPlayers.length >= 2) {
+    const columns = ['N° Licence', 'Nom', 'Prénom', 'Catégorie', 'Statut médical', 'Date de naissance'];
+    const csvRows = [
+      columns.join(';'),
+      ...multiPlayers.map((p) => `${p.license};${p.nom};${p.prenom};${p.category};${p.medical};${p.birthDate}`),
+    ];
+    return {
+      csv: csvRows.join('\n'),
+      rows: multiPlayers.length,
+      columns,
+      warnings,
+    };
   }
 
   const headerIndex = lines.findIndex((line) => looksLikeHeader(splitCells(line)));
