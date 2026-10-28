@@ -79,4 +79,45 @@ describe('footclubsCsvParser', () => {
     expect(exported).toContain('"2548963210";"Moussa Diallo";"moussa@test.com";"U17";"Valide"');
     expect(exported).toContain('"2548963211";"Lucas Martin";"lucas@test.com";"U15";"À vérifier"');
   });
+
+  it('gère les exports Footclubs officiels avec BOM UTF-8 et en-têtes FFF réels', () => {
+    // Fichier type export officiel FFF avec BOM, séparateur ; et intitulés réels
+    const fffExport = '\uFEFF' + `Numéro de licence;Nom Licencié;Prénom Licencié;Date de Naissance;Catégorie;Certificat Médical
+1478523690;BENZEMA;Karim;19/12/1987;Seniors;À jour
+9638527410;MBAPPE;Kylian;20/12/1998;Seniors;Conforme`;
+
+    const result = parseFootclubsCsv(fffExport);
+    expect(result.success).toBe(true);
+    expect(result.validRowsCount).toBe(2);
+    expect(result.rows[0].lastName).toBe('BENZEMA');
+    expect(result.rows[0].firstName).toBe('Karim');
+    expect(result.rows[0].displayName).toBe('Karim BENZEMA');
+    expect(result.rows[0].medicalValid).toBe(true);
+    expect(result.rows[1].lastName).toBe('MBAPPE');
+    expect(result.rows[1].firstName).toBe('Kylian');
+    expect(result.rows[1].medicalValid).toBe(true);
+  });
+
+  it('gère l’inversion des colonnes Prénom avant Nom sans confusion', () => {
+    const csv = `Prénom;Nom;N° Licence;Equipe
+Antoine;Griezmann;7788994455;Seniors`;
+
+    const result = parseFootclubsCsv(csv);
+    expect(result.success).toBe(true);
+    expect(result.rows[0].firstName).toBe('Antoine');
+    expect(result.rows[0].lastName).toBe('Griezmann');
+    expect(result.rows[0].displayName).toBe('Antoine Griezmann');
+    expect(result.rows[0].licenseNumber).toBe('7788994455');
+  });
+
+  it('gère une colonne Nom complet unique quand le prénom n’est pas séparé', () => {
+    const csv = `Licence;Nom complet;Catégorie
+112233;ZIDANE Zinedine;Vétérans`;
+
+    const result = parseFootclubsCsv(csv);
+    expect(result.success).toBe(true);
+    expect(result.rows[0].lastName).toBe('ZIDANE');
+    expect(result.rows[0].firstName).toBe('Zinedine');
+    expect(result.rows[0].displayName).toBe('Zinedine ZIDANE');
+  });
 });

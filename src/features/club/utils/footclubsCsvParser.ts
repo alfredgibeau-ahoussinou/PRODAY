@@ -86,7 +86,8 @@ export function parseFootclubsCsv(csvContent: string): FootclubsParseResult {
     };
   }
 
-  const rawLines = csvContent.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const cleanContent = csvContent.replace(/^\uFEFF/, '').trim();
+  const rawLines = cleanContent.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (rawLines.length === 0) {
     return {
       success: false,
@@ -102,29 +103,39 @@ export function parseFootclubsCsv(csvContent: string): FootclubsParseResult {
   const normalizedHeaders = headers.map(normalizeHeader);
 
   // Détection des colonnes clés
-  const colLicense = normalizedHeaders.findIndex((h) =>
-    h.includes('licence') || h.includes('license') || h === 'num' || h === 'no' || h === 'id',
-  );
-  const colNom = normalizedHeaders.findIndex((h) =>
-    h === 'nom' || h.includes('nom') || h === 'lastname',
-  );
+  const colLicense = normalizedHeaders.findIndex((h) => {
+    if (h.includes('nom') || h.includes('prenom') || h.includes('statut') || h.includes('date')) return false;
+    return (
+      h.includes('licen') ||
+      h.includes('license') ||
+      h.includes('numlic') ||
+      h === 'num' ||
+      h === 'no' ||
+      h === 'id' ||
+      h === 'n'
+    );
+  });
+  const colNom = normalizedHeaders.findIndex((h) => {
+    if (h.includes('prenom') || h.includes('firstname')) return false;
+    return h === 'nom' || h.includes('nom') || h.includes('lastname') || h === 'joueur';
+  });
   const colPrenom = normalizedHeaders.findIndex((h) =>
     h === 'prenom' || h.includes('prenom') || h === 'firstname',
   );
   const colBirth = normalizedHeaders.findIndex((h) =>
-    h.includes('naissance') || h.includes('birth') || h.includes('nele'),
+    h.includes('naissance') || h.includes('birth') || h.includes('nele') || h === 'ddn' || h.includes('datenaiss'),
   );
   const colCategory = normalizedHeaders.findIndex((h) =>
-    h.includes('categorie') || h.includes('category') || h.includes('equipe'),
+    h.includes('categorie') || h.includes('category') || h.includes('equipe') || h.includes('souscategorie'),
   );
   const colEmail = normalizedHeaders.findIndex((h) =>
     h.includes('email') || h.includes('mail') || h.includes('courriel'),
   );
   const colPhone = normalizedHeaders.findIndex((h) =>
-    h.includes('tel') || h.includes('phone') || h.includes('mobile'),
+    h.includes('tel') || h.includes('phone') || h.includes('mobile') || h.includes('port'),
   );
   const colMedical = normalizedHeaders.findIndex((h) =>
-    h.includes('medical') || h.includes('certificat') || h.includes('sante'),
+    h.includes('medical') || h.includes('certificat') || h.includes('sante') || h.includes('aptitude'),
   );
 
   if (colNom === -1 && colLicense === -1) {
@@ -149,13 +160,27 @@ export function parseFootclubsCsv(csvContent: string): FootclubsParseResult {
       raw[h] = cells[idx] ?? '';
     });
 
-    const lastName = (colNom !== -1 ? cells[colNom] : '').trim();
-    const firstName = (colPrenom !== -1 ? cells[colPrenom] : '').trim();
+    let lastName = (colNom !== -1 ? cells[colNom] : '').trim();
+    let firstName = (colPrenom !== -1 ? cells[colPrenom] : '').trim();
     const licenseNumber = (colLicense !== -1 ? cells[colLicense] : '').replace(/\s+/g, '').trim();
 
     if (!lastName && !firstName && !licenseNumber) {
       // Ligne vide ignorée
       continue;
+    }
+
+    // Si seulement le nom est renseigné et contient nom + prénom (ex: "DUPONT Thomas")
+    if (lastName && !firstName && lastName.includes(' ')) {
+      const parts = lastName.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        if (parts[0] === parts[0].toUpperCase() && parts[1] !== parts[1].toUpperCase()) {
+          lastName = parts[0];
+          firstName = parts.slice(1).join(' ');
+        } else {
+          lastName = parts[parts.length - 1];
+          firstName = parts.slice(0, -1).join(' ');
+        }
+      }
     }
 
     if (!lastName && !firstName) {
@@ -171,8 +196,16 @@ export function parseFootclubsCsv(csvContent: string): FootclubsParseResult {
 
     let medicalValid = false;
     if (colMedical !== -1 && cells[colMedical]) {
-      const med = cells[colMedical].toLowerCase();
-      medicalValid = med.includes('oui') || med.includes('valid') || med === 'ok' || med === '1' || med === 'true';
+      const med = cells[colMedical].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      medicalValid =
+        med.includes('oui') ||
+        med.includes('valid') ||
+        med.includes('apte') ||
+        med.includes('conforme') ||
+        med.includes('jour') ||
+        med === 'ok' ||
+        med === '1' ||
+        med === 'true';
     }
 
     rows.push({
