@@ -4,7 +4,6 @@ import {
   Keyboard,
   Modal,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +12,7 @@ import {
   View,
   type GestureResponderEvent,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CoachExerciseDiagramRenderer } from './CoachExerciseDiagramRenderer';
 import { CoachDiagramAnimationEditor } from './CoachDiagramAnimationEditor';
@@ -425,7 +425,7 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
-      <SafeAreaView style={styles.root}>
+      <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
         {/* ——— Barre Supérieure : Titre, Undo/Redo & Enregistrement ——— */}
         <View style={styles.headerBar}>
           <PressableSpring onPress={handleClose} scaleTo={0.9} haptic style={styles.closeBtn}>
@@ -649,6 +649,7 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.optionsContent}
+            keyboardShouldPersistTaps="handled"
           >
             {activeTab === 'players' && (
               <View style={styles.subToolRow}>
@@ -700,6 +701,7 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
                     { id: 'goal', label: 'Grand but' },
                     { id: 'mannequin', label: 'Mannequin' },
                     { id: 'ladder', label: 'Échelle' },
+                    { id: 'hurdle', label: 'Haie' },
                   ] as { id: EquipmentType; label: string }[]
                 ).map((eq) => (
                   <PressableSpring

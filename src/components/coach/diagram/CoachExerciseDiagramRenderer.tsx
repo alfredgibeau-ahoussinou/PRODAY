@@ -1,8 +1,10 @@
+import { COACH_REF_PALETTE } from '../../../features/coach/theme/coachDesignSystem';
 import React from 'react';
 import { DimensionValue, View } from 'react-native';
 import Svg, {
   Circle,
   Defs,
+  Ellipse,
   G,
   Line,
   Marker,
@@ -61,90 +63,170 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
       case 'full':
         return (
           <G>
-            {/* Outer touchlines */}
+            {/* Lignes de touche & de but extérieures */}
             <Rect
-              x={2}
-              y={2}
-              width={vbW - 4}
-              height={vbH - 4}
-              rx={2}
+              x={3}
+              y={3}
+              width={vbW - 6}
+              height={vbH - 6}
+              rx={1.5}
               fill="none"
-              stroke="rgba(255,255,255,0.28)"
-              strokeWidth={0.7}
+              stroke="#FFFFFF"
+              strokeWidth={0.8}
+              strokeOpacity={0.85}
             />
-            {/* Center line and circle */}
+
+            {/* Ligne médiane & cercle central */}
             <Line
               x1={vbW / 2}
-              y1={2}
+              y1={3}
               x2={vbW / 2}
-              y2={vbH - 2}
-              stroke="rgba(255,255,255,0.25)"
-              strokeWidth={0.6}
+              y2={vbH - 3}
+              stroke="#FFFFFF"
+              strokeWidth={0.8}
+              strokeOpacity={0.85}
             />
             <Circle
               cx={vbW / 2}
               cy={vbH / 2}
-              r={9}
+              r={9.15}
               fill="none"
-              stroke="rgba(255,255,255,0.25)"
-              strokeWidth={0.6}
+              stroke="#FFFFFF"
+              strokeWidth={0.8}
+              strokeOpacity={0.85}
             />
-            <Circle cx={vbW / 2} cy={vbH / 2} r={0.7} fill="rgba(255,255,255,0.6)" />
-            {/* Penalty boxes */}
+            <Circle cx={vbW / 2} cy={vbH / 2} r={0.8} fill="#FFFFFF" />
+
+            {/* Surface de réparation gauche (16.5m) */}
             <Rect
-              x={2}
-              y={vbH / 2 - 14}
-              width={16}
-              height={28}
+              x={3}
+              y={vbH / 2 - 18}
+              width={16.5}
+              height={36}
               fill="none"
-              stroke="rgba(255,255,255,0.25)"
-              strokeWidth={0.6}
+              stroke="#FFFFFF"
+              strokeWidth={0.8}
+              strokeOpacity={0.85}
             />
+            {/* Surface de but gauche (5.5m / 6 yards) */}
             <Rect
-              x={vbW - 18}
-              y={vbH / 2 - 14}
-              width={16}
-              height={28}
+              x={3}
+              y={vbH / 2 - 9}
+              width={5.5}
+              height={18}
               fill="none"
-              stroke="rgba(255,255,255,0.25)"
-              strokeWidth={0.6}
+              stroke="#FFFFFF"
+              strokeWidth={0.7}
+              strokeOpacity={0.8}
             />
-            {/* 6-yard boxes */}
+            {/* Point de penalty gauche (11m) & arc de cercle (D) */}
+            <Circle cx={14} cy={vbH / 2} r={0.7} fill="#FFFFFF" />
+            <Path
+              d={`M 19.5 ${vbH / 2 - 7.5} A 9.15 9.15 0 0 1 19.5 ${vbH / 2 + 7.5}`}
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth={0.7}
+              strokeOpacity={0.85}
+            />
+            {/* But gauche & filet */}
             <Rect
-              x={2}
-              y={vbH / 2 - 7}
-              width={6}
-              height={14}
-              fill="none"
-              stroke="rgba(255,255,255,0.2)"
-              strokeWidth={0.5}
+              x={0.8}
+              y={vbH / 2 - 5}
+              width={2.2}
+              height={10}
+              fill="rgba(255,255,255,0.15)"
+              stroke="#FFFFFF"
+              strokeWidth={1}
             />
+
+            {/* Surface de réparation droite (16.5m) */}
             <Rect
-              x={vbW - 8}
-              y={vbH / 2 - 7}
-              width={6}
-              height={14}
+              x={vbW - 19.5}
+              y={vbH / 2 - 18}
+              width={16.5}
+              height={36}
               fill="none"
-              stroke="rgba(255,255,255,0.2)"
-              strokeWidth={0.5}
+              stroke="#FFFFFF"
+              strokeWidth={0.8}
+              strokeOpacity={0.85}
             />
+            {/* Surface de but droite (5.5m) */}
+            <Rect
+              x={vbW - 8.5}
+              y={vbH / 2 - 9}
+              width={5.5}
+              height={18}
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth={0.7}
+              strokeOpacity={0.8}
+            />
+            {/* Point de penalty droit & arc de cercle (D) */}
+            <Circle cx={vbW - 14} cy={vbH / 2} r={0.7} fill="#FFFFFF" />
+            <Path
+              d={`M ${vbW - 19.5} ${vbH / 2 - 7.5} A 9.15 9.15 0 0 0 ${vbW - 19.5} ${vbH / 2 + 7.5}`}
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth={0.7}
+              strokeOpacity={0.85}
+            />
+            {/* But droit & filet */}
+            <Rect
+              x={vbW - 3}
+              y={vbH / 2 - 5}
+              width={2.2}
+              height={10}
+              fill="rgba(255,255,255,0.15)"
+              stroke="#FFFFFF"
+              strokeWidth={1}
+            />
+
+            {/* Arcs de cercle de corner aux 4 angles */}
+            <Path d="M 3 5 A 2 2 0 0 0 5 3" fill="none" stroke="#FFFFFF" strokeWidth={0.7} strokeOpacity={0.85} />
+            <Path d={`M 3 ${vbH - 5} A 2 2 0 0 1 5 ${vbH - 3}`} fill="none" stroke="#FFFFFF" strokeWidth={0.7} strokeOpacity={0.85} />
+            <Path d={`M ${vbW - 3} 5 A 2 2 0 0 1 ${vbW - 5} 3`} fill="none" stroke="#FFFFFF" strokeWidth={0.7} strokeOpacity={0.85} />
+            <Path d={`M ${vbW - 3} ${vbH - 5} A 2 2 0 0 0 ${vbW - 5} ${vbH - 3}`} fill="none" stroke="#FFFFFF" strokeWidth={0.7} strokeOpacity={0.85} />
           </G>
         );
 
       case 'box':
         return (
           <G>
+            {/* Terrain d'atelier délimité / Box Rondo Tacticslot */}
             <Rect
-              x={2}
-              y={2}
-              width={vbW - 4}
-              height={vbH - 4}
+              x={6}
+              y={5}
+              width={vbW - 12}
+              height={vbH - 10}
               rx={2}
               fill="none"
-              stroke="rgba(255,255,255,0.2)"
+              stroke="#FFFFFF"
+              strokeWidth={0.8}
+              strokeOpacity={0.85}
+            />
+            {/* Ligne médiane de l'atelier */}
+            <Line
+              x1={vbW / 2}
+              y1={5}
+              x2={vbW / 2}
+              y2={vbH - 5}
+              stroke="#FFFFFF"
               strokeWidth={0.6}
+              strokeOpacity={0.5}
               strokeDasharray="2,2"
             />
+            <Line
+              x1={6}
+              y1={vbH / 2}
+              x2={vbW - 6}
+              y2={vbH / 2}
+              stroke="#FFFFFF"
+              strokeWidth={0.6}
+              strokeOpacity={0.5}
+              strokeDasharray="2,2"
+            />
+            <Circle cx={vbW / 2} cy={vbH / 2} r={6} fill="none" stroke="#FFFFFF" strokeWidth={0.6} strokeOpacity={0.5} />
+            <Circle cx={vbW / 2} cy={vbH / 2} r={0.7} fill="#FFFFFF" strokeOpacity={0.8} />
           </G>
         );
 
@@ -155,46 +237,77 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
       default:
         return (
           <G>
-            {/* Outer touchlines */}
+            {/* Demi-terrain grand format type Tacticslot */}
             <Rect
-              x={2}
-              y={2}
-              width={vbW - 4}
-              height={vbH - 4}
+              x={3}
+              y={3}
+              width={vbW - 6}
+              height={vbH - 6}
               rx={2}
               fill="none"
-              stroke="rgba(255,255,255,0.28)"
-              strokeWidth={0.7}
+              stroke="#FFFFFF"
+              strokeWidth={0.8}
+              strokeOpacity={0.85}
             />
-            {/* Penalty box */}
+
+            {/* Surface de réparation 16.5m */}
             <Rect
               x={22}
-              y={2}
+              y={3}
               width={56}
-              height={24}
+              height={25}
               fill="none"
-              stroke="rgba(255,255,255,0.25)"
-              strokeWidth={0.6}
+              stroke="#FFFFFF"
+              strokeWidth={0.8}
+              strokeOpacity={0.85}
             />
-            {/* 6 yard box */}
+
+            {/* Surface de but 5.5m */}
             <Rect
               x={36}
-              y={2}
+              y={3}
               width={28}
               height={9}
               fill="none"
-              stroke="rgba(255,255,255,0.2)"
-              strokeWidth={0.5}
+              stroke="#FFFFFF"
+              strokeWidth={0.7}
+              strokeOpacity={0.8}
             />
-            {/* Penalty spot */}
-            <Circle cx={50} cy={17} r={0.8} fill="rgba(255,255,255,0.8)" />
-            {/* Penalty arc */}
+
+            {/* Point de penalty & arc de cercle (D) */}
+            <Circle cx={50} cy={18} r={0.8} fill="#FFFFFF" />
             <Path
-              d="M 38 26 A 9 9 0 0 0 62 26"
+              d="M 38 28 A 9.15 9.15 0 0 0 62 28"
               fill="none"
-              stroke="rgba(255,255,255,0.25)"
-              strokeWidth={0.6}
+              stroke="#FFFFFF"
+              strokeWidth={0.7}
+              strokeOpacity={0.85}
             />
+
+            {/* But haut & filet */}
+            <Rect
+              x={38}
+              y={0.8}
+              width={24}
+              height={2.2}
+              fill="rgba(255,255,255,0.15)"
+              stroke="#FFFFFF"
+              strokeWidth={1}
+            />
+
+            {/* Ligne médiane et arc du cercle central au bas du demi-terrain */}
+            <Path
+              d={`M 40.85 ${vbH - 3} A 9.15 9.15 0 0 1 59.15 ${vbH - 3}`}
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth={0.8}
+              strokeOpacity={0.85}
+            />
+            <Circle cx={50} cy={vbH - 3} r={0.8} fill="#FFFFFF" />
+
+            {/* Arcs de corner hauts */}
+            <Path d="M 3 6 A 3 3 0 0 0 6 3" fill="none" stroke="#FFFFFF" strokeWidth={0.7} strokeOpacity={0.85} />
+            <Path d={`M ${vbW - 3} 6 A 3 3 0 0 1 ${vbW - 6} 3`} fill="none" stroke="#FFFFFF" strokeWidth={0.7} strokeOpacity={0.85} />
           </G>
         );
     }
@@ -215,7 +328,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
           rx={2}
           fill={el.color || proSemantic.success}
           fillOpacity={el.fillOpacity ?? 0.12}
-          stroke={isSelected ? '#FFFFFF' : el.color || proSemantic.success}
+          stroke={isSelected ? COACH_REF_PALETTE.white : el.color || proSemantic.success}
           strokeWidth={isSelected ? 1.4 : 0.8}
           strokeDasharray={el.style === 'dashed' ? '2,2' : undefined}
         />
@@ -225,7 +338,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
             y={el.y + 4.5}
             fontSize={2.5}
             fontWeight="700"
-            fill={el.color || '#FFFFFF'}
+            fill={el.color || COACH_REF_PALETTE.white}
             opacity={0.9}
           >
             {el.label}
@@ -281,7 +394,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
           <Path
             d={`M ${el.fromX} ${el.fromY} Q ${el.controlX} ${el.controlY} ${el.toX} ${el.toY}`}
             fill="none"
-            stroke={isSelected ? '#FFFFFF' : color}
+            stroke={isSelected ? COACH_REF_PALETTE.white : color}
             strokeWidth={isSelected ? 1.4 : 0.9}
             strokeDasharray={dash}
             markerEnd={marker}
@@ -292,7 +405,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
             y1={el.fromY}
             x2={el.toX}
             y2={el.toY}
-            stroke={isSelected ? '#FFFFFF' : color}
+            stroke={isSelected ? COACH_REF_PALETTE.white : color}
             strokeWidth={isSelected ? 1.4 : 0.9}
             strokeDasharray={dash}
             markerEnd={marker}
@@ -319,7 +432,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
             cy={el.y}
             r={4.2}
             fill="none"
-            stroke="#FFFFFF"
+            stroke={COACH_REF_PALETTE.white}
             strokeWidth={0.7}
             strokeDasharray="1,1"
           />
@@ -329,36 +442,73 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
         <Circle cx={el.x} cy={el.y} r={5} fill="transparent" />
 
         {el.equipmentType === 'cone' && (
-          <Polygon
-            points={`${el.x},${el.y - 2.5} ${el.x - 2},${el.y + 2.5} ${el.x + 2},${el.y + 2.5}`}
-            fill={el.color || DEFAULT_EQUIPMENT_COLORS.cone}
-            stroke="#FFFFFF"
-            strokeWidth={0.3}
-          />
+          <G>
+            {/* Ombre portée sur le gazon */}
+            <Ellipse cx={el.x} cy={el.y + 2.3} rx={2.4} ry={1.1} fill="rgba(0,0,0,0.32)" />
+            {/* Socle carré / base plate du plot */}
+            <Rect
+              x={el.x - 2.2}
+              y={el.y + 1.6}
+              width={4.4}
+              height={0.8}
+              rx={0.3}
+              fill={el.color || DEFAULT_EQUIPMENT_COLORS.cone || '#FF6B00'}
+            />
+            {/* Corps du plot avec angle conique */}
+            <Polygon
+              points={`${el.x},${el.y - 3} ${el.x - 1.9},${el.y + 1.8} ${el.x + 1.9},${el.y + 1.8}`}
+              fill={el.color || DEFAULT_EQUIPMENT_COLORS.cone || '#FF6B00'}
+              stroke="#FFFFFF"
+              strokeWidth={0.2}
+            />
+            {/* Bande blanche réfléchissante centrale */}
+            <Polygon
+              points={`${el.x - 0.7},${el.y - 0.4} ${el.x + 0.7},${el.y - 0.4} ${el.x + 1.2},${el.y + 0.8} ${el.x - 1.2},${el.y + 0.8}`}
+              fill="#FFFFFF"
+              opacity={0.95}
+            />
+            {/* Apex sommital */}
+            <Circle cx={el.x} cy={el.y - 2.9} r={0.4} fill="#FFFFFF" />
+          </G>
         )}
 
         {el.equipmentType === 'disc_cone' && (
-          <Circle
-            cx={el.x}
-            cy={el.y}
-            r={1.6}
-            fill={el.color || DEFAULT_EQUIPMENT_COLORS.disc_cone}
-            stroke="#000000"
-            strokeWidth={0.3}
-          />
+          <G>
+            <Ellipse cx={el.x} cy={el.y + 0.6} rx={2.2} ry={1} fill="rgba(0,0,0,0.28)" />
+            <Ellipse
+              cx={el.x}
+              cy={el.y}
+              rx={2.2}
+              ry={1.3}
+              fill={el.color || DEFAULT_EQUIPMENT_COLORS.disc_cone || '#FACC15'}
+              stroke="#FFFFFF"
+              strokeWidth={0.3}
+            />
+            <Ellipse
+              cx={el.x}
+              cy={el.y - 0.2}
+              rx={1.5}
+              ry={0.8}
+              fill={withAlpha(el.color || '#FACC15', 0.8)}
+            />
+            <Ellipse cx={el.x} cy={el.y} rx={0.6} ry={0.4} fill="#14532D" />
+          </G>
         )}
 
         {el.equipmentType === 'ball' && (
           <G>
-            <Circle
-              cx={el.x}
-              cy={el.y}
-              r={1.4}
-              fill="#FFFFFF"
-              stroke="#000000"
-              strokeWidth={0.4}
+            <Ellipse cx={el.x + 0.5} cy={el.y + 1.3} rx={1.6} ry={0.8} fill="rgba(0,0,0,0.38)" />
+            <Circle cx={el.x} cy={el.y} r={1.6} fill="#FFFFFF" stroke="#0F172A" strokeWidth={0.35} />
+            {/* Pentagone central du ballon */}
+            <Polygon
+              points={`${el.x},${el.y - 0.6} ${el.x + 0.6},${el.y - 0.2} ${el.x + 0.4},${el.y + 0.5} ${el.x - 0.4},${el.y + 0.5} ${el.x - 0.6},${el.y - 0.2}`}
+              fill="#0F172A"
             />
-            <Circle cx={el.x} cy={el.y} r={0.5} fill="#000000" />
+            <Line x1={el.x} y1={el.y - 0.6} x2={el.x} y2={el.y - 1.5} stroke="#0F172A" strokeWidth={0.25} />
+            <Line x1={el.x + 0.6} y1={el.y - 0.2} x2={el.x + 1.4} y2={el.y - 0.5} stroke="#0F172A" strokeWidth={0.25} />
+            <Line x1={el.x + 0.4} y1={el.y + 0.5} x2={el.x + 1.1} y2={el.y + 1.2} stroke="#0F172A" strokeWidth={0.25} />
+            <Line x1={el.x - 0.4} y1={el.y + 0.5} x2={el.x - 1.1} y2={el.y + 1.2} stroke="#0F172A" strokeWidth={0.25} />
+            <Line x1={el.x - 0.6} y1={el.y - 0.2} x2={el.x - 1.4} y2={el.y - 0.5} stroke="#0F172A" strokeWidth={0.25} />
           </G>
         )}
 
@@ -369,8 +519,8 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
               y={el.y - (el.height ? el.height / 2 : 2)}
               width={el.width || 24}
               height={el.height || 4}
-              fill="none"
-              stroke="#FFFFFF"
+              fill="rgba(255,255,255,0.15)"
+              stroke={COACH_REF_PALETTE.white}
               strokeWidth={1.2}
             />
             <Line
@@ -378,7 +528,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
               y1={el.y - (el.height ? el.height / 2 : 2)}
               x2={el.x - (el.width ? el.width / 2 : 12)}
               y2={el.y + (el.height ? el.height / 2 : 2)}
-              stroke="#FFFFFF"
+              stroke={COACH_REF_PALETTE.white}
               strokeWidth={1}
             />
             <Line
@@ -386,7 +536,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
               y1={el.y - (el.height ? el.height / 2 : 2)}
               x2={el.x + (el.width ? el.width / 2 : 12)}
               y2={el.y + (el.height ? el.height / 2 : 2)}
-              stroke="#FFFFFF"
+              stroke={COACH_REF_PALETTE.white}
               strokeWidth={1}
             />
           </G>
@@ -396,11 +546,11 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
           <G>
             <Rect
               x={el.x - (el.width ? el.width / 2 : 3)}
-              y={el.y - (el.height ? el.height / 2 : 5)}
+              y={el.y - (el.height ? el.height / 2 : 4)}
               width={el.width || 6}
-              height={el.height || 10}
-              fill="none"
-              stroke="#FFFFFF"
+              height={el.height || 8}
+              fill="rgba(255,255,255,0.18)"
+              stroke={COACH_REF_PALETTE.white}
               strokeWidth={1}
             />
             <Line
@@ -408,7 +558,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
               y1={el.y}
               x2={el.x + (el.width ? el.width / 2 : 3)}
               y2={el.y}
-              stroke="#FFFFFF"
+              stroke={COACH_REF_PALETTE.white}
               strokeWidth={0.4}
               strokeDasharray="1,1"
             />
@@ -435,6 +585,16 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
               stroke="#000000"
               strokeWidth={0.3}
             />
+            <Line x1={el.x - 1.8} y1={el.y + 1.5} x2={el.x + 1.8} y2={el.y + 1.5} stroke="#64748B" strokeWidth={0.4} />
+            <Line x1={el.x - 1.8} y1={el.y + 3} x2={el.x + 1.8} y2={el.y + 3} stroke="#64748B" strokeWidth={0.4} />
+          </G>
+        )}
+
+        {el.equipmentType === 'hurdle' && (
+          <G>
+            <Rect x={el.x - 3} y={el.y - 1.5} width={6} height={3} rx={0.6} fill="none" stroke="#F59E0B" strokeWidth={0.8} />
+            <Line x1={el.x - 3} y1={el.y + 1.5} x2={el.x - 3} y2={el.y + 3} stroke="#F59E0B" strokeWidth={0.9} />
+            <Line x1={el.x + 3} y1={el.y + 1.5} x2={el.x + 3} y2={el.y + 3} stroke="#F59E0B" strokeWidth={0.9} />
           </G>
         )}
 
@@ -485,7 +645,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
             cy={el.y}
             r={4.6}
             fill="none"
-            stroke="#FFFFFF"
+            stroke={COACH_REF_PALETTE.white}
             strokeWidth={0.8}
           />
         ) : null}
@@ -496,7 +656,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
           cy={el.y}
           r={2.9}
           fill={color}
-          stroke="#FFFFFF"
+          stroke={COACH_REF_PALETTE.white}
           strokeWidth={0.7}
         />
 
@@ -507,7 +667,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
             y={el.y + 1.1}
             fontSize={2.7}
             fontWeight="800"
-            fill="#FFFFFF"
+            fill={COACH_REF_PALETTE.white}
             textAnchor="middle"
           >
             {el.num}
@@ -521,7 +681,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
             y={el.y + 5.5}
             fontSize={2.2}
             fontWeight="700"
-            fill="#FFFFFF"
+            fill={COACH_REF_PALETTE.white}
             textAnchor="middle"
           >
             {el.label}
@@ -534,7 +694,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
             cx={el.x + 2.5}
             cy={el.y - 2.5}
             r={1.2}
-            fill="#FFFFFF"
+            fill={COACH_REF_PALETTE.white}
             stroke="#000000"
             strokeWidth={0.4}
           />
@@ -557,7 +717,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
             width={(el.text.length * (el.fontSize || 2.8) * 0.6) + 2}
             height={(el.fontSize || 2.8) + 2}
             fill="none"
-            stroke="#FFFFFF"
+            stroke={COACH_REF_PALETTE.white}
             strokeWidth={0.5}
             strokeDasharray="1,1"
           />
@@ -567,7 +727,7 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
           y={el.y}
           fontSize={el.fontSize || 2.8}
           fontWeight="700"
-          fill={el.color || '#FFFFFF'}
+          fill={el.color || COACH_REF_PALETTE.white}
         >
           {el.text}
         </SvgText>
@@ -685,17 +845,17 @@ export const CoachExerciseDiagramRenderer: React.FC<CoachExerciseDiagramRenderer
           </Marker>
         </Defs>
 
-        {/* Grass Background with alternating subtle mower stripes */}
-        <Rect x={0} y={0} width={vbW} height={vbH} rx={4} fill={COACH_SITE.pitchDeep} />
-        {[0, 1, 2, 3, 4, 5].map((i) => (
+        {/* Pelouse tactique haute définition Tacticslot avec 10 bandes alternées */}
+        <Rect x={0} y={0} width={vbW} height={vbH} rx={4} fill="#14532D" />
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
           <Rect
             key={i}
-            x={i * (vbW / 6)}
+            x={i * (vbW / 10)}
             y={0}
-            width={vbW / 12}
+            width={vbW / 20}
             height={vbH}
-            fill={withAlpha(COACH_SITE.pitchLight, 0.45)}
-            opacity={0.5}
+            fill="#166534"
+            opacity={0.42}
           />
         ))}
 

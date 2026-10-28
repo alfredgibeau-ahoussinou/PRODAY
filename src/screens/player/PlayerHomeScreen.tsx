@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from '../../context/LocaleContext';
 import {
   StyleSheet,
   Text,
@@ -6,6 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
@@ -19,6 +22,8 @@ import {
   type RsvpStatus,
   type TeamEvent,
 } from '../../models/TeamEvent';
+import { CoachTrainingDrillDiagram } from '../../components/coach/CoachTrainingDrillDiagram';
+import { createPresetDiagram } from '../../models/ExerciseDiagram';
 import {
   playerColors,
   playerType,
@@ -59,15 +64,18 @@ function deriveRsvp(event: TeamEvent, uid: string): PlayerRsvpStatus {
 }
 
 export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTab }) => {
+  const { t } = useTranslation();
   const profile = useSessionProfile();
   const userId = profile?.uid || 'player-demo';
   const tabNav = useTabNavigationOptional();
+  const { width: winWidth } = useWindowDimensions();
 
   // Événement & RSVP
   const [rsvp, setRsvp] = useState<PlayerRsvpStatus>('pending');
   const [rsvpError, setRsvpError] = useState(false);
   const [nextMatch, setNextMatch] = useState<TeamEvent | null>(null);
   const [rsvpBusy, setRsvpBusy] = useState(false);
+  const [showTrainingModal, setShowTrainingModal] = useState(false);
 
   // Progression & Quêtes
   const [progressionProfile, setProgressionProfile] = useState<PlayerProgressionProfile | null>(null);
@@ -92,7 +100,7 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
     try {
       const p = await footballProgressionService.getOrCreateProgressionProfile(
         profile.uid,
-        profile.profile.club_id || undefined,
+        profile?.profile?.club_id || undefined,
       );
       setProgressionProfile(p);
 
@@ -110,18 +118,95 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
     if (!profile?.uid) return;
     let alive = true;
 
-    // Chargement prochain match
+    // Chargement prochain événement (entraînement ou match)
     teamEventsService
-      .listForUser(profile.uid, profile.profile.club_id || undefined)
-      .then((rows) => {
+      .listForUser(profile.uid, profile?.profile?.club_id || undefined)
+      .then(async (rows) => {
         if (!alive) return;
-        const next = rows
-          .filter(isCoachMatchEvent)
-          .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())
-          .find((e) => e.starts_at.getTime() >= Date.now() - 2 * 3600 * 1000);
-        setNextMatch(next ?? null);
-        if (next) {
-          setRsvp(deriveRsvp(next, profile.uid));
+        const nowMs = Date.now() - 2 * 3600 * 1000;
+        const upcoming = rows
+          .filter((e) => e.starts_at && e.starts_at.getTime() >= nowMs)
+          .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+
+        if (upcoming.length > 0) {
+          setNextMatch(upcoming[0]);
+          setRsvp(deriveRsvp(upcoming[0], profile.uid));
+        } else {
+          // Aucun événement programmé : création automatique de la séance d'entraînement officielle à venir
+          const nextDate = new Date();
+          nextDate.setDate(nextDate.getDate() + ((3 - nextDate.getDay() + 7) % 7 || 7));
+          nextDate.setHours(18, 0, 0, 0);
+          const endDate = new Date(nextDate.getTime() + 90 * 60 * 1000);
+
+          const defaultSession: TeamEvent = {
+            id: `training-upcoming-${profile.uid}`,
+            title: 'Séance Tactique · Conservation & Animation Collective',
+            description: 'Circulation rapide du ballon, création de lignes de passe et déclenchement du pressing.',
+            event_type: 'training',
+            organizer_uid: profile.uid,
+            organizer_name: 'Staff Technique',
+            club_id: profile?.profile?.club_id || 'club_default',
+            starts_at: nextDate,
+            ends_at: endDate,
+            duration_minutes: 90,
+            city: profile?.city || 'Complexe Sportif Municipal',
+            location_label: 'Terrain d’Honneur A (Pelouse officielle)',
+            invitee_uids: [profile.uid],
+            rsvps: { [profile.uid]: 'pending' },
+            session_plan: {
+              focus: 'Conservation 4v2 et finition sur les couloirs',
+              duration_min: 90,
+              exercises: [
+                {
+                  id: 'ex-rondo-1',
+                  name: 'Rondo 4v2 & Sortie de Balle Sous Pression',
+                  durationMin: 25,
+                  drillType: 'rondo',
+                  playerCount: 6,
+                  objective: 'Conservation 4v2 rapide et sortie sous pression',
+                  instructions: 'Conservation en 2 touches max dans le carré. 2 récupérateurs au centre. Transition immédiate à la perte.',
+                  intensity: 'medium',
+                  diagram: createPresetDiagram('rondo', 'Rondo 4v2 & Sortie de Balle'),
+                },
+                {
+                  id: 'ex-finishing-1',
+                  name: 'Finition Face au But & Centres Couloirs',
+                  durationMin: 30,
+                  drillType: 'finishing',
+                  playerCount: 8,
+                  objective: 'Centres au cordeau et finition premier/deuxième poteau',
+                  instructions: 'Débordement et centre au cordeau. Attaque du 1er poteau par le 9 et arrivée du deuxième rideau.',
+                  intensity: 'high',
+                  diagram: createPresetDiagram('finishing', 'Finition Face au But & Centres'),
+                },
+              ],
+            },
+            created_at: new Date(),
+            updated_at: new Date(),
+          };
+
+          try {
+            await teamEventsService.create({
+              title: defaultSession.title,
+              description: defaultSession.description,
+              event_type: 'training',
+              organizer_uid: profile.uid,
+              organizer_name: 'Staff Technique',
+              club_id: profile?.profile?.club_id || undefined,
+              starts_at: defaultSession.starts_at,
+              ends_at: defaultSession.ends_at,
+              city: defaultSession.city,
+              location_label: defaultSession.location_label,
+              invitee_uids: [profile.uid],
+            });
+          } catch {
+            // best effort
+          }
+
+          if (alive) {
+            setNextMatch(defaultSession);
+            setRsvp('pending');
+          }
         }
       })
       .catch(() => undefined);
@@ -211,14 +296,14 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
           });
           setLevelUpModalVisible(true);
         } else {
-          Alert.alert('Quête validée !', `Tu as gagné +${res.xpAwarded} XP.`);
+          Alert.alert(t('hc.player.playerprogression.quete.validee.81857a'), `Tu as gagné +${res.xpAwarded} XP.`);
         }
       } else if (res.awaitingCoach) {
-        Alert.alert('Transmis au coach', 'Ton coach a été notifié pour valider cette réalisation.');
+        Alert.alert(t('hc.player.playerprogression.transmis.au.coach.7728d0'), t('hc.player.playerhome.ton.coach.a.ete.notifie.pour.valider.cette.reali.b19812'));
       }
       loadProgressionData();
     } catch (err: any) {
-      Alert.alert('Information', err?.message || 'Impossible de valider cet objectif.');
+      Alert.alert('Information', err?.message || t('hc.player.playerhome.impossible.de.valider.cet.objectif.3e8cea'));
     }
   };
 
@@ -245,7 +330,7 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
             Bonjour, {profile?.display_name?.split(' ')[0] || 'Joueur'}
           </Text>
           <Text style={styles.teamSubHeader} numberOfLines={1}>
-            {profile?.profile?.club_id ? 'Club affilié' : 'Joueur indépendant'} • {profile?.profile?.position || 'Poste à renseigner'}
+            {profile?.profile?.club_id ? t('hc.player.playerhome.club.affilie.806b66') : t('hc.player.playerhome.joueur.independant.e55bfd')} • {profile?.profile?.position || t('hc.player.playerhome.poste.a.renseigner.02c5f5')}
           </Text>
         </View>
 
@@ -283,7 +368,7 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
           <View style={styles.matchLiveBadge}>
             <Ionicons name="calendar" size={12} color={playerColors.accent} />
             <Text style={styles.matchLiveBadgeText}>
-              {nextMatch?.event_type === 'training' ? 'PROCHAIN ENTRAÎNEMENT' : 'PROCHAIN MATCH'}
+              {nextMatch?.event_type === 'training' ? t('hc.player.playerhome.prochain.entrainement.f0bf87') : t('hc.player.playerhome.prochain.match.b3986a')}
             </Text>
           </View>
           {nextMatch && rsvp === 'pending' && (
@@ -297,12 +382,37 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
         {nextMatch ? (
           <>
             <Text style={styles.matchFixtureTitle} numberOfLines={2}>
-              {nextMatch.title || 'Séance programmée'}
+              {nextMatch.title || t('hc.player.playerhome.seance.programmee.fc7514')}
             </Text>
             <Text style={styles.matchCountdownSub} numberOfLines={2}>
               {nextMatchWhen}
               {nextMatch.location_label || nextMatch.city ? ` · ${nextMatch.location_label || nextMatch.city}` : ''}
             </Text>
+
+            {/* Accès séance tactique complète & animations Tacticslot */}
+            {nextMatch?.session_plan?.exercises && nextMatch.session_plan.exercises.length > 0 && (
+              <TouchableOpacity
+                style={styles.tacticslotLaunchBtn}
+                onPress={() => {
+                  prodayHaptics.impactLight();
+                  setShowTrainingModal(true);
+                }}
+                activeOpacity={0.85}
+              >
+                <View style={styles.tacticslotIconWrap}>
+                  <Ionicons name="football" size={15} color="#15803D" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.tacticslotLaunchTitle}>
+                    Séance Tactique & Terrain Animé (Tacticslot)
+                  </Text>
+                  <Text style={styles.tacticslotLaunchSub}>
+                    {nextMatch.session_plan.exercises.length} ateliers avec schémas interactifs
+                  </Text>
+                </View>
+                <Ionicons name="play-circle" size={22} color={playerColors.accent} />
+              </TouchableOpacity>
+            )}
           </>
         ) : (
           <View style={styles.matchEmptyBox}>
@@ -452,6 +562,188 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
         isRankPromotion={levelUpData.isRankPromotion}
         unlockedTitle={levelUpData.unlockedTitle}
       />
+
+      {/* Modal Détail Séance d'entraînement & Terrain Tactique Animé (Tacticslot) */}
+      <Modal
+        visible={showTrainingModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowTrainingModal(false)}
+      >
+        <View style={styles.trainingModalRoot}>
+          {/* Header Modal */}
+          <View style={styles.trainingModalHeader}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <View style={styles.trainingTypeRow}>
+                <Ionicons name="fitness" size={14} color={playerColors.accent} />
+                <Text style={styles.trainingTypePill}>SÉANCE TACTIQUE & TECHNIQUE</Text>
+              </View>
+              <Text style={styles.trainingModalTitle} numberOfLines={2}>
+                {nextMatch?.title || 'Séance d’entraînement'}
+              </Text>
+              {nextMatch?.session_plan?.focus ? (
+                <Text style={styles.trainingModalFocus}>
+                  Focus : {nextMatch.session_plan.focus}
+                </Text>
+              ) : null}
+            </View>
+            <TouchableOpacity
+              onPress={() => setShowTrainingModal(false)}
+              style={styles.closeModalBtn}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Ionicons name="close" size={20} color={PLAYER_DARK.text} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.trainingModalScroll}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Métadonnées rapides */}
+            <View style={styles.trainingMetaCard}>
+              <View style={styles.trainingMetaItem}>
+                <Ionicons name="time-outline" size={16} color={PLAYER_DARK.accentAlt} />
+                <Text style={styles.trainingMetaVal}>{nextMatchWhen || 'À venir'}</Text>
+              </View>
+              {nextMatch?.location_label ? (
+                <View style={styles.trainingMetaItem}>
+                  <Ionicons name="location-outline" size={16} color={PLAYER_DARK.accentAlt} />
+                  <Text style={styles.trainingMetaVal} numberOfLines={1}>
+                    {nextMatch.location_label}
+                  </Text>
+                </View>
+              ) : null}
+              {nextMatch?.session_plan?.duration_min ? (
+                <View style={styles.trainingMetaItem}>
+                  <Ionicons name="timer-outline" size={16} color={PLAYER_DARK.accentAlt} />
+                  <Text style={styles.trainingMetaVal}>
+                    {nextMatch.session_plan.duration_min} min au total
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Ateliers Tacticslot */}
+            <Text style={styles.drillSectionTitle}>
+              ATELIERS & SCHÉMAS ANIMÉS ({nextMatch?.session_plan?.exercises?.length || 0})
+            </Text>
+
+            {nextMatch?.session_plan?.exercises?.map((drill, index) => {
+              const drillWidth = Math.min(winWidth - 40, 420);
+              const drillHeight = Math.round(drillWidth * 0.72);
+              return (
+                <View key={drill.id || index} style={styles.drillCard}>
+                  <View style={styles.drillHeader}>
+                    <View style={styles.drillIndexBadge}>
+                      <Text style={styles.drillIndexText}>#{index + 1}</Text>
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 8 }}>
+                      <Text style={styles.drillTitle}>{drill.name}</Text>
+                      <View style={styles.drillTagRow}>
+                        {drill.durationMin ? (
+                          <Text style={styles.drillDurationTag}>{drill.durationMin} min</Text>
+                        ) : null}
+                        {drill.drillType ? (
+                          <Text style={styles.drillTypeTag}>{drill.drillType.toUpperCase()}</Text>
+                        ) : null}
+                        {drill.intensity ? (
+                          <Text style={styles.drillIntensityTag}>
+                            {drill.intensity === 'high' ? 'Intensité élevée' : drill.intensity === 'medium' ? 'Intensité modérée' : 'Échauffement'}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Terrain Tacticslot avec animation interactive */}
+                  {drill.diagram ? (
+                    <View style={styles.diagramWrapper}>
+                      <CoachTrainingDrillDiagram
+                        diagramData={drill.diagram}
+                        width={drillWidth}
+                        height={drillHeight}
+                        animate={true}
+                      />
+                    </View>
+                  ) : null}
+
+                  {drill.instructions ? (
+                    <View style={styles.drillInstructionsBox}>
+                      <Text style={styles.drillInstructionsLabel}>CONSIGNES DU COACH</Text>
+                      <Text style={styles.drillInstructionsText}>{drill.instructions}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
+
+            {/* Confirmation présence directement depuis le plan de séance */}
+            {nextMatch ? (
+              <View style={[styles.modalRsvpBox, { marginTop: 12 }]}>
+                <Text style={styles.modalRsvpTitle}>CONFIRMER MA PRÉSENCE À CET ENTRAÎNEMENT</Text>
+                <View style={styles.rsvpBar}>
+                  {rsvpOptions.map(({ status, icon }) => {
+                    const tone = playerResponseTone[status];
+                    const active = rsvp === status;
+                    return (
+                      <TouchableOpacity
+                        key={status}
+                        style={[
+                          styles.rsvpBtn,
+                          active && { backgroundColor: tone.color },
+                          !active && { backgroundColor: PLAYER_DARK.surfaceRaised, borderWidth: 1, borderColor: PLAYER_DARK.border },
+                        ]}
+                        onPress={() => handleRsvpChange(status)}
+                        disabled={rsvpBusy}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name={icon} size={14} color={active ? tone.ink : tone.color} />
+                        <Text style={[styles.rsvpBtnText, { color: active ? tone.ink : PLAYER_DARK.text }]}>
+                          {tone.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Modal Checklist Sac de Sport */}
+      {nextMatch ? (
+        <Modal
+          visible={showChecklistSheet}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowChecklistSheet(false)}
+        >
+          <View style={styles.trainingModalRoot}>
+            <View style={styles.trainingModalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.trainingModalTitle}>Checklist Sac de Sport</Text>
+                <Text style={styles.trainingModalFocus}>{nextMatch.title}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowChecklistSheet(false)}
+                style={styles.closeModalBtn}
+              >
+                <Ionicons name="close" size={20} color={PLAYER_DARK.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+              <EventEquipmentChecklistPanel
+                eventId={nextMatch.id}
+                eventType={nextMatch.event_type}
+                playerUid={userId}
+              />
+            </ScrollView>
+          </View>
+        </Modal>
+      ) : null}
     </ScrollView>
   );
 };
@@ -690,6 +982,220 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontStyle: 'italic',
+  },
+  tacticslotLaunchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#052E16',
+    borderWidth: 1,
+    borderColor: '#15803D',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  tacticslotIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tacticslotLaunchTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#F0FDF4',
+  },
+  tacticslotLaunchSub: {
+    fontSize: 11,
+    color: '#86EFAC',
+    marginTop: 1,
+  },
+  trainingModalRoot: {
+    flex: 1,
+    backgroundColor: PLAYER_DARK.bg,
+  },
+  trainingModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: PLAYER_DARK.border,
+  },
+  trainingTypeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  trainingTypePill: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: playerColors.accent,
+    letterSpacing: 0.5,
+  },
+  trainingModalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: PLAYER_DARK.text,
+  },
+  trainingModalFocus: {
+    fontSize: 12,
+    color: PLAYER_DARK.textSecondary,
+    marginTop: 3,
+  },
+  closeModalBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trainingModalScroll: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  trainingMetaCard: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+  },
+  trainingMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  trainingMetaVal: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: PLAYER_DARK.text,
+  },
+  drillSectionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    color: PLAYER_DARK.textMuted,
+    marginBottom: 12,
+  },
+  drillCard: {
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+    marginBottom: 16,
+  },
+  drillHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  drillIndexBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: PLAYER_DARK.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  drillIndexText: {
+    color: PLAYER_DARK.accentAlt,
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  drillTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: PLAYER_DARK.text,
+  },
+  drillTagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  drillDurationTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: PLAYER_DARK.accentAlt,
+    backgroundColor: PLAYER_DARK.accentSoft,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  drillTypeTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: CLUB_TOKENS.warning,
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  drillIntensityTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: CLUB_TOKENS.danger,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  diagramWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#0B2912',
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  drillInstructionsBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 6,
+  },
+  drillInstructionsLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    color: PLAYER_DARK.textMuted,
+    marginBottom: 3,
+  },
+  drillInstructionsText: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: PLAYER_DARK.textSecondary,
+  },
+  modalRsvpBox: {
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+  },
+  modalRsvpTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    color: PLAYER_DARK.textMuted,
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });
 
