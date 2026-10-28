@@ -132,81 +132,8 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
           setNextMatch(upcoming[0]);
           setRsvp(deriveRsvp(upcoming[0], profile.uid));
         } else {
-          // Aucun événement programmé : création automatique de la séance d'entraînement officielle à venir
-          const nextDate = new Date();
-          nextDate.setDate(nextDate.getDate() + ((3 - nextDate.getDay() + 7) % 7 || 7));
-          nextDate.setHours(18, 0, 0, 0);
-          const endDate = new Date(nextDate.getTime() + 90 * 60 * 1000);
-
-          const defaultSession: TeamEvent = {
-            id: `training-upcoming-${profile.uid}`,
-            title: 'Séance Tactique · Conservation & Animation Collective',
-            description: 'Circulation rapide du ballon, création de lignes de passe et déclenchement du pressing.',
-            event_type: 'training',
-            organizer_uid: profile.uid,
-            organizer_name: 'Staff Technique',
-            club_id: profile?.profile?.club_id || 'club_default',
-            starts_at: nextDate,
-            ends_at: endDate,
-            duration_minutes: 90,
-            city: profile?.city || 'Complexe Sportif Municipal',
-            location_label: 'Terrain d’Honneur A (Pelouse officielle)',
-            invitee_uids: [profile.uid],
-            rsvps: { [profile.uid]: 'pending' },
-            session_plan: {
-              focus: 'Conservation 4v2 et finition sur les couloirs',
-              duration_min: 90,
-              exercises: [
-                {
-                  id: 'ex-rondo-1',
-                  name: 'Rondo 4v2 & Sortie de Balle Sous Pression',
-                  durationMin: 25,
-                  drillType: 'rondo',
-                  playerCount: 6,
-                  objective: 'Conservation 4v2 rapide et sortie sous pression',
-                  instructions: 'Conservation en 2 touches max dans le carré. 2 récupérateurs au centre. Transition immédiate à la perte.',
-                  intensity: 'medium',
-                  diagram: createPresetDiagram('rondo', 'Rondo 4v2 & Sortie de Balle'),
-                },
-                {
-                  id: 'ex-finishing-1',
-                  name: 'Finition Face au But & Centres Couloirs',
-                  durationMin: 30,
-                  drillType: 'finishing',
-                  playerCount: 8,
-                  objective: 'Centres au cordeau et finition premier/deuxième poteau',
-                  instructions: 'Débordement et centre au cordeau. Attaque du 1er poteau par le 9 et arrivée du deuxième rideau.',
-                  intensity: 'high',
-                  diagram: createPresetDiagram('finishing', 'Finition Face au But & Centres'),
-                },
-              ],
-            },
-            created_at: new Date(),
-            updated_at: new Date(),
-          };
-
-          try {
-            await teamEventsService.create({
-              title: defaultSession.title,
-              description: defaultSession.description,
-              event_type: 'training',
-              organizer_uid: profile.uid,
-              organizer_name: 'Staff Technique',
-              club_id: profile?.profile?.club_id || undefined,
-              starts_at: defaultSession.starts_at,
-              ends_at: defaultSession.ends_at,
-              city: defaultSession.city,
-              location_label: defaultSession.location_label,
-              invitee_uids: [profile.uid],
-            });
-          } catch {
-            // best effort
-          }
-
-          if (alive) {
-            setNextMatch(defaultSession);
-            setRsvp('pending');
-          }
+          setNextMatch(null);
+          setRsvp('pending');
         }
       })
       .catch(() => undefined);

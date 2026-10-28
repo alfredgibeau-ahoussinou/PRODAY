@@ -16,7 +16,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CoachExerciseDiagramRenderer } from './CoachExerciseDiagramRenderer';
 import { CoachDiagramAnimationEditor } from './CoachDiagramAnimationEditor';
-import type { ExerciseDiagramAnimationData } from '../../../models/ExerciseDiagramAnimation';
+import {
+  createDefaultAnimationStage,
+  type ExerciseDiagramAnimationData,
+} from '../../../models/ExerciseDiagramAnimation';
+import {
+  computeStageInterpolation,
+  buildStagedAnimationFromArrows,
+} from '../../../utils/diagramAnimationEngine';
 import {
   createEmptyDiagram,
   createPresetDiagram,
@@ -43,7 +50,7 @@ import { proRadius, proSemantic } from '../../../theme/professionalDesign';
 import { withAlpha } from '../../../utils/coachTeamTheme';
 import type { CoachComponentTokens } from '../../../features/coach/theme/coachPitchTokens';
 
-export type EditorToolTab = 'players' | 'equipment' | 'arrows' | 'zones' | 'template';
+export type EditorToolTab = 'select' | 'equipment' | 'players' | 'arrows' | 'zones' | 'template';
 
 export interface CoachDiagramEditorModalProps {
   visible: boolean;
@@ -90,7 +97,7 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
 
   // ——— Sélection & Outils ———
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<EditorToolTab>('players');
+  const [activeTab, setActiveTab] = useState<EditorToolTab>('equipment');
   const [toolsCollapsed, setToolsCollapsed] = useState<boolean>(false);
 
   // Sous-options d'outils
@@ -99,12 +106,17 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
   const [playerLabel, setPlayerLabel] = useState<string>('');
 
   const [equipmentType, setEquipmentType] = useState<EquipmentType>('cone');
+  const [equipmentColor, setEquipmentColor] = useState<string>('#FF6B00');
   const [arrowKind, setArrowKind] = useState<ArrowKind>('movement');
   const [isCurvedArrow, setIsCurvedArrow] = useState<boolean>(false);
   const [arrowStartPoint, setArrowStartPoint] = useState<{ x: number; y: number } | null>(null);
 
   const [zoneLabel, setZoneLabel] = useState<string>('Zone');
   const [textInputVal, setTextInputVal] = useState<string>('Consigne');
+
+  // Animation intégrée en direct
+  const [isEditorPlaying, setIsEditorPlaying] = useState<boolean>(false);
+  const [editorPreviewTimeMs, setEditorPreviewTimeMs] = useState<number>(0);
 
   // ——— Historique Undo / Redo ———
   const [historyPast, setHistoryPast] = useState<DiagramElement[][]>([]);
@@ -127,6 +139,8 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
       setStages(init.stages || []);
       setCurrentAnimation(init.animation);
       setShowAnimationEditor(false);
+      setIsEditorPlaying(false);
+      setEditorPreviewTimeMs(0);
       setCurrentStageIdx(0);
       setSelectedId(null);
       setHistoryPast([]);
@@ -135,6 +149,63 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
       setArrowStartPoint(null);
     }
   }, [visible, initialDiagram, drillType, exerciseTitle]);
+
+  // Boucle d'animation en direct dans l'éditeur
+  useEffect(() => {
+    let animId: number;
+    let lastTime: number | null = null;
+
+    if (!isEditorPlaying) {
+      setEditorPreviewTimeMs(0);
+      return;
+    }
+
+    const currentAnim =
+      currentAnimation && currentAnimation.stages && currentAnimation.stages.length > 0
+        ? currentAnimation
+        : buildStagedAnimationFromArrows(elements);
+
+    const activeStage = currentAnim?.stages?.[0];
+    const totalDuration = (activeStage?.durationMs || 2500) + (activeStage?.pauseAfterMs || 600);
+
+    const loopTick = (now: number) => {
+      if (lastTime === null) lastTime = now;
+      const delta = now - lastTime;
+      lastTime = now;
+
+      setEditorPreviewTimeMs((prev) => {
+        const next = prev + delta;
+        if (next >= totalDuration) return 0;
+        return next;
+      });
+
+      animId = requestAnimationFrame(loopTick);
+    };
+
+    animId = requestAnimationFrame(loopTick);
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [isEditorPlaying, currentAnimation, elements]);
+
+  // Éléments interpolés pendant la lecture en direct
+  const displayElements = useMemo(() => {
+    if (!isEditorPlaying) return elements;
+    const currentAnim =
+      currentAnimation && currentAnimation.stages && currentAnimation.stages.length > 0
+        ? currentAnimation
+        : buildStagedAnimationFromArrows(elements);
+    const activeStage = currentAnim?.stages?.[0];
+    if (!activeStage) return elements;
+    return computeStageInterpolation(activeStage, editorPreviewTimeMs, elements).elements;
+  }, [isEditorPlaying, editorPreviewTimeMs, currentAnimation, elements]);
+
+  const handleGenerateAnimationFromArrows = useCallback(() => {
+    const generated = buildStagedAnimationFromArrows(elements);
+    setCurrentAnimation(generated);
+    setHasUnsavedChanges(true);
+    setIsEditorPlaying(true);
+  }, [elements]);
 
   const pushHistory = useCallback(
     (newElements: DiagramElement[]) => {
@@ -244,8 +315,13 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
     setSelectedId(null);
   }, [selectedId, elements, pushHistory]);
 
-  // Interaction tactile sur le canevas du terrain
+  // Interaction tactile sur le canevas du terrain (Style Tactical Slate)
   const handlePitchTouch = (event: GestureResponderEvent) => {
+    if (isEditorPlaying) {
+      setIsEditorPlaying(false);
+      return;
+    }
+
     const { locationX, locationY } = event.nativeEvent;
     const normX = Math.round(Math.max(4, Math.min(96, (locationX / pitchWidth) * 100)));
     const normY = Math.round(Math.max(4, Math.min(60, (locationY / pitchHeight) * 64)));
@@ -255,7 +331,7 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
         setArrowStartPoint({ x: normX, y: normY });
       } else {
         const newArrow: DiagramArrowElement = {
-          id: `arrow_${Date.now()}`,
+          id: `arrow_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
           type: 'arrow',
           kind: arrowKind,
           fromX: arrowStartPoint.x,
@@ -271,14 +347,13 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
           color: DEFAULT_ARROW_COLORS[arrowKind],
         };
         pushHistory([...elements, newArrow]);
-        setSelectedId(newArrow.id);
         setArrowStartPoint(null);
       }
       return;
     }
 
-    // Si on a déjà un élément sélectionné et qu'on clique ailleurs, on déplace cet élément
-    if (selectedId) {
+    // Mode Curseur / Déplacement : si un élément est sélectionné, on le déplace
+    if (activeTab === 'select' && selectedId) {
       const updated = elements.map((el) => {
         if (el.id !== selectedId) return el;
         if (el.type === 'arrow') return el;
@@ -288,11 +363,29 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
       return;
     }
 
-    // Sinon, on ajoute l'élément de l'outil sélectionné
+    // Mode Plots & Matériel : chaque tap ajoute un nouvel équipement sans téléporter les précédents
+    if (activeTab === 'equipment') {
+      const newEq: DiagramEquipmentElement = {
+        id: `eq_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        type: 'equipment',
+        equipmentType,
+        x: normX,
+        y: normY,
+        width: equipmentType === 'goal' ? 24 : equipmentType === 'mini_goal' ? 6 : undefined,
+        height: equipmentType === 'goal' ? 4 : equipmentType === 'mini_goal' ? 10 : undefined,
+        color: equipmentColor || DEFAULT_EQUIPMENT_COLORS[equipmentType],
+      };
+      pushHistory([...elements, newEq]);
+      // En mode ajout continu de plots, on ne bloque pas les prochains taps
+      setSelectedId(null);
+      return;
+    }
+
+    // Mode Joueurs : chaque tap ajoute un joueur sur le terrain
     if (activeTab === 'players') {
       const num = parseInt(playerNum, 10);
       const newPlayer: DiagramPlayerElement = {
-        id: `p_${Date.now()}`,
+        id: `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         type: 'player',
         x: normX,
         y: normY,
@@ -302,23 +395,14 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
         color: DEFAULT_TEAM_COLORS[playerTeam],
       };
       pushHistory([...elements, newPlayer]);
-      setSelectedId(newPlayer.id);
-    } else if (activeTab === 'equipment') {
-      const newEq: DiagramEquipmentElement = {
-        id: `eq_${Date.now()}`,
-        type: 'equipment',
-        equipmentType,
-        x: normX,
-        y: normY,
-        width: equipmentType === 'goal' ? 24 : equipmentType === 'mini_goal' ? 6 : undefined,
-        height: equipmentType === 'goal' ? 4 : equipmentType === 'mini_goal' ? 10 : undefined,
-        color: DEFAULT_EQUIPMENT_COLORS[equipmentType],
-      };
-      pushHistory([...elements, newEq]);
-      setSelectedId(newEq.id);
-    } else if (activeTab === 'zones') {
+      setSelectedId(null);
+      return;
+    }
+
+    // Mode Zones
+    if (activeTab === 'zones') {
       const newZone: DiagramZoneElement = {
-        id: `zone_${Date.now()}`,
+        id: `zone_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         type: 'zone',
         x: Math.max(4, normX - 15),
         y: Math.max(4, normY - 10),
@@ -330,8 +414,12 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
         fillOpacity: 0.1,
       };
       pushHistory([...elements, newZone]);
-      setSelectedId(newZone.id);
+      setSelectedId(null);
+      return;
     }
+
+    // Tap dans le vide sans outil d'ajout : désélectionne
+    setSelectedId(null);
   };
 
   // Dimensions réactives du terrain
@@ -499,6 +587,39 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
 
         {/* ——— Terrain de dessin ——— */}
         <View style={styles.canvasContainer}>
+          {/* Sélecteur direct de gabarit de terrain (Tactical Slate) */}
+          <View style={styles.pitchTemplateSegmented}>
+            {[
+              { id: 'full', label: 'Grand terrain', icon: 'soccer-field' },
+              { id: 'half', label: 'Demi-terrain', icon: 'crop-portrait' },
+              { id: 'box', label: 'Surface / Boîte', icon: 'vector-square' },
+              { id: 'blank', label: 'Espace libre', icon: 'layers-outline' },
+            ].map((tpl) => {
+              const active = pitchTemplate === tpl.id;
+              return (
+                <PressableSpring
+                  key={tpl.id}
+                  onPress={() => {
+                    setPitchTemplate(tpl.id as PitchTemplate);
+                    setHasUnsavedChanges(true);
+                  }}
+                  scaleTo={0.95}
+                  haptic
+                  style={[styles.tplBtn, active && styles.tplBtnActive]}
+                >
+                  <MaterialCommunityIcons
+                    name={tpl.icon as any}
+                    size={14}
+                    color={active ? tokens.accent : tokens.muted}
+                  />
+                  <Text style={[styles.tplBtnText, active && styles.tplBtnTextActive]}>
+                    {tpl.label}
+                  </Text>
+                </PressableSpring>
+              );
+            })}
+          </View>
+
           <View
             style={[
               styles.pitchWrap,
@@ -510,14 +631,48 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
               diagram={{
                 ...diagram,
                 pitchTemplate,
-                elements,
+                elements: isEditorPlaying ? displayElements : elements,
               }}
               width="100%"
               height="100%"
               selectedElementId={selectedId}
-              onSelectElement={(el) => setSelectedId(el ? el.id : null)}
-              isInteractive
+              onSelectElement={(el) => {
+                if (isEditorPlaying) setIsEditorPlaying(false);
+                setSelectedId(el ? el.id : null);
+              }}
+              isInteractive={!isEditorPlaying}
             />
+
+            {/* Barre flottante d'animation Tacticslot directement sur le terrain */}
+            <View style={styles.floatingPitchBar}>
+              <PressableSpring
+                onPress={() => setIsEditorPlaying(!isEditorPlaying)}
+                scaleTo={0.92}
+                haptic
+                style={[styles.playPitchBtn, isEditorPlaying && styles.playPitchBtnActive]}
+              >
+                <Ionicons
+                  name={isEditorPlaying ? 'pause' : 'play'}
+                  size={14}
+                  color="#FFFFFF"
+                />
+                <Text style={styles.playPitchBtnText}>
+                  {isEditorPlaying ? 'Arrêter' : 'Tester l’animation'}
+                </Text>
+              </PressableSpring>
+
+              {elements.some((el) => el.type === 'arrow') ? (
+                <PressableSpring
+                  onPress={handleGenerateAnimationFromArrows}
+                  scaleTo={0.92}
+                  haptic
+                  style={styles.syncArrowsBtn}
+                >
+                  <MaterialCommunityIcons name="lightning-bolt" size={14} color="#F59E0B" />
+                  <Text style={styles.syncArrowsBtnText}>Générer animation</Text>
+                </PressableSpring>
+              ) : null}
+            </View>
           </View>
 
           {/* Contrôles de réglage fin de l'objet sélectionné (Nudge, Rotation, Duplication, Poubelle) */}
@@ -592,15 +747,31 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
                   <Ionicons name="trash-outline" size={15} color={proSemantic.danger} />
                   <Text style={[styles.toolActionText, { color: proSemantic.danger }]}>Suppr.</Text>
                 </PressableSpring>
+
+                <PressableSpring
+                  onPress={() => setSelectedId(null)}
+                  scaleTo={0.92}
+                  haptic
+                  style={styles.toolActionBtn}
+                >
+                  <Ionicons name="close" size={14} color={tokens.muted} />
+                  <Text style={[styles.toolActionText, { color: tokens.muted }]}>Terminer</Text>
+                </PressableSpring>
               </View>
             </View>
           ) : (
             <View style={styles.hintBar}>
               <Ionicons name="hand-left-outline" size={14} color={tokens.muted} />
               <Text style={styles.hintText}>
-                {activeTab === 'arrows' && arrowStartPoint
-                  ? 'Touchez la destination pour terminer le tracé de la flèche'
-                  : 'Touchez le terrain pour placer l’élément choisi ci-dessous'}
+                {activeTab === 'equipment'
+                  ? 'Touchez le terrain pour poser un plot ou équipement (plusieurs d’affilée possible)'
+                  : activeTab === 'players'
+                    ? 'Touchez le terrain pour poser un joueur'
+                    : activeTab === 'arrows' && arrowStartPoint
+                      ? 'Touchez la destination pour terminer le tracé de la flèche'
+                      : activeTab === 'select'
+                        ? 'Touchez un élément sur le terrain pour le sélectionner ou le déplacer'
+                        : 'Touchez le terrain pour placer l’élément choisi ci-dessous'}
               </Text>
             </View>
           )}
@@ -612,8 +783,9 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
           <View style={styles.tabsRow}>
             {(
               [
+                { id: 'select', icon: 'cursor-default-outline', label: 'Curseur' },
+                { id: 'equipment', icon: 'cone', label: 'Plots & Matériel' },
                 { id: 'players', icon: 'account-group', label: 'Joueurs' },
-                { id: 'equipment', icon: 'soccer', label: 'Matériel' },
                 { id: 'arrows', icon: 'vector-line', label: 'Tracés' },
                 { id: 'zones', icon: 'selection-drag', label: 'Zones' },
                 { id: 'template', icon: 'soccer-field', label: 'Terrain' },
@@ -651,6 +823,14 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
             contentContainerStyle={styles.optionsContent}
             keyboardShouldPersistTaps="handled"
           >
+            {activeTab === 'select' && (
+              <View style={styles.subToolRow}>
+                <Text style={styles.hintSubText}>
+                  Touchez un joueur ou plot sur le terrain pour le sélectionner, le déplacer ou le supprimer.
+                </Text>
+              </View>
+            )}
+
             {activeTab === 'players' && (
               <View style={styles.subToolRow}>
                 {(['home', 'away', 'neutral', 'gk'] as TeamSide[]).map((team) => (
@@ -721,6 +901,29 @@ export const CoachDiagramEditorModal: React.FC<CoachDiagramEditorModalProps> = (
                     </Text>
                   </PressableSpring>
                 ))}
+
+                {/* Sélecteur de couleur des plots */}
+                <View style={styles.colorPickerInline}>
+                  {[
+                    { color: '#FF6B00', label: 'Orange' },
+                    { color: '#FACC15', label: 'Jaune' },
+                    { color: '#EF4444', label: 'Rouge' },
+                    { color: '#FFFFFF', label: 'Blanc' },
+                    { color: '#3B82F6', label: 'Bleu' },
+                  ].map((c) => (
+                    <PressableSpring
+                      key={c.color}
+                      onPress={() => setEquipmentColor(c.color)}
+                      style={[
+                        styles.colorDotBtn,
+                        { backgroundColor: c.color },
+                        equipmentColor === c.color && styles.colorDotBtnActive,
+                      ]}
+                    >
+                      <View />
+                    </PressableSpring>
+                  ))}
+                </View>
               </View>
             )}
 
@@ -962,6 +1165,106 @@ const createStyles = (tokens: CoachComponentTokens) =>
       justifyContent: 'center',
       position: 'relative',
       padding: 10,
+    },
+    pitchTemplateSegmented: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginBottom: 8,
+      backgroundColor: tokens.elevated,
+      padding: 4,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    tplBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderRadius: 7,
+    },
+    tplBtnActive: {
+      backgroundColor: withAlpha(tokens.accent, 0.16),
+      borderWidth: 1,
+      borderColor: tokens.accent,
+    },
+    tplBtnText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: tokens.muted,
+    },
+    tplBtnTextActive: {
+      color: tokens.accent,
+      fontWeight: '800',
+    },
+    floatingPitchBar: {
+      position: 'absolute',
+      bottom: 8,
+      left: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    playPitchBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: '#15803D',
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    playPitchBtnActive: {
+      backgroundColor: '#DC2626',
+    },
+    playPitchBtnText: {
+      color: '#FFFFFF',
+      fontSize: 11,
+      fontWeight: '800',
+    },
+    syncArrowsBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#F59E0B',
+    },
+    syncArrowsBtnText: {
+      color: '#F59E0B',
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    colorPickerInline: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginLeft: 6,
+      paddingLeft: 6,
+      borderLeftWidth: 1,
+      borderLeftColor: tokens.border,
+    },
+    colorDotBtn: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.4)',
+    },
+    colorDotBtnActive: {
+      borderWidth: 2,
+      borderColor: '#FFFFFF',
+      transform: [{ scale: 1.2 }],
     },
     pitchWrap: {
       borderRadius: 8,

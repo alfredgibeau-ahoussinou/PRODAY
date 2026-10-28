@@ -3,7 +3,6 @@ import {
   Alert,
   Modal,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CoachExerciseDiagramRenderer } from './CoachExerciseDiagramRenderer';
 import type {
@@ -379,7 +379,7 @@ export const CoachDiagramAnimationEditor: React.FC<CoachDiagramAnimationEditorPr
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <SafeAreaView style={styles.root}>
+      <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
         {/* ——— En-tête Éditeur Animation ——— */}
         <View style={styles.headerBar}>
           <View style={styles.headerTitleRow}>
@@ -484,12 +484,38 @@ export const CoachDiagramAnimationEditor: React.FC<CoachDiagramAnimationEditorPr
         </View>
 
         <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
-          {/* ——— Terrain de Démonstration & Tracé ——— */}
-          <View style={[styles.pitchContainer, { width: pitchW, height: pitchH }]}>
+          {/* ——— Terrain de Démonstration & Tracé (Tactical Slate) ——— */}
+          <View
+            style={[styles.pitchContainer, { width: pitchW, height: pitchH }]}
+            onTouchEnd={(event) => {
+              if (isPreviewPlaying) return;
+              const { locationX, locationY } = event.nativeEvent;
+              const normX = Math.round(Math.max(4, Math.min(96, (locationX / pitchW) * 100)));
+              const normY = Math.round(Math.max(4, Math.min(60, (locationY / pitchH) * 64)));
+              if (selectedActorId) {
+                setDestinationPoint({ x: normX, y: normY });
+              }
+            }}
+          >
             <CoachExerciseDiagramRenderer
               diagram={diagram}
               activeElements={renderedElements}
-              activeMovements={currentStage.movements}
+              activeMovements={
+                destinationPoint && selectedActorId && selectedActorPos
+                  ? [
+                      ...currentStage.movements,
+                      {
+                        id: 'preview-target',
+                        elementId: selectedActorId,
+                        actionType: movementType,
+                        from: selectedActorPos,
+                        to: destinationPoint,
+                        startDelayMs: 0,
+                        durationMs: 1500,
+                      },
+                    ]
+                  : currentStage.movements
+              }
               selectedElementId={selectedActorId}
               onSelectElement={handlePitchTap}
               isInteractive={!isPreviewPlaying}
@@ -581,7 +607,21 @@ export const CoachDiagramAnimationEditor: React.FC<CoachDiagramAnimationEditorPr
 
             {/* Choix 2 : Destination */}
             <View style={styles.formRow}>
-              <Text style={styles.fieldLabel}>2. Destination :</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <Text style={styles.fieldLabel}>2. Destination :</Text>
+                {destinationPoint ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="checkmark-circle" size={14} color="#15803D" />
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#15803D' }}>
+                      Cible ({destinationPoint.x}%, {destinationPoint.y}%)
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={{ fontSize: 11, color: tokens.muted, fontStyle: 'italic' }}>
+                    Touchez directement le terrain pour cibler
+                  </Text>
+                )}
+              </View>
               <View style={styles.destPickerRow}>
                 {[
                   { label: 'Avant centre', pt: { x: 50, y: 18 } },
