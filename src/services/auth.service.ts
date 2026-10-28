@@ -155,7 +155,27 @@ function mapAuthError(code: string): string {
   return translateAuthErrorCode(code);
 }
 
-export { needsEmailVerification } from '../utils/needsEmailVerification';
+function usesPasswordProvider(fbUser: FirebaseAuthUser): boolean {
+  return fbUser.providerData.some((p) => p.providerId === 'password');
+}
+
+export function needsEmailVerification(
+  fbUser: FirebaseAuthUser | null,
+  profileEmail?: string | null,
+  profileVerified?: boolean | null,
+  profileRole?: string | null
+): boolean {
+  if (!fbUser) return false;
+  if (profileVerified === true || fbUser.emailVerified) return false;
+  // Les comptes coach et club affiliés accèdent directement à leur espace sans confirmation d'email
+  if (profileRole === 'coach' || profileRole === 'club') return false;
+  if (!usesPasswordProvider(fbUser)) return false;
+  const email = profileEmail ?? fbUser.email ?? '';
+  const normalized = email.trim().toLowerCase();
+  if (normalized.endsWith('@proday.club')) return false;
+  if (isBetaAccountBypassed(email)) return false;
+  return true;
+}
 
 function extractPendingOAuthCredential(
   error: unknown,
@@ -531,51 +551,12 @@ export const authService = {
       }
     }
 
-    // 3. Récupération ou création du profil Firestore
-    let existingProfile = await usersService.getById(fbUser.uid).catch(() => null);
-    if (!existingProfile) {
-      existingProfile = await profileService.createProfile(
-        fbUser.uid,
-        effectiveEmail,
-        role,
-        displayName,
-        {
-          city: club.city,
-          department: club.department,
-          profile: {
-            club_id: `fff_${club.fffNumber}`,
-            job_title: identity?.functionOrDiploma || (isCoach ? 'Entraîneur' : 'Dirigeant'),
-            category: identity?.category || club.defaultCategories?.[0],
-          },
-          email_verified: true,
-          onboarding_documents_submitted: true,
-          product_line: 'pro',
-        }
-      );
-      if (identity?.phone) {
-        await profileService.updateProfile(fbUser.uid, { phone: identity.phone }).catch(() => {});
-      }
-    } else {
-      // Mettre à jour les informations utiles si fournies et garantir email_verified
-      const updatePayload: Record<string, unknown> = {
-        email_verified: true,
-      };
-      if (identity?.functionOrDiploma) updatePayload['profile.job_title'] = identity.functionOrDiploma;
-      if (identity?.category) updatePayload['profile.category'] = identity.category;
-      if (identity?.phone) updatePayload['phone'] = identity.phone;
-      if (displayName && (!existingProfile.display_name || existingProfile.display_name === 'Membre')) {
-        updatePayload['display_name'] = displayName;
-      }
-      await profileService.updateProfile(fbUser.uid, updatePayload as any).catch(() => {});
-      existingProfile.email_verified = true;
-    }
-
-    // 4. Rattachement et auto-validation du membership du club
+    // 3. Résolution ou création de l'entité club dans Firestore
+    let resolvedClubId = `fff_${club.fffNumber}`;
+    let clubDoc: any = null;
     try {
       const { clubsService } = await import('./clubs.service');
-      const { membershipsService } = await import('./memberships.service');
-
-      let clubDoc = await clubsService.getByFffAffiliationNumber(club.fffNumber);
+      clubDoc = await clubsService.getByFffAffiliationNumber(club.fffNumber);
       if (!clubDoc) {
         const newClubId = await clubsService.create({
           name: club.clubName,
@@ -590,25 +571,90 @@ export const authService = {
         });
         clubDoc = await clubsService.getById(newClubId);
       }
+      if (clubDoc?.id) {
+        resolvedClubId = clubDoc.id;
+      }
+    } catch (clubErr) {
+      console.warn('[authService] loginWithPartnerCode club resolution:', clubErr);
+    }
 
-      if (clubDoc) {
-        const memberships = await membershipsService.listByPlayer(fbUser.uid);
-        const existingMem = memberships.find((m) => m.club_id === clubDoc?.id);
-        if (!existingMem) {
-          const membershipRole: import('../models/Membership').MembershipRole = isCoach ? 'coach' : 'coach';
-          const newMem = await membershipsService.requestJoin({
-            club_id: clubDoc.id,
-            player_uid: fbUser.uid,
-            player_name: displayName,
-            role: membershipRole,
+    // 4. Récupération ou création du profil Firestore
+    let existingProfile = await usersService.getById(fbUser.uid).catch(() => null);
+    if (!existingProfile) {
+      existingProfile = await profileService.createProfile(
+        fbUser.uid,
+        effectiveEmail,
+        role,
+        displayName,
+        {
+          city: club.city,
+          department: club.department,
+          profile: {
+            club_id: resolvedClubId,
+            job_title: identity?.functionOrDiploma || (isCoach ? 'Entraîneur' : 'Dirigeant'),
             category: identity?.category || club.defaultCategories?.[0],
-          });
-          if (club.coachAutoValidate && newMem?.id) {
-            await membershipsService.approve(newMem.id, 'system_partner_code', {
-              role: membershipRole,
-            }).catch(() => {});
-          }
+          },
+          email_verified: true,
+          onboarding_documents_submitted: true,
+          product_line: 'pro',
         }
+      );
+      if (identity?.phone) {
+        await profileService.updateProfile(fbUser.uid, { phone: identity.phone }).catch(() => {});
+      }
+    } else {
+      // Mettre à jour les informations utiles et marquer email_verified: true
+      const updatePayload: Record<string, unknown> = {
+        email_verified: true,
+        onboarding_documents_submitted: true,
+        role,
+        'profile.club_id': resolvedClubId,
+      };
+      if (identity?.functionOrDiploma) updatePayload['profile.job_title'] = identity.functionOrDiploma;
+      if (identity?.category) updatePayload['profile.category'] = identity.category;
+      if (identity?.phone) updatePayload['phone'] = identity.phone;
+      if (displayName && (!existingProfile.display_name || existingProfile.display_name === 'Membre')) {
+        updatePayload['display_name'] = displayName;
+      }
+      await profileService.updateProfile(fbUser.uid, updatePayload as any).catch(() => {});
+      existingProfile = {
+        ...existingProfile,
+        email_verified: true,
+        onboarding_documents_submitted: true,
+        role,
+        profile: {
+          ...existingProfile.profile,
+          club_id: resolvedClubId,
+          job_title: identity?.functionOrDiploma || existingProfile.profile?.job_title,
+          category: identity?.category || existingProfile.profile?.category,
+        },
+      };
+    }
+
+    // 5. Rattachement et auto-validation du membership du club
+    try {
+      const { membershipsService } = await import('./memberships.service');
+      const targetClubId = clubDoc?.id || resolvedClubId;
+      const memberships = await membershipsService.listByPlayer(fbUser.uid);
+      const existingMem = memberships.find((m) => m.club_id === targetClubId);
+      const membershipRole: import('../models/Membership').MembershipRole = 'coach';
+      if (!existingMem) {
+        const newMem = await membershipsService.requestJoin({
+          club_id: targetClubId,
+          player_uid: fbUser.uid,
+          player_name: displayName,
+          role: membershipRole,
+          category: identity?.category || club.defaultCategories?.[0],
+        });
+        if (newMem?.id) {
+          await membershipsService.approve(newMem.id, 'system_partner_code', {
+            role: membershipRole,
+          }).catch(() => {});
+        }
+      } else if (existingMem.status === 'pending') {
+        await membershipsService.approve(existingMem.id, 'system_partner_code', {
+          role: existingMem.role || membershipRole,
+        }).catch(() => {});
       }
     } catch (membershipErr) {
       console.warn('[authService] loginWithPartnerCode membership link:', membershipErr);

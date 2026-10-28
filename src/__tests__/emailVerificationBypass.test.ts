@@ -1,3 +1,41 @@
+jest.mock('firebase/auth', () => ({
+  signOut: jest.fn(() => Promise.resolve()),
+  createUserWithEmailAndPassword: jest.fn(),
+  signInWithEmailAndPassword: jest.fn(),
+  signInWithCredential: jest.fn(),
+  linkWithCredential: jest.fn(),
+  sendEmailVerification: jest.fn(),
+  sendPasswordResetEmail: jest.fn(),
+  fetchSignInMethodsForEmail: jest.fn(),
+  deleteUser: jest.fn(),
+  GoogleAuthProvider: { credential: jest.fn() },
+  OAuthProvider: jest.fn().mockImplementation(() => ({ credential: jest.fn() })),
+}));
+
+jest.mock('../lib/firebase', () => ({
+  getFirebaseAuth: jest.fn(() => ({ currentUser: null })),
+  getDb: jest.fn(),
+}));
+
+jest.mock('firebase/firestore', () => ({
+  doc: jest.fn(),
+  deleteDoc: jest.fn(),
+}));
+
+jest.mock('../lib/firebaseFunctions', () => ({
+  callFunction: jest.fn(),
+  getCallableErrorMessage: jest.fn(),
+  isFunctionsUnavailable: jest.fn(() => false),
+}));
+
+jest.mock('../services/profile.service', () => ({
+  profileService: {},
+}));
+
+jest.mock('../services/users.service', () => ({
+  usersService: {},
+}));
+
 import {
   isBetaAccountBypassed,
   isBetaBypassAllowed,
@@ -6,7 +44,8 @@ import {
   isPartnerPoleTestAccount,
   normalizeEmailForBypass,
 } from '../config/emailVerificationBypass';
-import { needsEmailVerification } from '../utils/needsEmailVerification';
+import { needsEmailVerification } from '../services/auth.service';
+import type { User as FirebaseAuthUser } from 'firebase/auth';
 
 describe('emailVerificationBypass', () => {
   it('autorise le compte démo partenaire', () => {
@@ -35,20 +74,33 @@ describe('emailVerificationBypass', () => {
     expect(typeof isBetaBypassAllowed()).toBe('boolean');
   });
 
-  it('needsEmailVerification contourne la vérification pour coach, club et email_verified', () => {
-    const mockUser = {
-      emailVerified: false,
-      providerData: [{ providerId: 'password' }],
-    } as any;
+  describe('needsEmailVerification — Bypass clubs et coachs', () => {
+    const mockFbUser = (emailVerified = false): FirebaseAuthUser =>
+      ({
+        emailVerified,
+        email: 'coach.dupont@gmail.com',
+        providerData: [{ providerId: 'password' }],
+      } as unknown as FirebaseAuthUser);
 
-    // Quand le profil a email_verified: true -> bypass
-    expect(needsEmailVerification(mockUser, 'test@example.com', true)).toBe(false);
+    it('bypass si fbUser.emailVerified est true', () => {
+      expect(needsEmailVerification(mockFbUser(true), 'coach.dupont@gmail.com')).toBe(false);
+    });
 
-    // Quand le rôle est coach ou club -> bypass
-    expect(needsEmailVerification(mockUser, 'coach@example.com', false, 'coach')).toBe(false);
-    expect(needsEmailVerification(mockUser, 'club@example.com', false, 'club')).toBe(false);
+    it('bypass si profile.email_verified est true même si fbUser non vérifié', () => {
+      expect(needsEmailVerification(mockFbUser(false), 'coach.dupont@gmail.com', true)).toBe(false);
+    });
 
-    // Quand l'email se termine par @proday.club -> bypass
-    expect(needsEmailVerification(mockUser, 'coach.alexandre.lm-coach-7726@proday.club')).toBe(false);
+    it('bypass si role coach ou club', () => {
+      expect(needsEmailVerification(mockFbUser(false), 'coach.dupont@gmail.com', false, 'coach')).toBe(false);
+      expect(needsEmailVerification(mockFbUser(false), 'president@valdefontenay.fr', false, 'club')).toBe(false);
+    });
+
+    it('bypass pour les emails techniques @proday.club', () => {
+      expect(needsEmailVerification(mockFbUser(false), 'coach.test.tf-coach-7842@proday.club')).toBe(false);
+    });
+
+    it('exige la vérification pour les joueurs non vérifiés', () => {
+      expect(needsEmailVerification(mockFbUser(false), 'joueur.lambda@gmail.com', false, 'player')).toBe(true);
+    });
   });
 });

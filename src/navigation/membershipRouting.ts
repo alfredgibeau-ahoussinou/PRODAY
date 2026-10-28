@@ -59,15 +59,17 @@ export function resolveUserDestination(
     return { kind: 'retired', user, role: user.role };
   }
 
-  // 3. Standalone self-governed roles (Sponsor, Parent, Supporter)
+  // 3. Standalone self-governed roles (Community, Sponsor, Parent)
+  // `community` est le rôle écrit à l'inscription ; `supporter` est l'ancien nom
+  // lu sur les comptes existants. Les deux ouvrent le même espace public.
   if (isSponsorRole(user.role)) {
     return { kind: 'standalone_role', role: 'sponsor', user };
   }
   if (user.role === 'parent') {
     return { kind: 'standalone_role', role: 'parent', user };
   }
-  if (user.role === 'supporter') {
-    return { kind: 'standalone_role', role: 'supporter', user };
+  if (user.role === 'community' || user.role === 'supporter') {
+    return { kind: 'standalone_role', role: 'community', user };
   }
 
   // 4. Synthetic / Demo Accounts — kept strictly isolated
@@ -117,16 +119,16 @@ export function resolveUserDestination(
   }
 
 
-  // Fallback: If user is a club manager (role === 'club') whose club_id is attached directly on their profile or uid
-  // (Players and coaches MUST have an active record in memberships collection to access a club)
-  if (user.role === 'club') {
+  // Fallback: If user is a club manager (role === 'club') or affiliated coach (role === 'coach' with profile.club_id)
+  // (Players MUST have an active record in memberships collection to access a club)
+  if (user.role === 'club' || (user.role === 'coach' && user.profile?.club_id)) {
     const clubId = user.profile?.club_id || user.uid;
     if (clubId && (!isDemoClubId(clubId) || isSyntheticUser(user))) {
       if (pendingMemberships.length === 0) {
         return {
           kind: 'active_club',
           clubId,
-          role: 'club',
+          role: user.role,
           user,
         };
       }
