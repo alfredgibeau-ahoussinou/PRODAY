@@ -27,6 +27,9 @@ function isListedTestEmail(
 }
 
 export function isPartnerPoleTestAccount(email: string | null | undefined): boolean {
+  if (!email?.trim()) return false;
+  const normalized = normalizeEmailForBypass(email);
+  if (normalized.endsWith('@proday.club')) return true;
   return isListedTestEmail(email, PARTNER_POLE_TEST_EMAILS);
 }
 

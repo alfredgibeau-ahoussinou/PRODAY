@@ -19,17 +19,21 @@ import type { FirebaseError } from 'firebase/app';
 import type { User, UserRole, UserProfile } from '../models/User';
 import type { ParentalSettings } from '../models/ParentalSettings';
 import type { AppSpaceId } from '../models/AppSpace';
-import type { ProductLineId } from '../models/ProductLine';
+import { PRODUCT_LINE_STORAGE_KEY, type ProductLineId } from '../models/ProductLine';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearProdayAiReplyCache } from './prodayAiReplyCache';
 import { getFirebaseAuth, getDb } from '../lib/firebase';
 import { callFunction, getCallableErrorMessage, isFunctionsUnavailable } from '../lib/firebaseFunctions';
 import { profileService } from './profile.service';
 import { usersService } from './users.service';
 import {
+  getUserProductLine,
   assertProfileMatchesActiveLine,
   getActiveProductLineFromStorage,
   ProductLineMismatchError,
 } from '../utils/productLineAccess';
 import { isBetaAccountBypassed } from '../config/emailVerificationBypass';
+import { isPlatformAdminEmail } from '../config/admin';
 import { AuthNeedsProfileError, AuthLinkPasswordRequiredError } from '../utils/authErrors';
 import {
   decodeJwtEmail,
@@ -38,6 +42,10 @@ import {
   normalizeAuthEmail,
   oauthProviderLabel,
 } from '../utils/authOAuthLink';
+import {
+  translateAuthErrorCode,
+  translateAuthFallback,
+} from '../i18n/authErrorMessages';
 import { markVerificationEmailResend } from '../utils/verificationEmailResend';
 import { resolveAuthEmailSendStrategy } from '../utils/authEmailCallableResult';
 
@@ -142,41 +150,9 @@ export interface SignUpInput {
   product_line?: ProductLineId;
 }
 
+/** WAVE 5 — codes Firebase → catalogues fr/en/es/pt. */
 function mapAuthError(code: string): string {
-  const messages: Record<string, string> = {
-    'auth/email-already-in-use':
-      'Cet email est déjà utilisé. Connectez-vous ou réinitialisez votre mot de passe.',
-    'auth/invalid-email': 'Format d’email invalide. Vérifiez l’adresse saisie.',
-    'auth/weak-password':
-      'Mot de passe trop faible (10 caractères min., 1 majuscule, 1 chiffre, 1 caractère spécial).',
-    'auth/user-not-found': 'Aucun compte avec cet email.',
-    'auth/wrong-password': 'Mot de passe incorrect.',
-    'auth/invalid-credential': 'Email ou mot de passe incorrect.',
-    'auth/too-many-requests': 'Trop de tentatives. Réessayez plus tard.',
-    'auth/network-request-failed': 'Pas de réseau. Vérifiez votre connexion.',
-    'auth/operation-not-allowed':
-      'Connexion email/mot de passe désactivée dans Firebase (Authentication).',
-    'auth/user-disabled': 'Ce compte est désactivé.',
-    'auth/invalid-api-key': 'Clé Firebase invalide. Vérifiez le fichier .env.',
-    'auth/configuration-not-found': 'Projet Firebase introuvable. Vérifiez le .env.',
-    'firestore/permission-denied': 'Accès refusé aux données. Réessayez ou contactez le support.',
-    'permission-denied': 'Accès refusé aux données. Réessayez ou contactez le support.',
-    'auth/popup-closed-by-user': 'Connexion annulée.',
-    'auth/cancelled-popup-request': 'Connexion annulée.',
-    'auth/account-exists-with-different-credential':
-      'Un compte existe déjà avec cet email. Connectez-vous avec votre mot de passe ProDay pour lier Google ou Apple.',
-    'auth/operation-not-supported-in-this-environment':
-      'Connexion non disponible sur cette plateforme.',
-    'auth/invalid-id-token': 'Session Google invalide. Réessayez ou vérifiez les ID clients dans .env.',
-    'auth/invalid-oauth-client-id': 'ID client Google incorrect dans .env.',
-    'auth/unauthorized-domain': 'Domaine non autorisé dans la console Google.',
-    'auth/missing-email':
-      'Email non fourni par Google/Apple. Autorisez le partage d’email ou utilisez un autre compte.',
-    'auth/credential-already-in-use': 'Cet email est déjà lié à un autre compte.',
-    'auth/user-token-expired': 'Session expirée. Reconnectez-vous.',
-    'auth/internal-error': 'Erreur serveur. Réessayez dans un instant.',
-  };
-  return messages[code] ?? '';
+  return translateAuthErrorCode(code);
 }
 
 function usesPasswordProvider(fbUser: FirebaseAuthUser): boolean {
@@ -190,6 +166,8 @@ export function needsEmailVerification(
   if (!fbUser || fbUser.emailVerified) return false;
   if (!usesPasswordProvider(fbUser)) return false;
   const email = profileEmail ?? fbUser.email ?? '';
+  const normalized = email.trim().toLowerCase();
+  if (normalized.endsWith('@proday.club')) return false;
   if (isBetaAccountBypassed(email)) return false;
   return true;
 }
@@ -270,19 +248,53 @@ async function loadProfileAfterAuth(fbUser: FirebaseAuthUser): Promise<User> {
     throw e;
   }
   if (!profile) {
-    throw new AuthNeedsProfileError(
-      fbUser.email ?? '',
-      fbUser.displayName ?? undefined
-    );
+    if (fbUser.email && isPlatformAdminEmail(fbUser.email)) {
+      try {
+        profile = await profileService.createProfile(
+          fbUser.uid,
+          fbUser.email,
+          'coach',
+          fbUser.displayName || 'Administrateur ProDay',
+          {
+            email_verified: true,
+            onboarding_documents_submitted: true,
+            product_line: 'pro',
+          },
+        );
+      } catch {
+        // En cas d'erreur de création Firestore (ex: règles ou offline), profil minimal mémoire
+        profile = {
+          uid: fbUser.uid,
+          email: fbUser.email,
+          display_name: fbUser.displayName || 'Administrateur ProDay',
+          role: 'coach',
+          is_admin: true,
+          email_verified: true,
+          onboarding_documents_submitted: true,
+          is_verified: true,
+          verification_status: 'VERIFIED',
+          profile: {},
+          documents: [],
+          created_at: new Date(),
+          updated_at: new Date(),
+          is_active: true,
+          product_line: 'pro',
+        };
+      }
+    } else {
+      throw new AuthNeedsProfileError(
+        fbUser.email ?? '',
+        fbUser.displayName ?? undefined
+      );
+    }
   }
 
-  const activeLine = await getActiveProductLineFromStorage();
+  // Synchronise automatiquement l'univers canonique du compte utilisateur
+  const userLine = getUserProductLine(profile);
   try {
-    assertProfileMatchesActiveLine(profile, activeLine);
-  } catch (e) {
-    const auth = getFirebaseAuth();
-    if (auth) await firebaseSignOut(auth);
-    throw e;
+    await AsyncStorage.setItem(PRODUCT_LINE_STORAGE_KEY, userLine);
+  } catch {
+    // ignore
   }
 
   if (isBetaAccountBypassed(fbUser.email ?? profile.email)) {
@@ -470,6 +482,155 @@ export const authService = {
     return loadProfileAfterAuth(cred.user);
   },
 
+  /**
+   * Connexion directe avec un code officiel de club ou de coach partenaire.
+   * Si l'appareil / IP n'est pas reconnu ou si le compte n'existe pas encore,
+   * utilise les informations de l'éducateur / dirigeant pour finaliser l'accès et l'affiliation.
+   */
+  async loginWithPartnerCode(
+    affiliation: import('./partnerClubs.service').ResolvedClubAffiliation,
+    identity?: {
+      firstName: string;
+      lastName: string;
+      phone?: string;
+      functionOrDiploma?: string;
+      category?: string;
+      email?: string;
+    }
+  ): Promise<User> {
+    const auth = getFirebaseAuth();
+    if (!auth) throw new Error('Firebase non configuré');
+
+    const club = affiliation.club;
+    const isCoach = affiliation.matchedType === 'coach';
+    const role: UserRole = isCoach ? 'coach' : 'club';
+
+    // Génération d'un identifiant stable pour l'utilisateur affilié
+    const cleanFirstName = (identity?.firstName || 'Coach').trim();
+    const cleanLastName = (identity?.lastName || club.clubName.split(' ')[0]).trim();
+    const displayName = `${cleanFirstName} ${cleanLastName}`.trim();
+    
+    // Email de connexion : fourni par l'utilisateur ou compte de rattachement au club
+    const effectiveEmail = identity?.email
+      ? identity.email.trim().toLowerCase()
+      : isCoach
+        ? `coach.${cleanFirstName.toLowerCase().replace(/[^a-z0-9]/g, '')}.${affiliation.codeUsed.toLowerCase()}@proday.club`
+        : `club.${affiliation.club.fffNumber}@proday.club`;
+
+    const codeSecretPassword = `ProDay#${affiliation.codeUsed}*2026!`;
+
+    let fbUser: FirebaseAuthUser;
+    try {
+      // 1. Tenter la connexion si le compte existe déjà
+      const cred = await signInWithEmailAndPassword(auth, effectiveEmail, codeSecretPassword);
+      fbUser = cred.user;
+    } catch (err: unknown) {
+      const code = getFirebaseAuthErrorCode(err);
+      if (code === 'auth/user-not-found' || code === 'auth/invalid-credential') {
+        // 2. Compte non existant : création automatique
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, effectiveEmail, codeSecretPassword);
+          fbUser = cred.user;
+        } catch (createErr: unknown) {
+          const createCode = getFirebaseAuthErrorCode(createErr);
+          if (createCode === 'auth/email-already-in-use') {
+            // Reconnexion avec le compte existant
+            const signInCred = await signInWithEmailAndPassword(auth, effectiveEmail, codeSecretPassword);
+            fbUser = signInCred.user;
+          } else {
+            throw createErr;
+          }
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    // 3. Récupération ou création du profil Firestore
+    let existingProfile = await usersService.getById(fbUser.uid).catch(() => null);
+    if (!existingProfile) {
+      existingProfile = await profileService.createProfile(
+        fbUser.uid,
+        effectiveEmail,
+        role,
+        displayName,
+        {
+          city: club.city,
+          department: club.department,
+          profile: {
+            club_id: `fff_${club.fffNumber}`,
+            job_title: identity?.functionOrDiploma || (isCoach ? 'Entraîneur' : 'Dirigeant'),
+            category: identity?.category || club.defaultCategories?.[0],
+          },
+          email_verified: true,
+          onboarding_documents_submitted: true,
+          product_line: 'pro',
+        }
+      );
+      if (identity?.phone) {
+        await profileService.updateProfile(fbUser.uid, { phone: identity.phone }).catch(() => {});
+      }
+    } else {
+      // Mettre à jour les informations utiles si fournies
+      const updatePayload: Record<string, unknown> = {};
+      if (identity?.functionOrDiploma) updatePayload['profile.job_title'] = identity.functionOrDiploma;
+      if (identity?.category) updatePayload['profile.category'] = identity.category;
+      if (identity?.phone) updatePayload['phone'] = identity.phone;
+      if (displayName && (!existingProfile.display_name || existingProfile.display_name === 'Membre')) {
+        updatePayload['display_name'] = displayName;
+      }
+      if (Object.keys(updatePayload).length > 0) {
+        await profileService.updateProfile(fbUser.uid, updatePayload as any).catch(() => {});
+      }
+    }
+
+    // 4. Rattachement et auto-validation du membership du club
+    try {
+      const { clubsService } = await import('./clubs.service');
+      const { membershipsService } = await import('./memberships.service');
+
+      let clubDoc = await clubsService.getByFffAffiliationNumber(club.fffNumber);
+      if (!clubDoc) {
+        const newClubId = await clubsService.create({
+          name: club.clubName,
+          city: club.city,
+          department: club.department,
+          categories: club.defaultCategories,
+          owner_uid: isCoach ? 'system_partner' : fbUser.uid,
+          fff_affiliation_number: club.fffNumber,
+          fff_league_id: club.fffLeagueId,
+          fff_division_label: club.divisionLabel,
+          logo_url: club.logoUrl,
+        });
+        clubDoc = await clubsService.getById(newClubId);
+      }
+
+      if (clubDoc) {
+        const memberships = await membershipsService.listByPlayer(fbUser.uid);
+        const existingMem = memberships.find((m) => m.club_id === clubDoc?.id);
+        if (!existingMem) {
+          const membershipRole: import('../models/Membership').MembershipRole = isCoach ? 'coach' : 'coach';
+          const newMem = await membershipsService.requestJoin({
+            club_id: clubDoc.id,
+            player_uid: fbUser.uid,
+            player_name: displayName,
+            role: membershipRole,
+            category: identity?.category || club.defaultCategories?.[0],
+          });
+          if (club.coachAutoValidate && newMem?.id) {
+            await membershipsService.approve(newMem.id, 'system_partner_code', {
+              role: membershipRole,
+            }).catch(() => {});
+          }
+        }
+      }
+    } catch (membershipErr) {
+      console.warn('[authService] loginWithPartnerCode membership link:', membershipErr);
+    }
+
+    return existingProfile;
+  },
+
   async signInWithGoogleIdToken(idToken: string): Promise<User> {
     const credential = GoogleAuthProvider.credential(idToken);
     const email = decodeJwtEmail(idToken);
@@ -511,6 +672,8 @@ export const authService = {
   },
 
   async signOut(): Promise<void> {
+    // Évite qu'un autre compte reçoive une réponse Proday IA mise en cache.
+    await clearProdayAiReplyCache();
     const auth = getFirebaseAuth();
     if (auth) await firebaseSignOut(auth);
   },
@@ -593,7 +756,7 @@ export const authService = {
     const raw =
       mapped ||
       (error instanceof Error && error.message ? error.message : '') ||
-      (__DEV__ && code ? `Erreur (${code}). Réessayez.` : 'Erreur de connexion. Réessayez.');
+      translateAuthFallback(code || undefined);
     return humanizeAuthErrorText(raw);
   },
 };

@@ -12,6 +12,7 @@ describe('emailVerificationBypass', () => {
     expect(isBetaAccountBypassed('part@gmail.com')).toBe(true);
     expect(isEmailVerificationBypassed('  PART@gmail.com  ')).toBe(true);
     expect(isOnboardingDocumentsBypassed('part@gmail.com')).toBe(true);
+    expect(isPartnerPoleTestAccount('coach.alexandre.lm-coach-7726@proday.club')).toBe(true);
   });
 
   it('ne bypass plus le compte joueur principal', () => {
