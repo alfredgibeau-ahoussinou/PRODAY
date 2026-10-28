@@ -290,20 +290,23 @@ export function CoachSquadImportPanel({
 
   const readPdf = useCallback(
     async (file: { uri: string; mimeType: string; fileName?: string }) => {
-      if (!uid) {
-        setErrors(['Connexion requise pour convertir une feuille PDF.']);
-        return;
-      }
       setStage('reading');
       setBusyLabel('Analyse de la feuille PDF en cours…');
       setWarnings([]);
       setErrors([]);
       try {
-        const extraction = await extractSquadSheetCsv({ uid, file });
+        const effectiveUid = uid || 'coach-import-session';
+        const extraction = await extractSquadSheetCsv({ uid: effectiveUid, file });
         if (!extraction.csv.trim()) {
           setRows([]);
           setText('');
-          setWarnings(resolvePdfWarnings(extraction.warnings));
+          setWarnings(
+            resolvePdfWarnings(
+              extraction.warnings.length > 0
+                ? extraction.warnings
+                : ['Document PDF sans texte exploitable (scan ou image). Préférez un export CSV Footclubs officiel ou l’onglet Copier-coller.'],
+            ),
+          );
           setErrors([]);
           setStage('idle');
           return;
@@ -314,7 +317,7 @@ export function CoachSquadImportPanel({
         setErrors([
           error instanceof Error
             ? error.message
-            : 'Conversion PDF impossible. Fournissez un export CSV FootClubs.',
+            : 'Conversion PDF impossible. Fournissez un export CSV FootClubs ou collez le tableau.',
         ]);
         setStage('idle');
       } finally {
@@ -339,7 +342,15 @@ export function CoachSquadImportPanel({
       });
       if (result.canceled || !result.assets?.[0]?.uri) return;
       const asset = result.assets[0];
-      const kind = classifySheetFile(asset.name ?? '', asset.mimeType);
+      let kind = classifySheetFile(asset.name ?? asset.uri ?? '', asset.mimeType);
+      if (
+        kind === 'unknown' &&
+        (asset.name?.toLowerCase().includes('.pdf') ||
+          asset.uri.toLowerCase().includes('.pdf') ||
+          asset.mimeType?.toLowerCase().includes('pdf'))
+      ) {
+        kind = 'pdf';
+      }
 
       if (kind === 'spreadsheet') {
         setWarnings([SPREADSHEET_HINT]);
@@ -360,6 +371,14 @@ export function CoachSquadImportPanel({
       setStage('reading');
       setBusyLabel('Lecture du fichier sélectionné…');
       const content = await FileSystem.readAsStringAsync(asset.uri);
+      if (content.startsWith('%PDF-') || content.slice(0, 20).includes('%PDF-')) {
+        await readPdf({
+          uri: asset.uri,
+          mimeType: 'application/pdf',
+          fileName: asset.name ?? 'Feuille_officielle.pdf',
+        });
+        return;
+      }
       setFileName(asset.name ?? 'Export_Footclubs.csv');
       applyText(content);
     } catch {
