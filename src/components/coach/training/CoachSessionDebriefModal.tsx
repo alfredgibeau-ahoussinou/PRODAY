@@ -26,6 +26,7 @@ import {
   type CoachSessionDebrief,
   type IntensityRealVsPlanned,
 } from '../../../services/coachSessionDebrief.service';
+import { useModalBottomInset } from '../../../hooks/useModalTopInset';
 
 export interface CoachSessionDebriefModalProps {
   visible: boolean;
@@ -51,6 +52,7 @@ export const CoachSessionDebriefModal: React.FC<CoachSessionDebriefModalProps> =
   const { tokens } = useCoachTheme();
   const { width } = useWindowDimensions();
   const sheetMode = coachChrome.modalIsSheet(width);
+  const sheetBottomPad = useModalBottomInset(16);
 
   const [loadingInitial, setLoadingInitial] = useState(false);
   const [existingDebriefId, setExistingDebriefId] = useState<string | undefined>(
@@ -186,7 +188,10 @@ export const CoachSessionDebriefModal: React.FC<CoachSessionDebriefModalProps> =
         style={styles.backdrop}
       >
         <Pressable style={styles.scrim} onPress={onClose} />
-        <View style={styles.sheet} testID="coach-session-debrief-modal">
+        <View
+          style={[styles.sheet, { paddingBottom: sheetBottomPad }]}
+          testID="coach-session-debrief-modal"
+        >
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
@@ -460,10 +465,10 @@ export const CoachSessionDebriefModal: React.FC<CoachSessionDebriefModalProps> =
               testID="debrief-save-button"
             >
               {saving ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={tokens.onAccent} />
               ) : (
                 <>
-                  <Ionicons name="checkmark-done-circle" size={18} color="#FFFFFF" />
+                  <Ionicons name="checkmark-done-circle" size={18} color={tokens.onAccent} />
                   <CoachText variant="body" style={styles.saveButtonText}>
                     {existingDebriefId ? 'Mettre à jour le débrief' : 'Valider le débrief (3 clics)'}
                   </CoachText>
@@ -604,6 +609,8 @@ function createStyles(tokens: any, sheetMode: boolean) {
       color: '#FFFFFF',
       fontWeight: '900',
       fontSize: 18,
+      lineHeight: 22,
+      includeFontPadding: false,
     },
     rpeInfoTextCol: {
       flex: 1,
@@ -635,10 +642,14 @@ function createStyles(tokens: any, sheetMode: boolean) {
       fontSize: 13,
       fontWeight: '700',
       color: tokens.foreground,
+      lineHeight: 18,
+      includeFontPadding: false,
     },
     rpeButtonTextSelected: {
       color: '#FFFFFF',
       fontWeight: '900',
+      lineHeight: 18,
+      includeFontPadding: false,
     },
     intensityRow: {
       flexDirection: 'row',
@@ -762,7 +773,7 @@ function createStyles(tokens: any, sheetMode: boolean) {
       opacity: 0.5,
     },
     saveButtonText: {
-      color: '#FFFFFF',
+      color: tokens.onAccent,
       fontWeight: '800',
       fontSize: 14,
     },

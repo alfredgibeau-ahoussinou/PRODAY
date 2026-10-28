@@ -27,12 +27,16 @@ export function useVideoOrientationLock(active: boolean): void {
 
     let cancelled = false;
 
-    void ScreenOrientation.lockAsync(FULLSCREEN_ORIENTATION_LOCK);
+    ScreenOrientation.lockAsync(FULLSCREEN_ORIENTATION_LOCK).catch((err) => {
+      console.warn('[useVideoOrientationLock] Error locking fullscreen orientation:', err);
+    });
 
     return () => {
       if (cancelled) return;
       cancelled = true;
-      void ScreenOrientation.lockAsync(PORTRAIT_ORIENTATION_LOCK);
+      ScreenOrientation.lockAsync(PORTRAIT_ORIENTATION_LOCK).catch((err) => {
+        console.warn('[useVideoOrientationLock] Error restoring portrait orientation:', err);
+      });
     };
   }, [active]);
 }
