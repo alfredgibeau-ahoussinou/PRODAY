@@ -194,7 +194,7 @@ trailer
       expect(res.text).toContain('DUPONT Lucas');
     });
 
-    it('extrait une fiche multi-lignes Footclubs FFF (format bloc carte joueur)', () => {
+    it('extrait une fiche multi-lignes Footclubs FFF (format bloc carte joueur avec nationalité internationale, licences 9 chiffres et noms sur 2 lignes)', () => {
       const sampleText = `
 TORCY PARIS VALLEE DE LA MARNE FOOTBALL U.S. - 511876
 Liste licences matchs *
@@ -216,20 +216,37 @@ Libre / U17 (- 17 ans)
 01/07/2026
 Validée
 
-MUTATION jusqu'au 01/07/2027
-
-ABBES AMYS\tYanis
-06/01/2009
-F
-2547183748
+BOUFTOUH\tIbrahim
+20/05/2009
+DZA
+9602430360
 Libre / U18 (- 18 ans)
 01/07/2026
 Validée
+
+PANCRATE\tLudovic
+23/02/1987
+F
+721525582
+Libre / Vétéran
+08/09/2026
+Validée
+
+MOUKOURI\tMANGA\tMOUSS
+Socrate
+24/11/1981
+F
+2378035426
+Libre / Vétéran
+29/08/2026
+Validée
       `;
       const res = convertExtractedTextToSquadCsv(sampleText);
-      expect(res.rowCount).toBe(2);
+      expect(res.rowCount).toBe(4);
       expect(res.csv).toContain('2548376029;ABADA;Zinedine;Libre / U17 (- 17 ans);Valide;14/05/2010');
-      expect(res.csv).toContain('2547183748;ABBES AMYS;Yanis;Libre / U18 (- 18 ans);Valide;06/01/2009');
+      expect(res.csv).toContain('9602430360;BOUFTOUH;Ibrahim;Libre / U18 (- 18 ans);Valide;20/05/2009');
+      expect(res.csv).toContain('721525582;PANCRATE;Ludovic;Libre / Vétéran;Valide;23/02/1987');
+      expect(res.csv).toContain('2378035426;MOUKOURI;MANGA MOUSS Socrate;Libre / Vétéran;Valide;24/11/1981');
     });
   });
 });

@@ -180,6 +180,7 @@ function parseMultiLineRoster(lines: string[]): Array<{
       l.startsWith('club :') ||
       l.includes('dernier club') ||
       l.includes('mutation') ||
+      l.includes("jusqu'au") ||
       l.includes('fédération') ||
       l.includes('nom\tp') ||
       l.includes('date\tn') ||
@@ -187,14 +188,20 @@ function parseMultiLineRoster(lines: string[]): Array<{
       l.includes('date enreg') ||
       l.includes('état') ||
       l.includes('etat') ||
-      l === 'f' ||
-      l === 'm' ||
-      l === 'caf' ||
-      l === 'e'
+      l.includes('validée') ||
+      l.includes('validee') ||
+      l.includes('en cours') ||
+      l.includes('attente') ||
+      l.includes('rejetée') ||
+      l.includes('rejetee') ||
+      l === 'u.s.' ||
+      l === 'us' ||
+      l === 'fc' ||
+      l.includes('vallee de la marne')
     );
   };
 
-  const licenseRegex = /\b([12]\d{9})\b/;
+  const licenseRegex = /\b(\d{7,11})\b/;
   const dateRegex = /\b(\d{2}\/\d{2}\/\d{4})\b/;
   const players: Array<{
     license: string;
@@ -207,48 +214,68 @@ function parseMultiLineRoster(lines: string[]): Array<{
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
+    if (isNoise(line)) continue;
     const licMatch = line.match(licenseRegex);
     if (!licMatch) continue;
     const license = licMatch[1]!;
 
+    let birthDateIdx = -1;
     let birthDate = '';
-    let nameLine = '';
     for (let back = 1; back <= 4 && i - back >= 0; back++) {
       const prev = lines[i - back]!;
-      if (!birthDate && dateRegex.test(prev)) {
+      if (dateRegex.test(prev)) {
+        birthDateIdx = i - back;
         birthDate = prev.match(dateRegex)![1]!;
-        continue;
+        break;
       }
-      if (!nameLine && !isNoise(prev) && !dateRegex.test(prev) && !licenseRegex.test(prev)) {
-        nameLine = prev;
+    }
+
+    if (birthDateIdx === -1) continue;
+
+    let nom = '';
+    let prenom = '';
+    const lineAbove = lines[birthDateIdx - 1] || '';
+
+    if (lineAbove.includes('\t')) {
+      const parts = lineAbove.split('\t').map((s) => s.trim()).filter(Boolean);
+      nom = parts[0] || '';
+      prenom = parts.slice(1).join(' ');
+    } else {
+      const lineTwoAbove = birthDateIdx - 2 >= 0 ? lines[birthDateIdx - 2] : '';
+      if (
+        lineTwoAbove &&
+        !isNoise(lineTwoAbove) &&
+        !dateRegex.test(lineTwoAbove) &&
+        !licenseRegex.test(lineTwoAbove)
+      ) {
+        if (lineTwoAbove.includes('\t')) {
+          const parts = lineTwoAbove.split('\t').map((s) => s.trim()).filter(Boolean);
+          nom = parts[0] || '';
+          prenom = [parts.slice(1).join(' '), lineAbove].filter(Boolean).join(' ');
+        } else {
+          nom = lineTwoAbove.trim();
+          prenom = lineAbove.trim();
+        }
+      } else {
+        const parts = lineAbove.split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) {
+          nom = parts[0];
+          prenom = parts.slice(1).join(' ');
+        } else {
+          nom = lineAbove;
+        }
       }
     }
 
     let category = '';
     let medical = 'Valide';
-    for (let fwd = 1; fwd <= 4 && i + fwd < lines.length; fwd++) {
+    for (let fwd = 1; fwd <= 5 && i + fwd < lines.length; fwd++) {
       const next = lines[i + fwd]!;
       if (!category && (/U\d+|Senior|Vétéran|Féminine|Libre/i.test(next) || next.includes('/'))) {
         category = next.replace(/\s+/g, ' ').trim();
       }
       if (next.toLowerCase().includes('validée') || next.toLowerCase().includes('apte')) {
         medical = 'Valide';
-      }
-    }
-
-    let nom = '';
-    let prenom = '';
-    if (nameLine.includes('\t')) {
-      const parts = nameLine.split('\t').map((s) => s.trim()).filter(Boolean);
-      nom = parts[0] || '';
-      prenom = parts.slice(1).join(' ');
-    } else {
-      const parts = nameLine.split(/\s+/).filter(Boolean);
-      if (parts.length >= 2) {
-        nom = parts[0] || '';
-        prenom = parts.slice(1).join(' ');
-      } else {
-        nom = nameLine;
       }
     }
 
