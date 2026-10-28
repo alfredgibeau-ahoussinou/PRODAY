@@ -93,11 +93,7 @@ export const AuthCodeIdentityModal: React.FC<AuthCodeIdentityModalProps> = ({
 
   const handleFinalSubmit = async () => {
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) {
-      setError('Veuillez renseigner votre adresse email pour activer votre compte.');
-      return;
-    }
-    if (!EMAIL_REGEX.test(cleanEmail)) {
+    if (cleanEmail && !EMAIL_REGEX.test(cleanEmail)) {
       setError('Format d’adresse email invalide.');
       return;
     }
@@ -108,7 +104,7 @@ export const AuthCodeIdentityModal: React.FC<AuthCodeIdentityModalProps> = ({
       phone: phone.trim() || undefined,
       functionOrDiploma: functionOrDiploma.trim(),
       category: selectedCategory || undefined,
-      email: cleanEmail,
+      email: cleanEmail || undefined,
     });
   };
 
@@ -380,7 +376,10 @@ export const AuthCodeIdentityModal: React.FC<AuthCodeIdentityModalProps> = ({
                     <View style={styles.fieldWrap}>
                       <View style={styles.labelRow}>
                         <ProDayText variant="caption" style={styles.fieldLabel}>
-                          Votre email (obligatoire)
+                          Votre email
+                        </ProDayText>
+                        <ProDayText variant="caption" style={styles.optionalHint}>
+                          Optionnel
                         </ProDayText>
                       </View>
                       <View style={styles.inputContainer}>
@@ -401,7 +400,7 @@ export const AuthCodeIdentityModal: React.FC<AuthCodeIdentityModalProps> = ({
                         />
                       </View>
                       <ProDayText variant="caption" style={styles.fieldHint}>
-                        Votre véritable email pour recevoir le lien de validation et vos accès.
+                        Votre adresse pour vos notifications et échanges avec le club.
                       </ProDayText>
                     </View>
                   </View>

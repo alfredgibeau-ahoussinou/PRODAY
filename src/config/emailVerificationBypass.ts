@@ -38,11 +38,9 @@ export function isBetaBypassAllowed(): boolean {
 }
 
 export function isBetaAccountBypassed(email: string | null | undefined): boolean {
+  if (isPartnerPoleTestAccount(email)) return true;
   if (!isBetaBypassAllowed()) return false;
-  return (
-    isListedTestEmail(email, BETA_ACCOUNT_BYPASS_EMAILS) ||
-    isPartnerPoleTestAccount(email)
-  );
+  return isListedTestEmail(email, BETA_ACCOUNT_BYPASS_EMAILS);
 }
 
 /** Alias — email + documents */

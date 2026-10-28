@@ -155,22 +155,7 @@ function mapAuthError(code: string): string {
   return translateAuthErrorCode(code);
 }
 
-function usesPasswordProvider(fbUser: FirebaseAuthUser): boolean {
-  return fbUser.providerData.some((p) => p.providerId === 'password');
-}
-
-export function needsEmailVerification(
-  fbUser: FirebaseAuthUser | null,
-  profileEmail?: string | null
-): boolean {
-  if (!fbUser || fbUser.emailVerified) return false;
-  if (!usesPasswordProvider(fbUser)) return false;
-  const email = profileEmail ?? fbUser.email ?? '';
-  const normalized = email.trim().toLowerCase();
-  if (normalized.endsWith('@proday.club')) return false;
-  if (isBetaAccountBypassed(email)) return false;
-  return true;
-}
+export { needsEmailVerification } from '../utils/needsEmailVerification';
 
 function extractPendingOAuthCredential(
   error: unknown,
@@ -571,17 +556,18 @@ export const authService = {
         await profileService.updateProfile(fbUser.uid, { phone: identity.phone }).catch(() => {});
       }
     } else {
-      // Mettre à jour les informations utiles si fournies
-      const updatePayload: Record<string, unknown> = {};
+      // Mettre à jour les informations utiles si fournies et garantir email_verified
+      const updatePayload: Record<string, unknown> = {
+        email_verified: true,
+      };
       if (identity?.functionOrDiploma) updatePayload['profile.job_title'] = identity.functionOrDiploma;
       if (identity?.category) updatePayload['profile.category'] = identity.category;
       if (identity?.phone) updatePayload['phone'] = identity.phone;
       if (displayName && (!existingProfile.display_name || existingProfile.display_name === 'Membre')) {
         updatePayload['display_name'] = displayName;
       }
-      if (Object.keys(updatePayload).length > 0) {
-        await profileService.updateProfile(fbUser.uid, updatePayload as any).catch(() => {});
-      }
+      await profileService.updateProfile(fbUser.uid, updatePayload as any).catch(() => {});
+      existingProfile.email_verified = true;
     }
 
     // 4. Rattachement et auto-validation du membership du club

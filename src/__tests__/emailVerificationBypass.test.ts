@@ -6,6 +6,7 @@ import {
   isPartnerPoleTestAccount,
   normalizeEmailForBypass,
 } from '../config/emailVerificationBypass';
+import { needsEmailVerification } from '../utils/needsEmailVerification';
 
 describe('emailVerificationBypass', () => {
   it('autorise le compte démo partenaire', () => {
@@ -32,5 +33,22 @@ describe('emailVerificationBypass', () => {
 
   it('expose le flag bypass dev', () => {
     expect(typeof isBetaBypassAllowed()).toBe('boolean');
+  });
+
+  it('needsEmailVerification contourne la vérification pour coach, club et email_verified', () => {
+    const mockUser = {
+      emailVerified: false,
+      providerData: [{ providerId: 'password' }],
+    } as any;
+
+    // Quand le profil a email_verified: true -> bypass
+    expect(needsEmailVerification(mockUser, 'test@example.com', true)).toBe(false);
+
+    // Quand le rôle est coach ou club -> bypass
+    expect(needsEmailVerification(mockUser, 'coach@example.com', false, 'coach')).toBe(false);
+    expect(needsEmailVerification(mockUser, 'club@example.com', false, 'club')).toBe(false);
+
+    // Quand l'email se termine par @proday.club -> bypass
+    expect(needsEmailVerification(mockUser, 'coach.alexandre.lm-coach-7726@proday.club')).toBe(false);
   });
 });
