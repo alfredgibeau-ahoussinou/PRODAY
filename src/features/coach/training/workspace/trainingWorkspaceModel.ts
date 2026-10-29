@@ -274,3 +274,35 @@ export const PLAYER_PRESETS: Array<{ side: TeamSide; label: string }> = [
   { side: 'coach', label: 'Coach' },
   { side: 'referee', label: 'Arbitre' },
 ];
+
+/**
+ * Crée un atelier tactique vierge (terrain vide, aucun joueur ni équipement).
+ * Permet au coach de concevoir son schéma pas à pas.
+ */
+export function createEmptyDrill(pitchConfig: PitchConfiguration = 'full'): Drill {
+  const now = new Date().toISOString();
+  return {
+    id: `drill-${Date.now()}`,
+    name: 'Nouvel atelier',
+    category: 'rondo',
+    objective: '',
+    pitchConfig,
+    frames: [
+      {
+        id: `frame-${Date.now()}-1`,
+        order: 0,
+        durationMs: 2000,
+        title: 'Phase 1',
+        players: [],
+        equipment: [],
+        drawings: [],
+        zones: [],
+      },
+    ],
+    durationMin: 15,
+    playerCount: 0,
+    source: 'coach_custom',
+    createdAt: now,
+    updatedAt: now,
+  };
+}

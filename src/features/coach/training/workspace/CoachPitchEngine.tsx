@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { View, StyleSheet, PanResponder } from 'react-native';
 import Svg, {
   Circle,
   Defs,
@@ -24,6 +24,7 @@ import type {
   ViewMode,
 } from './trainingWorkspaceModel';
 import { EQUIPMENT_PRESET_COLORS, TEAM_PRESET_COLORS } from './trainingWorkspaceModel';
+import { prodayHaptics } from '../../../../utils/prodayHaptics';
 
 interface Props {
   pitchConfig: PitchConfiguration;
@@ -36,12 +37,19 @@ interface Props {
   ghostPlayers?: PlayerToken[];
   ghostEquipment?: EquipmentToken[];
   selectedId?: string | null;
-  onSelectObject?: (id: string, type: 'player' | 'equipment' | 'drawing' | 'zone') => void;
+  onSelectObject?: (id: string | null, type: 'player' | 'equipment' | 'drawing' | 'zone' | null) => void;
+  onMovePlayer?: (id: string, x: number, y: number) => void;
+  onMoveEquipment?: (id: string, x: number, y: number) => void;
+  onPlayerMovedWithTrail?: (id: string, from: { x: number; y: number }, to: { x: number; y: number }) => void;
+  onDragEnd?: () => void;
+  activeStamp?: { kind: 'player' | 'equipment'; label: string } | null;
+  onStampPlace?: (x: number, y: number) => void;
   interactive?: boolean;
   width?: number | string;
   height?: number | string;
   turfTheme?: 'tactical_blue' | 'classic_green';
   showCornerHandles?: boolean;
+  onPitchLayout?: (layout: { width: number; height: number; x: number; y: number }) => void;
 }
 
 // Projection perspective 3D pour les coordonnées tactiques normalisées [0..100] -> [0..100, 0..64]
@@ -141,16 +149,222 @@ export const CoachPitchEngine: React.FC<Props> = ({
   ghostEquipment = [],
   selectedId,
   onSelectObject,
+  onMovePlayer,
+  onMoveEquipment,
+  onPlayerMovedWithTrail,
+  onDragEnd,
+  activeStamp = null,
+  onStampPlace,
   interactive = true,
   width = '100%',
   height = '100%',
   turfTheme = 'tactical_blue',
   showCornerHandles = true,
+  onPitchLayout,
 }) => {
   const vbW = 100;
   const vbH = 64;
 
-  // Calcul des bandes de pelouse (thème Bleu Tactique Tacticslate ou Vert Stade Classique)
+  const [pitchLayout, setPitchLayout] = useState<{ width: number; height: number; x: number; y: number }>({
+    width: typeof width === 'number' ? width : 800,
+    height: typeof height === 'number' ? height : 512,
+    x: 0,
+    y: 0,
+  });
+
+  // Trajectoire animée en direct pendant le glissement d'un joueur (style Tactical Slate)
+  const [liveDragMotion, setLiveDragMotion] = useState<{
+    id: string;
+    from: { x: number; y: number };
+    to: { x: number; y: number };
+    color: string;
+  } | null>(null);
+
+  const activeDragRef = useRef<{
+    id: string;
+    type: 'player' | 'equipment';
+    startNormX: number;
+    startNormY: number;
+    currentX: number;
+    currentY: number;
+    color: string;
+    moved: boolean;
+  } | null>(null);
+
+  const lastStampPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Latest props refs to avoid stale closures in PanResponder
+  const playersRef = useRef(players);
+  playersRef.current = players;
+  const equipmentRef = useRef(equipment);
+  equipmentRef.current = equipment;
+  const onMovePlayerRef = useRef(onMovePlayer);
+  onMovePlayerRef.current = onMovePlayer;
+  const onMoveEquipmentRef = useRef(onMoveEquipment);
+  onMoveEquipmentRef.current = onMoveEquipment;
+  const onPlayerMovedWithTrailRef = useRef(onPlayerMovedWithTrail);
+  onPlayerMovedWithTrailRef.current = onPlayerMovedWithTrail;
+  const onSelectObjectRef = useRef(onSelectObject);
+  onSelectObjectRef.current = onSelectObject;
+  const onDragEndRef = useRef(onDragEnd);
+  onDragEndRef.current = onDragEnd;
+  const activeStampRef = useRef(activeStamp);
+  activeStampRef.current = activeStamp;
+  const onStampPlaceRef = useRef(onStampPlace);
+  onStampPlaceRef.current = onStampPlace;
+  const pitchLayoutRef = useRef(pitchLayout);
+  pitchLayoutRef.current = pitchLayout;
+
+  const panResponder = useMemo(() => {
+    return PanResponder.create({
+      onStartShouldSetPanResponder: () => interactive,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return interactive && (Math.hypot(gestureState.dx, gestureState.dy) > 3 || !!activeStampRef.current);
+      },
+      onPanResponderGrant: (evt) => {
+        if (!interactive) return;
+        const curLayout = pitchLayoutRef.current;
+        const locX = evt.nativeEvent.locationX;
+        const locY = evt.nativeEvent.locationY;
+        const normX = Math.round(Math.max(2, Math.min(vbW - 2, (locX / curLayout.width) * vbW)));
+        const normY = Math.round(Math.max(2, Math.min(vbH - 2, (locY / curLayout.height) * vbH)));
+
+        // Mode Pose Continue / Stamp actif : pose immédiate au clic
+        if (activeStampRef.current) {
+          onStampPlaceRef.current?.(normX, normY);
+          lastStampPosRef.current = { x: normX, y: normY };
+          prodayHaptics.confirm();
+          return;
+        }
+
+        const TOUCH_RADIUS = 6.0; // units de terrain
+
+        // Hit-test joueurs
+        let hitPlayer: PlayerToken | undefined;
+        let minPlayerDist = Infinity;
+        for (const p of playersRef.current) {
+          const d = Math.hypot(p.x - normX, p.y - normY);
+          if (d < TOUCH_RADIUS && d < minPlayerDist) {
+            hitPlayer = p;
+            minPlayerDist = d;
+          }
+        }
+
+        // Hit-test équipements (plots, ballons, échelles, etc.)
+        let hitEquip: EquipmentToken | undefined;
+        let minEquipDist = Infinity;
+        for (const eq of equipmentRef.current) {
+          const d = Math.hypot(eq.x - normX, eq.y - normY);
+          if (d < TOUCH_RADIUS && d < minEquipDist) {
+            hitEquip = eq;
+            minEquipDist = d;
+          }
+        }
+
+        if (hitPlayer && (!hitEquip || minPlayerDist <= minEquipDist)) {
+          const pColor = hitPlayer.color || (hitPlayer.team === 'teamB' ? '#EF4444' : hitPlayer.team === 'neutral' ? '#EAB308' : '#3B82F6');
+          activeDragRef.current = {
+            id: hitPlayer.id,
+            type: 'player',
+            startNormX: hitPlayer.x,
+            startNormY: hitPlayer.y,
+            currentX: hitPlayer.x,
+            currentY: hitPlayer.y,
+            color: pColor,
+            moved: false,
+          };
+          onSelectObjectRef.current?.(hitPlayer.id, 'player');
+          prodayHaptics.press();
+        } else if (hitEquip) {
+          activeDragRef.current = {
+            id: hitEquip.id,
+            type: 'equipment',
+            startNormX: hitEquip.x,
+            startNormY: hitEquip.y,
+            currentX: hitEquip.x,
+            currentY: hitEquip.y,
+            color: hitEquip.color || '#F97316',
+            moved: false,
+          };
+          onSelectObjectRef.current?.(hitEquip.id, 'equipment');
+          prodayHaptics.press();
+        } else {
+          activeDragRef.current = null;
+          onSelectObjectRef.current?.(null, null);
+        }
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        const curLayout = pitchLayoutRef.current;
+        const locX = evt.nativeEvent.locationX;
+        const locY = evt.nativeEvent.locationY;
+        const normX = Math.round(Math.max(2, Math.min(vbW - 2, (locX / curLayout.width) * vbW)));
+        const normY = Math.round(Math.max(2, Math.min(vbH - 2, (locY / curLayout.height) * vbH)));
+
+        // Mode Pose Continue / Stamp : déposer le long du tracé du doigt
+        if (activeStampRef.current) {
+          const last = lastStampPosRef.current;
+          if (!last || Math.hypot(normX - last.x, normY - last.y) >= 8.5) {
+            onStampPlaceRef.current?.(normX, normY);
+            lastStampPosRef.current = { x: normX, y: normY };
+            prodayHaptics.press();
+          }
+          return;
+        }
+
+        const drag = activeDragRef.current;
+        if (!drag) return;
+
+        const deltaNormX = (gestureState.dx / curLayout.width) * vbW;
+        const deltaNormY = (gestureState.dy / curLayout.height) * vbH;
+
+        const newX = Math.round(Math.max(2, Math.min(vbW - 2, drag.startNormX + deltaNormX)));
+        const newY = Math.round(Math.max(2, Math.min(vbH - 2, drag.startNormY + deltaNormY)));
+
+        drag.moved = true;
+        drag.currentX = newX;
+        drag.currentY = newY;
+
+        if (drag.type === 'player') {
+          onMovePlayerRef.current?.(drag.id, newX, newY);
+          // Affiche la flèche animée reliant la position de départ à la position d'avancée
+          setLiveDragMotion({
+            id: drag.id,
+            from: { x: drag.startNormX, y: drag.startNormY },
+            to: { x: newX, y: newY },
+            color: drag.color,
+          });
+        } else if (drag.type === 'equipment') {
+          onMoveEquipmentRef.current?.(drag.id, newX, newY);
+        }
+      },
+      onPanResponderRelease: () => {
+        const drag = activeDragRef.current;
+        if (drag && drag.moved) {
+          const dist = Math.hypot(drag.currentX - drag.startNormX, drag.currentY - drag.startNormY);
+          if (drag.type === 'player' && dist >= 3.5) {
+            // Création automatique de la phase animée et du vecteur de course
+            onPlayerMovedWithTrailRef.current?.(
+              drag.id,
+              { x: drag.startNormX, y: drag.startNormY },
+              { x: drag.currentX, y: drag.currentY },
+            );
+          } else {
+            onDragEndRef.current?.();
+          }
+        }
+        setLiveDragMotion(null);
+        activeDragRef.current = null;
+        lastStampPosRef.current = null;
+      },
+      onPanResponderTerminate: () => {
+        setLiveDragMotion(null);
+        activeDragRef.current = null;
+        lastStampPosRef.current = null;
+      },
+    });
+  }, [interactive, vbW, vbH]);
+
+  // Calcul des bandes de pelouse (thème Bleu Tactique ou Vert Stade Classique)
   const isBlue = turfTheme === 'tactical_blue';
   const lawnStripes = useMemo(() => {
     const stripesCount = 10;
@@ -297,8 +511,19 @@ export const CoachPitchEngine: React.FC<Props> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <Svg width={width} height={height} viewBox={`0 0 ${vbW} ${vbH}`}>
+    <View
+      style={[
+        styles.container,
+        typeof width === 'number' && typeof height === 'number' ? { width, height } : null,
+      ]}
+      onLayout={(e) => {
+        const { width: w, height: h, x, y } = e.nativeEvent.layout;
+        setPitchLayout({ width: w, height: h, x, y });
+        onPitchLayout?.({ width: w, height: h, x, y });
+      }}
+      {...(interactive ? panResponder.panHandlers : {})}
+    >
+      <Svg width={width} height={height} viewBox={`0 0 ${vbW} ${vbH}`} pointerEvents="none">
         <Defs>
           <LinearGradient id="pitchGrass" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0%" stopColor={isBlue ? '#356F98' : '#14532D'} />
@@ -319,15 +544,13 @@ export const CoachPitchEngine: React.FC<Props> = ({
         {/* Lignes périphériques du terrain */}
         <Rect x={2} y={2} width={vbW - 4} height={vbH - 4} fill="none" stroke="#FFFFFF" strokeWidth={0.85} strokeOpacity={0.95} />
 
-        {/* Poignées de coin blanches TacticalSlate et filigranes */}
+        {/* Poignées de coin blanches de cadrage */}
         {showCornerHandles && (
           <G pointerEvents="none">
             <Circle cx={2} cy={2} r={0.9} fill="#FFFFFF" stroke="#000000" strokeWidth={0.25} />
             <Circle cx={vbW - 2} cy={2} r={0.9} fill="#FFFFFF" stroke="#000000" strokeWidth={0.25} />
             <Circle cx={2} cy={vbH - 2} r={0.9} fill="#FFFFFF" stroke="#000000" strokeWidth={0.25} />
             <Circle cx={vbW - 2} cy={vbH - 2} r={0.9} fill="#FFFFFF" stroke="#000000" strokeWidth={0.25} />
-            <SvgText x={3} y={5} fontSize={2.4} fill="rgba(255,255,255,0.22)" fontWeight="700">tacticslate.com</SvgText>
-            <SvgText x={vbW - 22} y={vbH - 3} fontSize={2.4} fill="rgba(255,255,255,0.22)" fontWeight="700">tacticslate.com</SvgText>
           </G>
         )}
 
@@ -402,6 +625,43 @@ export const CoachPitchEngine: React.FC<Props> = ({
             </G>
           );
         })}
+
+        {/* Trajectoire animée en temps réel pendant le déplacement d'un joueur */}
+        {liveDragMotion && (
+          <G pointerEvents="none">
+            {/* Silhouette fantôme au point de départ */}
+            <Circle
+              cx={liveDragMotion.from.x}
+              cy={liveDragMotion.from.y}
+              r={2.9}
+              fill="none"
+              stroke={liveDragMotion.color}
+              strokeWidth={0.8}
+              strokeDasharray="1.5,1.5"
+              opacity={0.85}
+            />
+            {/* Ligne pointillée de trajectoire avec halo lumineux */}
+            <Line
+              x1={liveDragMotion.from.x}
+              y1={liveDragMotion.from.y}
+              x2={liveDragMotion.to.x}
+              y2={liveDragMotion.to.y}
+              stroke="rgba(255, 255, 255, 0.4)"
+              strokeWidth={2.4}
+            />
+            <Line
+              x1={liveDragMotion.from.x}
+              y1={liveDragMotion.from.y}
+              x2={liveDragMotion.to.x}
+              y2={liveDragMotion.to.y}
+              stroke={liveDragMotion.color}
+              strokeWidth={1.2}
+              strokeDasharray="2,1.5"
+            />
+            {/* Flèche d'orientation à l'arrivée */}
+            <Circle cx={liveDragMotion.to.x} cy={liveDragMotion.to.y} r={1.6} fill={liveDragMotion.color} stroke="#FFFFFF" strokeWidth={0.3} />
+          </G>
+        )}
 
         {/* Positions Fantômes (Ghosting des frames précédentes) */}
         {ghostPlayers.map((gp) => {

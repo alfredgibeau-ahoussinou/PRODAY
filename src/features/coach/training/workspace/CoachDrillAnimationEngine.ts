@@ -117,7 +117,7 @@ export function sampleDrillAtTime(drill: Drill, timeMs: number): InterpolatedFra
 
     // Détection de trajectoire courbe si une flèche de course courbe existe
     const runDrawing = currentFrame.drawings?.find(
-      (d) => Math.hypot(d.from.x - p.x, d.from.y - p.y) < 7.0 && d.controlPoint,
+      (d) => d.from && Math.hypot(d.from.x - p.x, d.from.y - p.y) < 7.0 && d.controlPoint,
     );
 
     let pos: NormalizedPoint;

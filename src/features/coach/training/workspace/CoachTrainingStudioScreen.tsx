@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Alert,
+  PanResponder,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -12,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCoachTheme } from '../../shell/CoachThemeContext';
 import {
   type Camera3DPreset,
@@ -29,6 +31,7 @@ import {
   PITCH_CONFIGURATIONS,
   clampPoint,
   generateTokenId,
+  createEmptyDrill,
 } from './trainingWorkspaceModel';
 import { CoachPitchEngine } from './CoachPitchEngine';
 import { CoachContextualInspector } from './CoachContextualInspector';
@@ -45,6 +48,127 @@ import {
   autoSaveWorkspaceDrill,
 } from './trainingPersistenceService';
 import { PRELOADED_DRILLS } from './trainingLibraryData';
+import {
+  supportsOrientationLock,
+  FULLSCREEN_ORIENTATION_LOCK,
+  PORTRAIT_ORIENTATION_LOCK,
+} from '../../../video/videoOrientation';
+import { prodayHaptics } from '../../../../utils/prodayHaptics';
+
+interface PaletteTokenButtonProps {
+  onTap: () => void;
+  onLongPress?: () => void;
+  onDrop: (normX: number, normY: number) => void;
+  accessibilityLabel: string;
+  tokenInfo: {
+    kind: 'player' | 'equipment';
+    label?: string;
+    team?: TeamSide;
+    type?: EquipmentType;
+    color?: string;
+    num?: number;
+    icon?: React.ReactNode;
+  };
+  pitchBounds: { left: number; top: number; width: number; height: number };
+  onDragStateChange: (drag: { active: boolean; x: number; y: number; info?: any } | null) => void;
+  isActiveStamp?: boolean;
+  children: React.ReactNode;
+  style?: any;
+}
+
+const PaletteTokenButton: React.FC<PaletteTokenButtonProps> = ({
+  onTap,
+  onLongPress,
+  onDrop,
+  accessibilityLabel,
+  tokenInfo,
+  pitchBounds,
+  onDragStateChange,
+  isActiveStamp,
+  children,
+  style,
+}) => {
+  const panResponder = useMemo(() => {
+    let isDragging = false;
+    let isLongPress = false;
+    let timer: any = null;
+
+    return PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.hypot(gestureState.dx, gestureState.dy) > 5;
+      },
+      onPanResponderGrant: () => {
+        isDragging = false;
+        isLongPress = false;
+        timer = setTimeout(() => {
+          isLongPress = true;
+          onLongPress?.();
+          prodayHaptics.confirm();
+        }, 380);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (Math.hypot(gestureState.dx, gestureState.dy) > 5) {
+          if (timer) clearTimeout(timer);
+          if (!isDragging) {
+            isDragging = true;
+            prodayHaptics.press();
+          }
+          onDragStateChange({
+            active: true,
+            x: gestureState.moveX,
+            y: gestureState.moveY,
+            info: tokenInfo,
+          });
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (timer) clearTimeout(timer);
+        if (isDragging) {
+          onDragStateChange(null);
+          const { moveX, moveY } = gestureState;
+          if (
+            pitchBounds.width > 0 &&
+            moveX >= pitchBounds.left &&
+            moveX <= pitchBounds.left + pitchBounds.width &&
+            moveY >= pitchBounds.top &&
+            moveY <= pitchBounds.top + pitchBounds.height
+          ) {
+            const normX = Math.round(
+              Math.max(2, Math.min(98, ((moveX - pitchBounds.left) / pitchBounds.width) * 100)),
+            );
+            const normY = Math.round(
+              Math.max(2, Math.min(62, ((moveY - pitchBounds.top) / pitchBounds.height) * 64)),
+            );
+            onDrop(normX, normY);
+            prodayHaptics.confirm();
+          }
+        } else if (!isLongPress) {
+          onTap();
+          prodayHaptics.press();
+        }
+        isDragging = false;
+        isLongPress = false;
+      },
+      onPanResponderTerminate: () => {
+        if (timer) clearTimeout(timer);
+        isDragging = false;
+        isLongPress = false;
+        onDragStateChange(null);
+      },
+    });
+  }, [onTap, onLongPress, onDrop, pitchBounds, tokenInfo, onDragStateChange]);
+
+  return (
+    <View
+      {...panResponder.panHandlers}
+      style={[style, isActiveStamp && styles.toolCircleStampActive]}
+      accessibilityLabel={accessibilityLabel}
+    >
+      {children}
+    </View>
+  );
+};
 
 interface CoachTrainingStudioScreenProps {
   initialDrill?: Drill | null;
@@ -59,12 +183,57 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
 }) => {
   const { tokens } = useCoachTheme();
   const { width: winWidth, height: winHeight } = useWindowDimensions();
+  const isLandscape = winWidth >= winHeight;
   const isDesktop = winWidth >= 900;
+  const isMobile = !isDesktop;
 
-  // ——— Core Drill State ———
+  // Verrouillage de l'orientation en mode Paysage sur mobile (ex: tactical-slate)
+  useEffect(() => {
+    if (!supportsOrientationLock()) return;
+    ScreenOrientation.lockAsync(FULLSCREEN_ORIENTATION_LOCK).catch((err) => {
+      console.warn('[CoachTrainingStudioScreen] Orientation lock failed:', err);
+    });
+    return () => {
+      ScreenOrientation.lockAsync(PORTRAIT_ORIENTATION_LOCK).catch((err) => {
+        console.warn('[CoachTrainingStudioScreen] Orientation restore failed:', err);
+      });
+    };
+  }, []);
+
+  // Référence du conteneur du terrain pour le drop de pions
+  const pitchWrapperRef = useRef<View>(null);
+  const [pitchBounds, setPitchBounds] = useState<{ left: number; top: number; width: number; height: number }>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  });
+
+  // État du glisser-déposer depuis la palette vers le terrain
+  const [paletteDrag, setPaletteDrag] = useState<{
+    active: boolean;
+    x: number;
+    y: number;
+    info?: any;
+  } | null>(null);
+
+  // Mode Pose Continue (Stamp) activé par appui long sur un pion ou plot
+  const [activeStamp, setActiveStamp] = useState<{
+    kind: 'player' | 'equipment';
+    type?: EquipmentType;
+    team?: TeamSide;
+    label: string;
+    color?: string;
+    roleNum?: number;
+  } | null>(null);
+
+  // Toast visuel lorsque le déplacement génère automatiquement l'animation d'avancée
+  const [showAnimationToast, setShowAnimationToast] = useState<boolean>(false);
+
+  // ——— Core Drill State (Starts 100% empty for clean coach setup) ———
   const [drill, setDrill] = useState<Drill>(() => {
     if (initialDrill) return initialDrill;
-    return PRELOADED_DRILLS[0];
+    return createEmptyDrill();
   });
 
   const [activeFrameIndex, setActiveFrameIndex] = useState<number>(0);
@@ -193,23 +362,25 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
 
   // ——— Object Placement Actions ———
 
-  const handleSelectObject = useCallback((id: string, type: 'player' | 'equipment' | 'drawing' | 'zone') => {
+  const handleSelectObject = useCallback((id: string | null, type: 'player' | 'equipment' | 'drawing' | 'zone' | null) => {
     setSelectedObjectId(id);
     setSelectedObjectType(type);
   }, []);
 
   const addPlayerToken = useCallback(
-    (label: string, team: TeamSide, roleNum?: number) => {
+    (label: string, team: TeamSide, roleNum?: number, customX?: number, customY?: number) => {
       pushHistory();
       const id = generateTokenId(team);
       const calculatedNum = roleNum ?? (team === 'gk' ? 1 : currentFrame.players.filter((p) => p.team === team).length + 2);
+      const targetX = customX != null ? customX : Math.round(46 + (Math.random() * 10 - 5));
+      const targetY = customY != null ? customY : Math.round(28 + (Math.random() * 10 - 5));
       const newPlayer: PlayerToken = {
         id,
         team,
         num: calculatedNum,
         label: `${label} ${calculatedNum}`,
-        x: Math.round(44 + (Math.random() * 12 - 6)),
-        y: Math.round(26 + (Math.random() * 12 - 6)),
+        x: targetX,
+        y: targetY,
         rotation: team === 'teamB' ? 180 : 0,
         hasBall: false,
       };
@@ -231,15 +402,17 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
   );
 
   const addEquipmentToken = useCallback(
-    (type: EquipmentType, color?: string) => {
+    (type: EquipmentType, color?: string, customX?: number, customY?: number) => {
       pushHistory();
       const id = generateTokenId(`equip-${type}`);
+      const targetX = customX != null ? customX : Math.round(46 + (Math.random() * 12 - 6));
+      const targetY = customY != null ? customY : Math.round(26 + (Math.random() * 12 - 6));
       const newEquip: EquipmentToken = {
         id,
         type,
         color: color || (type === 'cone' ? '#F97316' : type === 'ladder' ? '#EAB308' : '#3B82F6'),
-        x: Math.round(44 + (Math.random() * 14 - 7)),
-        y: Math.round(24 + (Math.random() * 14 - 7)),
+        x: targetX,
+        y: targetY,
         rotation: 0,
       };
 
@@ -257,6 +430,117 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
       setSelectedObjectType('equipment');
     },
     [pushHistory, activeFrameIndex],
+  );
+
+  // Déplacement direct en temps réel d'un joueur sur le terrain (comme sur Tactical Slate)
+  const handleMovePlayer = useCallback((id: string, x: number, y: number) => {
+    setDrill((prev) => {
+      const updatedFrames = prev.frames.map((f, idx) => {
+        if (idx !== activeFrameIndex) return f;
+        return {
+          ...f,
+          players: f.players.map((p) => (p.id === id ? { ...p, x, y } : p)),
+        };
+      });
+      return { ...prev, frames: updatedFrames };
+    });
+  }, [activeFrameIndex]);
+
+  // Déplacement direct en temps réel d'un équipement (plot, ballon, échelle)
+  const handleMoveEquipment = useCallback((id: string, x: number, y: number) => {
+    setDrill((prev) => {
+      const updatedFrames = prev.frames.map((f, idx) => {
+        if (idx !== activeFrameIndex) return f;
+        return {
+          ...f,
+          equipment: f.equipment.map((e) => (e.id === id ? { ...e, x, y } : e)),
+        };
+      });
+      return { ...prev, frames: updatedFrames };
+    });
+  }, [activeFrameIndex]);
+
+  // Fin de glissement sur le terrain -> enregistre dans l'historique d'annulation
+  const handleDragEnd = useCallback(() => {
+    pushHistory();
+  }, [pushHistory]);
+
+  // Mode Pose Continue (Stamp) : pose d'un élément au toucher ou glissé sur la pelouse
+  const handleStampPlace = useCallback(
+    (x: number, y: number) => {
+      if (!activeStamp) return;
+      if (activeStamp.kind === 'player') {
+        addPlayerToken(activeStamp.label, activeStamp.team || 'teamA', activeStamp.roleNum, x, y);
+      } else {
+        addEquipmentToken(activeStamp.type || 'cone', activeStamp.color, x, y);
+      }
+    },
+    [activeStamp, addPlayerToken, addEquipmentToken],
+  );
+
+  // Déplacement avec création automatique d'animation (Style Tactical Slate)
+  const handlePlayerMovedWithTrail = useCallback(
+    (id: string, from: { x: number; y: number }, to: { x: number; y: number }) => {
+      pushHistory();
+      const movedPlayer = currentFrame.players.find((p) => p.id === id);
+      const strokeColor =
+        movedPlayer?.color ||
+        (movedPlayer?.team === 'teamB'
+          ? '#EF4444'
+          : movedPlayer?.team === 'neutral'
+          ? '#EAB308'
+          : movedPlayer?.team === 'gk'
+          ? '#10B981'
+          : '#3B82F6');
+
+      const newDrawing: DrawingObject = {
+        id: generateTokenId('draw-run'),
+        type: 'run',
+        from,
+        to,
+        color: strokeColor,
+      };
+
+      setDrill((prev) => {
+        // Si l'atelier n'a qu'une seule frame, créer automatiquement la Phase 2 pour voir l'avancée !
+        if (prev.frames.length <= 1) {
+          const frame1: DrillFrame = {
+            ...prev.frames[0],
+            drawings: [...prev.frames[0].drawings, newDrawing],
+          };
+          const frame2: DrillFrame = {
+            id: `frame-${Date.now()}-2`,
+            order: 1,
+            durationMs: 2000,
+            title: 'Phase 2',
+            players: prev.frames[0].players.map((p) => (p.id === id ? { ...p, x: to.x, y: to.y } : p)),
+            equipment: prev.frames[0].equipment,
+            drawings: [],
+            zones: prev.frames[0].zones,
+          };
+          return {
+            ...prev,
+            frames: [frame1, frame2],
+          };
+        }
+
+        // Si plusieurs frames existent déjà, mettre à jour la frame active
+        const updatedFrames = prev.frames.map((f, idx) => {
+          if (idx !== activeFrameIndex) return f;
+          return {
+            ...f,
+            players: f.players.map((p) => (p.id === id ? { ...p, x: to.x, y: to.y } : p)),
+            drawings: [...f.drawings, newDrawing],
+          };
+        });
+        return { ...prev, frames: updatedFrames };
+      });
+
+      prodayHaptics.confirm();
+      setShowAnimationToast(true);
+      setTimeout(() => setShowAnimationToast(false), 3800);
+    },
+    [pushHistory, currentFrame.players, activeFrameIndex],
   );
 
   const handleUpdatePlayer = useCallback(
@@ -481,12 +765,29 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
   const totalSec = (totalMs / 1000).toFixed(2).padStart(5, '0');
   const timerString = `00:${currentSec} / 00:${totalSec}`;
 
-  // Dimensions of floating pitch
-  const pitchWidth = Math.min(winWidth - (isDesktop ? 220 : 40), 960);
+  // Dimensions of floating pitch — adaptées au format horizontal mobile & desktop
+  const verticalMargin = isMobile ? (isLandscape ? 58 : 100) : 74;
+  const targetHeight = Math.min(winHeight - verticalMargin, isMobile ? 380 : 580);
+  let targetWidth = Math.round(targetHeight / 0.64);
+  const maxAllowedWidth = winWidth - (isMobile ? (isLandscape ? 116 : 30) : 210);
+  if (targetWidth > maxAllowedWidth) {
+    targetWidth = maxAllowedWidth;
+  }
+  const pitchWidth = Math.max(280, targetWidth);
   const pitchHeight = Math.round(pitchWidth * 0.64);
 
   return (
     <View style={styles.workspaceRoot}>
+      {/* Bannière d'orientation si mobile tenu en portrait */}
+      {isMobile && !isLandscape && (
+        <View style={styles.rotatePromptBanner}>
+          <MaterialCommunityIcons name="phone-rotate-landscape" size={16} color="#38BDF8" />
+          <Text style={styles.rotatePromptText}>
+            Mode Horizontal : pivotez votre appareil en paysage
+          </Text>
+        </View>
+      )}
+
       {/* Top Floating Discreet Header */}
       <View style={styles.floatingTopBar}>
         <View style={styles.floatingTopLeft}>
@@ -534,8 +835,50 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
         </View>
       </View>
 
+      {/* Bandeau Mode Pose Continue (Stamp) */}
+      {activeStamp && (
+        <View style={styles.stampModeBanner}>
+          <View style={[styles.stampPillDot, { backgroundColor: activeStamp.color || '#3B82F6' }]} />
+          <Text style={styles.stampModeBannerText}>
+            Mode Pose : {activeStamp.label} — Touchez le terrain pour poser au fur et à mesure
+          </Text>
+          <TouchableOpacity onPress={() => setActiveStamp(null)} style={styles.stampDoneBtn}>
+            <Ionicons name="checkmark" size={15} color="#FFFFFF" />
+            <Text style={styles.stampDoneText}>Terminé</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Toast d'avancée animée créée automatiquement lors du déplacement */}
+      {showAnimationToast && (
+        <View style={styles.animationCreatedToast}>
+          <MaterialCommunityIcons name="movie-play" size={17} color="#38BDF8" />
+          <Text style={styles.animationCreatedText}>Avancée animée enregistrée !</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setIsPlaying(true);
+              setPlaybackTimeMs(0);
+            }}
+            style={styles.animationPlayNowBtn}
+          >
+            <Ionicons name="play" size={13} color="#FFFFFF" />
+            <Text style={styles.animationPlayNowText}>Voir l'avancée</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Main Tactical Pitch Workspace */}
-      <View style={styles.centerPitchWrapper}>
+      <View
+        ref={pitchWrapperRef}
+        style={styles.centerPitchWrapper}
+        onLayout={() => {
+          pitchWrapperRef.current?.measure((_x, _y, w, h, pageX, pageY) => {
+            if (w > 0 && h > 0) {
+              setPitchBounds({ left: pageX, top: pageY, width: w, height: h });
+            }
+          });
+        }}
+      >
         <CoachPitchEngine
           pitchConfig={activePitchConfig}
           viewMode={viewMode}
@@ -548,6 +891,19 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
           ghostEquipment={showGhosts ? previousFrame?.equipment : undefined}
           selectedId={selectedObjectId}
           onSelectObject={handleSelectObject}
+          onMovePlayer={handleMovePlayer}
+          onMoveEquipment={handleMoveEquipment}
+          onPlayerMovedWithTrail={handlePlayerMovedWithTrail}
+          onDragEnd={handleDragEnd}
+          activeStamp={activeStamp}
+          onStampPlace={handleStampPlace}
+          onPitchLayout={() => {
+            pitchWrapperRef.current?.measure((_x, _y, w, h, pageX, pageY) => {
+              if (w > 0 && h > 0) {
+                setPitchBounds({ left: pageX, top: pageY, width: w, height: h });
+              }
+            });
+          }}
           turfTheme={turfTheme}
           showCornerHandles={true}
           interactive
@@ -576,164 +932,284 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
         )}
       </View>
 
-      {/* Left Floating Dock — Inspired by Tacticslate */}
+      {/* Left Floating Dock — Tactical Canvas Tools */}
       <View style={styles.leftFloatingDock}>
         <View style={styles.dockColumn}>
-          {/* 3D Pro */}
-          <TouchableOpacity
-            onPress={() => setViewMode('3d')}
-            style={[styles.toolCircle, viewMode === '3d' && styles.toolCircleActive]}
-          >
-            <Text style={styles.tool3dText}>3D</Text>
-            <View style={styles.goldBadge}><Text style={styles.goldBadgeText}>Pro</Text></View>
-          </TouchableOpacity>
-
-          {/* 3D 360 */}
-          <TouchableOpacity
-            onPress={() => {
-              setViewMode('3d');
-              setCameraPreset((p) => (p === 'isometric' ? 'side' : 'isometric'));
-            }}
-            style={styles.toolCircle}
-          >
-            <MaterialCommunityIcons name="axis-z-rotate-clockwise" size={17} color="#FFFFFF" />
-            <View style={styles.goldBadge}><Text style={styles.goldBadgeText}>Pro</Text></View>
-          </TouchableOpacity>
-
-          {/* 2D Mode */}
-          <TouchableOpacity
-            onPress={() => setViewMode('2d')}
-            style={[styles.toolCircle, viewMode === '2d' && styles.toolCircleActive]}
-          >
-            <Text style={styles.tool2dText}>2D</Text>
-          </TouchableOpacity>
-
-          {/* Clapboard Animation */}
-          <TouchableOpacity
-            onPress={() => setIsPlaying((p) => !p)}
-            style={[styles.toolCircle, isPlaying && styles.toolCircleCyan]}
-          >
-            <MaterialCommunityIcons name="movie-play" size={18} color={isPlaying ? '#38BDF8' : '#FFFFFF'} />
-          </TouchableOpacity>
-
-          {/* Folders / Project */}
-          <TouchableOpacity onPress={() => setLibraryModalVisible(true)} style={styles.toolCircle}>
-            <Ionicons name="folder-outline" size={17} color="#FBBF24" />
-          </TouchableOpacity>
-
-          {/* Pitch Grid / Layout switcher */}
-          <TouchableOpacity onPress={() => setConfigsModalVisible(true)} style={styles.toolCircle}>
-            <MaterialCommunityIcons name="grid" size={17} color="#94A3B8" />
-          </TouchableOpacity>
-
-          {/* Zoom % pill */}
-          <View style={styles.zoomPill}>
-            <Text style={styles.zoomPillText}>70%</Text>
-          </View>
-        </View>
-
-        <View style={styles.dockColumn}>
-          {/* Draw pencil */}
-          <TouchableOpacity
-            onPress={() => setActiveTool((t) => (t === 'draw_run' ? 'select' : 'draw_run'))}
-            style={[styles.toolCircle, activeTool === 'draw_run' && styles.toolCircleActive]}
-          >
-            <Ionicons name="pencil" size={17} color="#F59E0B" />
-          </TouchableOpacity>
-
           {/* Pan / Move tool */}
           <TouchableOpacity
             onPress={() => setActiveTool('select')}
             style={[styles.toolCircle, activeTool === 'select' && styles.toolCircleActive]}
+            accessibilityLabel="Sélectionner / Déplacer"
           >
             <MaterialCommunityIcons name="cursor-move" size={18} color="#FFFFFF" />
           </TouchableOpacity>
 
-          {/* Broom / Clear */}
-          <TouchableOpacity onPress={handleClearPitch} style={styles.toolCircle}>
+          {/* Trace course avec flèche */}
+          <TouchableOpacity
+            onPress={() => setActiveTool((t) => (t === 'draw_run' ? 'select' : 'draw_run'))}
+            style={[styles.toolCircle, activeTool === 'draw_run' && styles.toolCircleActive]}
+            accessibilityLabel="Tracer une course"
+          >
+            <Ionicons name="pencil" size={17} color="#F59E0B" />
+          </TouchableOpacity>
+
+          {/* Trace passe / Trajectoire */}
+          <TouchableOpacity
+            onPress={() => setActiveTool((t) => (t === 'draw_pass' ? 'select' : 'draw_pass'))}
+            style={[styles.toolCircle, activeTool === 'draw_pass' && styles.toolCircleActive]}
+            accessibilityLabel="Tracer une passe"
+          >
+            <MaterialCommunityIcons name="vector-curve" size={17} color="#4ADE80" />
+          </TouchableOpacity>
+
+          {/* Zoom % pill */}
+          <View style={styles.zoomPill}>
+            <Text style={styles.zoomPillText}>100%</Text>
+          </View>
+
+          {/* Pitch Grid / Format du terrain */}
+          <TouchableOpacity
+            onPress={() => setConfigsModalVisible(true)}
+            style={styles.toolCircle}
+            accessibilityLabel="Format du terrain"
+          >
+            <MaterialCommunityIcons name="grid" size={17} color="#94A3B8" />
+          </TouchableOpacity>
+
+          {/* Folders / Bibliothèque d'ateliers */}
+          <TouchableOpacity
+            onPress={() => setLibraryModalVisible(true)}
+            style={styles.toolCircle}
+            accessibilityLabel="Bibliothèque d'ateliers"
+          >
+            <Ionicons name="folder-outline" size={17} color="#FBBF24" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.dockColumn}>
+          {/* Clapboard Animation Play */}
+          <TouchableOpacity
+            onPress={() => setIsPlaying((p) => !p)}
+            style={[styles.toolCircle, isPlaying && styles.toolCircleCyan]}
+            accessibilityLabel="Lecture de l'animation"
+          >
+            <MaterialCommunityIcons name="movie-play" size={18} color={isPlaying ? '#38BDF8' : '#FFFFFF'} />
+          </TouchableOpacity>
+
+          {/* Broom / Effacer le terrain */}
+          <TouchableOpacity
+            onPress={handleClearPitch}
+            style={styles.toolCircle}
+            accessibilityLabel="Effacer le terrain"
+          >
             <MaterialCommunityIcons name="broom" size={17} color="#F87171" />
           </TouchableOpacity>
 
           {/* AI Generator Box */}
-          <TouchableOpacity onPress={() => setAiModalVisible(true)} style={styles.toolCircle}>
+          <TouchableOpacity
+            onPress={() => setAiModalVisible(true)}
+            style={styles.toolCircle}
+            accessibilityLabel="Assistant IA tactique"
+          >
             <Ionicons name="sparkles" size={17} color="#00E676" />
           </TouchableOpacity>
 
           {/* Undo */}
-          <TouchableOpacity onPress={handleUndo} disabled={history.length === 0} style={[styles.toolCircle, history.length === 0 && { opacity: 0.35 }]}>
+          <TouchableOpacity
+            onPress={handleUndo}
+            disabled={history.length === 0}
+            style={[styles.toolCircle, history.length === 0 && { opacity: 0.35 }]}
+            accessibilityLabel="Annuler"
+          >
             <Ionicons name="arrow-undo" size={17} color="#FFFFFF" />
           </TouchableOpacity>
 
           {/* Redo */}
-          <TouchableOpacity onPress={handleRedo} disabled={redoStack.length === 0} style={[styles.toolCircle, redoStack.length === 0 && { opacity: 0.35 }]}>
+          <TouchableOpacity
+            onPress={handleRedo}
+            disabled={redoStack.length === 0}
+            style={[styles.toolCircle, redoStack.length === 0 && { opacity: 0.35 }]}
+            accessibilityLabel="Rétablir"
+          >
             <Ionicons name="arrow-redo" size={17} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Aide */}
+          <TouchableOpacity
+            onPress={() => setHelpModalVisible(true)}
+            style={styles.toolCircle}
+            accessibilityLabel="Aide et raccourcis"
+          >
+            <Ionicons name="help-circle-outline" size={18} color="#94A3B8" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Right Floating Dock — Equipment & Tokens Palette */}
+      {/* Right Floating Dock — Equipment & Tokens Palette (Tap-to-place ou Glisser-Déposer) */}
       <View style={styles.rightFloatingDock}>
         <View style={styles.dockColumn}>
           {/* Coach Token */}
-          <TouchableOpacity onPress={() => addPlayerToken('Coach', 'coach')} style={styles.toolCircle}>
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'player', label: 'Coach', team: 'coach', color: '#1E293B' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addPlayerToken('Coach', 'coach')}
+            onLongPress={() => setActiveStamp({ kind: 'player', label: 'Coach', team: 'coach', color: '#1E293B' })}
+            onDrop={(x, y) => addPlayerToken('Coach', 'coach', undefined, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.label === 'Coach'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Coach (clic ou appui long pour pose continue)"
+          >
             <MaterialCommunityIcons name="account-tie" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
+          </PaletteTokenButton>
 
           {/* Red Player 2 */}
-          <TouchableOpacity onPress={() => addPlayerToken('Player', 'teamB', 2)} style={styles.toolCircle}>
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'player', label: 'Joueur Rouge', team: 'teamB', color: '#EF4444', num: 2 }}
+            pitchBounds={pitchBounds}
+            onTap={() => addPlayerToken('Player', 'teamB', 2)}
+            onLongPress={() => setActiveStamp({ kind: 'player', label: 'Joueur Rouge', team: 'teamB', color: '#EF4444', roleNum: 2 })}
+            onDrop={(x, y) => addPlayerToken('Player', 'teamB', 2, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.team === 'teamB'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Joueur Rouge (clic ou appui long pour pose continue)"
+          >
             <View style={[styles.playerMiniCircle, { backgroundColor: '#EF4444' }]}>
               <Text style={styles.playerMiniText}>2</Text>
             </View>
-          </TouchableOpacity>
+          </PaletteTokenButton>
 
           {/* Yellow Joker */}
-          <TouchableOpacity onPress={() => addPlayerToken('Joker', 'neutral')} style={styles.toolCircle}>
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'player', label: 'Joker Jaune', team: 'neutral', color: '#EAB308' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addPlayerToken('Joker', 'neutral')}
+            onLongPress={() => setActiveStamp({ kind: 'player', label: 'Joker Jaune', team: 'neutral', color: '#EAB308' })}
+            onDrop={(x, y) => addPlayerToken('Joker', 'neutral', undefined, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.team === 'neutral'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Joker Jaune (clic ou appui long pour pose continue)"
+          >
             <View style={[styles.playerMiniCircle, { backgroundColor: '#EAB308' }]}>
               <Text style={[styles.playerMiniText, { color: '#000000' }]}>J</Text>
             </View>
-          </TouchableOpacity>
+          </PaletteTokenButton>
 
           {/* Blue Player 1 */}
-          <TouchableOpacity onPress={() => addPlayerToken('Player', 'teamA', 1)} style={styles.toolCircle}>
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'player', label: 'Joueur Bleu', team: 'teamA', color: '#3B82F6', num: 1 }}
+            pitchBounds={pitchBounds}
+            onTap={() => addPlayerToken('Player', 'teamA', 1)}
+            onLongPress={() => setActiveStamp({ kind: 'player', label: 'Joueur Bleu', team: 'teamA', color: '#3B82F6', roleNum: 1 })}
+            onDrop={(x, y) => addPlayerToken('Player', 'teamA', 1, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.team === 'teamA'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Joueur Bleu (clic ou appui long pour pose continue)"
+          >
             <View style={[styles.playerMiniCircle, { backgroundColor: '#3B82F6' }]}>
               <Text style={styles.playerMiniText}>1</Text>
             </View>
-          </TouchableOpacity>
+          </PaletteTokenButton>
+
+          {/* Gardien (GK) */}
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'player', label: 'Gardien Vert', team: 'gk', color: '#10B981', num: 1 }}
+            pitchBounds={pitchBounds}
+            onTap={() => addPlayerToken('Gardien', 'gk', 1)}
+            onLongPress={() => setActiveStamp({ kind: 'player', label: 'Gardien Vert', team: 'gk', color: '#10B981', roleNum: 1 })}
+            onDrop={(x, y) => addPlayerToken('Gardien', 'gk', 1, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.team === 'gk'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Gardien (clic ou appui long pour pose continue)"
+          >
+            <View style={[styles.playerMiniCircle, { backgroundColor: '#10B981' }]}>
+              <Text style={[styles.playerMiniText, { fontSize: 8 }]}>GK</Text>
+            </View>
+          </PaletteTokenButton>
 
           {/* Match Ball */}
-          <TouchableOpacity onPress={() => addEquipmentToken('ball')} style={styles.toolCircle}>
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'equipment', type: 'ball', label: 'Ballon' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addEquipmentToken('ball')}
+            onLongPress={() => setActiveStamp({ kind: 'equipment', type: 'ball', label: 'Ballon' })}
+            onDrop={(x, y) => addEquipmentToken('ball', undefined, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.type === 'ball'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Ballon (clic ou appui long pour pose continue)"
+          >
             <Ionicons name="football" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
+          </PaletteTokenButton>
 
-          {/* 3D Orange Cone */}
-          <TouchableOpacity onPress={() => addEquipmentToken('cone', '#F97316')} style={styles.toolCircle}>
+          {/* Plot / Cône orange */}
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'equipment', type: 'cone', color: '#F97316', label: 'Plot Cône' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addEquipmentToken('cone', '#F97316')}
+            onLongPress={() => setActiveStamp({ kind: 'equipment', type: 'cone', color: '#F97316', label: 'Plot Cône' })}
+            onDrop={(x, y) => addEquipmentToken('cone', '#F97316', x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.type === 'cone'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Plot Cône (clic ou appui long pour pose continue)"
+          >
             <MaterialCommunityIcons name="cone" size={18} color="#F97316" />
-          </TouchableOpacity>
+          </PaletteTokenButton>
 
           {/* Agility Ladder */}
-          <TouchableOpacity onPress={() => addEquipmentToken('ladder')} style={styles.toolCircle}>
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'equipment', type: 'ladder', color: '#EAB308', label: 'Échelle' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addEquipmentToken('ladder')}
+            onLongPress={() => setActiveStamp({ kind: 'equipment', type: 'ladder', color: '#EAB308', label: 'Échelle' })}
+            onDrop={(x, y) => addEquipmentToken('ladder', undefined, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.type === 'ladder'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Échelle (clic ou appui long pour pose continue)"
+          >
             <MaterialCommunityIcons name="ladder" size={18} color="#EAB308" />
-          </TouchableOpacity>
+          </PaletteTokenButton>
 
-          {/* Blue Rebounder / Mini Goal */}
-          <TouchableOpacity onPress={() => addEquipmentToken('mini_goal')} style={styles.toolCircle}>
+          {/* Mini Goal */}
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'equipment', type: 'mini_goal', color: '#3B82F6', label: 'Mini-but' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addEquipmentToken('mini_goal')}
+            onLongPress={() => setActiveStamp({ kind: 'equipment', type: 'mini_goal', color: '#3B82F6', label: 'Mini-but' })}
+            onDrop={(x, y) => addEquipmentToken('mini_goal', undefined, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.type === 'mini_goal'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Mini-but (clic ou appui long pour pose continue)"
+          >
             <MaterialCommunityIcons name="soccer-field" size={18} color="#3B82F6" />
-          </TouchableOpacity>
+          </PaletteTokenButton>
 
-          {/* Runner */}
-          <TouchableOpacity onPress={() => addPlayerToken('Player', 'teamA')} style={styles.toolCircle}>
-            <MaterialCommunityIcons name="run-fast" size={18} color="#38BDF8" />
-          </TouchableOpacity>
-
-          {/* Library Book */}
-          <TouchableOpacity onPress={() => setLibraryModalVisible(true)} style={styles.toolCircle}>
-            <Ionicons name="book-outline" size={17} color="#FFFFFF" />
-          </TouchableOpacity>
+          {/* Dummy Mannequin */}
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'equipment', type: 'mannequin', color: '#94A3B8', label: 'Mannequin' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addEquipmentToken('mannequin')}
+            onLongPress={() => setActiveStamp({ kind: 'equipment', type: 'mannequin', color: '#94A3B8', label: 'Mannequin' })}
+            onDrop={(x, y) => addEquipmentToken('mannequin', undefined, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.type === 'mannequin'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Mannequin (clic ou appui long pour pose continue)"
+          >
+            <MaterialCommunityIcons name="human" size={18} color="#94A3B8" />
+          </PaletteTokenButton>
         </View>
 
         <View style={styles.dockColumn}>
           {/* Strategy */}
-          <TouchableOpacity onPress={() => setConfigsModalVisible(true)} style={styles.toolCircle}>
+          <TouchableOpacity onPress={() => setConfigsModalVisible(true)} style={styles.toolCircle} accessibilityLabel="Disposition tactique">
             <MaterialCommunityIcons name="strategy" size={17} color="#A78BFA" />
           </TouchableOpacity>
 
@@ -741,51 +1217,84 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
           <TouchableOpacity
             onPress={() => setActivePitchConfig((c) => (c === 'full' ? 'half' : 'full'))}
             style={styles.toolCircle}
+            accessibilityLabel="Basculer Demi/Plein terrain"
           >
             <MaterialCommunityIcons name="circle-half-full" size={17} color="#38BDF8" />
           </TouchableOpacity>
 
-          {/* Fullscreen */}
-          <TouchableOpacity onPress={() => {}} style={styles.toolCircle}>
-            <MaterialCommunityIcons name="fullscreen" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          {/* Help ? */}
-          <TouchableOpacity onPress={() => setHelpModalVisible(true)} style={styles.toolCircleRed}>
-            <Text style={styles.helpQuestionText}>?</Text>
-          </TouchableOpacity>
-
-          {/* Pro Gold */}
-          <View style={styles.proGoldChip}>
-            <Text style={styles.proGoldChipText}>Pro</Text>
-          </View>
-
           {/* Staff */}
-          <TouchableOpacity onPress={() => addPlayerToken('Staff', 'coach')} style={styles.toolCircle}>
-            <Ionicons name="person" size={16} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          {/* Curve drawing */}
-          <TouchableOpacity
-            onPress={() => setActiveTool((t) => (t === 'draw_pass' ? 'select' : 'draw_pass'))}
-            style={[styles.toolCircle, activeTool === 'draw_pass' && styles.toolCircleActive]}
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'player', label: 'Staff', team: 'coach', color: '#334155' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addPlayerToken('Staff', 'coach')}
+            onLongPress={() => setActiveStamp({ kind: 'player', label: 'Staff', team: 'coach', color: '#334155' })}
+            onDrop={(x, y) => addPlayerToken('Staff', 'coach', undefined, x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.label === 'Staff'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Staff (clic ou appui long pour pose continue)"
           >
-            <MaterialCommunityIcons name="vector-curve" size={17} color="#4ADE80" />
+            <Ionicons name="person" size={16} color="#FFFFFF" />
+          </PaletteTokenButton>
+
+          {/* Coupelle plate */}
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'equipment', type: 'disc_cone', color: '#EAB308', label: 'Coupelle' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addEquipmentToken('disc_cone', '#EAB308')}
+            onLongPress={() => setActiveStamp({ kind: 'equipment', type: 'disc_cone', color: '#EAB308', label: 'Coupelle' })}
+            onDrop={(x, y) => addEquipmentToken('disc_cone', '#EAB308', x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.type === 'disc_cone'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Coupelle (clic ou appui long pour pose continue)"
+          >
+            <Ionicons name="disc-outline" size={17} color="#EAB308" />
+          </PaletteTokenButton>
+
+          {/* Piquet d'agilité */}
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'equipment', type: 'pole', color: '#EF4444', label: 'Piquet' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addEquipmentToken('pole', '#EF4444')}
+            onLongPress={() => setActiveStamp({ kind: 'equipment', type: 'pole', color: '#EF4444', label: 'Piquet' })}
+            onDrop={(x, y) => addEquipmentToken('pole', '#EF4444', x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.type === 'pole'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Piquet (clic ou appui long pour pose continue)"
+          >
+            <Ionicons name="remove-outline" size={18} color="#EF4444" />
+          </PaletteTokenButton>
+
+          {/* Haie */}
+          <PaletteTokenButton
+            tokenInfo={{ kind: 'equipment', type: 'hurdle', color: '#38BDF8', label: 'Haie' }}
+            pitchBounds={pitchBounds}
+            onTap={() => addEquipmentToken('hurdle', '#38BDF8')}
+            onLongPress={() => setActiveStamp({ kind: 'equipment', type: 'hurdle', color: '#38BDF8', label: 'Haie' })}
+            onDrop={(x, y) => addEquipmentToken('hurdle', '#38BDF8', x, y)}
+            onDragStateChange={setPaletteDrag}
+            isActiveStamp={activeStamp?.type === 'hurdle'}
+            style={styles.toolCircle}
+            accessibilityLabel="Ajouter Haie (clic ou appui long pour pose continue)"
+          >
+            <MaterialCommunityIcons name="ray-start-arrow" size={17} color="#38BDF8" />
+          </PaletteTokenButton>
+
+          {/* Library Book */}
+          <TouchableOpacity onPress={() => setLibraryModalVisible(true)} style={styles.toolCircle} accessibilityLabel="Bibliothèque d'exercices">
+            <Ionicons name="book-outline" size={17} color="#FFFFFF" />
           </TouchableOpacity>
 
-          {/* Dummy Mannequin */}
-          <TouchableOpacity onPress={() => addEquipmentToken('mannequin')} style={styles.toolCircle}>
-            <MaterialCommunityIcons name="human" size={18} color="#94A3B8" />
-          </TouchableOpacity>
-
-          {/* More menu */}
-          <TouchableOpacity onPress={() => setHelpModalVisible(true)} style={styles.toolCircle}>
+          {/* Plus d'options / Guide */}
+          <TouchableOpacity onPress={() => setHelpModalVisible(true)} style={styles.toolCircle} accessibilityLabel="Aide">
             <Ionicons name="ellipsis-horizontal" size={18} color="#60A5FA" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Bottom Floating Timeline Dock — Exact Tacticslate Architecture */}
+      {/* Bottom Floating Timeline Dock */}
       <View style={styles.bottomTimelineDock}>
         {/* Play / Pause circular button */}
         <TouchableOpacity
@@ -900,6 +1409,69 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
           setActiveFrameIndex(0);
         }}
       />
+
+      {/* Fantôme flottant lors du glisser-déposer depuis la palette */}
+      {paletteDrag && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.floatingDragGhost,
+            {
+              left: paletteDrag.x - 22,
+              top: paletteDrag.y - 22,
+            },
+          ]}
+        >
+          {paletteDrag.info?.kind === 'player' ? (
+            <View
+              style={[
+                styles.ghostPlayerCircle,
+                {
+                  backgroundColor:
+                    paletteDrag.info?.color ||
+                    (paletteDrag.info?.team === 'teamB'
+                      ? '#EF4444'
+                      : paletteDrag.info?.team === 'neutral'
+                      ? '#EAB308'
+                      : paletteDrag.info?.team === 'gk'
+                      ? '#10B981'
+                      : '#3B82F6'),
+                },
+              ]}
+            >
+              <Text style={styles.ghostPlayerText}>
+                {paletteDrag.info?.num != null
+                  ? paletteDrag.info?.num
+                  : paletteDrag.info?.team === 'coach'
+                  ? 'C'
+                  : ''}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.ghostEquipCircle}>
+              {paletteDrag.info?.type === 'cone' ? (
+                <MaterialCommunityIcons name="cone" size={24} color="#F97316" />
+              ) : paletteDrag.info?.type === 'ball' ? (
+                <Ionicons name="football" size={22} color="#FFFFFF" />
+              ) : paletteDrag.info?.type === 'ladder' ? (
+                <MaterialCommunityIcons name="ladder" size={24} color="#EAB308" />
+              ) : paletteDrag.info?.type === 'mini_goal' ? (
+                <MaterialCommunityIcons name="soccer-field" size={24} color="#3B82F6" />
+              ) : paletteDrag.info?.type === 'mannequin' ? (
+                <MaterialCommunityIcons name="human" size={24} color="#94A3B8" />
+              ) : paletteDrag.info?.type === 'disc_cone' ? (
+                <Ionicons name="disc-outline" size={24} color="#EAB308" />
+              ) : paletteDrag.info?.type === 'pole' ? (
+                <Ionicons name="remove-outline" size={24} color="#EF4444" />
+              ) : paletteDrag.info?.type === 'hurdle' ? (
+                <MaterialCommunityIcons name="ray-start-arrow" size={24} color="#38BDF8" />
+              ) : (
+                <Ionicons name="football" size={22} color="#FFFFFF" />
+              )}
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 };
@@ -907,7 +1479,7 @@ export const CoachTrainingStudioScreen: React.FC<CoachTrainingStudioScreenProps>
 const styles = StyleSheet.create({
   workspaceRoot: {
     flex: 1,
-    backgroundColor: '#ABB5A3', // Exact soft matte sage green canvas from Tacticslate
+    backgroundColor: '#ABB5A3', // Soft matte sage green studio canvas
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1029,13 +1601,13 @@ const styles = StyleSheet.create({
   },
   leftFloatingDock: {
     position: 'absolute',
-    left: 20,
-    top: '18%',
-    backgroundColor: '#1C222E', // Floating dark pill from Tacticslate
-    borderRadius: 28,
-    padding: 10,
+    left: 12,
+    top: '12%',
+    backgroundColor: '#1C222E',
+    borderRadius: 24,
+    padding: 6,
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
@@ -1043,16 +1615,17 @@ const styles = StyleSheet.create({
     elevation: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
+    zIndex: 90,
   },
   rightFloatingDock: {
     position: 'absolute',
-    right: 20,
-    top: '14%',
-    backgroundColor: '#1C222E', // Floating dark pill from Tacticslate
-    borderRadius: 28,
-    padding: 10,
+    right: 12,
+    top: '10%',
+    backgroundColor: '#1C222E',
+    borderRadius: 24,
+    padding: 6,
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
@@ -1060,6 +1633,7 @@ const styles = StyleSheet.create({
     elevation: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
+    zIndex: 90,
   },
   dockColumn: {
     flexDirection: 'column',
@@ -1093,43 +1667,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 16,
-  },
-  tool3dText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  tool2dText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  goldBadge: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    backgroundColor: '#F59E0B',
-    borderRadius: 4,
-    paddingHorizontal: 3,
-    paddingVertical: 1,
-  },
-  goldBadgeText: {
-    fontSize: 7,
-    fontWeight: '900',
-    color: '#000000',
-  },
-  proGoldChip: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#F59E0B',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  proGoldChipText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#000000',
   },
   zoomPill: {
     backgroundColor: '#262F3F',
@@ -1324,5 +1861,161 @@ const styles = StyleSheet.create({
   configRowTextActive: {
     color: '#FFFFFF',
     fontWeight: '700',
+  },
+  floatingDragGhost: {
+    position: 'absolute',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 16,
+  },
+  ghostPlayerCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  ghostPlayerText: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+    fontSize: 14,
+  },
+  ghostEquipCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(28, 34, 46, 0.95)',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  rotatePromptBanner: {
+    position: 'absolute',
+    top: 50,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.4)',
+    zIndex: 80,
+  },
+  rotatePromptText: {
+    color: '#F0F9FF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  toolCircleStampActive: {
+    borderColor: '#38BDF8',
+    borderWidth: 2,
+    backgroundColor: 'rgba(56, 189, 248, 0.25)',
+  },
+  stampModeBanner: {
+    position: 'absolute',
+    top: 48,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    zIndex: 110,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  stampPillDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  stampModeBannerText: {
+    color: '#F0F9FF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  stampDoneBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#0284C7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  stampDoneText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  animationCreatedToast: {
+    position: 'absolute',
+    bottom: 64,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    zIndex: 110,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 12,
+  },
+  animationCreatedText: {
+    color: '#F0F9FF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  animationPlayNowBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  animationPlayNowText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
   },
 });

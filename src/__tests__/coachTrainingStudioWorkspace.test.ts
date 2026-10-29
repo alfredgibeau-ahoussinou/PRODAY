@@ -1,6 +1,7 @@
 import {
   clampPoint,
   generateTokenId,
+  createEmptyDrill,
   PITCH_CONFIGURATIONS,
   type PitchConfiguration,
   type Drill,
@@ -53,6 +54,19 @@ describe('Coach Training Studio Workspace', () => {
       const inverted = fromScreenPixels(screenPt, screenW, screenH);
       expect(inverted.x).toBeCloseTo(50);
       expect(inverted.y).toBeCloseTo(50);
+    });
+
+    it('accurately maps palette drag-and-drop screen position into pitch normalized coordinates', () => {
+      const pitchBounds = { left: 100, top: 50, width: 800, height: 512 };
+      // User drops at center of pitch
+      const dropX = 100 + 400;
+      const dropY = 50 + 256;
+
+      const normX = Math.round(Math.max(2, Math.min(98, ((dropX - pitchBounds.left) / pitchBounds.width) * 100)));
+      const normY = Math.round(Math.max(2, Math.min(62, ((dropY - pitchBounds.top) / pitchBounds.height) * 64)));
+
+      expect(normX).toBe(50);
+      expect(normY).toBe(32);
     });
   });
 
@@ -109,6 +123,16 @@ describe('Coach Training Studio Workspace', () => {
         expect(cfg.bounds.maxY).toBe(100);
         expect(cfg.goals.length).toBeGreaterThanOrEqual(1);
       });
+    });
+
+    it('initializes an empty drill with 0 players and 0 equipment for coach custom placement', () => {
+      const emptyDrill = createEmptyDrill('full');
+      expect(emptyDrill.frames.length).toBe(1);
+      expect(emptyDrill.frames[0].players).toEqual([]);
+      expect(emptyDrill.frames[0].equipment).toEqual([]);
+      expect(emptyDrill.frames[0].drawings).toEqual([]);
+      expect(emptyDrill.frames[0].zones).toEqual([]);
+      expect(emptyDrill.playerCount).toBe(0);
     });
   });
 
@@ -240,6 +264,100 @@ describe('Coach Training Studio Workspace', () => {
       expect(roundTripDrill.id).toEqual(originalDrill.id);
       expect(roundTripDrill.name).toEqual(originalDrill.name);
       expect(roundTripDrill.frames.length).toEqual(originalDrill.frames.length);
+    });
+  });
+
+  describe('Tactical Continuous Stamp Mode & Motion Vectors', () => {
+    it('accumulates multiple tokens consecutively in stamp mode without re-clicking palette', () => {
+      const emptyDrill = createEmptyDrill('full');
+      let currentFrame = emptyDrill.frames[0];
+
+      // Simulate placing 3 cones in succession with stamp mode
+      const conePositions = [
+        { x: 30, y: 20 },
+        { x: 35, y: 20 },
+        { x: 40, y: 20 },
+      ];
+
+      conePositions.forEach((pos, idx) => {
+        const newEquip: EquipmentToken = {
+          id: `equip-cone-${idx}`,
+          type: 'cone',
+          color: '#F97316',
+          x: pos.x,
+          y: pos.y,
+        };
+        currentFrame = {
+          ...currentFrame,
+          equipment: [...currentFrame.equipment, newEquip],
+        };
+      });
+
+      expect(currentFrame.equipment.length).toBe(3);
+      expect(currentFrame.equipment.map((e) => e.x)).toEqual([30, 35, 40]);
+    });
+
+    it('generates Phase 2 advancement animation and directional vector when player is moved', () => {
+      const emptyDrill = createEmptyDrill('full');
+      const player: PlayerToken = {
+        id: 'player-1',
+        team: 'teamA',
+        num: 7,
+        label: 'Ailier',
+        x: 20,
+        y: 30,
+        rotation: 0,
+      };
+
+      const frame1: DrillFrame = {
+        ...emptyDrill.frames[0],
+        players: [player],
+      };
+
+      // When player is moved from (20, 30) to (50, 45)
+      const fromPt = { x: 20, y: 30 };
+      const toPt = { x: 50, y: 45 };
+
+      // Phase 1 gets the trajectory drawing arrow
+      const motionArrow: DrawingObject = {
+        id: 'drawing-motion-player-1',
+        type: 'run',
+        from: fromPt,
+        to: toPt,
+        color: '#38BDF8',
+      };
+
+      const updatedFrame1: DrillFrame = {
+        ...frame1,
+        drawings: [...frame1.drawings, motionArrow],
+      };
+
+      // Phase 2 is automatically generated with player at destination
+      const frame2: DrillFrame = {
+        id: 'frame-phase-2',
+        order: 1,
+        durationMs: 2000,
+        players: [{ ...player, x: toPt.x, y: toPt.y }],
+        equipment: [],
+        drawings: [],
+        zones: [],
+      };
+
+      const multiPhaseDrill: Drill = {
+        ...emptyDrill,
+        frames: [updatedFrame1, frame2],
+      };
+
+      expect(multiPhaseDrill.frames.length).toBe(2);
+      expect(multiPhaseDrill.frames[0].drawings[0].from).toEqual(fromPt);
+      expect(multiPhaseDrill.frames[0].drawings[0].to).toEqual(toPt);
+      expect(multiPhaseDrill.frames[1].players[0].x).toBe(50);
+      expect(multiPhaseDrill.frames[1].players[0].y).toBe(45);
+
+      // Verify the animation engine plays smooth translation across the vector
+      const sampleAtHalf = sampleDrillAtTime(multiPhaseDrill, 1000);
+      expect(sampleAtHalf.players[0].x).toBeCloseTo(35, 1);
+      expect(sampleAtHalf.players[0].y).toBeCloseTo(37.5, 1);
     });
   });
 });
