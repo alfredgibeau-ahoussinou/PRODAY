@@ -40,6 +40,8 @@ interface Props {
   interactive?: boolean;
   width?: number | string;
   height?: number | string;
+  turfTheme?: 'tactical_blue' | 'classic_green';
+  showCornerHandles?: boolean;
 }
 
 // Projection perspective 3D pour les coordonnées tactiques normalisées [0..100] -> [0..100, 0..64]
@@ -142,11 +144,14 @@ export const CoachPitchEngine: React.FC<Props> = ({
   interactive = true,
   width = '100%',
   height = '100%',
+  turfTheme = 'tactical_blue',
+  showCornerHandles = true,
 }) => {
   const vbW = 100;
   const vbH = 64;
 
-  // Calcul des bandes de tonte de pelouse (10 bandes alternées en vert stade pro)
+  // Calcul des bandes de pelouse (thème Bleu Tactique Tacticslate ou Vert Stade Classique)
+  const isBlue = turfTheme === 'tactical_blue';
   const lawnStripes = useMemo(() => {
     const stripesCount = 10;
     const stripeW = vbW / stripesCount;
@@ -155,9 +160,11 @@ export const CoachPitchEngine: React.FC<Props> = ({
       y: 0,
       width: stripeW,
       height: vbH,
-      fill: i % 2 === 0 ? '#14532D' : '#166534',
+      fill: isBlue
+        ? i % 2 === 0 ? '#336E97' : '#2A5D82'
+        : i % 2 === 0 ? '#14532D' : '#166534',
     }));
-  }, [vbW, vbH]);
+  }, [vbW, vbH, isBlue]);
 
   // Points projetés 2D ou 3D
   const getCoords = (pt: NormalizedPoint) => {
@@ -294,8 +301,8 @@ export const CoachPitchEngine: React.FC<Props> = ({
       <Svg width={width} height={height} viewBox={`0 0 ${vbW} ${vbH}`}>
         <Defs>
           <LinearGradient id="pitchGrass" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor="#14532D" />
-            <Stop offset="100%" stopColor="#0B3E1F" />
+            <Stop offset="0%" stopColor={isBlue ? '#356F98' : '#14532D'} />
+            <Stop offset="100%" stopColor={isBlue ? '#275778' : '#0B3E1F'} />
           </LinearGradient>
           {/* Marqueur de flèche pour les passes et tirs */}
           <Path id="arrowHead" d="M 0 0 L 3 -1.5 L 2.2 0 L 3 1.5 Z" fill="#FFFFFF" />
@@ -306,11 +313,23 @@ export const CoachPitchEngine: React.FC<Props> = ({
 
         {/* Bandes de tonte réalistes (stadium mower stripes) */}
         {lawnStripes.map((stripe, idx) => (
-          <Rect key={`lawn-${idx}`} x={stripe.x} y={stripe.y} width={stripe.width} height={stripe.height} fill={stripe.fill} opacity={0.6} />
+          <Rect key={`lawn-${idx}`} x={stripe.x} y={stripe.y} width={stripe.width} height={stripe.height} fill={stripe.fill} opacity={0.65} />
         ))}
 
         {/* Lignes périphériques du terrain */}
-        <Rect x={2} y={2} width={vbW - 4} height={vbH - 4} rx={1.5} fill="none" stroke="#FFFFFF" strokeWidth={0.9} strokeOpacity={0.95} />
+        <Rect x={2} y={2} width={vbW - 4} height={vbH - 4} fill="none" stroke="#FFFFFF" strokeWidth={0.85} strokeOpacity={0.95} />
+
+        {/* Poignées de coin blanches TacticalSlate et filigranes */}
+        {showCornerHandles && (
+          <G pointerEvents="none">
+            <Circle cx={2} cy={2} r={0.9} fill="#FFFFFF" stroke="#000000" strokeWidth={0.25} />
+            <Circle cx={vbW - 2} cy={2} r={0.9} fill="#FFFFFF" stroke="#000000" strokeWidth={0.25} />
+            <Circle cx={2} cy={vbH - 2} r={0.9} fill="#FFFFFF" stroke="#000000" strokeWidth={0.25} />
+            <Circle cx={vbW - 2} cy={vbH - 2} r={0.9} fill="#FFFFFF" stroke="#000000" strokeWidth={0.25} />
+            <SvgText x={3} y={5} fontSize={2.4} fill="rgba(255,255,255,0.22)" fontWeight="700">tacticslate.com</SvgText>
+            <SvgText x={vbW - 22} y={vbH - 3} fontSize={2.4} fill="rgba(255,255,255,0.22)" fontWeight="700">tacticslate.com</SvgText>
+          </G>
+        )}
 
         {/* Marquages géométriques selon la configuration */}
         {renderMarkings()}
@@ -387,14 +406,27 @@ export const CoachPitchEngine: React.FC<Props> = ({
         {/* Positions Fantômes (Ghosting des frames précédentes) */}
         {ghostPlayers.map((gp) => {
           const c = getCoords(gp);
+          const r = c.scale;
+          const ghostColor = gp.team === 'teamB' ? '#991B1B' : '#1E40AF';
           return (
-            <G key={`ghost-p-${gp.id}`} opacity={0.28}>
-              <Circle cx={c.x} cy={c.y} r={3 * c.scale} fill={gp.color || TEAM_PRESET_COLORS[gp.team]?.fill || '#3B82F6'} stroke="#FFFFFF" strokeWidth={0.5} strokeDasharray="1,1" />
+            <G key={`ghost-p-${gp.id}`} opacity={0.45}>
+              <Circle
+                cx={c.x}
+                cy={c.y}
+                r={2.8 * r}
+                fill={ghostColor}
+                stroke="#FFFFFF"
+                strokeWidth={0.6 * r}
+                strokeDasharray="1.2,1.2"
+              />
               {gp.num != null ? (
-                <SvgText x={c.x} y={c.y + 1} fontSize={2.4 * c.scale} fontWeight="800" fill="#FFFFFF" textAnchor="middle">
+                <SvgText x={c.x} y={c.y + 1.0 * r} fontSize={2.6 * r} fontWeight="800" fill="#FFFFFF" textAnchor="middle">
                   {gp.num}
                 </SvgText>
               ) : null}
+              <SvgText x={c.x} y={c.y - 3.8 * r} fontSize={2.1 * r} fontWeight="700" fill={ghostColor} textAnchor="middle">
+                {gp.label || `Player ${gp.num || ''}`}
+              </SvgText>
             </G>
           );
         })}
@@ -402,7 +434,7 @@ export const CoachPitchEngine: React.FC<Props> = ({
         {ghostEquipment.map((ge) => {
           const c = getCoords(ge);
           return (
-            <G key={`ghost-eq-${ge.id}`} opacity={0.25}>
+            <G key={`ghost-eq-${ge.id}`} opacity={0.35}>
               <Circle cx={c.x} cy={c.y} r={2.5 * c.scale} fill={ge.color || EQUIPMENT_PRESET_COLORS[ge.type] || '#F97316'} stroke="#FFFFFF" strokeWidth={0.5} strokeDasharray="1,1" />
             </G>
           );
@@ -419,17 +451,19 @@ export const CoachPitchEngine: React.FC<Props> = ({
             <G key={eq.id} onPress={() => interactive && onSelectObject?.(eq.id, 'equipment')}>
               {/* Halo de sélection */}
               {isSelected ? (
-                <Circle cx={c.x} cy={c.y} r={4.5 * r} fill="none" stroke="#FFFFFF" strokeWidth={0.8} strokeDasharray="1.5,1.5" />
+                <Circle cx={c.x} cy={c.y} r={4.8 * r} fill="none" stroke="#FFFFFF" strokeWidth={0.8} strokeDasharray="1.5,1.5" />
               ) : null}
 
-              {/* Cône 3D avec bande réfléchissante */}
+              {/* Cône 3D avec bande réfléchissante (Fidélité TacticalSlate) */}
               {eq.type === 'cone' && (
                 <G>
-                  <Ellipse cx={c.x} cy={c.y + 2.2 * r} rx={2.4 * r} ry={1.1 * r} fill="rgba(0,0,0,0.35)" />
-                  <Rect x={c.x - 2.2 * r} y={c.y + 1.5 * r} width={4.4 * r} height={0.8 * r} rx={0.3 * r} fill={color} />
-                  <Polygon points={`${c.x},${c.y - 3 * r} ${c.x - 1.9 * r},${c.y + 1.8 * r} ${c.x + 1.9 * r},${c.y + 1.8 * r}`} fill={color} stroke="#FFFFFF" strokeWidth={0.2} />
-                  <Polygon points={`${c.x - 0.7 * r},${c.y - 0.4 * r} ${c.x + 0.7 * r},${c.y - 0.4 * r} ${c.x + 1.2 * r},${c.y + 0.8 * r} ${c.x - 1.2 * r},${c.y + 0.8 * r}`} fill="#FFFFFF" opacity={0.95} />
-                  <Circle cx={c.x} cy={c.y - 2.9 * r} r={0.4 * r} fill="#FFFFFF" />
+                  <Ellipse cx={c.x + 1.2 * r} cy={c.y + 2.8 * r} rx={3.0 * r} ry={1.3 * r} fill="rgba(0,0,0,0.38)" />
+                  <Ellipse cx={c.x} cy={c.y + 2.1 * r} rx={2.8 * r} ry={1.2 * r} fill="#E65100" />
+                  <Ellipse cx={c.x} cy={c.y + 1.8 * r} rx={2.4 * r} ry={1.0 * r} fill="#FB8C00" />
+                  <Polygon points={`${c.x},${c.y - 4.6 * r} ${c.x - 2.2 * r},${c.y + 1.8 * r} ${c.x + 2.2 * r},${c.y + 1.8 * r}`} fill="#FB8C00" />
+                  <Polygon points={`${c.x},${c.y - 4.6 * r} ${c.x},${c.y + 1.8 * r} ${c.x + 2.2 * r},${c.y + 1.8 * r}`} fill="#F57C00" />
+                  <Polygon points={`${c.x - 1.0 * r},${c.y - 1.2 * r} ${c.x + 1.0 * r},${c.y - 1.2 * r} ${c.x + 1.5 * r},${c.y + 0.5 * r} ${c.x - 1.5 * r},${c.y + 0.5 * r}`} fill="#FFFFFF" opacity={0.96} />
+                  <Circle cx={c.x} cy={c.y - 4.4 * r} r={0.5 * r} fill="#FFA726" />
                 </G>
               )}
 
@@ -446,9 +480,9 @@ export const CoachPitchEngine: React.FC<Props> = ({
               {/* Ballon de match */}
               {eq.type === 'ball' && (
                 <G>
-                  <Ellipse cx={c.x + 0.5 * r} cy={c.y + 1.2 * r} rx={1.5 * r} ry={0.8 * r} fill="rgba(0,0,0,0.4)" />
-                  <Circle cx={c.x} cy={c.y} r={1.6 * r} fill="#FFFFFF" stroke="#0F172A" strokeWidth={0.35} />
-                  <Polygon points={`${c.x},${c.y - 0.6 * r} ${c.x + 0.6 * r},${c.y - 0.2 * r} ${c.x + 0.4 * r},${c.y + 0.5 * r} ${c.x - 0.4 * r},${c.y + 0.5 * r} ${c.x - 0.6 * r},${c.y - 0.2 * r}`} fill="#0F172A" />
+                  <Ellipse cx={c.x + 0.6 * r} cy={c.y + 1.4 * r} rx={1.6 * r} ry={0.9 * r} fill="rgba(0,0,0,0.45)" />
+                  <Circle cx={c.x} cy={c.y} r={1.8 * r} fill="#FFFFFF" stroke="#000000" strokeWidth={0.45} />
+                  <Polygon points={`${c.x},${c.y - 0.7 * r} ${c.x + 0.7 * r},${c.y - 0.2 * r} ${c.x + 0.4 * r},${c.y + 0.6 * r} ${c.x - 0.4 * r},${c.y + 0.6 * r} ${c.x - 0.7 * r},${c.y - 0.2 * r}`} fill="#0F172A" />
                 </G>
               )}
 
@@ -470,14 +504,14 @@ export const CoachPitchEngine: React.FC<Props> = ({
                 </G>
               )}
 
-              {/* Échelle de rythme */}
+              {/* Échelle de rythme horizontale jaune/noire (Fidélité TacticalSlate) */}
               {eq.type === 'ladder' && (
                 <G>
-                  <Rect x={c.x - 3 * r} y={c.y - 6 * r} width={6 * r} height={12 * r} fill="rgba(0,0,0,0.15)" />
-                  <Line x1={c.x - 3 * r} y1={c.y - 6 * r} x2={c.x - 3 * r} y2={c.y + 6 * r} stroke={color} strokeWidth={0.7 * r} />
-                  <Line x1={c.x + 3 * r} y1={c.y - 6 * r} x2={c.x + 3 * r} y2={c.y + 6 * r} stroke={color} strokeWidth={0.7 * r} />
-                  {[-4.5, -2.5, -0.5, 1.5, 3.5, 5.5].map((off, idx) => (
-                    <Line key={`rung-${idx}`} x1={c.x - 3 * r} y1={c.y + off * r} x2={c.x + 3 * r} y2={c.y + off * r} stroke={color} strokeWidth={0.6 * r} />
+                  <Ellipse cx={c.x} cy={c.y + 2.2 * r} rx={6.2 * r} ry={1.6 * r} fill="rgba(0,0,0,0.3)" />
+                  <Line x1={c.x - 6 * r} y1={c.y - 1.8 * r} x2={c.x + 6 * r} y2={c.y - 1.8 * r} stroke="#EAB308" strokeWidth={0.9 * r} />
+                  <Line x1={c.x - 6 * r} y1={c.y + 1.8 * r} x2={c.x + 6 * r} y2={c.y + 1.8 * r} stroke="#EAB308" strokeWidth={0.9 * r} />
+                  {[-5, -3, -1, 1, 3, 5].map((off, idx) => (
+                    <Line key={`rung-${idx}`} x1={c.x + off * r} y1={c.y - 1.8 * r} x2={c.x + off * r} y2={c.y + 1.8 * r} stroke="#1E293B" strokeWidth={0.65 * r} />
                   ))}
                 </G>
               )}
@@ -492,11 +526,12 @@ export const CoachPitchEngine: React.FC<Props> = ({
                 </G>
               )}
 
-              {/* Mini-but / Bownet */}
+              {/* Mini-but / Bownet Rebondeur Bleu (Fidélité TacticalSlate) */}
               {(eq.type === 'mini_goal' || eq.type === 'bownet') && (
                 <G>
-                  <Rect x={c.x - 3.5 * r} y={c.y - 2 * r} width={7 * r} height={4 * r} fill="rgba(255,255,255,0.2)" stroke={eq.type === 'bownet' ? '#F43F5E' : '#FFFFFF'} strokeWidth={0.8 * r} />
-                  <Line x1={c.x - 3.5 * r} y1={c.y} x2={c.x + 3.5 * r} y2={c.y} stroke="#FFFFFF" strokeWidth={0.4 * r} strokeDasharray="1,1" />
+                  <Rect x={c.x - 3.8 * r} y={c.y - 2.0 * r} width={7.6 * r} height={4.0 * r} rx={0.4 * r} fill="rgba(0,0,0,0.25)" />
+                  <Rect x={c.x - 3.6 * r} y={c.y - 2.2 * r} width={7.2 * r} height={4.4 * r} rx={0.6 * r} fill="#1D4ED8" stroke="#3B82F6" strokeWidth={0.65 * r} />
+                  <Rect x={c.x - 3.0 * r} y={c.y - 1.6 * r} width={6.0 * r} height={3.2 * r} fill="rgba(255,255,255,0.15)" stroke="#93C5FD" strokeWidth={0.35 * r} strokeDasharray="1,1" />
                 </G>
               )}
 
@@ -511,7 +546,7 @@ export const CoachPitchEngine: React.FC<Props> = ({
           );
         })}
 
-        {/* Joueurs et Staff (Tokens vectoriels HD) */}
+        {/* Joueurs et Staff (Tokens vectoriels HD avec contour noir et label au-dessus) */}
         {players.map((p) => {
           const c = getCoords(p);
           const isSelected = selectedId === p.id;
@@ -522,15 +557,15 @@ export const CoachPitchEngine: React.FC<Props> = ({
           return (
             <G key={p.id} onPress={() => interactive && onSelectObject?.(p.id, 'player')}>
               {/* Ombre portée */}
-              <Ellipse cx={c.x} cy={c.y + 2.5 * r} rx={3.2 * r} ry={1.3 * r} fill="rgba(0,0,0,0.35)" />
+              <Ellipse cx={c.x} cy={c.y + 2.5 * r} rx={3.2 * r} ry={1.3 * r} fill="rgba(0,0,0,0.38)" />
 
               {/* Halo de sélection pulsé */}
               {isSelected ? (
                 <Circle cx={c.x} cy={c.y} r={4.6 * r} fill="none" stroke="#FFFFFF" strokeWidth={0.9} strokeDasharray="1.5,1.5" />
               ) : null}
 
-              {/* Corps du pion / maillot */}
-              <Circle cx={c.x} cy={c.y} r={2.9 * r} fill={fill} stroke="#FFFFFF" strokeWidth={0.7} />
+              {/* Corps du pion avec contour noir épais TacticalSlate */}
+              <Circle cx={c.x} cy={c.y} r={2.9 * r} fill={fill} stroke="#000000" strokeWidth={0.8 * r} />
 
               {/* Numéro de maillot */}
               {p.num != null ? (
@@ -539,12 +574,10 @@ export const CoachPitchEngine: React.FC<Props> = ({
                 </SvgText>
               ) : null}
 
-              {/* Nom / Initiales sous le joueur */}
-              {p.label ? (
-                <SvgText x={c.x} y={c.y + 5.2 * r} fontSize={2.2 * r} fontWeight="700" fill="#FFFFFF" textAnchor="middle">
-                  {p.label}
-                </SvgText>
-              ) : null}
+              {/* Label au-dessus du joueur (ex: "Player 1", "Player 2" en couleur d'équipe) */}
+              <SvgText x={c.x} y={c.y - 3.8 * r} fontSize={2.2 * r} fontWeight="700" fill={fill} textAnchor="middle">
+                {p.label || `Player ${p.num || ''}`}
+              </SvgText>
 
               {/* Témoin de porteur de balle */}
               {p.hasBall ? (
