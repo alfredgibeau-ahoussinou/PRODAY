@@ -62,6 +62,7 @@ import {
   TACTICAL_STARTER_SCHEMAS,
   tacticalSceneForLibraryExercise,
 } from '../../tactics/engine/tacticalStarterSchemas';
+import { CoachTrainingStudioScreen } from './workspace/CoachTrainingStudioScreen';
 import { TacticalSchemaPreview } from './TacticalSchemaPreview';
 import type { CoachNavItemId } from '../navigation/coachNavConfig';
 
@@ -88,7 +89,7 @@ const GENERATION_STEPS = [
   tStatic('hc.coach.coachtraininghome.seance.prete.cbcef7'),
 ];
 
-type HomeView = 'home' | 'builder' | 'free' | 'review' | 'session';
+type HomeView = 'home' | 'builder' | 'free' | 'review' | 'session' | 'studio';
 
 type UpcomingRow = {
   id: string;
@@ -223,19 +224,12 @@ export function CoachTrainingHome({ onDone, initialPreloadedTheme, onNavigate }:
         setUpcoming(trainings);
         return;
       }
+      setUpcoming([]);
+      return;
     } catch {
-      /* fallback catalogue */
+      setUpcoming([]);
     }
-    setUpcoming(
-      featuredSessions.slice(0, 2).map((session) => ({
-        id: session.id,
-        // DEF-W7-006 — titre carte sans durée/âge (déjà dans le sous-titre)
-        title: session.focus || preloadedSessionCardTitle(session),
-        subtitle: `${session.durationMin} min · catalogue local`,
-        preloaded: session,
-      })),
-    );
-  }, [sessionProfile?.uid, sessionProfile?.profile?.club_id, featuredSessions]);
+  }, [sessionProfile?.uid, sessionProfile?.profile?.club_id]);
 
   useEffect(() => {
     void loadUpcoming();
@@ -364,6 +358,15 @@ export function CoachTrainingHome({ onDone, initialPreloadedTheme, onNavigate }:
       tacticalSceneForLibraryExercise(activeSessionExercise.id) ??
       TACTICAL_STARTER_SCHEMAS.find((s) => s.id === activeSessionExercise.id)?.scene
     : undefined;
+
+  if (view === 'studio') {
+    return (
+      <CoachTrainingStudioScreen
+        onBack={() => setView('home')}
+        onSave={() => setView('home')}
+      />
+    );
+  }
 
   if (view === 'free') {
     return (
@@ -707,6 +710,16 @@ export function CoachTrainingHome({ onDone, initialPreloadedTheme, onNavigate }:
         accessibilityLabel={tr(t, 'coach.training.cta.prepareSession', 'Préparer une séance')}
       />
 
+      <View style={{ marginTop: 8 }}>
+        <CoachPrimaryButton
+          category="entrainements"
+          variant="pill"
+          label="Studio Tactique & Animation (TacticSlate)"
+          onPress={() => setView('studio')}
+          accessibilityLabel="Studio Tactique & Animation"
+        />
+      </View>
+
       <CoachSectionTitle
         category="entrainements"
         title={tr(t, 'coach.training.section.upcoming', 'À venir')}
@@ -714,12 +727,8 @@ export function CoachTrainingHome({ onDone, initialPreloadedTheme, onNavigate }:
       <CoachListGroup style={styles.groupReset}>
         {upcoming.length === 0 ? (
           <CoachListRow
-            title={tr(t, 'coach.training.empty.noSession', 'Aucune séance planifiée')}
-            subtitle={tr(
-              t,
-              'coach.training.empty.noSessionHint',
-              'Préparez-en une pour votre prochain créneau',
-            )}
+            title="Aucun entraînement à venir"
+            subtitle="Préparez votre prochaine séance d’entraînement ci-dessous."
           />
         ) : (
           upcoming.map((row) => (
@@ -780,8 +789,8 @@ export function CoachTrainingHome({ onDone, initialPreloadedTheme, onNavigate }:
           />
         ) : (
           <CoachListRow
-            title={tr(t, 'coach.training.empty.none', 'Aucune séance')}
-            subtitle={tr(t, 'coach.training.empty.noneHint', 'Créez-en une depuis le builder')}
+            title="Aucun entraînement planifié"
+            subtitle="Planifiez votre prochaine séance pour voir son contexte ici."
           />
         )}
       </CoachListGroup>
